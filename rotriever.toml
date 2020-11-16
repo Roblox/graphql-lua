@@ -1,0 +1,10 @@
+[package]
+name = "roblox/graphql-lua"
+version = "0.1.0"
+author = "Roblox"
+content_root = "src"
+
+[dependencies]
+
+[dev_dependencies]
+TestEZ = "github.com/roblox/testez@0.4.1"

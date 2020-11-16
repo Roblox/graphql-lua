@@ -1,0 +1,13 @@
+/luacov.*
+/site
+/*.rbxl
+/*.rbxl.lock
+/*.rbxlx
+/*.rbxlx.lock
+/*.rbxm
+/*.rbxmx
+/*.sig
+/rotriever.lock
+/Packages
+.DS_Store
+.vscode

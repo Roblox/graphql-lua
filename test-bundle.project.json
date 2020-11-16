@@ -1,0 +1,12 @@
+{
+  "name": "TestingBundle",
+  "tree": {
+	"$className": "Folder",
+    "GraphQL": {
+      "$path": "src"
+	},
+    "Packages": {
+      "$path": "Packages"
+	}
+  }
+}
