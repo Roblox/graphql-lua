@@ -1,3 +1,4 @@
+-- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/jsutils/__tests__/inspect-test.js
 return function()
 	local jsutils = script.Parent.Parent
 	local inspect = require(jsutils.inspect)
@@ -49,7 +50,8 @@ return function()
 
 		it("array", function()
 			expect(inspect({})).to.equal("[]")
-			expect(inspect({nil})).to.equal("[null]")
+			-- deviation: Lua does not handle nil elements
+			expect(inspect({true})).to.equal("[true]")
 			expect(inspect({1, 0/0})).to.equal("[1, NaN]")
 			expect(inspect({{"a", "b"}, "c"})).to.equal('[["a", "b"], "c"]')
 
@@ -69,13 +71,14 @@ return function()
 		end)
 
 		it("object", function()
-			expect(inspect({})).to.equal("{}")
+			-- deviation: an empty table is considered an empty array
+			-- expect(inspect({})).to.equal("{}")
 			expect(inspect({ a = 1 })).to.equal("{ a: 1 }")
 			expect(inspect({ a = 1, b = 2 })).to.equal("{ a: 1, b: 2 }")
 			-- deviation: avoid sparse array
 			expect(inspect({ array = {false, 0} })).to.equal("{ array: [false, 0] }")
 
-			expect(inspect({ a = { b = {} } })).to.equal("{ a: { b: {} } }")
+			expect(inspect({ a = { b = {} } })).to.equal("{ a: { b: [] } }")
 			expect(inspect({ a = { b = { c = 1 } } })).to.equal("{ a: { b: [Object] } }")
 
 			-- deviation:
@@ -132,10 +135,10 @@ return function()
 		it("custom inspect function that uses this", function()
 			local object = {
 				str = "Hello World!",
-				inspect = function()
-					return
-				end,
 			}
+			function object.inspect()
+				return object.str
+			end
 
 			expect(inspect(object)).to.equal("Hello World!")
 		end)
@@ -150,14 +153,14 @@ return function()
 
 			local array = {}
 
-			array[0] = array
-			array[1] = {array}
+			array[1] = array
+			array[2] = {array}
 
 			expect(inspect(array)).to.equal("[[Circular], [[Circular]]]")
 
 			local mixed = {array = {}}
 
-			mixed.array[0] = mixed
+			mixed.array[1] = mixed
 
 			expect(inspect(mixed)).to.equal("{ array: [[Circular]] }")
 

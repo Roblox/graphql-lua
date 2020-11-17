@@ -1,3 +1,4 @@
+-- upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/jsutils/__tests__/suggestionList-test.js
 return function()
 	local jsutils = script.Parent.Parent
 
@@ -9,45 +10,45 @@ return function()
 		end
 
 		it("Returns results when input is empty", function()
-			expectSuggestions("", {"a"}).to.deep.equal({"a"})
+			expectSuggestions("", {"a"}).toEqual({"a"})
 		end)
 
 		it("Returns empty array when there are no options", function()
-			expectSuggestions("input", {}).to.deep.equal({})
+			expectSuggestions("input", {}).toEqual({})
 		end)
 
 		it("Returns options with small lexical distance", function()
-			expectSuggestions("greenish", {"green"}).to.deep.equal({"green"})
-			expectSuggestions("green", {"greenish"}).to.deep.equal({"greenish"})
+			expectSuggestions("greenish", {"green"}).toEqual({"green"})
+			expectSuggestions("green", {"greenish"}).toEqual({"greenish"})
 		end)
 
 		it("Rejects options with distance that exceeds threshold", function()
-			expectSuggestions("aaaa", {"aaab"}).to.deep.equal({"aaab"})
-			expectSuggestions("aaaa", {"aabb"}).to.deep.equal({"aabb"})
-			expectSuggestions("aaaa", {"abbb"}).to.deep.equal({})
+			expectSuggestions("aaaa", {"aaab"}).toEqual({"aaab"})
+			expectSuggestions("aaaa", {"aabb"}).toEqual({"aabb"})
+			expectSuggestions("aaaa", {"abbb"}).toEqual({})
 
-			expectSuggestions("ab", {"ca"}).to.deep.equal({})
+			expectSuggestions("ab", {"ca"}).toEqual({})
 		end)
 
 		it("Returns options with different case", function()
-			expectSuggestions("verylongstring", {"VERYLONGSTRING"}).to.deep.equal({
+			expectSuggestions("verylongstring", {"VERYLONGSTRING"}).toEqual({
 				"VERYLONGSTRING"
 			})
-			expectSuggestions("VERYLONGSTRING", {"verylongstring"}).to.deep.equal({
+			expectSuggestions("VERYLONGSTRING", {"verylongstring"}).toEqual({
 				"verylongstring",
 			})
-			expectSuggestions("VERYLONGSTRING", {"VeryLongString"}).to.deep.equal({
+			expectSuggestions("VERYLONGSTRING", {"VeryLongString"}).toEqual({
 				"VeryLongString",
 			})
 		end)
 
 		it("Returns options with transpositions", function()
-			expectSuggestions("agr", {"arg"}).to.deep.equal({"arg"})
-			expectSuggestions("214365879", {"123456789"}).to.deep.equal({"123456789"})
+			expectSuggestions("agr", {"arg"}).toEqual({"arg"})
+			expectSuggestions("214365879", {"123456789"}).toEqual({"123456789"})
 		end)
 
 		it("Returns options sorted based on lexical distance", function()
-			expectSuggestions("abc", {"a", "ab", "abc"}).to.deep.equal({
+			expectSuggestions("abc", {"a", "ab", "abc"}).toEqual({
 				"abc",
 				"ab",
 				"a",
@@ -55,7 +56,7 @@ return function()
 		end)
 
 		it("Returns options with the same lexical distance sorted lexicographically", function()
-			expectSuggestions("a", {"az", "ax", "ay"}).to.deep.equal({
+			expectSuggestions("a", {"az", "ax", "ay"}).toEqual({
 				"ax",
 				"ay",
 				"az",

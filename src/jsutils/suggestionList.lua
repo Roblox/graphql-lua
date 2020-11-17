@@ -1,3 +1,15 @@
+-- upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/jsutils/suggestionList.js
+local jsutils = script.Parent
+local graphql = jsutils.Parent
+local luauPolyfills = require(graphql["temp-polyfills"])
+local Object = luauPolyfills.Object
+
+type Array<T> = { [number]: T }
+
+local function localeCompare(a, b)
+	return a < b
+end
+
 local LexicalDistance = {}
 
 --[[
@@ -11,7 +23,7 @@ local function suggestionList(
 	local optionsByDistance = {}
 	local lexicalDistance = LexicalDistance.new(input)
 
-	local threshold = math.floor(input.length * 0.4) + 1
+	local threshold = math.floor(input:len() * 0.4) + 1
 	for i = 1, #options do
 		local option = options[i]
 		local distance = lexicalDistance:measure(option, threshold)
@@ -20,14 +32,14 @@ local function suggestionList(
 		end
 	end
 
-	local keys = {}
-	for key in pairs(optionsByDistance) do
-		table.insert(keys, key)
-	end
+	local keys = Object.keys(optionsByDistance)
 
 	table.sort(keys, function(a, b)
 		local distanceDiff = optionsByDistance[a] - optionsByDistance[b]
-		return distanceDiff ~= 0 and distanceDiff or a.localeCompare(b)
+		if distanceDiff ~= 0 then
+			return distanceDiff < 0
+		end
+		return localeCompare(a, b)
 	end)
 
 	return keys
@@ -63,6 +75,7 @@ function LexicalDistance.new(input: string)
 		table.create(inputLength + 1, 0),
 		table.create(inputLength + 1, 0),
 	}
+	return self
 end
 
 function LexicalDistance:measure(option: string, threshold: number): number | nil
@@ -104,7 +117,7 @@ function LexicalDistance:measure(option: string, threshold: number): number | ni
 
 		currentRow[1] = i
 		local smallestCell = i
-		for j = 2, bLength do
+		for j = 1, bLength do
 			local cost = a[i] == b[j] and 0 or 1
 
 			local currentCell = math.min(
@@ -132,7 +145,7 @@ function LexicalDistance:measure(option: string, threshold: number): number | ni
 		end
 	end
 
-	local distance = rows[aLength % 3 + 1][bLength]
+	local distance = rows[aLength % 3 + 1][bLength + 1]
 	if distance <= threshold then
 		return distance
 	end

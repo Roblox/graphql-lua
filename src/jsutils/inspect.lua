@@ -1,15 +1,17 @@
+-- upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/jsutils/inspect.js
 local HttpService = game:GetService("HttpService")
 
 local jsutils = script.Parent
+local graphql = jsutils.Parent
+local luauPolyfills = require(graphql['temp-polyfills'])
+local Array = luauPolyfills.Array
+local Object = luauPolyfills.Object
 local nodejsCustomInspectSymbol = require(jsutils.nodejsCustomInspectSymbol)
-
-local Array = nil
-local Object = nil
 
 local MAX_ARRAY_LENGTH = 10
 local MAX_RECURSIVE_DEPTH = 2
 
--- deviation: pre-declare function
+-- deviation: pre-declare functions
 local formatValue
 local formatObjectValue
 local formatArray
@@ -28,6 +30,17 @@ function formatValue(value, seenValues)
 	local valueType = typeof(value)
 	if valueType == "string" then
 		return HttpService:JSONEncode(value)
+	-- deviation: format numbers like in JS
+	elseif valueType == "number" then
+		if value ~= value then
+			return "NaN"
+		elseif value == math.huge then
+			return "Infinity"
+		elseif value == -math.huge then
+			return "-Infinity"
+		else
+			return tostring(value)
+		end
 	elseif valueType == "function" then
 		-- deviation: functions don't have names in Lua
 		return "[function]"
@@ -43,7 +56,7 @@ function formatObjectValue(value, previouslySeenValues)
 		return "[Circular]"
 	end
 
-	local seenValues = unpack(previouslySeenValues)
+	local seenValues = {unpack(previouslySeenValues)}
 	table.insert(seenValues, value)
 	local customInspectFn = getCustomFn(value)
 
@@ -67,18 +80,20 @@ end
 function formatObject(object, seenValues)
 	local keys = Object.keys(object)
 
-	if keys.length == 0 then
+	if #keys == 0 then
 		return "{}"
 	end
-	if seenValues.length > MAX_RECURSIVE_DEPTH then
+	if #seenValues > MAX_RECURSIVE_DEPTH then
 		return "[" .. getObjectTag(object) .. "]"
 	end
 
-	local properties = keys.map(function(key)
+	local properties = {}
+	for i = 1, #keys do
+		local key = keys[i]
 		local value = formatValue(object[key], seenValues)
 
-		return key .. ": " .. value
-	end)
+		properties[i] = key .. ": " .. value
+	end
 
 	return "{ " .. table.concat(properties, ", ") .. " }"
 end
@@ -88,7 +103,7 @@ function formatArray(array, seenValues)
 	if length == 0 then
 		return "[]"
 	end
-	if length > MAX_RECURSIVE_DEPTH then
+	if #seenValues > MAX_RECURSIVE_DEPTH then
 		return "[Array]"
 	end
 
@@ -106,7 +121,7 @@ function formatArray(array, seenValues)
 		table.insert(items, ("... %s more items"):format(remaining))
 	end
 
-	return "[" .. items.join(", ") .. "]"
+	return "[" .. table.concat(items, ", ") .. "]"
 end
 
 function getCustomFn(object)
@@ -121,21 +136,22 @@ function getCustomFn(object)
 	return nil
 end
 
-function getObjectTag(object)
-	local tag = Object.prototype.toString
-		.call(object)
-		.replace("")
-		.replace("")
+function getObjectTag(_object)
+	-- local tag = Object.prototype.toString
+	-- 	.call(object)
+	-- 	.replace("")
+	-- 	.replace("")
 
-	if tag == "Object" and typeof(object.constructor) == "function" then
-		local name = object.constructor.name
+	-- if tag == "Object" and typeof(object.constructor) == "function" then
+	-- 	local name = object.constructor.name
 
-		if typeof(name) == "string" and name ~= "" then
-			return name
-		end
-	end
+	-- 	if typeof(name) == "string" and name ~= "" then
+	-- 		return name
+	-- 	end
+	-- end
 
-	return tag
+	-- return tag
+	return "Object"
 end
 
 return inspect

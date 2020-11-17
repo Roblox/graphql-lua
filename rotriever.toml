@@ -5,6 +5,7 @@ author = "Roblox"
 content_root = "src"
 
 [dependencies]
+LuauPolyfill = { git = "https://github.com/Roblox/luau-polyfill.git", rev = "main" }
 
 [dev_dependencies]
 TestEZ = "github.com/roblox/testez@0.4.1"

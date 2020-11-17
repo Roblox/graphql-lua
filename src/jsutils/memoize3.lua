@@ -1,3 +1,4 @@
+-- upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/jsutils/memoize3.js
 -- deviation: we need to replace 'nil' with a symbol
 -- in the table to support it
 local NULL = {}
