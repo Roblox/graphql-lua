@@ -1,3 +1,4 @@
+-- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/jsutils/keyMap.js
 --[[
  * Creates a keyed JS object from an array, given a function to produce the keys
  * for each value in the array.

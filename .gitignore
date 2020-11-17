@@ -8,6 +8,7 @@
 /*.rbxmx
 /*.sig
 /rotriever.lock
-/Packages
+Packages/*
+!Packages/.robloxrc
 .DS_Store
 .vscode
