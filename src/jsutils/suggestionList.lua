@@ -1,8 +1,9 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/jsutils/suggestionList.js
 local jsutils = script.Parent
 local graphql = jsutils.Parent
-local luauPolyfills = require(graphql["temp-polyfills"])
-local Object = luauPolyfills.Object
+local Packages = graphql.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Object = LuauPolyfill.Object
 
 type Array<T> = { [number]: T }
 

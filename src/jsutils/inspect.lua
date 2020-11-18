@@ -3,9 +3,10 @@ local HttpService = game:GetService("HttpService")
 
 local jsutils = script.Parent
 local graphql = jsutils.Parent
-local luauPolyfills = require(graphql['temp-polyfills'])
-local Array = luauPolyfills.Array
-local Object = luauPolyfills.Object
+local Packages = graphql.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local Object = LuauPolyfill.Object
 local nodejsCustomInspectSymbol = require(jsutils.nodejsCustomInspectSymbol)
 
 local MAX_ARRAY_LENGTH = 10
