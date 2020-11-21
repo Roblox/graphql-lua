@@ -6,6 +6,7 @@ content_root = "src"
 
 [dependencies]
 LuauPolyfill = { git = "https://github.com/Roblox/luau-polyfill.git", rev = "main" }
+Promise = { git = "https://github.com/evaera/roblox-lua-promise.git", tag = "v3.0.1" }
 
 [dev_dependencies]
 TestEZ = "github.com/roblox/testez@0.4.1"
