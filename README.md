@@ -1,6 +1,6 @@
 # GraphQL.lua
 
-The JavaScript reference implementation for GraphQL, a query language for APIs created by Facebook.
+The Lua reference implementation for GraphQL, a query language for APIs created by Facebook.
 
 [![npm version](https://badge.fury.io/js/graphql.svg)](https://badge.fury.io/js/graphql)
 [![Build Status](https://github.com/graphql/graphql-js/workflows/CI/badge.svg?branch=master)](https://github.com/graphql/graphql-js/actions?query=branch%3Amaster)
@@ -20,9 +20,9 @@ describes a simple set of GraphQL examples that exist as [tests](src/__tests__)
 in this repository. A good way to get started with this repository is to walk
 through that README and the corresponding tests in parallel.
 
-### Using GraphQL.js
+### Using GraphQL.lua
 
-Install GraphQL.js from npm
+Install GraphQL.lua from npm
 
 With npm:
 

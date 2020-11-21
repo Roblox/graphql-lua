@@ -4,7 +4,7 @@ export type Path = {
 	key: string | number,
 	typename: string?,
 }
-type Array<T> = { T }
+type Array<T> = { [number]: T }
 
 local exports = {}
 
