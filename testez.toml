@@ -1,0 +1,49 @@
+[selene]
+base = "lua51"
+name = "testez"
+
+[[describe.args]]
+type = "string"
+
+[[describe.args]]
+type = "function"
+
+[[it.args]]
+type = "string"
+
+[[it.args]]
+type = "function"
+
+[expect]
+any = true
+
+[FOCUS]
+args = []
+
+[SKIP]
+args = []
+
+[[itFOCUS.args]]
+type = "string"
+
+[[itFOCUS.args]]
+type = "function"
+
+[[itSKIP.args]]
+type = "string"
+
+[[itSKIP.args]]
+type = "function"
+required = false
+
+[[beforeAll.args]]
+type = "function"
+
+[[beforeEach.args]]
+type = "function"
+
+[[afterEach.args]]
+type = "function"
+
+[[afterAll.args]]
+type = "function"
