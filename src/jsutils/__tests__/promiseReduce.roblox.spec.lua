@@ -15,18 +15,18 @@ return function()
 		end)
 
 		it("should fold the list if the reducer never returns promises", function()
-			local sum = promiseReduce({1, 2, 3}, function(sum, element)
-				return sum + element
+			local sum = promiseReduce({1, 2, 3}, function(acc, element)
+				return acc + element
 			end, 0)
 			expect(sum).to.equal(6)
 		end)
 
 		it("should fold the list into a promise if the reducer returns at least a promise", function()
-			local sum = promiseReduce({1, 2, 3}, function(sum, element)
+			local sum = promiseReduce({1, 2, 3}, function(acc, element)
 				if element == 2 then
-					return Promise.resolve(sum + element)
+					return Promise.resolve(acc + element)
 				else
-					return sum + element
+					return acc + element
 				end
 			end, 0)
 			expect(Promise.is(sum)).to.equal(true)
@@ -36,11 +36,11 @@ return function()
 
 		it("should return the first rejected promise", function()
 			local errorMessage = "foo"
-			local sum = promiseReduce({1, 2, 3}, function(sum, element)
+			local sum = promiseReduce({1, 2, 3}, function(acc, element)
 				if element == 2 then
 					return Promise.reject(errorMessage)
 				else
-					return sum + element
+					return acc + element
 				end
 			end, 0)
 			expect(Promise.is(sum)).to.equal(true)
