@@ -2,24 +2,24 @@
 local src = script.Parent.Parent
 local String = require(src.luaUtils.String)
 
-local exports = {}
-
 -- /**
 --  * Takes a Source and a UTF-8 character offset, and returns the corresponding
 --  * line and column as a SourceLocation.
 --  */
-exports.getLocation = function(source, position)
+local function getLocation(source, position)
 	local terms = { "\r\n", "\r", "\n" }
 	local line = 1
-	local column = position + 1
+	local column = position
 	local match = String.findOr(source.body, terms)
 	while match ~= nil and match.index < position do
 		line += 1
-		column = position + 1 - match.index + string.len(match.match)
+		column = position + 1 - (match.index + string.len(match.match))
 		match = String.findOr(source.body, terms)
 	end
 
 	return { line = line, column = column }
 end
 
-return exports
+return {
+	getLocation = getLocation,
+}

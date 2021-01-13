@@ -1,49 +1,38 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/language/printLocation.js
---!nolint LocalUnused
---!nolint FunctionUnused
 
 local language = script.Parent
-local src = language.Parent
-local root = src.Parent
+local srcWorkspace = language.Parent
+local root = srcWorkspace.Parent
 
-local getLocation = language.location
+local getLocation = require(language.location).getLocation
 local Packages = root.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
+
 local Array = LuauPolyfill.Array
+local UtilArray = require(srcWorkspace.luaUtils.Array)
+local String = require(srcWorkspace.luaUtils.String)
 
-local function whitespace(len: number): string
-	return Array(len + 1).join(" ")
+-- deviation: pre-declare functions
+local whitespace
+local leftPad
+local printSourceLocation
+local printPrefixedLines
+
+-- /**
+--  * Render a helpful description of the location in the GraphQL Source document.
+--  */
+local function printLocation(location)
+	return printSourceLocation(location.source, getLocation(location.source, location.start))
 end
 
-local function leftPad(len: number, str: string): string
-	return whitespace(len - str.length) .. str
-end
-
-local function printPrefixedLines(lines): string
-	local existingLines = Array.filter(lines, function(prev)
-		local _ = prev[1]
-		local line = prev[2]
-		return line ~= nil
-	end)
-
-	-- local padLen = max.max(existingLines.map(([prefix]) => prefix.length));
-	local padLen = math.max(Array.map(existingLines, function(val)
-		local prefix = val[1]
-		return prefix:len()
-	end))
-
-	return Array.map(existingLines, function(val)
-		local prefix = val[1]
-		local line = val[2]
-		return leftPad(padLen, prefix) .. line and "|" .. line or "|"
-	end).join("\n")
-end
-
-local function printSourceLocation(source, sourceLocation)
+-- /**
+--  * Render a helpful description of the location in the GraphQL Source document.
+--  */
+function printSourceLocation(source, sourceLocation): string
 	local firstLineColumnOffset = source.locationOffset.column - 1
-	local body = whitespace(firstLineColumnOffset) + source.body
+	local body = whitespace(firstLineColumnOffset) .. source.body
 
-	local lineIndex = sourceLocation.line - 1
+	local lineIndex = sourceLocation.line - 1 + 1 -- convert JS 0-based index to Lua 1-based index
 	local lineOffset = source.locationOffset.line - 1
 	local lineNum = sourceLocation.line + lineOffset
 
@@ -51,12 +40,62 @@ local function printSourceLocation(source, sourceLocation)
 	local columnNum = sourceLocation.column + columnOffset
 	local locationStr = source.name .. ":" .. lineNum .. ":" .. columnNum .. "\n"
 
-	-- local lines = body.split(/\r\n|[\n\r]/g);
-	-- local locationLine = lines[lineIndex];
+	local lines = String.split(body, { "\r\n", "\n", "\r" })
+	local locationLine = lines[lineIndex]
+
+	-- // Special case for minified documents
+	if string.len(locationLine) > 120 then
+		local subLineIndex = math.floor(columnNum / 80) + 1 -- convert JS 0-based index to Lua 1-based index
+		local subLineColumnNum = columnNum % 80
+		local subLines = {}
+		for i = 1, string.len(locationLine), 80 do
+			table.insert(subLines, String.slice(locationLine, i, i + 80))
+		end
+		return (locationStr .. printPrefixedLines(UtilArray.concat(
+			{ { tostring(lineNum), subLines[1] } },
+			Array.map(Array.slice(subLines, 2, subLineIndex + 1), function(subLine)
+				return { "", subLine }
+			end),
+			{ { " ", whitespace(subLineColumnNum - 1) .. "^" } },
+			{ { "", subLines[subLineIndex + 1] } }
+		)))
+	end
+
+	return (locationStr .. printPrefixedLines({
+		-- // Lines specified like this: ["prefix", "string"],
+		{ lineNum - 1, lines[lineIndex - 1] },
+		{ lineNum, locationLine },
+		{ "", whitespace(columnNum - 1) .. "^" },
+		{ lineNum + 1, lines[lineIndex + 1] },
+	}))
 end
 
-local printLocation = function(location)
-	return printSourceLocation(location.source, getLocation(location.source, location.start))
+function printPrefixedLines(lines): string
+	local existingLines = Array.filter(lines, function(prev)
+		local line = prev[2]
+		return line ~= nil
+	end)
+
+	local padLen = math.max(table.unpack(Array.map(existingLines, function(val)
+		local prefix = val[1]
+		return string.len(prefix)
+	end)))
+	return UtilArray.join(
+		Array.map(existingLines, function(val)
+			local prefix = val[1]
+			local line = val[2]
+			return leftPad(padLen, prefix) .. (line and line ~= "" and " | " .. line or " |")
+		end),
+		"\n"
+	)
+end
+
+function whitespace(len: number): string
+	return string.rep(" ", len)
+end
+
+function leftPad(len: number, str: string): string
+	return whitespace(len - string.len(str)) .. str
 end
 
 return {
