@@ -1,43 +1,83 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/__testUtils__/dedent.js
---!nolint ImportUnused
---!nolint LocalUnused
 
-return function(strings)
--- 	--...values
--- )
-	return strings
-	-- local str = ''
+local testUtilsWorkspace = script.Parent
+local srcWorkspace = testUtilsWorkspace.Parent
+local rootWorkspace = srcWorkspace.Parent
+local PackagesWorkspace = rootWorkspace.Packages
 
-	-- for i = 0, #strings, 1 do
-	-- 	str = str .. string.sub(strings, i, i)
-	-- 	if i < #values then
-	-- 		local value = string.sub(values, i, i)
+local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local String = require(srcWorkspace.luaUtils.String)
 
-	-- 		str = str .. value -- interpolation
-	-- end
+function dedent(strings: Array<string> | string, ...): string
+	local values: Array<string> = { ... }
 
-	-- for (let i = 0; i < strings.length; ++i) {
-  --   str += strings[i];
-  --   if (i < values.length) {
-  --     // istanbul ignore next (Ignore else inside Babel generated code)
-  --     const value = values[i];
+	local str = ""
 
-  --     str += value; // interpolation
-  --   }
-	-- }
+	if Array.isArray(strings) then
+		for i = 1, #strings do
+			str ..= strings[i]
+			if i <= #values then
+				local value = values[i]
 
-	-- const trimmedStr = str
-  --   .replace(/^\n*/m, '') //  remove leading newline
-  --   .replace(/[ \t]*$/, ''); // remove trailing spaces and tabs
+				str ..= value
+			end
+		end
+	else
+		str = strings
+	end
 
-  -- // fixes indentation by removing leading spaces and tabs from each line
-  -- let indent = '';
-  -- for (const char of trimmedStr) {
-  --   if (char !== ' ' && char !== '\t') {
-  --     break;
-  --   }
-  --   indent += char;
-  -- }
-  -- return trimmedStr.replace(RegExp('^' + indent, 'mg'), ''); // remove indent
+	local trimmedStr = removeTrailingSpacesAndTabs(removeLeadingNewLines(str))
+	local indent = ""
+	for i = 1, string.len(trimmedStr) do
+		local char = string.sub(trimmedStr, i, i)
+		if char ~= " " and char ~= "\t" then
+			break
+		end
+		indent ..= char
+	end
 
+	return removeCommonIndent(trimmedStr, indent)
 end
+
+function removeLeadingNewLines(str: string): string
+	local leadingNewLinesMatch = String.findOr(str, { "\n*" })
+
+	if leadingNewLinesMatch ~= nil and leadingNewLinesMatch.index == 1 then
+		str = string.sub(str, string.len(leadingNewLinesMatch.match) + 1)
+	end
+	return str
+end
+
+function removeTrailingSpacesAndTabs(str: string): string
+	local match
+	local lastMatch
+	local init = 1
+	repeat
+		match = String.findOr(str, { " +", "\t+" }, init)
+
+		if match ~= nil then
+			if lastMatch ~= nil and lastMatch.index + string.len(lastMatch.match) == match.index then
+				lastMatch = {
+					index = lastMatch.index,
+					match = lastMatch.match .. match.match,
+				}
+			else
+				lastMatch = match
+			end
+			init = match.index + string.len(match.match)
+		end
+	until match == nil or init > string.len(str)
+	if lastMatch ~= nil and lastMatch.index + string.len(lastMatch.match) == string.len(str) + 1 then
+		return string.sub(str, 1, lastMatch.index - 1)
+	end
+	return str
+end
+
+function removeCommonIndent(str: string, commonIndent: string): string
+	local trimmedStr = string.gsub(str, commonIndent, "", 1)
+	trimmedStr = string.gsub(trimmedStr, "\n" .. commonIndent, "\n")
+	return trimmedStr
+end
+
+return dedent
