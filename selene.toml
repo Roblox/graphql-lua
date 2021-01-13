@@ -1,1 +1,5 @@
 std = "roblox+testez"
+
+# to be removed - only helpful while scaffolding in dev
+[rules]
+unused_variable = "allow"

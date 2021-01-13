@@ -2,6 +2,7 @@
 
 return function(condition: any, message: string | nil)
 	if not condition then
-		error(message)
+		-- must set error level to zero otherwise msg includes stack
+		error(message, 2)
 	end
 end
