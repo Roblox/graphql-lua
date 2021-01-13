@@ -12,3 +12,4 @@ Packages/*
 !Packages/.robloxrc
 .DS_Store
 .vscode
+debug.log
