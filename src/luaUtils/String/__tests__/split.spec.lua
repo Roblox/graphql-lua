@@ -35,5 +35,20 @@ return function()
 			local str = "one\ntwo\rthree\r\nfour"
 			expect(split(str, { "\r\n", "\r", "\n" })).toEqual({ "one", "two", "three", "four" })
 		end)
+
+		it("should include empty string in the beginning", function()
+			local str = "babc"
+			expect(split(str, { "b" })).toEqual({ "", "a", "c" })
+		end)
+
+		it("should include empty string in the end", function()
+			local str = "abcb"
+			expect(split(str, { "b" })).toEqual({ "a", "c", "" })
+		end)
+
+		it("should include whole string if no match", function()
+			local str = "abc"
+			expect(split(str, { "d" })).toEqual({ "abc" })
+		end)
 	end)
 end

@@ -1,0 +1,32 @@
+return function()
+	local concat = require(script.Parent.Parent.concat)
+
+	describe("Array - concat", function()
+		it("should concatenate arrays with single values", function()
+			expect(concat({ 1 })).toEqual({ 1 })
+			expect(concat({ 1 }, { 2 })).toEqual({ 1, 2 })
+			expect(concat({ 1 }, { 2 }, { 3 })).toEqual({ 1, 2, 3 })
+		end)
+
+		it("should concatenate arrays with multiple values", function()
+			expect(concat({ 1 }, { 2, 3 })).toEqual({ 1, 2, 3 })
+			expect(concat({ 1, 2 }, { 3 })).toEqual({ 1, 2, 3 })
+			expect(concat({ 1, 2 }, { 3, 4 })).toEqual({ 1, 2, 3, 4 })
+			expect(concat({ 1, 2 }, { 3, 4 }, { 5, 6 })).toEqual({ 1, 2, 3, 4, 5, 6 })
+		end)
+
+		it("should concatenate values", function()
+			expect(concat(1)).toEqual({ 1 })
+			expect(concat(1, 2)).toEqual({ 1, 2 })
+			expect(concat(1, 2, 3)).toEqual({ 1, 2, 3 })
+			expect(concat(1, 2, 3, 4)).toEqual({ 1, 2, 3, 4 })
+		end)
+
+		it("should concatenate values and arrays combination", function()
+			expect(concat(1, { 2 })).toEqual({ 1, 2 })
+			expect(concat({ 1 }, 2)).toEqual({ 1, 2 })
+			expect(concat({ 1 }, 2, { 3 })).toEqual({ 1, 2, 3 })
+			expect(concat({ 1, 2 }, 3, { 4 })).toEqual({ 1, 2, 3, 4 })
+		end)
+	end)
+end
