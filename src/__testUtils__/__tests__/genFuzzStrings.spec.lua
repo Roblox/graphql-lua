@@ -12,7 +12,7 @@ return function()
 			item = gen.next()
 		end
 
-		-- ROBLOX deviation - because of how TestEZ works we can't use expect in here
+		-- ROBLOX deviation: because of how TestEZ works we can't use expect in here
 		return arr
 	end
 
