@@ -111,14 +111,16 @@ function Parser:parseDefinition()
 			return self:parseOperationDefinition()
 		elseif tokenValue == "fragment" then
 			return self:parseFragmentDefinition()
-		elseif tokenValue == "schema" or
-			   tokenValue == "scalar" or
-			   tokenValue == "type" or
-			   tokenValue == "interface" or
-			   tokenValue == "union" or
-			   tokenValue == "enum" or
-			   tokenValue == "input" or
-			   tokenValue == "directive" then
+		elseif
+			tokenValue == "schema"
+			or tokenValue == "scalar"
+			or tokenValue == "type"
+			or tokenValue == "interface"
+			or tokenValue == "union"
+			or tokenValue == "enum"
+			or tokenValue == "input"
+			or tokenValue == "directive"
+		then
 			return self:parseTypeSystemDefinition()
 		elseif tokenValue == "extend" then
 			return self:parseTypeSystemExtension()

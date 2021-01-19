@@ -3,8 +3,6 @@
 -- directory
 local srcWorkspace = script.Parent.Parent
 local languageWorkspace = srcWorkspace.language
-local rootWorkspace = srcWorkspace.Parent
-local PackagesWorkspace = rootWorkspace.Packages
 
 -- require
 local getLocation = require(languageWorkspace.location).getLocation
@@ -16,8 +14,7 @@ local printSourceLocation = printLocationIndex.printSourceLocation
 local isObjectLike = require(srcWorkspace.jsutils.isObjectLike)
 local symbols = require(srcWorkspace.polyfill.symbols)
 local SYMBOL_TO_STRING_TAG = symbols.SYMBOL_TO_STRING_TAG
-local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
-local Array = LuauPolyfill.Array
+local Array = require(srcWorkspace.Parent.Packages.LuauPolyfill).Array
 local Error = require(srcWorkspace.luaUtils.Error)
 
 -- deviation: pre-declare functions
@@ -25,6 +22,9 @@ local printError
 
 local GraphQLError = setmetatable({}, { __index = Error })
 GraphQLError.__index = GraphQLError
+GraphQLError.__tostring = function(self)
+	return printError(self)
+end
 
 function GraphQLError.new(
 	message: string,
@@ -70,9 +70,9 @@ function GraphQLError.new(
 	local _locations
 	if positions ~= nil and source ~= nil then
 		_locations = Array.map(positions, function(pos)
-			return getLocation(source, pos)
-		end)
-	elseif _nodes ~= nil then
+				return getLocation(source, pos)
+			end)
+		elseif _nodes ~= nil then
 		_locations = Array.reduce(_nodes, function(list, node)
 			if node.loc ~= nil then
 				table.insert(list, getLocation(node.loc.source, node.loc.start))

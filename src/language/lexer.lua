@@ -5,7 +5,6 @@ local language = script.Parent
 local src = language.Parent
 local Packages = src.Parent.Packages
 
-local json = require(src.luaUtils.json)
 local Number = require(Packages.LuauPolyfill).Number
 local isNaN = Number.isNaN
 
@@ -15,12 +14,55 @@ local TokenKind = require(language.tokenKind).TokenKind
 local Token = require(language.ast).Token
 local slice = require(src.luaUtils.slice).sliceString
 local toUnicodeString = require(src.luaUtils.toUnicodeString)
+local dedentBlockStringValue = require(language.blockString).dedentBlockStringValue
+
+local HttpService = game:GetService("HttpService")
 
 -- deviation: pre-declare functions
 local readBlockString
 local readString
+local uniCharCode
+local char2hex
 
 local charCodeAt = require(src.luaUtils.charCodeAt)
+
+--[[
+ * Converts four hexadecimal chars to the integer that the
+ * string represents. For example, uniCharCode('0','0','0','f')
+ * will return 15, and uniCharCode('0','0','f','f') returns 255.
+ *
+ * Returns a negative number on error, if a char was invalid.
+ *
+ * This is implemented by noting that char2hex() returns -1 on error,
+ * which means the result of ORing the char2hex() will also be negative.
+]]
+function uniCharCode(a, b, c, d)
+	return bit32.bor(
+		bit32.lshift(char2hex(a), 12),
+		bit32.lshift(char2hex(b), 8),
+		bit32.lshift(char2hex(c), 4),
+		char2hex(d)
+	)
+end
+
+--[[
+ * Converts a hex character to its integer value.
+ * '0' becomes 0, '9' becomes 9
+ * 'A' becomes 10, 'F' becomes 15
+ * 'a' becomes 10, 'f' becomes 15
+ *
+ * Returns -1 on error.
+]]
+function char2hex(a)
+	local firstCondition = a >= 48 and a <= 57
+	local secondCondition = a >= 65 and a <= 70
+	local thirdCondition = a >= 97 and a <= 102
+	return firstCondition and a - 48 -- 0-9
+	or secondCondition and a - 55 -- A-F
+	or thirdCondition and a - 87 -- a-f
+	or -1
+end
+
 --[[
  Reads an alphanumeric + underscore name from the source.
 
@@ -41,7 +83,6 @@ local function readName(
 	local firstCondition = function()
 		return position ~= bodyLength + 1
 	end
-	-- local secondCondition = false
 	local secondCondition = function ()
 		code = charCodeAt(body, position, position)
 		return not isNaN(code)
@@ -95,22 +136,16 @@ local function readComment(
   col,
   prev
 )
-  local body = source.body;
-  local code;
+	local body = source.body;
+	local code;
 	local position = start;
 
-	position = position + 1
-	code = charCodeAt(body, position + 1)
 
-	-- // SourceCharacter but not LineTerminator
-	local firstCondition = code > 0x001f or code == 0x0009
-
-	while firstCondition
-	-- and !isNaN(code) and
-	do
+	repeat
 		position = position + 1
-		code = charCodeAt(body, position + 1)
-	end
+		code = charCodeAt(body, position)
+		-- // SourceCharacter but not LineTerminator
+	until not ((not isNaN(code)) and (code > 0x001f or code == 0x0009))
 
   return Token.new(
     TokenKind.COMMENT,
@@ -130,16 +165,11 @@ function printCharCode(code)
 	else
 	-- Trust JSON for ASCII.
 	if code < 0x007f then
-		return json.stringify(string.char(code))
+		return HttpService:JSONEncode(string.char(code))
 	else
 	-- Otherwise print the escaped form.
-	return "\\u00" .. slice(
-		string.upper(
-			toUnicodeString(tostring(code))
-		),
-		-4
-	)
-	  end
+		return toUnicodeString(tostring(code))
+	end
 	end
 end
 
@@ -176,7 +206,7 @@ end
 ]]--
 function unexpectedCharacterMessage(code)
   if code < 0x0020 and code ~= 0x0009 and code ~= 0x000a and code ~= 0x000d then
-    return "Cannot contain the invalid character  " .. printCharCode(code) .. "."
+    return "Cannot contain the invalid character " .. printCharCode(code) .. "."
 	end
 
   if code == 39 then
@@ -292,7 +322,7 @@ local function readToken(lexer, prev)
 
 	local pos = prev._end
 
-	while pos < bodyLength do
+	while pos <= bodyLength do
 
 		local code = charCodeAt(body, pos)
 		local line = lexer.line
@@ -489,25 +519,8 @@ function Lexer:lookahead()
 				token.next = readToken(self, token)
 				return token.next
 			end)()
-		until (token and token.kind) ~= TokenKind.COMMENT
-
-
-		-- if token.next == nil then
-		-- 	token.next = readToken(self, token)
-		-- 	token = token.next
-		-- else
-		-- 	token = token.next
-		-- end
-
-		-- while token ~= nil and token.kind == TokenKind.COMMENT do
-		-- 	if token.next == nil then
-		-- 		token.next = readToken(self, token)
-		-- 	else
-		-- 		token = token.next
-		-- 	end
-		-- end
+		until not (token.kind == TokenKind.COMMENT)
 	end
-
 	return token
 end
 
@@ -546,8 +559,68 @@ function readBlockString(
 	prev,
 	lexer
   )
-	-- TODO
-	return nil
+	local body = source.body
+	local position = start + 3
+	local chunkStart = position
+	local code = 0
+	local rawValue = ''
+
+	while position < string.len(body) and not isNaN(charCodeAt(body, position)) do
+		-- Closing Triple-Quote (""")
+		code = charCodeAt(body, position)
+		if code == 34 and charCodeAt(body, position + 1) == 34 and charCodeAt(body, position + 2) == 34 then
+			rawValue  = rawValue .. slice(body, chunkStart, position)
+			return Token.new(
+				TokenKind.BLOCK_STRING,
+				start,
+				position + 3,
+				line,
+				col,
+				prev,
+				dedentBlockStringValue(rawValue)
+			)
+		end
+
+		-- SourceCharacter
+		if code < 0x0020 and
+			code ~= 0x0009 and
+			code ~= 0x000a and
+			code ~= 0x000d
+			then
+			error(syntaxError(
+					source,
+					position,
+					"Invalid character within String: " .. printCharCode(code) .. "."
+				))
+		end
+
+		if code == 10 then
+			-- new line
+			position += 1
+			lexer.line += 1
+			lexer.lineStart = position
+		elseif code == 13 then
+			-- carriage return
+			if charCodeAt(body, position + 1) == 10 then
+				position += 2
+			else
+				position += 1
+			end
+			lexer.line += 1
+			lexer.lineStart = position
+		elseif --[[ Escape Triple-Quote (\""") ]] code == 92
+			and charCodeAt(body, position + 1) == 34
+			and charCodeAt(body, position + 2) == 34
+			and charCodeAt(body, position + 3) == 34 then
+			rawValue = rawValue .. slice(body, chunkStart, position) .. '"""'
+			position += 4
+			chunkStart = position
+		else
+			position += 1
+		end
+	end
+
+	error(syntaxError(source, position, 'Unterminated string.'))
 end
 
 
@@ -562,8 +635,99 @@ function readString(
 	col,
 	prev
   )
-	-- TODO
-	return nil
+	local body = source.body
+	local position = start + 1
+	local chunkStart = position
+	local code = 0
+	local value = ''
+
+	--code = charCodeAt(body, position)
+	while position <= string.len(body) and
+		not isNaN(
+		  (function()
+			code = charCodeAt(body, position)
+			return code
+		  end)()
+		)
+		-- not LineTerminator
+		and code ~= 0x000a
+		and code ~= 0x000d do
+		-- Closing Quote (")
+		if code == 34 then
+			value = value .. slice(body, chunkStart, position)
+			return Token.new(
+				TokenKind.STRING,
+				start,
+				position + 1,
+				line,
+				col,
+				prev,
+				value
+			)
+		end
+
+		-- SourceCharacter
+		if code < 0x0020 and code ~= 0x0009 then
+			error(syntaxError(
+				source,
+				position,
+				"Invalid character within String: " .. printCharCode(code) .. '.'
+			))
+		end
+
+		position  += 1
+		if code == 92 then
+			-- \
+			value = value .. slice(body, chunkStart, position - 1)
+			code = charCodeAt(body, position)
+			if code == 34 then
+				value = value .. '"'
+			elseif code == 47 then
+				value = value .. '/'
+			elseif code == 92 then
+				value = value .. '\\'
+			elseif code == 98 then
+				value = value .. '\b'
+			elseif code == 102 then
+				value = value .. '\f'
+			elseif code == 110 then
+				value = value .. '\n'
+			elseif code == 114 then
+				value = value .. '\r'
+			elseif code == 116 then
+				value = value .. '\t'
+			elseif code == 117 then
+				-- uXXXX
+				local charCode = uniCharCode(
+					charCodeAt(body, position + 1),
+					charCodeAt(body, position + 2),
+					charCodeAt(body, position + 3),
+					charCodeAt(body, position + 4)
+				)
+				if charCode < 0 then
+					local invalidSequence = slice(body, position + 1, position + 5)
+					error(syntaxError(
+						source,
+						position,
+						"Invalid character escape sequence: \\u" .. invalidSequence .. '.'
+					))
+				end
+				value = value .. utf8.char(charCode)
+				position += 4
+			else error(syntaxError(source, position, "Invalid character escape sequence: \\" .. utf8.char(code) .. '.'))
+		end
+
+		position += 1
+		chunkStart = position
+		end
+
+	end
+
+	error(syntaxError(
+		source,
+		position,
+		"Unterminated string."
+	))
 end
 
 return {
