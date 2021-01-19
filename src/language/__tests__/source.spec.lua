@@ -5,11 +5,11 @@ return function()
 	local Source = require(script.Parent.Parent.source).Source
 	describe("Source", function()
 
-		-- it('can be Object.toStringified', () => {
-		-- 	const source = new Source('');
+		it("can be Object.toStringified", function()
+			local source = Source.new("")
 
-		-- 	expect(Object.prototype.toString.call(source)).to.equal('[object Source]');
-		-- });
+			expect(tostring(source)).toEqual("{table Source}")
+		end)
 
 		it("rejects invalid locationOffset", function()
 			function createSource(locationOffset)

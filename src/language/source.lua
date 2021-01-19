@@ -6,9 +6,6 @@ local src = language.Parent
 local inspect = require(src.jsutils.inspect)
 local devAssert = require(src.jsutils.devAssert)
 
-local symbols = require(src.polyfill.symbols)
-local SYMBOL_TO_STRING_TAG = symbols.SYMBOL_TO_STRING_TAG
-
 -- /**
 --  * A representation of source input to GraphQL. The `name` and `locationOffset` parameters are
 --  * optional, but they are useful for clients who store GraphQL documents in source files.
@@ -44,7 +41,10 @@ function Source.new(body, _name, _locationOffset)
 	return setmetatable(self, Source)
 end
 
-Source[SYMBOL_TO_STRING_TAG] = "Source"
+function Source:__tostring()
+	-- ROBLOX: deviation for idiomatic lua representation of "object"
+	return "{table Source}"
+end
 
 return {
 	Source = Source,
