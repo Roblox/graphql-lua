@@ -143,7 +143,7 @@ return function()
 		end)
 
 		it("supports expression interpolation", function()
-			-- ROBLOX deviation - Lua doesn't support tagged template literals
+			-- ROBLOX deviation: Lua doesn't support tagged template literals
 			local output = dedent([[
 			  {
 			    "me": {
