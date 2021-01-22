@@ -84,7 +84,7 @@ local function readName(
 		return position ~= bodyLength + 1
 	end
 	local secondCondition = function ()
-		code = charCodeAt(body, position, position)
+		code = charCodeAt(body, position)
 		return not isNaN(code)
 	end
 	local thirdConditionFirstPart = function()
@@ -179,21 +179,15 @@ end
 function readDigits(source, start, firstCode)
   local body = source.body;
   local position = start;
-	local code = firstCode;
+  local code = firstCode;
 
-  if code >= 48 and code <= 57 then
-		-- 0 - 9
-		while true do
+    if code >= 48 and code <= 57 then
+		repeat
 			position += 1
-			code = charCodeAt(body, position + 1);
-
-			if not (code >= 48 and code <= 57) then -- 0 - 9
-				break
-			end
-		end
-
+			code = charCodeAt(body, position)
+		until not (code >= 48 and code <= 57) -- 0-9
 		return position
-  end
+    end
   error(syntaxError(
     source,
     position,
@@ -250,13 +244,13 @@ function readNumber(
   if code == 45 then
 	-- -
 		position += 1
-    	code = charCodeAt(body, position + 1);
+    	code = charCodeAt(body, position);
 	end
 
   if code == 48 then
 		-- 0
 		position += 1
-    	code = charCodeAt(body, position + 1);
+    	code = charCodeAt(body, position);
     if code >= 48 and code <= 57 then
       error(syntaxError(
         source,
@@ -266,7 +260,7 @@ function readNumber(
     end
   else
     position = readDigits(source, position, code);
-    code = charCodeAt(body, position + 1);
+    code = charCodeAt(body, position);
   end
 
   if code == 46 then
@@ -274,10 +268,10 @@ function readNumber(
     isFloat = true
 
 	position += 1
-	code = charCodeAt(body, position + 1);
+	code = charCodeAt(body, position);
 	position = readDigits(source, position, code);
 
-    code = charCodeAt(body, position + 1);
+    code = charCodeAt(body, position);
   end
 
   if code == 69 or code == 101 then
@@ -285,14 +279,14 @@ function readNumber(
     isFloat = true;
 
 		position += 1
-    	code = charCodeAt(body, position + 1);
+    	code = charCodeAt(body, position);
     if code == 43 or code == 45 then
 		-- + -
 		position += 1
-    	code = charCodeAt(body, position + 1);
+    	code = charCodeAt(body, position);
 	end
     position = readDigits(source, position, code);
-	code = charCodeAt(body, position + 1);
+	code = charCodeAt(body, position);
   end
 
   -- Numbers cannot be followed by . or NameStart
@@ -329,7 +323,7 @@ local function readToken(lexer, prev)
 		local col = pos - lexer.lineStart
 		-- SourceCharacter
 		if code == 0xfeff -- <BOM>
-			or  code == 9 -- \t
+			or code == 9 -- \t
 			or code == 32 -- <space>
 			or code == 44 -- ,
 		then
@@ -565,7 +559,7 @@ function readBlockString(
 	local code = 0
 	local rawValue = ''
 
-	while position < string.len(body) and not isNaN(charCodeAt(body, position)) do
+	while position <= string.len(body) and not isNaN(charCodeAt(body, position)) do
 		-- Closing Triple-Quote (""")
 		code = charCodeAt(body, position)
 		if code == 34 and charCodeAt(body, position + 1) == 34 and charCodeAt(body, position + 2) == 34 then

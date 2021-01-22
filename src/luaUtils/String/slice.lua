@@ -1,23 +1,27 @@
-return function(str, _startIndex, _lastIndex)
-	local startIndex = _startIndex
-	if _startIndex < 0 then
+return function(str, startIndexStr, lastIndexStr)
+
+	local strLen = utf8.len(str)
+
+	if startIndexStr < 0 then
 		-- then start index is negative
-		startIndex = #str + _startIndex
+		startIndexStr = strLen + startIndexStr
 	end
 
-	local strLen = #str
-	local lastIndex = _lastIndex or strLen + 1
-
-	local sliced = ""
-
-	local counter = startIndex
-
-	for i = startIndex or 1, strLen do
-		if counter < lastIndex then
-			sliced = sliced .. string.sub(str, i, i)
-		end
-		counter = counter + 1
+	if startIndexStr > strLen then
+		return ""
 	end
 
-	return sliced
+	-- if no last index length set, go to str length + 1
+	lastIndexStr = lastIndexStr or strLen + 1
+
+	if lastIndexStr > strLen then
+		lastIndexStr = strLen + 1
+	end
+
+	local startIndexByte = utf8.offset(str, startIndexStr)
+	-- get char length of charset retunred at offset
+	local lastIndexByte = utf8.offset(str, lastIndexStr) - 1
+
+	return string.sub(str, startIndexByte, lastIndexByte)
+
 end
