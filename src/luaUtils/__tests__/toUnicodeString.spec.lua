@@ -8,5 +8,11 @@ return function()
 			local expected = '"\\u0017"'
 			expect(actual).to.equal(expected)
 		end)
+
+		it("returns stringified character code in uppercase",function()
+			local actual = toUnicodeString(0xab)
+			local expected = '"\\u00AB"'
+			expect(actual).to.equal(expected)
+		end)
 	end)
 end

@@ -3,18 +3,21 @@
 return function()
 	local language = script.Parent.Parent
 	local src = language.Parent
+	local root = src.Parent
 
 	local inspect = require(src.jsutils.inspect)
 	local lexerExport = require(language.lexer)
 	local dedent = require(src.__testUtils__.dedent)
 	local sourceExport = require(language.source)
 	local tokenKindExport = require(language.tokenKind)
-	local Array = require(src.luaUtils.Array)
+	local Array = require(root.Packages.LuauPolyfill).Array
+	local UtilArray = require(src.luaUtils.Array)
+	local instanceOf = require(src.jsutils.instanceOf)
+	local GraphQLError = require(src.error.GraphQLError).GraphQLError
 
 	local Lexer = lexerExport.Lexer
 	local Source = sourceExport.Source
 	local TokenKind = tokenKindExport.TokenKind
-	-- local devPrint = require(src.TestMatchers.devPrint)
 
 	local lexOne = function(str)
 		local lexer = Lexer.new(Source.new(str))
@@ -166,7 +169,7 @@ return function()
 		it("errors respect whitespace", function()
 			local caughtError
 			xpcall(function()
-				lexOne(Array.join({ "", "", "    ?", "" }, "\n"))
+				lexOne(UtilArray.join({ "", "", "    ?", "" }, "\n"))
 			end, function(e)
 				caughtError = e
 			end)
@@ -184,7 +187,7 @@ return function()
 		it("updates line numbers in error for file context", function()
 			local caughtError
 			xpcall(function()
-				local str = Array.join({ "", "", "     ?", "" }, "\n")
+				local str = UtilArray.join({ "", "", "     ?", "" }, "\n")
 				local source = Source.new(str, "foo.js", { line = 11, column = 12 })
 				Lexer.new(source):advance()
 			end, function(e)
@@ -269,84 +272,83 @@ return function()
 			})
 		end)
 
-		itSKIP("lex reports useful string errors", function()
-			-- ROBLOX TODO: isn't throwing errors like it should
-			expectSyntaxError("\"").toEqual({
+		it("lex reports useful string errors", function()
+			expectSyntaxError(expect, "\"").toObjectContain({
 				message = "Syntax Error: Unterminated string.",
 				locations = { { line = 1, column = 2 } },
 			})
 
-			expectSyntaxError("\"\"\"").toEqual({
+			expectSyntaxError(expect, "\"\"\"").toObjectContain({
 				message = "Syntax Error: Unterminated string.",
 				locations = { { line = 1, column = 4 } },
 			})
 
-			expectSyntaxError("\"\"\"\"").toEqual({
+			expectSyntaxError(expect, "\"\"\"\"").toObjectContain({
 				message = "Syntax Error: Unterminated string.",
 				locations = { { line = 1, column = 5 } },
 			})
 
-			expectSyntaxError("\"no end quote").toEqual({
+			expectSyntaxError(expect, "\"no end quote").toObjectContain({
 				message = "Syntax Error: Unterminated string.",
 				locations = { { line = 1, column = 14 } },
 			})
 
-			expectSyntaxError("'single quotes'").toEqual({
+			expectSyntaxError(expect, "'single quotes'").toObjectContain({
 				message = "Syntax Error: Unexpected single quote character ('), did you mean to use a double quote (\")?",
 				locations = { { line = 1, column = 1 } },
 			})
 
-			expectSyntaxError("\"contains unescaped \\u0007 control char\"").toEqual({
+			expectSyntaxError(expect, "\"contains unescaped \u{0007} control char\"").toObjectContain({
 				message = "Syntax Error: Invalid character within String: \"\\u0007\".",
 				locations = { { line = 1, column = 21 } },
 			})
 
-			expectSyntaxError("\"null-byte is not \\u0000 end of file\"").toEqual({
+			expectSyntaxError(expect, "\"null-byte is not \u{0000} end of file\"").toObjectContain({
 				message = "Syntax Error: Invalid character within String: \"\\u0000\".",
 				locations = { { line = 1, column = 19 } },
 			})
 
-			expectSyntaxError("\"multi\nline\"").toEqual({
+			expectSyntaxError(expect, "\"multi\nline\"").toObjectContain({
 				message = "Syntax Error: Unterminated string.",
 				locations = { { line = 1, column = 7 } },
 			})
 
-			expectSyntaxError("\"multi\rline\"").toEqual({
+			expectSyntaxError(expect, "\"multi\rline\"").toObjectContain({
 				message = "Syntax Error: Unterminated string.",
 				locations = { { line = 1, column = 7 } },
 			})
 
-			expectSyntaxError("\"bad \\z esc\"").toEqual({
+			expectSyntaxError(expect, "\"bad \\z esc\"").toObjectContain({
 				message = "Syntax Error: Invalid character escape sequence: \\z.",
 				locations = { { line = 1, column = 7 } },
 			})
 
-			expectSyntaxError("\"bad \\x esc\"").toEqual({
+			expectSyntaxError(expect, "\"bad \\x esc\"").toObjectContain({
 				message = "Syntax Error: Invalid character escape sequence: \\x.",
 				locations = { { line = 1, column = 7 } },
 			})
 
-			expectSyntaxError("\"bad \\u1 esc\"").toEqual({
+			expectSyntaxError(expect, "\"bad \\u1 esc\"").toObjectContain({
 				message = "Syntax Error: Invalid character escape sequence: \\u1 es.",
 				locations = { { line = 1, column = 7 } },
 			})
 
-			expectSyntaxError("\"bad \\u0XX1 esc\"").toEqual({
+			expectSyntaxError(expect, "\"bad \\u0XX1 esc\"").toObjectContain({
 				message = "Syntax Error: Invalid character escape sequence: \\u0XX1.",
 				locations = { { line = 1, column = 7 } },
 			})
 
-			expectSyntaxError("\"bad \\uXXXX esc\"").toEqual({
+			expectSyntaxError(expect, "\"bad \\uXXXX esc\"").toObjectContain({
 				message = "Syntax Error: Invalid character escape sequence: \\uXXXX.",
 				locations = { { line = 1, column = 7 } },
 			})
 
-			expectSyntaxError("\"bad \\uFXXX esc\"").toEqual({
+			expectSyntaxError(expect, "\"bad \\uFXXX esc\"").toObjectContain({
 				message = "Syntax Error: Invalid character escape sequence: \\uFXXX.",
 				locations = { { line = 1, column = 7 } },
 			})
 
-			expectSyntaxError("\"bad \\uXXXF esc\"").toEqual({
+			expectSyntaxError(expect, "\"bad \\uXXXF esc\"").toObjectContain({
 				message = "Syntax Error: Invalid character escape sequence: \\uXXXF.",
 				locations = { { line = 1, column = 7 } },
 			})
@@ -358,6 +360,13 @@ return function()
 				start = 1,
 				_end = 7,
 				value = "",
+			})
+
+			expect(lexOne("\"\"\"simple\"\"\"")).toObjectContain({
+				kind = TokenKind.BLOCK_STRING,
+				start = 1,
+				_end = 13,
+				value = "simple",
 			})
 
 			expect(lexOne("\"\"\" white space \"\"\"")).toObjectContain({
@@ -417,29 +426,47 @@ return function()
 			})
 		end)
 
-		itSKIP("advance line after lexing multiline block string", function()
-			-- expect(
-			-- 	lexSecond('"""\n\n        spans\n          multiple\n            lines\n\n        \n """ second_token')
-			-- ).toObjectContain({
-			-- 	kind = TokenKind.NAME,
-			-- 	start = 71,
-			-- 	_end = 83,
-			-- 	line = 8,
-			-- 	column = 6,
-			-- 	value = 'second_token'
-			-- })
-			local actual = lexSecond("\"\"\"\n\n        spans\n          multiple\n            lines\n\n        \n \"\"\" second_token")
-			-- ROBLOX TODO: lexSecond() incorrectly returns nil for the above string
-			expect(actual.kind).toEqual(TokenKind.NAME)
-			expect(actual.start).toEqual(71)
-			expect(actual._end).toEqual(83)
-			expect(actual.line).toEqual(8)
-			expect(actual.column).toEqual(6)
-			expect(actual.value).toEqual("second_token")
+		it("advance line after lexing multiline block string", function()
+			expect(lexSecond(UtilArray.join(
+				{
+					"\"\"\"",
+					"",
+					"        spans",
+					"          multiple",
+					"            lines",
+					"",
+					"        \n \"\"\" second_token",
+				},
+				"\n"
+			))).toObjectContain({
+				kind = TokenKind.NAME,
+				start = 72,
+				_end = 84,
+				line = 8,
+				column = 6,
+				value = "second_token",
+			})
+
+			expect(lexSecond(UtilArray.join(
+				{
+					"\"\"\" \n",
+					"spans \r\n",
+					"multiple \n\r",
+					"lines \n\n",
+					"\"\"\"\n second_token",
+				},
+				""
+			))).toObjectContain({
+				kind = TokenKind.NAME,
+				start = 38,
+				_end = 50,
+				line = 8,
+				column = 2,
+				value = "second_token",
+			})
 		end)
 
 		it("lex reports useful block string errors", function()
-			-- ROBLOX TODO: not currently throwing errors like it should
 			expectSyntaxError(expect, "\"\"\"").toObjectContain({
 				message = "Syntax Error: Unterminated string.",
 				locations = { { line = 1, column = 4 } },
@@ -655,216 +682,231 @@ return function()
 				message = "Syntax Error: Invalid number, expected digit but got: \".\".",
 				locations = { { line = 1, column = 5 } },
 			})
-			-- })
+		end)
 
-			-- it('lex does not allow name-start after a number', function()
-			--   expectSyntaxError(expect, '0xF1').toObjectContain({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: "x".',
-			--     locations = {{ line = 1, column = 2 }}
-			--   })
-			--   expectSyntaxError(expect, '0b10').toObjectContain({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: "b".',
-			--     locations = {{ line = 1, column = 2 }}
-			--   })
-			--   expectSyntaxError(expect, '123abc').toObjectContain({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: "a".',
-			--     locations = {{ line = 1, column = 4 }}
-			--   })
-			--   expectSyntaxError(expect, '1_234').toObjectContain({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: "_".',
-			--     locations = {{ line = 1, column = 2 }}
-			--   })
-			--   expectSyntaxError(expect, '1ß').toObjectContain({
-			--     message = 'Syntax Error: Cannot parse the unexpected character "\\u00DF".',
-			--     locations = {{ line = 1, column = 2 }}
-			--   })
-			--   expectSyntaxError(expect, '1.23f').toObjectContain({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: "f".',
-			--     locations = {{ line = 1, column = 5 }}
-			--   })
-			--   expectSyntaxError(expect, '1.234_5').toObjectContain({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: "_".',
-			--     locations = {{ line = 1, column = 6 }}
-			--   })
-			--   expectSyntaxError(expect, '1ß').toObjectContain({
-			--     message = 'Syntax Error: Cannot parse the unexpected character "\\u00DF".',
-			--     locations = {{ line = 1, column = 2 }}
-			--   })
-			-- })
+		it("lex does not allow name-start after a number", function()
+			expectSyntaxError(expect, "0xF1").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: \"x\".",
+				locations = { { line = 1, column = 2 } },
+			})
+			expectSyntaxError(expect, "0b10").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: \"b\".",
+				locations = { { line = 1, column = 2 } },
+			})
+			expectSyntaxError(expect, "123abc").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: \"a\".",
+				locations = { { line = 1, column = 4 } },
+			})
+			expectSyntaxError(expect, "1_234").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: \"_\".",
+				locations = { { line = 1, column = 2 } },
+			})
+			expectSyntaxError(expect, "1ß").toObjectContain({
+				message = "Syntax Error: Cannot parse the unexpected character \"\\u00DF\".",
+				locations = { { line = 1, column = 2 } },
+			})
+			expectSyntaxError(expect, "1.23f").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: \"f\".",
+				locations = { { line = 1, column = 5 } },
+			})
+			expectSyntaxError(expect, "1.234_5").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: \"_\".",
+				locations = { { line = 1, column = 6 } },
+			})
+			expectSyntaxError(expect, "1ß").toObjectContain({
+				message = "Syntax Error: Cannot parse the unexpected character \"\\u00DF\".",
+				locations = { { line = 1, column = 2 } },
+			})
+		end)
 
-			-- it('lexes punctuation', function()
-			--   expect(lexOne('!')).toObjectContain({
-			--     kind = TokenKind.BANG,
-			--     start = 0,
-			--     _end = 1,
-			--     value = undefined,
-			--   })
+		it("lexes punctuation", function()
+			expect(lexOne("!")).toObjectContain({
+				kind = TokenKind.BANG,
+				start = 1,
+				_end = 2,
+				value = nil,
+			})
 
-			--   expect(lexOne('$')).toObjectContain({
-			--     kind = TokenKind.DOLLAR,
-			--     start = 0,
-			--     _end = 1,
-			--     value = undefined,
-			--   })
+			expect(lexOne("$")).toObjectContain({
+				kind = TokenKind.DOLLAR,
+				start = 1,
+				_end = 2,
+				value = nil,
+			})
 
-			--   expect(lexOne('(')).toObjectContain({
-			--     kind = TokenKind.PAREN_L,
-			--     start = 0,
-			--     _end = 1,
-			--     value = undefined,
-			--   })
+			expect(lexOne("(")).toObjectContain({
+				kind = TokenKind.PAREN_L,
+				start = 1,
+				_end = 2,
+				value = nil,
+			})
 
-			--   expect(lexOne(')')).toObjectContain({
-			--     kind = TokenKind.PAREN_R,
-			--     start = 0,
-			--     _end = 1,
-			--     value = undefined,
-			--   })
+			expect(lexOne(")")).toObjectContain({
+				kind = TokenKind.PAREN_R,
+				start = 1,
+				_end = 2,
+				value = nil,
+			})
 
-			--   expect(lexOne('...')).toObjectContain({
-			--     kind = TokenKind.SPREAD,
-			--     start = 0,
-			--     _end = 3,
-			--     value = undefined,
-			--   })
+			expect(lexOne("...")).toObjectContain({
+				kind = TokenKind.SPREAD,
+				start = 1,
+				_end = 4,
+				value = nil,
+			})
 
-			--   expect(lexOne(':')).toObjectContain({
-			--     kind = TokenKind.COLON,
-			--     start = 0,
-			--     _end = 1,
-			--     value = undefined,
-			--   })
+			expect(lexOne(":")).toObjectContain({
+				kind = TokenKind.COLON,
+				start = 1,
+				_end = 2,
+				value = nil,
+			})
 
-			--   expect(lexOne('=')).toObjectContain({
-			--     kind = TokenKind.EQUALS,
-			--     start = 0,
-			--     _end = 1,
-			--     value = undefined,
-			--   })
+			expect(lexOne("=")).toObjectContain({
+				kind = TokenKind.EQUALS,
+				start = 1,
+				_end = 2,
+				value = nil,
+			})
 
-			--   expect(lexOne('@')).toObjectContain({
-			--     kind = TokenKind.AT,
-			--     start = 0,
-			--     _end = 1,
-			--     value = undefined,
-			--   })
+			expect(lexOne("@")).toObjectContain({
+				kind = TokenKind.AT,
+				start = 1,
+				_end = 2,
+				value = nil,
+			})
 
-			--   expect(lexOne('[')).toObjectContain({
-			--     kind = TokenKind.BRACKET_L,
-			--     start = 0,
-			--     _end = 1,
-			--     value = undefined,
-			--   })
+			expect(lexOne("[")).toObjectContain({
+				kind = TokenKind.BRACKET_L,
+				start = 1,
+				_end = 2,
+				value = nil,
+			})
 
-			--   expect(lexOne(']')).toObjectContain({
-			--     kind = TokenKind.BRACKET_R,
-			--     start = 0,
-			--     _end = 1,
-			--     value = undefined,
-			--   })
+			expect(lexOne("]")).toObjectContain({
+				kind = TokenKind.BRACKET_R,
+				start = 1,
+				_end = 2,
+				value = nil,
+			})
 
-			--   expect(lexOne('{')).toObjectContain({
-			--     kind = TokenKind.BRACE_L,
-			--     start = 0,
-			--     _end = 1,
-			--     value = undefined,
-			--   })
+			expect(lexOne("{")).toObjectContain({
+				kind = TokenKind.BRACE_L,
+				start = 1,
+				_end = 2,
+				value = nil,
+			})
 
-			--   expect(lexOne('|')).toObjectContain({
-			--     kind = TokenKind.PIPE,
-			--     start = 0,
-			--     _end = 1,
-			--     value = undefined,
-			--   })
+			expect(lexOne("|")).toObjectContain({
+				kind = TokenKind.PIPE,
+				start = 1,
+				_end = 2,
+				value = nil,
+			})
 
-			--   expect(lexOne('}')).toObjectContain({
-			--     kind = TokenKind.BRACE_R,
-			--     start = 0,
-			--     _end = 1,
-			--     value = undefined,
-			--   })
-			-- })
+			expect(lexOne("}")).toObjectContain({
+				kind = TokenKind.BRACE_R,
+				start = 1,
+				_end = 2,
+				value = nil,
+			})
+		end)
 
-			-- it('lex reports useful unknown character error', function()
-			--   expectSyntaxError('..').toEqual({
-			--     message = 'Syntax Error: Cannot parse the unexpected character ".".',
-			--     locations = {{ line = 1, column = 1 }}
-			--   })
+		it("lex reports useful unknown character error", function()
+			expectSyntaxError(expect, "..").toObjectContain({
+				message = "Syntax Error: Cannot parse the unexpected character \".\".",
+				locations = { { line = 1, column = 1 } },
+			})
 
-			--   expectSyntaxError('?').toEqual({
-			--     message = 'Syntax Error: Cannot parse the unexpected character "?".',
-			--     locations = {{ line = 1, column = 1 }}
-			--   })
+			expectSyntaxError(expect, "?").toObjectContain({
+				message = "Syntax Error: Cannot parse the unexpected character \"?\".",
+				locations = { { line = 1, column = 1 } },
+			})
 
-			--   expectSyntaxError('\u203B').toEqual({
-			--     message = 'Syntax Error: Cannot parse the unexpected character "\\u203B".',
-			--     locations = {{ line = 1, column = 1 }}
-			--   })
+			expectSyntaxError(expect, "\u{203B}").toObjectContain({
+				message = "Syntax Error: Cannot parse the unexpected character \"\\u203B\".",
+				locations = { { line = 1, column = 1 } },
+			})
 
-			--   expectSyntaxError('\u200b').toEqual({
-			--     message = 'Syntax Error: Cannot parse the unexpected character "\\u200B".',
-			--     locations = {{ line = 1, column = 1 }}
-			--   })
-			-- })
+			expectSyntaxError(expect, "\u{200b}").toObjectContain({
+				message = "Syntax Error: Cannot parse the unexpected character \"\\u200B\".",
+				locations = { { line = 1, column = 1 } },
+			})
+		end)
 
-			-- it('lex reports useful information for dashes in names', function()
-			--   const source = new Source('a-b')
-			--   const lexer = new Lexer(source)
-			--   const firstToken = lexer.advance()
-			--   expect(firstToken).toObjectContain({
-			--     kind = TokenKind.NAME,
-			--     start = 0,
-			--     _end = 1,
-			--     value = 'a',
-			--   })
+		it("lex reports useful information for dashes in names", function()
+			local source = Source.new("a-b")
+			local lexer = Lexer.new(source)
+			local firstToken = lexer:advance()
+			expect(firstToken).toObjectContain({
+				kind = TokenKind.NAME,
+				start = 1,
+				_end = 2,
+				value = "a",
+			})
 
-			--   expect(() => lexer.advance())
-			--     .throw(GraphQLError)
-			--     .that.deep.include({
-			--       message = 'Syntax Error: Invalid number, expected digit but got: "b".',
-			--       locations = {{ line = 1, column = 3 }}
-			--     })
-			-- })
+			local caughtError
+			xpcall(function()
+				lexer:advance()
+			end, function(e)
+				caughtError = e
+			end)
 
-			-- it('produces double linked list of tokens, including comments', function()
-			--   const source = new Source(`
-			--     {
-			--       #comment
-			--       field
-			--     }
-			--   `)
+			expect(instanceOf(caughtError, GraphQLError)).to.equal(true)
+			expect(caughtError).toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: \"b\".",
+				locations = { { line = 1, column = 3 } },
+			})
+		end)
 
-			--   const lexer = new Lexer(source)
-			--   const startToken = lexer.token
-			--   let endToken
-			--   do {
-			--     endToken = lexer.advance()
-			--     // Lexer advances over ignored comment tokens to make writing parsers
-			--     // easier, but will include them in the linked list result.
-			--     expect(endToken.kind).to.not.equal(TokenKind.COMMENT)
-			--   } while (endToken.kind !== TokenKind.EOF)
+		it("produces double linked list of tokens, including comments", function()
+			local source = Source.new(UtilArray.join(
+				{
+					"",
+					"      {",
+					"        #comment",
+					"        field",
+					"      }",
+					"    ",
+				},
+				"\n"
+			))
 
-			--   expect(startToken.prev).to.equal(null)
-			--   expect(endToken.next).to.equal(null)
+			local lexer = Lexer.new(source)
+			local startToken = lexer.token
+			local endToken
+			repeat
+				endToken = lexer:advance()
+				-- // Lexer advances over ignored comment tokens to make writing parsers
+				-- // easier, but will include them in the linked list result.
+				expect(endToken.kind ~= TokenKind.COMMENT).to.equal(true)
+			until not (endToken.kind ~= TokenKind.EOF)
 
-			--   const tokens = []
-			--   for (let tok = startToken tok tok = tok.next) {
-			--     if (tokens.length) {
-			--       // Tokens are double-linked, prev should point to last seen token.
-			--       expect(tok.prev).to.equal(tokens[tokens.length - 1])
-			--     }
-			--     tokens.push(tok)
-			--   }
+			expect(startToken.prev).to.equal(nil)
+			expect(endToken.next).to.equal(nil)
 
-			--   expect(tokens.map((tok) => tok.kind)).toEqual([
-			--     TokenKind.SOF,
-			--     TokenKind.BRACE_L,
-			--     TokenKind.COMMENT,
-			--     TokenKind.NAME,
-			--     TokenKind.BRACE_R,
-			--     TokenKind.EOF,
-			--   ])
-			-- })
+			local tokens = {}
+			local tok = startToken
+
+			while tok do
+				if #tokens > 0 then
+					-- // Tokens are double-linked, prev should point to last seen token.
+					expect(tok.prev).to.equal(tokens[#tokens])
+				end
+				table.insert(tokens, tok)
+				tok = tok.next
+			end
+
+			expect(Array.map(tokens, function(tok_)
+				return tok_.kind
+			end)).toObjectContain({
+				TokenKind.SOF,
+				TokenKind.BRACE_L,
+				TokenKind.COMMENT,
+				TokenKind.NAME,
+				TokenKind.BRACE_R,
+				TokenKind.EOF,
+			})
 		end)
 	end)
 end
