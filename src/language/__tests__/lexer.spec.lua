@@ -14,6 +14,7 @@ return function()
 	local Lexer = lexerExport.Lexer
 	local Source = sourceExport.Source
 	local TokenKind = tokenKindExport.TokenKind
+	-- local devPrint = require(src.TestMatchers.devPrint)
 
 	local lexOne = function(str)
 		local lexer = Lexer.new(Source.new(str))
@@ -27,28 +28,30 @@ return function()
 		return lexer:advance()
 	end
 
-	local expectSyntaxError = function(text)
+	local expectSyntaxError = function(expect_, text)
 		local lexSecondRes = function()
 			return lexSecond(text)
 		end
 		local _ok, thrownError = pcall(lexSecondRes)
-		expect(_ok).to.equal(false)
-		return thrownError
+		-- ROBLOX deviation: expect cannot be called unless inside of an it
+		-- ROBLOX deviation: pass expect into this function and use local scope
+		expect_(_ok).to.equal(false)
+		return expect_(thrownError)
 	end
 
 	describe("Lexer", function()
 		it("disallows uncommon control characters", function()
-			expect(expectSyntaxError("\007")).toObjectContain({
+			expectSyntaxError(expect, "\007").toObjectContain({
 				message = "Syntax Error: Cannot contain the invalid character \"\\u0007\".",
 				locations = { { column = 1, line = 1 } },
 			})
 		end)
 
-		itSKIP("accepts BOM header", function()
-			expect(lexOne("\\uFEFF foo")).toArrayContains({
+		it("accepts BOM header", function()
+			expect(lexOne("\u{FEFF} foo")).toObjectContain({
 				kind = TokenKind.NAME,
-				start = 2,
-				_end = 5,
+				start = 3,
+				_end = 6,
 				value = "foo",
 			})
 		end)
@@ -349,72 +352,72 @@ return function()
 			})
 		end)
 
-		itSKIP("lexes block strings", function()
+		it("lexes block strings", function()
 			expect(lexOne("\"\"\"\"\"\"")).toObjectContain({
 				kind = TokenKind.BLOCK_STRING,
-				start = 0,
-				_end = 6,
+				start = 1,
+				_end = 7,
 				value = "",
 			})
 
 			expect(lexOne("\"\"\" white space \"\"\"")).toObjectContain({
 				kind = TokenKind.BLOCK_STRING,
-				start = 0,
-				_end = 19,
+				start = 1,
+				_end = 20,
 				value = " white space ",
 			})
 
 			expect(lexOne("\"\"\"contains \" quote\"\"\"")).toObjectContain({
 				kind = TokenKind.BLOCK_STRING,
-				start = 0,
-				_end = 22,
+				start = 1,
+				_end = 23,
 				value = "contains \" quote",
 			})
 
 			expect(lexOne("\"\"\"contains \\\"\"\" triple quote\"\"\"")).toObjectContain({
 				kind = TokenKind.BLOCK_STRING,
-				start = 0,
-				_end = 32,
+				start = 1,
+				_end = 33,
 				value = "contains \"\"\" triple quote",
 			})
 
 			expect(lexOne("\"\"\"multi\nline\"\"\"")).toObjectContain({
 				kind = TokenKind.BLOCK_STRING,
-				start = 0,
-				_end = 16,
+				start = 1,
+				_end = 17,
 				value = "multi\nline",
 			})
 
 			expect(lexOne("\"\"\"multi\rline\r\nnormalized\"\"\"")).toObjectContain({
 				kind = TokenKind.BLOCK_STRING,
-				start = 0,
-				_end = 28,
+				start = 1,
+				_end = 29,
 				value = "multi\nline\nnormalized",
 			})
 
 			expect(lexOne("\"\"\"unescaped \\n\\r\\b\\t\\f\\u1234\"\"\"")).toObjectContain({
 				kind = TokenKind.BLOCK_STRING,
-				start = 0,
-				_end = 32,
+				start = 1,
+				_end = 33,
 				value = "unescaped \\n\\r\\b\\t\\f\\u1234",
 			})
 
 			expect(lexOne("\"\"\"slashes \\\\ \\/\"\"\"")).toObjectContain({
 				kind = TokenKind.BLOCK_STRING,
-				start = 0,
-				_end = 19,
+				start = 1,
+				_end = 20,
 				value = "slashes \\\\ \\/",
 			})
 
 			expect(lexOne("\"\"\"\n\n        spans\n          multiple\n            lines\n\n        \"\"\"")).toObjectContain({
 				kind = TokenKind.BLOCK_STRING,
-				start = 0,
-				_end = 68,
+				start = 1,
+				_end = 69,
 				value = "spans\n  multiple\n    lines",
 			})
 		end)
 
-		itSKIP("advance line after lexing multiple block string", function()
+		itSKIP("advance line after lexing multiline block string", function()
 			-- expect(
 			-- 	lexSecond('"""\n\n        spans\n          multiple\n            lines\n\n        \n """ second_token')
 			-- ).toObjectContain({
@@ -435,267 +438,255 @@ return function()
 			expect(actual.value).toEqual("second_token")
 		end)
 
-		itSKIP("lex reports useful block string errors", function()
+		it("lex reports useful block string errors", function()
 			-- ROBLOX TODO: not currently throwing errors like it should
-			expectSyntaxError("\"\"\"").toEqual({
+			expectSyntaxError(expect, "\"\"\"").toObjectContain({
 				message = "Syntax Error: Unterminated string.",
 				locations = { { line = 1, column = 4 } },
 			})
 
-			expectSyntaxError("\"\"\"no end quote").toEqual({
+			expectSyntaxError(expect, "\"\"\"no end quote").toObjectContain({
 				message = "Syntax Error: Unterminated string.",
 				locations = { { line = 1, column = 16 } },
 			})
 
-			expectSyntaxError("\"\"\"contains unescaped \\u0007 control char\"\"\"").toEqual({
+			expectSyntaxError(expect, "\"\"\"contains unescaped \u{0007} control char\"\"\"").toObjectContain({
 				message = "Syntax Error: Invalid character within String: \"\\u0007\".",
 				locations = { { line = 1, column = 23 } },
 			})
 
-			expectSyntaxError("\"\"\"null-byte is not \\u0000 end of file\"\"\"").toEqual({
+			expectSyntaxError(expect, "\"\"\"null-byte is not \u{0000} end of file\"\"\"").toObjectContain({
 				message = "Syntax Error: Invalid character within String: \"\\u0000\".",
 				locations = { { line = 1, column = 21 } },
 			})
 		end)
 
-		-- ROBLOX deviation: no "contains" matcher, so match fields individually
-		itSKIP("lexes numbers", function()
-			-- expect(lexOne('4')).toObjectContain({
-			-- 	kind = TokenKind.INT,
-			-- 	start = 0,
-			-- 	_end = 1,
-			-- 	value = '4'
-			-- })
-			local actual = lexOne("4")
-			expect(actual.kind).toEqual(TokenKind.INT)
-			expect(actual.start).toEqual(0)
-			expect(actual._end).toEqual(1)
-			expect(actual.value).toEqual("4")
+		it("lexes numbers", function()
+			expect(lexOne("4")).toObjectContain({
+				kind = TokenKind.INT,
+				start = 1,
+				_end = 2,
+				value = "4",
+			})
 
-			-- expect(lexOne('4.123')).toObjectContain({
-			-- 	kind = TokenKind.FLOAT,
-			-- 	start = 0,
-			-- 	_end = 5,
-			-- 	value = '4.123'
-			-- })
-			actual = lexOne("4.123")
-			expect(actual.kind).toEqual(TokenKind.FLOAT)
-			expect(actual.start).toEqual(0)
-			expect(actual._end).toEqual(5)
-			-- ROBLOX TODO: this expect fails due to a bug in the slice() implementation
-			-- expect(actual.value).toEqual('4.123')
+			expect(lexOne("4.123")).toObjectContain({
+				kind = TokenKind.FLOAT,
+				start = 1,
+				_end = 6,
+				value = "4.123",
+			})
 
-			--   expect(lexOne('-4')).toObjectContain({
-			--     kind = TokenKind.INT,
-			--     start = 0,
-			--     _end = 2,
-			--     value = '-4',
-			--   })
+			expect(lexOne("-4")).toObjectContain({
+				kind = TokenKind.INT,
+				start = 1,
+				_end = 3,
+				value = "-4",
+			})
 
-			--   expect(lexOne('9')).toObjectContain({
-			--     kind = TokenKind.INT,
-			--     start = 0,
-			--     _end = 1,
-			--     value = '9',
-			--   })
+			expect(lexOne("9")).toObjectContain({
+				kind = TokenKind.INT,
+				start = 1,
+				_end = 2,
+				value = "9",
+			})
 
-			--   expect(lexOne('0')).toObjectContain({
-			--     kind = TokenKind.INT,
-			--     start = 0,
-			--     _end = 1,
-			--     value = '0',
-			--   })
+			expect(lexOne("0")).toObjectContain({
+				kind = TokenKind.INT,
+				start = 1,
+				_end = 2,
+				value = "0",
+			})
 
-			--   expect(lexOne('-4.123')).toObjectContain({
-			--     kind = TokenKind.FLOAT,
-			--     start = 0,
-			--     _end = 6,
-			--     value = '-4.123',
-			--   })
+			expect(lexOne("-4.123")).toObjectContain({
+				kind = TokenKind.FLOAT,
+				start = 1,
+				_end = 7,
+				value = "-4.123",
+			})
 
-			--   expect(lexOne('0.123')).toObjectContain({
-			--     kind = TokenKind.FLOAT,
-			--     start = 0,
-			--     _end = 5,
-			--     value = '0.123',
-			--   })
+			expect(lexOne("0.123")).toObjectContain({
+				kind = TokenKind.FLOAT,
+				start = 1,
+				_end = 6,
+				value = "0.123",
+			})
 
-			--   expect(lexOne('123e4')).toObjectContain({
-			--     kind = TokenKind.FLOAT,
-			--     start = 0,
-			--     _end = 5,
-			--     value = '123e4',
-			--   })
+			expect(lexOne("123e4")).toObjectContain({
+				kind = TokenKind.FLOAT,
+				start = 1,
+				_end = 6,
+				value = "123e4",
+			})
 
-			--   expect(lexOne('123E4')).toObjectContain({
-			--     kind = TokenKind.FLOAT,
-			--     start = 0,
-			--     _end = 5,
-			--     value = '123E4',
-			--   })
+			expect(lexOne("123E4")).toObjectContain({
+				kind = TokenKind.FLOAT,
+				start = 1,
+				_end = 6,
+				value = "123E4",
+			})
 
-			--   expect(lexOne('123e-4')).toObjectContain({
-			--     kind = TokenKind.FLOAT,
-			--     start = 0,
-			--     _end = 6,
-			--     value = '123e-4',
-			--   })
+			expect(lexOne("123e-4")).toObjectContain({
+				kind = TokenKind.FLOAT,
+				start = 1,
+				_end = 7,
+				value = "123e-4",
+			})
 
-			--   expect(lexOne('123e+4')).toObjectContain({
-			--     kind = TokenKind.FLOAT,
-			--     start = 0,
-			--     _end = 6,
-			--     value = '123e+4',
-			--   })
+			expect(lexOne("123e+4")).toObjectContain({
+				kind = TokenKind.FLOAT,
+				start = 1,
+				_end = 7,
+				value = "123e+4",
+			})
 
-			--   expect(lexOne('-1.123e4')).toObjectContain({
-			--     kind = TokenKind.FLOAT,
-			--     start = 0,
-			--     _end = 8,
-			--     value = '-1.123e4',
-			--   })
+			expect(lexOne("-1.123e4")).toObjectContain({
+				kind = TokenKind.FLOAT,
+				start = 1,
+				_end = 9,
+				value = "-1.123e4",
+			})
 
-			--   expect(lexOne('-1.123E4')).toObjectContain({
-			--     kind = TokenKind.FLOAT,
-			--     start = 0,
-			--     _end = 8,
-			--     value = '-1.123E4',
-			--   })
+			expect(lexOne("-1.123E4")).toObjectContain({
+				kind = TokenKind.FLOAT,
+				start = 1,
+				_end = 9,
+				value = "-1.123E4",
+			})
 
-			--   expect(lexOne('-1.123e-4')).toObjectContain({
-			--     kind = TokenKind.FLOAT,
-			--     start = 0,
-			--     _end = 9,
-			--     value = '-1.123e-4',
-			--   })
+			expect(lexOne("-1.123e-4")).toObjectContain({
+				kind = TokenKind.FLOAT,
+				start = 1,
+				_end = 10,
+				value = "-1.123e-4",
+			})
 
-			--   expect(lexOne('-1.123e+4')).toObjectContain({
-			--     kind = TokenKind.FLOAT,
-			--     start = 0,
-			--     _end = 9,
-			--     value = '-1.123e+4',
-			--   })
+			expect(lexOne("-1.123e+4")).toObjectContain({
+				kind = TokenKind.FLOAT,
+				start = 1,
+				_end = 10,
+				value = "-1.123e+4",
+			})
 
-			--   expect(lexOne('-1.123e4567')).toObjectContain({
-			--     kind = TokenKind.FLOAT,
-			--     start = 0,
-			--     _end = 11,
-			--     value = '-1.123e4567',
-			--   })
-			-- })
+			expect(lexOne("-1.123e4567")).toObjectContain({
+				kind = TokenKind.FLOAT,
+				start = 1,
+				_end = 12,
+				value = "-1.123e4567",
+			})
+		end)
 
-			-- it('lex reports useful number errors', function()
-			--   expectSyntaxError('00').toEqual({
-			--     message = 'Syntax Error: Invalid number, unexpected digit after 0: "0".',
-			--     locations = {{ line = 1, column = 2 }}
-			--   })
+		it("lex reports useful number errors", function()
+			expectSyntaxError(expect, "00").toObjectContain({
+				message = "Syntax Error: Invalid number, unexpected digit after 0: \"0\".",
+				locations = { { line = 1, column = 2 } },
+			})
 
-			--   expectSyntaxError('01').toEqual({
-			--     message = 'Syntax Error: Invalid number, unexpected digit after 0: "1".',
-			--     locations = {{ line = 1, column = 2 }}
-			--   })
+			expectSyntaxError(expect, "01").toObjectContain({
+				message = "Syntax Error: Invalid number, unexpected digit after 0: \"1\".",
+				locations = { { line = 1, column = 2 } },
+			})
 
-			--   expectSyntaxError('01.23').toEqual({
-			--     message = 'Syntax Error: Invalid number, unexpected digit after 0: "1".',
-			--     locations = {{ line = 1, column = 2 }}
-			--   })
+			expectSyntaxError(expect, "01.23").toObjectContain({
+				message = "Syntax Error: Invalid number, unexpected digit after 0: \"1\".",
+				locations = { { line = 1, column = 2 } },
+			})
 
-			--   expectSyntaxError('+1').toEqual({
-			--     message = 'Syntax Error: Cannot parse the unexpected character "+".',
-			--     locations = {{ line = 1, column = 1 }}
-			--   })
+			expectSyntaxError(expect, "+1").toObjectContain({
+				message = "Syntax Error: Cannot parse the unexpected character \"+\".",
+				locations = { { line = 1, column = 1 } },
+			})
 
-			--   expectSyntaxError('1.').toEqual({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: <EOF>.',
-			--     locations = {{ line = 1, column = 3 }}
-			--   })
+			expectSyntaxError(expect, "1.").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: <EOF>.",
+				locations = { { line = 1, column = 3 } },
+			})
 
-			--   expectSyntaxError('1e').toEqual({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: <EOF>.',
-			--     locations = {{ line = 1, column = 3 }}
-			--   })
+			expectSyntaxError(expect, "1e").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: <EOF>.",
+				locations = { { line = 1, column = 3 } },
+			})
 
-			--   expectSyntaxError('1E').toEqual({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: <EOF>.',
-			--     locations = {{ line = 1, column = 3 }}
-			--   })
+			expectSyntaxError(expect, "1E").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: <EOF>.",
+				locations = { { line = 1, column = 3 } },
+			})
 
-			--   expectSyntaxError('1.e1').toEqual({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: "e".',
-			--     locations = {{ line = 1, column = 3 }}
-			--   })
+			expectSyntaxError(expect, "1.e1").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: \"e\".",
+				locations = { { line = 1, column = 3 } },
+			})
 
-			--   expectSyntaxError('.123').toEqual({
-			--     message = 'Syntax Error: Cannot parse the unexpected character ".".',
-			--     locations = {{ line = 1, column = 1 }}
-			--   })
+			expectSyntaxError(expect, ".123").toObjectContain({
+				message = "Syntax Error: Cannot parse the unexpected character \".\".",
+				locations = { { line = 1, column = 1 } },
+			})
 
-			--   expectSyntaxError('1.A').toEqual({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: "A".',
-			--     locations = {{ line = 1, column = 3 }}
-			--   })
+			expectSyntaxError(expect, "1.A").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: \"A\".",
+				locations = { { line = 1, column = 3 } },
+			})
 
-			--   expectSyntaxError('-A').toEqual({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: "A".',
-			--     locations = {{ line = 1, column = 2 }}
-			--   })
+			expectSyntaxError(expect, "-A").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: \"A\".",
+				locations = { { line = 1, column = 2 } },
+			})
 
-			--   expectSyntaxError('1.0e').toEqual({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: <EOF>.',
-			--     locations = {{ line = 1, column = 5 }}
-			--   })
+			expectSyntaxError(expect, "1.0e").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: <EOF>.",
+				locations = { { line = 1, column = 5 } },
+			})
 
-			--   expectSyntaxError('1.0eA').toEqual({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: "A".',
-			--     locations = {{ line = 1, column = 5 }}
-			--   })
+			expectSyntaxError(expect, "1.0eA").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: \"A\".",
+				locations = { { line = 1, column = 5 } },
+			})
 
-			--   expectSyntaxError('1.2e3e').toEqual({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: "e".',
-			--     locations = {{ line = 1, column = 6 }}
-			--   })
+			expectSyntaxError(expect, "1.2e3e").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: \"e\".",
+				locations = { { line = 1, column = 6 } },
+			})
 
-			--   expectSyntaxError('1.2e3.4').toEqual({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: ".".',
-			--     locations = {{ line = 1, column = 6 }}
-			--   })
+			expectSyntaxError(expect, "1.2e3.4").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: \".\".",
+				locations = { { line = 1, column = 6 } },
+			})
 
-			--   expectSyntaxError('1.23.4').toEqual({
-			--     message = 'Syntax Error: Invalid number, expected digit but got: ".".',
-			--     locations = {{ line = 1, column = 5 }}
-			--   })
+			expectSyntaxError(expect, "1.23.4").toObjectContain({
+				message = "Syntax Error: Invalid number, expected digit but got: \".\".",
+				locations = { { line = 1, column = 5 } },
+			})
 			-- })
 
 			-- it('lex does not allow name-start after a number', function()
-			--   expectSyntaxError('0xF1').toEqual({
+			--   expectSyntaxError(expect, '0xF1').toObjectContain({
 			--     message = 'Syntax Error: Invalid number, expected digit but got: "x".',
 			--     locations = {{ line = 1, column = 2 }}
 			--   })
-			--   expectSyntaxError('0b10').toEqual({
+			--   expectSyntaxError(expect, '0b10').toObjectContain({
 			--     message = 'Syntax Error: Invalid number, expected digit but got: "b".',
 			--     locations = {{ line = 1, column = 2 }}
 			--   })
-			--   expectSyntaxError('123abc').toEqual({
+			--   expectSyntaxError(expect, '123abc').toObjectContain({
 			--     message = 'Syntax Error: Invalid number, expected digit but got: "a".',
 			--     locations = {{ line = 1, column = 4 }}
 			--   })
-			--   expectSyntaxError('1_234').toEqual({
+			--   expectSyntaxError(expect, '1_234').toObjectContain({
 			--     message = 'Syntax Error: Invalid number, expected digit but got: "_".',
 			--     locations = {{ line = 1, column = 2 }}
 			--   })
-			--   expectSyntaxError('1ß').toEqual({
+			--   expectSyntaxError(expect, '1ß').toObjectContain({
 			--     message = 'Syntax Error: Cannot parse the unexpected character "\\u00DF".',
 			--     locations = {{ line = 1, column = 2 }}
 			--   })
-			--   expectSyntaxError('1.23f').toEqual({
+			--   expectSyntaxError(expect, '1.23f').toObjectContain({
 			--     message = 'Syntax Error: Invalid number, expected digit but got: "f".',
 			--     locations = {{ line = 1, column = 5 }}
 			--   })
-			--   expectSyntaxError('1.234_5').toEqual({
+			--   expectSyntaxError(expect, '1.234_5').toObjectContain({
 			--     message = 'Syntax Error: Invalid number, expected digit but got: "_".',
 			--     locations = {{ line = 1, column = 6 }}
 			--   })
-			--   expectSyntaxError('1ß').toEqual({
+			--   expectSyntaxError(expect, '1ß').toObjectContain({
 			--     message = 'Syntax Error: Cannot parse the unexpected character "\\u00DF".',
 			--     locations = {{ line = 1, column = 2 }}
 			--   })

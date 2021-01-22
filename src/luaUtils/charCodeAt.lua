@@ -7,7 +7,9 @@ return function(str, pos): number
 		return NaN
 	end
 
-	local value = utf8.codepoint(str, pos, pos)
+
+	local offset = utf8.offset(str, pos)
+	local value = utf8.codepoint(str, offset, offset)
 
 	if value == nil then
 		return NaN

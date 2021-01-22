@@ -6,10 +6,9 @@ return function()
 	local LuauPolyfill = require(root.Packages.LuauPolyfill)
 	local Array = LuauPolyfill.Array
 
-
 	local sliceString = slice.sliceString
 
-	describe('sliceString', function()
+	describe("sliceString", function()
 		it("returns a sliced string", function()
 			local str = "hello"
 			expect(sliceString(str, 2, 4)).to.equal("el")
@@ -32,12 +31,11 @@ return function()
 		end)
 
 		it("returns a sliced table", function()
-			local tbl = {1,2,3,4}
-			expect(Array.slice(tbl, 2)).toEqual({2,3,4})
-			expect(Array.slice(tbl, 1,4)).toEqual({1,2,3})
+			local tbl = { 1, 2, 3, 4 }
+			expect(Array.slice(tbl, 2)).toEqual({ 2, 3, 4 })
+			expect(Array.slice(tbl, 1, 4)).toEqual({ 1, 2, 3 })
 		end)
 
 	end)
-
 
 end

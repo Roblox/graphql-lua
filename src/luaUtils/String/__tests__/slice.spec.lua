@@ -1,13 +1,8 @@
 return function()
-	local luaUtils = script.Parent.Parent.Parent
-	local root = luaUtils.Parent.Parent
-
-	local LuauPolyfill = require(root.Packages.LuauPolyfill)
-	local Array = LuauPolyfill.Array
-
 	local slice = require(script.Parent.Parent.slice)
 
 	describe("String - slice", function()
+
 		it("returns a sliced string", function()
 			local str = "hello"
 			expect(slice(str, 2, 4)).to.equal("el")
@@ -29,10 +24,31 @@ return function()
 			expect(slice(str, 1, 4)).to.equal("4.1")
 		end)
 
-		it("returns a sliced table", function()
-			local tbl = { 1, 2, 3, 4 }
-			expect(Array.slice(tbl, 2)).toEqual({ 2, 3, 4 })
-			expect(Array.slice(tbl, 1, 4)).toEqual({ 1, 2, 3 })
+		it("retruns empty string when start position is greater than str length", function()
+			local str = "4.123"
+			expect(slice(str, 7, 4)).to.equal("")
+		end)
+
+		it("retruns full string when end position undefined", function()
+			local str = "4.123"
+			expect(slice(str, 1)).to.equal("4.123")
+		end)
+
+		it("retruns full string when end position is greater than str length", function()
+			local str = "4.123"
+			expect(slice(str, 1, 99)).to.equal("4.123")
+		end)
+
+		it("handle chars above 7-bit ascii", function()
+
+			-- two bytes
+			-- first byte (81)  - has high bit set
+			-- second byte (23) - must have second byte
+			local body = "\u{8123}a"
+
+			expect(slice(body, 1, 2)).to.equal("\u{8123}")
+			expect(slice(body, 2, 3)).to.equal("a")
+
 		end)
 
 	end)
