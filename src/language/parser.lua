@@ -227,7 +227,8 @@ function Parser:parseField()
 end
 
 function Parser:parseArguments(isConst)
-	error("Parser.parseArguments unimplemented")
+	local item = isConst and self.parseConstArgument or self.parseArgument
+	return self:optionalMany(TokenKind.PAREN_L, item, TokenKind.PAREN_R)
 end
 
 function Parser:parseArgument()
@@ -310,10 +311,14 @@ function Parser:parseObjectField()
 end
 
 function Parser:parseDirectives(isConst)
-	error("Parser.parseDirectives unimplemented")
+	local directives = {}
+	while self:peek(TokenKind.AT) do
+		table.insert(directives, self:parseDirective(isConst))
+	end
+	return directives
 end
 
-function Parser:parseDirective()
+function Parser:parseDirective(isConst)
 	error("Parser.parseDirective unimplemented")
 end
 
