@@ -3,11 +3,19 @@ local src = script.Parent.Parent
 local String = require(src.luaUtils.String)
 
 -- /**
+--  * Represents a location in a Source.
+--  */
+export type SourceLocation = {
+	line: number,
+	column: number,
+}
+
+-- /**
 --  * Takes a Source and a UTF-8 character offset, and returns the corresponding
 --  * line and column as a SourceLocation.
 --  * ROBLOX deviation: position takes 1-based index
 --  */
-local function getLocation(source, position)
+local function getLocation(source, position: number): SourceLocation
 	local terms = { "\r\n", "\r", "\n" }
 	local line = 1
 	local column = position
