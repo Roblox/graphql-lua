@@ -6,12 +6,14 @@ return function()
 	local toEqual = require(TestMatchers.toEqual)
 	local toArrayContains = require(TestMatchers.toArrayContains)
 	local toObjectContain = require(TestMatchers.toObjectContain)
+	local toBeOneOf = require(TestMatchers.toBeOneOf)
 
 	beforeAll(function()
 		expect.extend({
 			toEqual = toEqual,
 			toArrayContains = toArrayContains,
-			toObjectContain = toObjectContain
+			toObjectContain = toObjectContain,
+			toBeOneOf = toBeOneOf,
 		})
 	end)
 end
