@@ -7,7 +7,7 @@ return function(code)
 	-- prepend 4 spaces
 	local pre = "0000" .. hex
 	-- take rightmost 4 characters
-	local val = sliceString(pre, -3)
+	local val = sliceString(pre, -3):upper()
 	-- then combine with "\\u${}"
 	local out = "\"\\u" .. val .. "\""
 	return out
