@@ -16,6 +16,7 @@ return function()
 	local GraphQLError = require(src.error.GraphQLError).GraphQLError
 
 	local Lexer = lexerExport.Lexer
+	local isPunctuatorTokenKind = lexerExport.isPunctuatorTokenKind
 	local Source = sourceExport.Source
 	local TokenKind = tokenKindExport.TokenKind
 
@@ -909,4 +910,38 @@ return function()
 			})
 		end)
 	end)
+
+	describe("isPunctuatorTokenKind", function()
+
+		function isPunctuatorToken(text)
+			return isPunctuatorTokenKind(lexOne(text).kind)
+		end
+
+		it("returns true for punctuator tokens", function()
+			expect(isPunctuatorToken("!")).to.equal(true)
+			expect(isPunctuatorToken("$")).to.equal(true)
+			expect(isPunctuatorToken("&")).to.equal(true)
+			expect(isPunctuatorToken("(")).to.equal(true)
+			expect(isPunctuatorToken(")")).to.equal(true)
+			expect(isPunctuatorToken("...")).to.equal(true)
+			expect(isPunctuatorToken(":")).to.equal(true)
+			expect(isPunctuatorToken("=")).to.equal(true)
+			expect(isPunctuatorToken("@")).to.equal(true)
+			expect(isPunctuatorToken("[")).to.equal(true)
+			expect(isPunctuatorToken("]")).to.equal(true)
+			expect(isPunctuatorToken("{")).to.equal(true)
+			expect(isPunctuatorToken("|")).to.equal(true)
+			expect(isPunctuatorToken("}")).to.equal(true)
+		end)
+
+		it("returns false for non-punctuator tokens", function()
+			expect(isPunctuatorToken("")).to.equal(false)
+			expect(isPunctuatorToken("name")).to.equal(false)
+			expect(isPunctuatorToken("1")).to.equal(false)
+			expect(isPunctuatorToken("3.14")).to.equal(false)
+			expect(isPunctuatorToken("\"str\"")).to.equal(false)
+			expect(isPunctuatorToken("\"\"\"str\"\"\"")).to.equal(false)
+		end)
+	end)
+
 end
