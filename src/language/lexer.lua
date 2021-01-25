@@ -522,7 +522,21 @@ end
 ]]
 --
 local function isPunctuatorTokenKind(kind)
-	return (kind == TokenKind.BANG or kind == TokenKind.DOLLAR or kind == TokenKind.AMP or kind == TokenKind.PAREN_L or kind == TokenKind.PAREN_R or kind == TokenKind.SPREAD or kind == TokenKind.COLON or kind == TokenKind.EQUALS or kind == TokenKind.AT or kind == TokenKind.BRACKET_L or kind == TokenKind.BRACKET_R or kind == TokenKind.BRACE_L or kind == TokenKind.PIPE or kind == TokenKind.BRACE_R)
+	local tokenKind = kind == TokenKind.BANG
+		or kind == TokenKind.DOLLAR
+		or kind == TokenKind.AMP
+		or kind == TokenKind.PAREN_L
+		or kind == TokenKind.PAREN_R
+		or kind == TokenKind.SPREAD
+		or kind == TokenKind.COLON
+		or kind == TokenKind.EQUALS
+		or kind == TokenKind.AT
+		or kind == TokenKind.BRACKET_L
+		or kind == TokenKind.BRACKET_R
+		or kind == TokenKind.BRACE_L
+		or kind == TokenKind.PIPE
+		or kind == TokenKind.BRACE_R
+	return tokenKind
 end
 
 --[[
