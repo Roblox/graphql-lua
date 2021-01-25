@@ -290,19 +290,82 @@ function Parser:parseFragmentName()
 	return self:parseName()
 end
 
-function Parser:parseValueLiteral()
-	error("Parser.parseValueLiteral unimplemented")
+function Parser:parseValueLiteral(isConst: boolean)
+	local token = self._lexer.token
+
+	local kind = token.kind
+	if kind == TokenKind.BRACKET_L then
+		return self:parseList(isConst);
+	elseif kind == TokenKind.BRACE_L then
+		return self:parseObject(isConst)
+	elseif kind == TokenKind.INT then
+		self._lexer:advance()
+		return {
+			kind = Kind.INT,
+			value = token.value,
+			loc = self:loc(token)
+		}
+	elseif kind == TokenKind.FLOAT then
+		self._lexer:advance()
+		return {
+			kind = Kind.FLOAT,
+			value = token.value,
+			loc = self:loc(token)
+		}
+	elseif
+		kind == TokenKind.STRING or
+		kind == TokenKind.BLOCK_STRING
+	then
+		return self:parseStringLiteral()
+	elseif kind == TokenKind.NAME then
+		self._lexer:advance()
+		local tokenValue = token.value
+		if tokenValue == 'true' then
+            return { kind = Kind.BOOLEAN, value = true, loc = self:loc(token) }
+		elseif tokenValue == 'false' then
+            return { kind = Kind.BOOLEAN, value = false, loc = self:loc(token) }
+		elseif tokenValue == 'null' then
+	        return { kind = Kind.NULL, loc = self:loc(token) }
+		else
+	        return {
+              kind = Kind.ENUM,
+              value = tokenValue,
+              loc = self:loc(token),
+            }
+		end
+	elseif kind == TokenKind.DOLLAR then
+		if not isConst then
+			return self:parseVariable()
+		end
+		-- break
+	end
+    error(self:unexpected())
 end
 
 function Parser:parseStringLiteral()
-	error("Parser.parseStringLiteral unimplemented")
+	local token = self._lexer.token
+    self._lexer:advance()
+    return {
+      kind = Kind.STRING,
+      value = token.value,
+      block = token.kind == TokenKind.BLOCK_STRING,
+      loc = self:loc(token),
+    }
 end
 
-function Parser:parseList()
-	error("Parser.parseList unimplemented")
+function Parser:parseList(isConst: boolean)
+	local start = self._lexer.token;
+	local item = function()
+		return self:parseValueLiteral(isConst);
+	end
+    return {
+      kind = Kind.LIST,
+      values = self:any(TokenKind.BRACKET_L, item, TokenKind.BRACKET_R),
+      loc = self:loc(start),
+    };
 end
 
-function Parser:parseObject()
+function Parser:parseObject(isConst: boolean)
 	error("Parser.parseObject unimplemented")
 end
 
@@ -514,8 +577,13 @@ function Parser:unexpected(atToken)
 	)
 end
 
-function Parser:any()
-	error("Parser.any unimplemented")
+function Parser:any(openKind, parseFn, closeKind)
+	self:expectToken(openKind);
+    local nodes = {};
+	while not self:expectOptionalToken(closeKind) do
+		table.insert(nodes, parseFn(self))
+	end
+    return nodes;
 end
 
 function Parser:optionalMany(openKind, parseFn, closeKind)

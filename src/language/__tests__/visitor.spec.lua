@@ -16,8 +16,6 @@ return function()
 	local REMOVE = visitor.REMOVE
 	local kitchenSinkQuery = require(srcWorkspace.__fixtures__).kitchenSinkQuery
 
-	-- local devPrint = require(script.Parent.Parent.Parent.TestMatchers.devPrint)
-
 	-- ROBLOX deviation: expect cannot be called unless inside of an it
 	-- ROBLOX deviation: pass expect into this function and use local scope
 	local function checkVisitorFnArgs(expect_, ast, args, isEdited)
