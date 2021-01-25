@@ -289,7 +289,7 @@ function readNumber(source, start, firstCode, line, col, prev)
 		line,
 		col,
 		prev,
-		slice(body, start - 1, position)
+		slice(body, start, position)
 	)
 end
 
@@ -301,8 +301,8 @@ local function readToken(lexer, prev)
 	local pos = prev._end
 
 	while pos <= bodyLength do
-
 		local code = charCodeAt(body, pos)
+
 		local line = lexer.line
 		local col = pos - lexer.lineStart
 		-- SourceCharacter

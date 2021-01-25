@@ -9,8 +9,6 @@ local inspect = require(script.Parent.Parent.jsutils.inspect)
 
 local isNode = require(script.Parent.ast).isNode
 
--- local devPrint = require(script.Parent.Parent.TestMatchers.devPrint)
-
 local QueryDocumentKeys = {
 	Name = {},
 
