@@ -70,9 +70,9 @@ function GraphQLError.new(
 	local _locations
 	if positions ~= nil and source ~= nil then
 		_locations = Array.map(positions, function(pos)
-				return getLocation(source, pos)
-			end)
-		elseif _nodes ~= nil then
+			return getLocation(source, pos)
+		end)
+	elseif _nodes ~= nil then
 		_locations = Array.reduce(_nodes, function(list, node)
 			if node.loc ~= nil then
 				table.insert(list, getLocation(node.loc.source, node.loc.start))

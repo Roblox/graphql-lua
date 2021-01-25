@@ -49,6 +49,11 @@ return function()
 			expect(slice(body, 1, 2)).to.equal("\u{8123}")
 			expect(slice(body, 2, 3)).to.equal("a")
 
+			body = "123 \u{0A0A} 456"
+
+			expect(slice(body, 1, 6)).to.equal("123 \u{0A0A}")
+			expect(slice(body, 5, 10)).to.equal("\u{0A0A} 456")
+
 		end)
 
 	end)
