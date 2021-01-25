@@ -131,7 +131,7 @@ function Parser:parseDefinition()
 		return self:parseTypeSystemDefinition()
 	end
 
-	return self:unexpected()
+	error(self:unexpected())
 end
 
 function Parser:parseOperationDefinition()
@@ -168,7 +168,7 @@ function Parser:parseOperationType()
 
 	if operationToken.value == "query" then
 		return "query"
-	elseif operationToken.value == "mution" then
+	elseif operationToken.value == "mutation" then
 		return "mutation"
 	elseif operationToken.value == "subscription" then
 		return "subscription"
@@ -182,11 +182,36 @@ function Parser:parseVariableDefinitions()
 end
 
 function Parser:parseVariableDefinition()
-	error("Parser.parseVariableDefinition unimplemented")
+	local start = self._lexer.token;
+    return {
+		kind = Kind.VARIABLE_DEFINITION,
+		variable = self:parseVariable(),
+		type = (function()
+			self:expectToken(TokenKind.COLON)
+			return self:parseTypeReference()
+		end)(),
+		defaultValue = (function()
+			if self:expectOptionalToken(TokenKind.EQUALS) then
+				return self:parseValueLiteral(true)
+			else
+				return nil
+			end
+		end)(),
+		directives = self:parseDirectives(true),
+		loc = self:loc(start),
+    };
 end
-
+-- /**
+--  * Variable : $ Name
+--  */
 function Parser:parseVariable()
-	error("Parser.parseVariable unimplemented")
+	local start = self._lexer.token;
+    self:expectToken(TokenKind.DOLLAR);
+    return {
+      kind = Kind.VARIABLE,
+      name = self:parseName(),
+      loc = self:loc(start),
+    };
 end
 
 function Parser:parseSelectionSet()
@@ -199,7 +224,11 @@ function Parser:parseSelectionSet()
 end
 
 function Parser:parseSelection()
-	return self:peek(TokenKind.SPREAD) and self:parseFragment() or self:parseField()
+	if self:peek(TokenKind.SPREAD) then
+		return self:parseFragment()
+	else
+		return self:parseField()
+	end
 end
 
 function Parser:parseField()
@@ -231,8 +260,20 @@ function Parser:parseArguments(isConst)
 	return self:optionalMany(TokenKind.PAREN_L, item, TokenKind.PAREN_R)
 end
 
+-- /**
+--  * Argument[Const] : Name : Value[?Const]
+--  */
 function Parser:parseArgument()
-	error("Parser.parseArgument unimplemented")
+	local start = self._lexer.token;
+    local name = self:parseName();
+
+    self:expectToken(TokenKind.COLON);
+    return {
+      kind = Kind.ARGUMENT,
+      name = name,
+      value = self:parseValueLiteral(false),
+      loc = self:loc(start),
+    };
 end
 
 function Parser:parseConstArgument()
@@ -240,7 +281,31 @@ function Parser:parseConstArgument()
 end
 
 function Parser:parseFragment()
-	error("Parser.parseFragment unimplemented")
+	local start = self._lexer.token;
+    self:expectToken(TokenKind.SPREAD);
+
+    local hasTypeCondition = self:expectOptionalKeyword('on');
+    if not hasTypeCondition and self:peek(TokenKind.NAME) then
+      return {
+        kind = Kind.FRAGMENT_SPREAD,
+        name = self:parseFragmentName(),
+        directives = self:parseDirectives(false),
+        loc = self:loc(start),
+      };
+    end
+    return {
+		kind = Kind.INLINE_FRAGMENT,
+		typeCondition = (function()
+			if hasTypeCondition then
+				return self:parseNamedType()
+			else
+				return nil
+			end
+		end)(),
+		directives = self:parseDirectives(false),
+		selectionSet = self:parseSelectionSet(),
+		loc = self:loc(start),
+    };
 end
 
 function Parser:parseFragmentDefinition()
@@ -365,12 +430,37 @@ function Parser:parseList(isConst: boolean)
     };
 end
 
+-- /**
+--  * ObjectValue[Const] :
+--  *   - { }
+--  *   - { ObjectField[?Const]+ }
+--  */
 function Parser:parseObject(isConst: boolean)
-	error("Parser.parseObject unimplemented")
+	local start = self._lexer.token;
+	local item = function()
+		return self:parseObjectField(isConst)
+	end
+    return {
+      kind = Kind.OBJECT,
+      fields = self:any(TokenKind.BRACE_L, item, TokenKind.BRACE_R),
+      loc = self:loc(start),
+    };
 end
 
-function Parser:parseObjectField()
-	error("Parser.parseObjectField unimplemented")
+-- /**
+--  * ObjectField[Const] : Name : Value[?Const]
+--  */
+function Parser:parseObjectField(isConst: boolean)
+	local start = self._lexer.token;
+    local name = self:parseName();
+    self:expectToken(TokenKind.COLON);
+
+    return {
+      kind = Kind.OBJECT_FIELD,
+      name = name,
+      value = self:parseValueLiteral(isConst),
+      loc = self:loc(start),
+    };
 end
 
 function Parser:parseDirectives(isConst)
@@ -381,16 +471,63 @@ function Parser:parseDirectives(isConst)
 	return directives
 end
 
+-- /**
+--  * Directive[Const] : @ Name Arguments[?Const]?
+--  */
 function Parser:parseDirective(isConst)
-	error("Parser.parseDirective unimplemented")
+	local start = self._lexer.token;
+    self:expectToken(TokenKind.AT);
+    return {
+      kind = Kind.DIRECTIVE,
+      name = self:parseName(),
+      arguments = self:parseArguments(isConst),
+      loc = self:loc(start),
+    };
 end
 
+-- // Implements the parsing rules in the Types section.
+
+-- /**
+--  * Type :
+--  *   - NamedType
+--  *   - ListType
+--  *   - NonNullType
+--  */
 function Parser:parseTypeReference()
-	error("Parser.parseTypeReference unimplemented")
+	local start = self._lexer.token;
+    local type;
+    if self:expectOptionalToken(TokenKind.BRACKET_L) then
+      type = self:parseTypeReference();
+      self:expectToken(TokenKind.BRACKET_R);
+      type = {
+        kind = Kind.LIST_TYPE,
+        type = type,
+        loc = self:loc(start),
+      };
+    else
+      type = self:parseNamedType();
+	end
+
+    if self:expectOptionalToken(TokenKind.BANG) then
+      return {
+        kind = Kind.NON_NULL_TYPE,
+        type = type,
+        loc = self:loc(start),
+      };
+    end
+    return type;
 end
 
+-- /**
+--  * NamedType : Name
+--  */
 function Parser:parseNamedType()
-	error("Parser.parseNamedType unimplemented")
+	local start = self._lexer.token;
+    return {
+      kind = Kind.NAMED_TYPE,
+      name = self:parseName(),
+      loc = self:loc(start),
+    };
 end
 
 function Parser:parseTypeSystemDefinition()
@@ -398,7 +535,7 @@ function Parser:parseTypeSystemDefinition()
 end
 
 function Parser:peekDescription()
-	error("Parser.peekDescription unimplemented")
+	return self:peek(TokenKind.STRING) or self:peek(TokenKind.BLOCK_STRING)
 end
 
 function Parser:parseDescription()
@@ -564,8 +701,17 @@ function Parser:expectKeyword(value)
 	end
 end
 
-function Parser:expectOptionalKeyword()
-	error("Parser.expectOptionalKeyword unimplemented")
+-- /**
+--  * If the next token is a given keyword, return "true" after advancing
+--  * the lexer. Otherwise, do not change the parser state and return "false".
+--  */
+function Parser:expectOptionalKeyword(value: string): boolean
+	local token = self._lexer.token
+    if token.kind == TokenKind.NAME and token.value == value then
+      self._lexer:advance()
+      return true
+	end
+    return false
 end
 
 function Parser:unexpected(atToken)

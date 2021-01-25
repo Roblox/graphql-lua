@@ -296,7 +296,7 @@ end
 local function readToken(lexer, prev)
 	local source = lexer.source
 	local body = source.body
-	local bodyLength = string.len(body)
+	local bodyLength = utf8.len(body)
 
 	local pos = prev._end
 
@@ -477,9 +477,8 @@ local function readToken(lexer, prev)
 	end
 
 	local line = lexer.line
-	local col = 1 + pos - lexer.lineStart
-	return Token.new(TokenKind.EOF, bodyLength, bodyLength, line, col, prev)
-
+	local col = pos - lexer.lineStart
+	return Token.new(TokenKind.EOF, bodyLength + 1, bodyLength + 1, line, col, prev)
 end
 
 local Lexer = {}
