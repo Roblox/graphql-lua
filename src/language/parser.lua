@@ -182,8 +182,8 @@ function Parser:parseVariableDefinitions()
 end
 
 function Parser:parseVariableDefinition()
-	local start = self._lexer.token;
-    return {
+	local start = self._lexer.token
+	return {
 		kind = Kind.VARIABLE_DEFINITION,
 		variable = self:parseVariable(),
 		type = (function()
@@ -199,19 +199,19 @@ function Parser:parseVariableDefinition()
 		end)(),
 		directives = self:parseDirectives(true),
 		loc = self:loc(start),
-    };
+	}
 end
 -- /**
 --  * Variable : $ Name
 --  */
 function Parser:parseVariable()
-	local start = self._lexer.token;
-    self:expectToken(TokenKind.DOLLAR);
-    return {
-      kind = Kind.VARIABLE,
-      name = self:parseName(),
-      loc = self:loc(start),
-    };
+	local start = self._lexer.token
+	self:expectToken(TokenKind.DOLLAR)
+	return {
+		kind = Kind.VARIABLE,
+		name = self:parseName(),
+		loc = self:loc(start),
+	}
 end
 
 function Parser:parseSelectionSet()
@@ -264,16 +264,16 @@ end
 --  * Argument[Const] : Name : Value[?Const]
 --  */
 function Parser:parseArgument()
-	local start = self._lexer.token;
-    local name = self:parseName();
+	local start = self._lexer.token
+	local name = self:parseName()
 
-    self:expectToken(TokenKind.COLON);
-    return {
-      kind = Kind.ARGUMENT,
-      name = name,
-      value = self:parseValueLiteral(false),
-      loc = self:loc(start),
-    };
+	self:expectToken(TokenKind.COLON)
+	return {
+		kind = Kind.ARGUMENT,
+		name = name,
+		value = self:parseValueLiteral(false),
+		loc = self:loc(start),
+	}
 end
 
 function Parser:parseConstArgument()
@@ -281,19 +281,19 @@ function Parser:parseConstArgument()
 end
 
 function Parser:parseFragment()
-	local start = self._lexer.token;
-    self:expectToken(TokenKind.SPREAD);
+	local start = self._lexer.token
+	self:expectToken(TokenKind.SPREAD)
 
-    local hasTypeCondition = self:expectOptionalKeyword('on');
-    if not hasTypeCondition and self:peek(TokenKind.NAME) then
-      return {
-        kind = Kind.FRAGMENT_SPREAD,
-        name = self:parseFragmentName(),
-        directives = self:parseDirectives(false),
-        loc = self:loc(start),
-      };
-    end
-    return {
+	local hasTypeCondition = self:expectOptionalKeyword("on")
+	if not hasTypeCondition and self:peek(TokenKind.NAME) then
+		return {
+			kind = Kind.FRAGMENT_SPREAD,
+			name = self:parseFragmentName(),
+			directives = self:parseDirectives(false),
+			loc = self:loc(start),
+		}
+	end
+	return {
 		kind = Kind.INLINE_FRAGMENT,
 		typeCondition = (function()
 			if hasTypeCondition then
@@ -305,7 +305,7 @@ function Parser:parseFragment()
 		directives = self:parseDirectives(false),
 		selectionSet = self:parseSelectionSet(),
 		loc = self:loc(start),
-    };
+	}
 end
 
 function Parser:parseFragmentDefinition()
@@ -360,7 +360,7 @@ function Parser:parseValueLiteral(isConst: boolean)
 
 	local kind = token.kind
 	if kind == TokenKind.BRACKET_L then
-		return self:parseList(isConst);
+		return self:parseList(isConst)
 	elseif kind == TokenKind.BRACE_L then
 		return self:parseObject(isConst)
 	elseif kind == TokenKind.INT then
@@ -368,35 +368,32 @@ function Parser:parseValueLiteral(isConst: boolean)
 		return {
 			kind = Kind.INT,
 			value = token.value,
-			loc = self:loc(token)
+			loc = self:loc(token),
 		}
 	elseif kind == TokenKind.FLOAT then
 		self._lexer:advance()
 		return {
 			kind = Kind.FLOAT,
 			value = token.value,
-			loc = self:loc(token)
+			loc = self:loc(token),
 		}
-	elseif
-		kind == TokenKind.STRING or
-		kind == TokenKind.BLOCK_STRING
-	then
+	elseif kind == TokenKind.STRING or kind == TokenKind.BLOCK_STRING then
 		return self:parseStringLiteral()
 	elseif kind == TokenKind.NAME then
 		self._lexer:advance()
 		local tokenValue = token.value
-		if tokenValue == 'true' then
-            return { kind = Kind.BOOLEAN, value = true, loc = self:loc(token) }
-		elseif tokenValue == 'false' then
-            return { kind = Kind.BOOLEAN, value = false, loc = self:loc(token) }
-		elseif tokenValue == 'null' then
-	        return { kind = Kind.NULL, loc = self:loc(token) }
+		if tokenValue == "true" then
+			return { kind = Kind.BOOLEAN, value = true, loc = self:loc(token) }
+		elseif tokenValue == "false" then
+			return { kind = Kind.BOOLEAN, value = false, loc = self:loc(token) }
+		elseif tokenValue == "null" then
+			return { kind = Kind.NULL, loc = self:loc(token) }
 		else
-	        return {
-              kind = Kind.ENUM,
-              value = tokenValue,
-              loc = self:loc(token),
-            }
+			return {
+				kind = Kind.ENUM,
+				value = tokenValue,
+				loc = self:loc(token),
+			}
 		end
 	elseif kind == TokenKind.DOLLAR then
 		if not isConst then
@@ -404,30 +401,30 @@ function Parser:parseValueLiteral(isConst: boolean)
 		end
 		-- break
 	end
-    error(self:unexpected())
+	error(self:unexpected())
 end
 
 function Parser:parseStringLiteral()
 	local token = self._lexer.token
-    self._lexer:advance()
-    return {
-      kind = Kind.STRING,
-      value = token.value,
-      block = token.kind == TokenKind.BLOCK_STRING,
-      loc = self:loc(token),
-    }
+	self._lexer:advance()
+	return {
+		kind = Kind.STRING,
+		value = token.value,
+		block = token.kind == TokenKind.BLOCK_STRING,
+		loc = self:loc(token),
+	}
 end
 
 function Parser:parseList(isConst: boolean)
-	local start = self._lexer.token;
+	local start = self._lexer.token
 	local item = function()
-		return self:parseValueLiteral(isConst);
+		return self:parseValueLiteral(isConst)
 	end
-    return {
-      kind = Kind.LIST,
-      values = self:any(TokenKind.BRACKET_L, item, TokenKind.BRACKET_R),
-      loc = self:loc(start),
-    };
+	return {
+		kind = Kind.LIST,
+		values = self:any(TokenKind.BRACKET_L, item, TokenKind.BRACKET_R),
+		loc = self:loc(start),
+	}
 end
 
 -- /**
@@ -436,31 +433,31 @@ end
 --  *   - { ObjectField[?Const]+ }
 --  */
 function Parser:parseObject(isConst: boolean)
-	local start = self._lexer.token;
+	local start = self._lexer.token
 	local item = function()
 		return self:parseObjectField(isConst)
 	end
-    return {
-      kind = Kind.OBJECT,
-      fields = self:any(TokenKind.BRACE_L, item, TokenKind.BRACE_R),
-      loc = self:loc(start),
-    };
+	return {
+		kind = Kind.OBJECT,
+		fields = self:any(TokenKind.BRACE_L, item, TokenKind.BRACE_R),
+		loc = self:loc(start),
+	}
 end
 
 -- /**
 --  * ObjectField[Const] : Name : Value[?Const]
 --  */
 function Parser:parseObjectField(isConst: boolean)
-	local start = self._lexer.token;
-    local name = self:parseName();
-    self:expectToken(TokenKind.COLON);
+	local start = self._lexer.token
+	local name = self:parseName()
+	self:expectToken(TokenKind.COLON)
 
-    return {
-      kind = Kind.OBJECT_FIELD,
-      name = name,
-      value = self:parseValueLiteral(isConst),
-      loc = self:loc(start),
-    };
+	return {
+		kind = Kind.OBJECT_FIELD,
+		name = name,
+		value = self:parseValueLiteral(isConst),
+		loc = self:loc(start),
+	}
 end
 
 function Parser:parseDirectives(isConst)
@@ -475,14 +472,14 @@ end
 --  * Directive[Const] : @ Name Arguments[?Const]?
 --  */
 function Parser:parseDirective(isConst)
-	local start = self._lexer.token;
-    self:expectToken(TokenKind.AT);
-    return {
-      kind = Kind.DIRECTIVE,
-      name = self:parseName(),
-      arguments = self:parseArguments(isConst),
-      loc = self:loc(start),
-    };
+	local start = self._lexer.token
+	self:expectToken(TokenKind.AT)
+	return {
+		kind = Kind.DIRECTIVE,
+		name = self:parseName(),
+		arguments = self:parseArguments(isConst),
+		loc = self:loc(start),
+	}
 end
 
 -- // Implements the parsing rules in the Types section.
@@ -494,40 +491,40 @@ end
 --  *   - NonNullType
 --  */
 function Parser:parseTypeReference()
-	local start = self._lexer.token;
-    local type;
-    if self:expectOptionalToken(TokenKind.BRACKET_L) then
-      type = self:parseTypeReference();
-      self:expectToken(TokenKind.BRACKET_R);
-      type = {
-        kind = Kind.LIST_TYPE,
-        type = type,
-        loc = self:loc(start),
-      };
-    else
-      type = self:parseNamedType();
+	local start = self._lexer.token
+	local type
+	if self:expectOptionalToken(TokenKind.BRACKET_L) then
+		type = self:parseTypeReference()
+		self:expectToken(TokenKind.BRACKET_R)
+		type = {
+			kind = Kind.LIST_TYPE,
+			type = type,
+			loc = self:loc(start),
+		}
+	else
+		type = self:parseNamedType()
 	end
 
-    if self:expectOptionalToken(TokenKind.BANG) then
-      return {
-        kind = Kind.NON_NULL_TYPE,
-        type = type,
-        loc = self:loc(start),
-      };
-    end
-    return type;
+	if self:expectOptionalToken(TokenKind.BANG) then
+		return {
+			kind = Kind.NON_NULL_TYPE,
+			type = type,
+			loc = self:loc(start),
+		}
+	end
+	return type
 end
 
 -- /**
 --  * NamedType : Name
 --  */
 function Parser:parseNamedType()
-	local start = self._lexer.token;
-    return {
-      kind = Kind.NAMED_TYPE,
-      name = self:parseName(),
-      loc = self:loc(start),
-    };
+	local start = self._lexer.token
+	return {
+		kind = Kind.NAMED_TYPE,
+		name = self:parseName(),
+		loc = self:loc(start),
+	}
 end
 
 function Parser:parseTypeSystemDefinition()
@@ -707,11 +704,11 @@ end
 --  */
 function Parser:expectOptionalKeyword(value: string): boolean
 	local token = self._lexer.token
-    if token.kind == TokenKind.NAME and token.value == value then
-      self._lexer:advance()
-      return true
+	if token.kind == TokenKind.NAME and token.value == value then
+		self._lexer:advance()
+		return true
 	end
-    return false
+	return false
 end
 
 function Parser:unexpected(atToken)
@@ -724,12 +721,12 @@ function Parser:unexpected(atToken)
 end
 
 function Parser:any(openKind, parseFn, closeKind)
-	self:expectToken(openKind);
-    local nodes = {};
+	self:expectToken(openKind)
+	local nodes = {}
 	while not self:expectOptionalToken(closeKind) do
 		table.insert(nodes, parseFn(self))
 	end
-    return nodes;
+	return nodes
 end
 
 function Parser:optionalMany(openKind, parseFn, closeKind)
