@@ -401,4 +401,5 @@ return {
 	visit = visit,
 	visitInParallel = visitInParallel,
 	getVisitFn = getVisitFn,
+	QueryDocumentKeys = QueryDocumentKeys
 }

@@ -10,10 +10,11 @@ return function()
 
 	local Kind = require(script.Parent.Parent.kinds).Kind
 	local parse = require(script.Parent.Parent.parser).parse
-	local visitor = require(script.Parent.Parent.visitor)
-	local visit = visitor.visit
-	local BREAK = visitor.BREAK
-	local REMOVE = visitor.REMOVE
+	local visitorExports = require(script.Parent.Parent.visitor)
+	local visit = visitorExports.visit
+	local BREAK = visitorExports.BREAK
+	local REMOVE = visitorExports.REMOVE
+	local QueryDocumentKeys = visitorExports.QueryDocumentKeys
 	local kitchenSinkQuery = require(srcWorkspace.__fixtures__).kitchenSinkQuery
 
 	-- ROBLOX deviation: expect cannot be called unless inside of an it
@@ -910,6 +911,95 @@ return function()
 				{ "leave", "OperationDefinition", 6 },
 				{ "leave", "Document" },
 			})
+		end)
+
+		describe("Support for custom AST nodes", function()
+			local customAST = parse("{ a }")
+			table.insert(customAST.definitions[1].selectionSet.selections, {
+				kind = "CustomField",
+				name = {
+					kind = "Name",
+					value = "b",
+				},
+				selectionSet = {
+					kind = "SelectionSet",
+					selections = {
+						{
+							kind = "CustomField",
+							name = {
+								kind = "Name",
+								value = "c",
+							},
+						},
+					},
+				},
+			})
+
+			it("does not traverse unknown node kinds", function()
+				local visited = {}
+				visit(customAST, {
+					enter = function(self, node)
+						table.insert(visited, { "enter", node.kind, getValue(node) })
+					end,
+					leave = function(self, node)
+						table.insert(visited, { "leave", node.kind, getValue(node) })
+					end,
+				})
+
+				expect(visited).toEqual({
+					{ "enter", "Document" },
+					{ "enter", "OperationDefinition" },
+					{ "enter", "SelectionSet" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "a" },
+					{ "leave", "Name", "a" },
+					{ "leave", "Field" },
+					{ "enter", "CustomField" },
+					{ "leave", "CustomField" },
+					{ "leave", "SelectionSet" },
+					{ "leave", "OperationDefinition" },
+					{ "leave", "Document" },
+				})
+			end)
+
+			it("does traverse unknown node kinds with visitor keys", function()
+				local customQueryDocumentKeys = Object.assign({}, QueryDocumentKeys)
+				customQueryDocumentKeys.CustomField = { "name", "selectionSet" }
+
+				local visited = {}
+				local visitor = {
+					enter = function(self, node)
+						table.insert(visited, { "enter", node.kind, getValue(node) })
+					end,
+					leave = function(self, node)
+						table.insert(visited, { "leave", node.kind, getValue(node) })
+					end,
+				}
+				visit(customAST, visitor, customQueryDocumentKeys)
+
+				expect(visited).toEqual({
+					{ "enter", "Document" },
+					{ "enter", "OperationDefinition" },
+					{ "enter", "SelectionSet" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "a" },
+					{ "leave", "Name", "a" },
+					{ "leave", "Field" },
+					{ "enter", "CustomField" },
+					{ "enter", "Name", "b" },
+					{ "leave", "Name", "b" },
+					{ "enter", "SelectionSet" },
+					{ "enter", "CustomField" },
+					{ "enter", "Name", "c" },
+					{ "leave", "Name", "c" },
+					{ "leave", "CustomField" },
+					{ "leave", "SelectionSet" },
+					{ "leave", "CustomField" },
+					{ "leave", "SelectionSet" },
+					{ "leave", "OperationDefinition" },
+					{ "leave", "Document" },
+				})
+			end)
 		end)
 	end)
 end
