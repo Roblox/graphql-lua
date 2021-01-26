@@ -12,6 +12,10 @@ local function deepEqual(a: any, b: any)
 		return false, message
 	end
 
+	if a == b then
+		return true
+	end
+
 	if typeof(a) == "table" then
 		local visitedKeys = {}
 
@@ -42,10 +46,6 @@ local function deepEqual(a: any, b: any)
 			end
 		end
 
-		return true
-	end
-
-	if a == b then
 		return true
 	end
 
