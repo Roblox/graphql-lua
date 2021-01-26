@@ -26,15 +26,13 @@ return function(options)
 
 			local leftOver = combination
 			while leftOver >= 0 do
-				local reminder = leftOver % numAllowedChars;
-				permutation = allowedChars[reminder + 1] .. permutation;
-				leftOver = (leftOver - reminder) / numAllowedChars - 1;
+				local reminder = leftOver % numAllowedChars
+				permutation = allowedChars[reminder + 1] .. permutation
+				leftOver = (leftOver - reminder) / numAllowedChars - 1
 			end
 			coroutine.yield(permutation)
 		end
 	end
 
-	return {
-		next = coroutine.wrap(getFuzzStrings),
-	}
+	return coroutine.wrap(getFuzzStrings)
 end
