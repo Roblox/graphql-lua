@@ -3,13 +3,10 @@
 return function()
 	local genFuzzStrings = require(script.Parent.Parent.genFuzzStrings)
 	local function expectFuzzStrings(options)
-		local gen = genFuzzStrings(options)
 		-- create an array from generator
 		local arr = {}
-		local item = gen.next()
-		while item ~= nil do
+		for item in genFuzzStrings(options) do
 			table.insert(arr, item)
-			item = gen.next()
 		end
 
 		-- ROBLOX deviation: because of how TestEZ works we can't use expect in here
