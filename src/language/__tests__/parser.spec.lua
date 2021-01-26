@@ -14,6 +14,7 @@ return function()
 	local parser = require(languageWorkspace.parser)
 	local parse = parser.parse
 	local parseValue = parser.parseValue
+	local parseType = parser.parseType
 
 	local kitchenSinkQuery = require(srcWorkspace.__fixtures__).kitchenSinkQuery
 
@@ -481,46 +482,6 @@ return function()
 				)
 			end)
 
-			it(
-				"parses Int value",
-				function() -- ROBLOX  deviation: additional test for parsing single integer value
-					local result = parseValue("123")
-
-					expect(toJSONDeep(result)).toEqual({
-						kind = Kind.INT,
-						loc = { start = 1, _end = 4 },
-						value = "123",
-					})
-				end
-			)
-
-			it(
-				"parses String value",
-				function() -- ROBLOX  deviation: additional test for parsing single string value
-					local result = parseValue("\"abc\"")
-
-					expect(toJSONDeep(result)).toEqual({
-						kind = Kind.STRING,
-						loc = { start = 1, _end = 6 },
-						value = "abc",
-						block = false,
-					})
-				end
-			)
-
-			it(
-				"parses empty list",
-				function() -- ROBLOX  deviation: additional test for parsing empty list value
-					local result = parseValue("[]")
-
-					expect(toJSONDeep(result)).toEqual({
-						kind = Kind.LIST,
-						loc = { start = 1, _end = 3 },
-						values = {},
-					})
-				end
-			)
-
 			it("parses list values", function()
 				local result = parseValue("[123 \"abc\"]")
 				expect(toJSONDeep(result)).toEqual(
@@ -561,6 +522,89 @@ return function()
 							loc = { start = 13, _end = 20 },
 							value = "short",
 							block = false,
+						},
+					},
+				})
+			end)
+		end)
+
+		describe("parseType", function()
+			it("parses well known types", function()
+				local result = parseType("String")
+				expect(toJSONDeep(result)).toObjectContain({
+					kind = Kind.NAMED_TYPE,
+					loc = { start = 1, _end = 7 },
+					name = {
+						kind = Kind.NAME,
+						loc = { start = 1, _end = 7 },
+						value = "String",
+					},
+				})
+			end)
+
+			it("parses custom types", function()
+				local result = parseType("MyType")
+				expect(toJSONDeep(result)).toObjectContain({
+					kind = Kind.NAMED_TYPE,
+					loc = { start = 1, _end = 7 },
+					name = {
+						kind = Kind.NAME,
+						loc = { start = 1, _end = 7 },
+						value = "MyType",
+					},
+				})
+			end)
+
+			it("parses list types", function()
+				local result = parseType("[MyType]")
+				expect(toJSONDeep(result)).toObjectContain({
+					kind = Kind.LIST_TYPE,
+					loc = { start = 1, _end = 9 },
+					type = {
+						kind = Kind.NAMED_TYPE,
+						loc = { start = 2, _end = 8 },
+						name = {
+							kind = Kind.NAME,
+							loc = { start = 2, _end = 8 },
+							value = "MyType",
+						},
+					},
+				})
+			end)
+
+			it("parses non-null types", function()
+				local result = parseType("MyType!")
+				expect(toJSONDeep(result)).toObjectContain({
+					kind = Kind.NON_NULL_TYPE,
+					loc = { start = 1, _end = 8 },
+					type = {
+						kind = Kind.NAMED_TYPE,
+						loc = { start = 1, _end = 7 },
+						name = {
+							kind = Kind.NAME,
+							loc = { start = 1, _end = 7 },
+							value = "MyType",
+						},
+					},
+				})
+			end)
+
+			it("parses nested types", function()
+				local result = parseType("[MyType!]")
+				expect(toJSONDeep(result)).toObjectContain({
+					kind = Kind.LIST_TYPE,
+					loc = { start = 1, _end = 10 },
+					type = {
+						kind = Kind.NON_NULL_TYPE,
+						loc = { start = 2, _end = 9 },
+						type = {
+							kind = Kind.NAMED_TYPE,
+							loc = { start = 2, _end = 8 },
+							name = {
+								kind = Kind.NAME,
+								loc = { start = 2, _end = 8 },
+								value = "MyType",
+							},
 						},
 					},
 				})
