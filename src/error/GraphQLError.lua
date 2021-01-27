@@ -54,13 +54,13 @@ function GraphQLError.new(
 
 	-- REF: GraphQLError.js:104
 	local _positions = positions
-	if not _positions and _nodes then
+	if _positions == nil and _nodes ~= nil then
 		_positions = Array.reduce(_nodes, function(list, node)
 			if node.loc ~= nil then
 				table.insert(list, node.loc.start)
 			end
 			return list
-		end)
+		end, {})
 	end
 	if _positions ~= nil and #_positions == 0 then
 		_positions = nil
@@ -78,7 +78,7 @@ function GraphQLError.new(
 				table.insert(list, getLocation(node.loc.source, node.loc.start))
 			end
 			return list
-		end)
+		end, {})
 	end
 
 	-- REF: GraphQLError.js:129
