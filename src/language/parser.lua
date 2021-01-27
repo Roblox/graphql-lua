@@ -17,6 +17,7 @@ local Lexer = lexer.Lexer
 local isPunctuatorTokenKind = lexer.isPunctuatorTokenKind
 
 local TokenKind = require(language.tokenKind).TokenKind
+local DirectiveLocation = require(language.directiveLocation).DirectiveLocation
 local Kind = require(language.kinds).Kind
 
 local syntaxError = require(script.Parent.Parent.error.syntaxError).syntaxError
@@ -28,10 +29,10 @@ local getTokenKindDesc
 local Parser = {}
 Parser.__index = Parser
 
--- /**
+--[[*
 --  * Given a GraphQL source, parses it into a Document.
 --  * Throws GraphQLError if a syntax error is encountered.
---  */
+--  *]]
 local function parse(source, options)
 	local parser = Parser.new(source, options)
 	return parser:parseDocument()
@@ -55,7 +56,7 @@ local function parseValue(source, options)
 	return value
 end
 
--- /**
+--[[*
 --  * Given a string containing a GraphQL Type (ex. `[Int!]`), parse the AST for
 --  * that type.
 --  * Throws GraphQLError if a syntax error is encountered.
@@ -64,7 +65,7 @@ end
 --  * in isolation of complete GraphQL documents.
 --  *
 --  * Consider providing the results to the utility function: typeFromAST().
---  */
+--  *]]
 local function parseType(source, options)
 	local parser = Parser.new(source, options)
 	parser:expectToken(TokenKind.SOF)
@@ -86,6 +87,9 @@ function Parser.new(source, options)
 	return setmetatable(self, Parser)
 end
 
+--[[*
+--  * Converts a name lex token into a name parse node.
+--  *]]
 function Parser:parseName()
 	local token = self:expectToken(TokenKind.NAME)
 	return {
@@ -95,6 +99,11 @@ function Parser:parseName()
 	}
 end
 
+-- Implements the parsing rules in the Document section.
+
+--[[*
+--  * Document : Definition+
+--  *]]
 function Parser:parseDocument()
 	local start = self._lexer.token
 	return {
@@ -104,6 +113,16 @@ function Parser:parseDocument()
 	}
 end
 
+--[[*
+--  * Definition :
+--  *   - ExecutableDefinition
+--  *   - TypeSystemDefinition
+--  *   - TypeSystemExtension
+--  *
+--  * ExecutableDefinition :
+--  *   - OperationDefinition
+--  *   - FragmentDefinition
+--  *]]
 function Parser:parseDefinition()
 	if self:peek(TokenKind.NAME) then
 		local tokenValue = self._lexer.token.value
@@ -134,6 +153,13 @@ function Parser:parseDefinition()
 	error(self:unexpected())
 end
 
+-- Implements the parsing rules in the Operations section.
+
+--[[*
+--  * OperationDefinition :
+--  *  - SelectionSet
+--  *  - OperationType Name? VariableDefinitions? Directives? SelectionSet
+--  *]]
 function Parser:parseOperationDefinition()
 	local start = self._lexer.token
 	if self:peek(TokenKind.BRACE_L) then
@@ -163,6 +189,9 @@ function Parser:parseOperationDefinition()
 	}
 end
 
+--[[*
+--  * OperationType : one of query mutation subscription
+--  *]]
 function Parser:parseOperationType()
 	local operationToken = self:expectToken(TokenKind.NAME)
 
@@ -177,10 +206,16 @@ function Parser:parseOperationType()
 	error(self:unexpected(operationToken))
 end
 
+--[[*
+--  * VariableDefinitions : ( VariableDefinition+ )
+--  *]]
 function Parser:parseVariableDefinitions()
 	return self:optionalMany(TokenKind.PAREN_L, self.parseVariableDefinition, TokenKind.PAREN_R)
 end
 
+--[[*
+--  * VariableDefinition : Variable : Type DefaultValue? Directives[Const]?
+--  *]]
 function Parser:parseVariableDefinition()
 	local start = self._lexer.token
 	return {
@@ -201,9 +236,10 @@ function Parser:parseVariableDefinition()
 		loc = self:loc(start),
 	}
 end
--- /**
+
+--[[*
 --  * Variable : $ Name
---  */
+--  *]]
 function Parser:parseVariable()
 	local start = self._lexer.token
 	self:expectToken(TokenKind.DOLLAR)
@@ -214,6 +250,9 @@ function Parser:parseVariable()
 	}
 end
 
+--[[*
+--  * SelectionSet : { Selection+ }
+--  *]]
 function Parser:parseSelectionSet()
 	local start = self._lexer.token
 	return {
@@ -223,6 +262,12 @@ function Parser:parseSelectionSet()
 	}
 end
 
+--[[*
+--  * Selection :
+--  *   - Field
+--  *   - FragmentSpread
+--  *   - InlineFragment
+--  *]]
 function Parser:parseSelection()
 	if self:peek(TokenKind.SPREAD) then
 		return self:parseFragment()
@@ -231,6 +276,11 @@ function Parser:parseSelection()
 	end
 end
 
+--[[*
+--  * Field : Alias? Name Arguments? Directives? SelectionSet?
+--  *
+--  * Alias : Name :
+--  *]]
 function Parser:parseField()
 	local start = self._lexer.token
 
@@ -255,14 +305,17 @@ function Parser:parseField()
 	}
 end
 
+--[[*
+--  * Arguments[Const] : ( Argument[?Const]+ )
+--  *]]
 function Parser:parseArguments(isConst)
 	local item = isConst and self.parseConstArgument or self.parseArgument
 	return self:optionalMany(TokenKind.PAREN_L, item, TokenKind.PAREN_R)
 end
 
--- /**
+--[[*
 --  * Argument[Const] : Name : Value[?Const]
---  */
+--  *]]
 function Parser:parseArgument()
 	local start = self._lexer.token
 	local name = self:parseName()
@@ -277,9 +330,27 @@ function Parser:parseArgument()
 end
 
 function Parser:parseConstArgument()
-	error("Parser.parseConstArgument unimplemented")
+	local start = self._lexer.token
+	return {
+		kind = Kind.ARGUMENT,
+		name = self:parseName(),
+		value = function()
+			self:expectToken(TokenKind.COLON)
+			return self:parseValueLiteral(true)
+		end,
+		loc = self:loc(start),
+	}
 end
 
+-- Implements the parsing rules in the Fragments section.
+
+--[[*
+--  * Corresponds to both FragmentSpread and InlineFragment in the spec.
+--  *
+--  * FragmentSpread : ... FragmentName Directives?
+--  *
+--  * InlineFragment : ... TypeCondition? Directives? SelectionSet
+--  *]]
 function Parser:parseFragment()
 	local start = self._lexer.token
 	self:expectToken(TokenKind.SPREAD)
@@ -308,6 +379,12 @@ function Parser:parseFragment()
 	}
 end
 
+--[[*
+--  * FragmentDefinition :
+--  *   - fragment FragmentName on TypeCondition Directives? SelectionSet
+--  *
+--  * TypeCondition : NamedType
+--  *]]
 function Parser:parseFragmentDefinition()
 	local start = self._lexer.token
 	self:expectKeyword("fragment")
@@ -348,6 +425,9 @@ function Parser:parseFragmentDefinition()
 	}
 end
 
+--[[*
+--  * FragmentName : Name but not `on`
+--  *]]
 function Parser:parseFragmentName()
 	if self._lexer.token.value == "on" then
 		error(self:unexpected())
@@ -355,6 +435,26 @@ function Parser:parseFragmentName()
 	return self:parseName()
 end
 
+-- Implements the parsing rules in the Values section.
+
+--[[*
+--  * Value[Const] :
+--  *   - [~Const] Variable
+--  *   - IntValue
+--  *   - FloatValue
+--  *   - StringValue
+--  *   - BooleanValue
+--  *   - NullValue
+--  *   - EnumValue
+--  *   - ListValue[?Const]
+--  *   - ObjectValue[?Const]
+--  *
+--  * BooleanValue : one of `true` `false`
+--  *
+--  * NullValue : `null`
+--  *
+--  * EnumValue : Name but not `true`, `false` or `null`
+--  *]]
 function Parser:parseValueLiteral(isConst: boolean)
 	local token = self._lexer.token
 
@@ -415,6 +515,11 @@ function Parser:parseStringLiteral()
 	}
 end
 
+--[[*
+--  * ListValue[Const] :
+--  *   - [ ]
+--  *   - [ Value[?Const]+ ]
+--  *]]
 function Parser:parseList(isConst: boolean)
 	local start = self._lexer.token
 	local item = function()
@@ -427,11 +532,11 @@ function Parser:parseList(isConst: boolean)
 	}
 end
 
--- /**
+--[[*
 --  * ObjectValue[Const] :
 --  *   - { }
 --  *   - { ObjectField[?Const]+ }
---  */
+--  *]]
 function Parser:parseObject(isConst: boolean)
 	local start = self._lexer.token
 	local item = function()
@@ -444,9 +549,9 @@ function Parser:parseObject(isConst: boolean)
 	}
 end
 
--- /**
+--[[*
 --  * ObjectField[Const] : Name : Value[?Const]
---  */
+--  *]]
 function Parser:parseObjectField(isConst: boolean)
 	local start = self._lexer.token
 	local name = self:parseName()
@@ -468,9 +573,9 @@ function Parser:parseDirectives(isConst)
 	return directives
 end
 
--- /**
+--[[*
 --  * Directive[Const] : @ Name Arguments[?Const]?
---  */
+--  *]]
 function Parser:parseDirective(isConst)
 	local start = self._lexer.token
 	self:expectToken(TokenKind.AT)
@@ -482,14 +587,14 @@ function Parser:parseDirective(isConst)
 	}
 end
 
--- // Implements the parsing rules in the Types section.
+-- Implements the parsing rules in the Types section.
 
--- /**
+--[[*
 --  * Type :
 --  *   - NamedType
 --  *   - ListType
 --  *   - NonNullType
---  */
+--  *]]
 function Parser:parseTypeReference()
 	local start = self._lexer.token
 	local type
@@ -515,9 +620,9 @@ function Parser:parseTypeReference()
 	return type
 end
 
--- /**
+--[[*
 --  * NamedType : Name
---  */
+--  *]]
 function Parser:parseNamedType()
 	local start = self._lexer.token
 	return {
@@ -527,130 +632,684 @@ function Parser:parseNamedType()
 	}
 end
 
+--[[*
+--  * TypeSystemDefinition :
+--  *   - SchemaDefinition
+--  *   - TypeDefinition
+--  *   - DirectiveDefinition
+--  *
+--  * TypeDefinition :
+--  *   - ScalarTypeDefinition
+--  *   - ObjectTypeDefinition
+--  *   - InterfaceTypeDefinition
+--  *   - UnionTypeDefinition
+--  *   - EnumTypeDefinition
+--  *   - InputObjectTypeDefinition
+--  *]]
 function Parser:parseTypeSystemDefinition()
-	error("Parser.parseTypeSystemDefinition unimplemented")
+	-- Many definitions begin with a description and require a lookahead.
+	local keywordToken = (function()
+		if self:peekDescription() then
+			return self._lexer:lookahead()
+		else
+			return self._lexer.token
+		end
+	end)()
+
+	if keywordToken.kind == TokenKind.NAME then
+		local tokenValue = keywordToken.value
+		if tokenValue == "schema" then
+			return self:parseSchemaDefinition()
+		elseif tokenValue == "scalar" then
+			return self:parseScalarTypeDefinition()
+		elseif tokenValue == "type" then
+			return self:parseObjectTypeDefinition()
+		elseif tokenValue == "interface" then
+			return self:parseInterfaceTypeDefinition()
+		elseif tokenValue == "union" then
+			return self:parseUnionTypeDefinition()
+		elseif tokenValue == "enum" then
+			return self:parseEnumTypeDefinition()
+		elseif tokenValue == "input" then
+			return self:parseInputObjectTypeDefinition()
+		elseif tokenValue == "directive" then
+			return self:parseDirectiveDefinition()
+		end
+	end
+
+	error(self:unexpected(keywordToken))
 end
 
 function Parser:peekDescription()
 	return self:peek(TokenKind.STRING) or self:peek(TokenKind.BLOCK_STRING)
 end
 
+--[[*
+--  * Description : StringValue
+--  *]]
 function Parser:parseDescription()
-	error("Parser.parseDescription unimplemented")
+	if self:peekDescription() then
+		return self:parseStringLiteral()
+	end
+	return -- ROBLOX deviation: no implicit returns
 end
 
+--[[*
+--  * SchemaDefinition : Description? schema Directives[Const]? { OperationTypeDefinition+ }
+--  *]]
 function Parser:parseSchemaDefinition()
-	error("Parser.parseSchemaDefinition unimplemented")
+	local start = self._lexer.token
+	local description = self:parseDescription()
+	self:expectKeyword("schema")
+	local directives = self:parseDirectives(true)
+	local operationTypes = self:many(
+		TokenKind.BRACE_L,
+		self.parseOperationTypeDefinition,
+		TokenKind.BRACE_R
+	)
+	return {
+		kind = Kind.SCHEMA_DEFINITION,
+		description = description,
+		directives = directives,
+		operationTypes = operationTypes,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * OperationTypeDefinition : OperationType : NamedType
+--  *]]
 function Parser:parseOperationTypeDefinition()
-	error("Parser.parseOperationTypeDefinition unimplemented")
+	local start = self._lexer.token
+	local operation = self:parseOperationType()
+	self:expectToken(TokenKind.COLON)
+	local type = self:parseNamedType()
+	return {
+		kind = Kind.OPERATION_TYPE_DEFINITION,
+		operation = operation,
+		type = type,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * ScalarTypeDefinition : Description? scalar Name Directives[Const]?
+--  *]]
 function Parser:parseScalarTypeDefinition()
-	error("Parser.parseScalarTypeDefinition unimplemented")
+	local start = self._lexer.token
+	local description = self:parseDescription()
+	self:expectKeyword("scalar")
+	local name = self:parseName()
+	local directives = self:parseDirectives(true)
+	return {
+		kind = Kind.SCALAR_TYPE_DEFINITION,
+		description = description,
+		name = name,
+		directives = directives,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * ObjectTypeDefinition :
+--  *   Description?
+--  *   type Name ImplementsInterfaces? Directives[Const]? FieldsDefinition?
+--  *]]
 function Parser:parseObjectTypeDefinition()
-	error("Parser.parseObjectTypeDefinition unimplemented")
+	local start = self._lexer.token
+	local description = self:parseDescription()
+	self:expectKeyword("type")
+	local name = self:parseName()
+	local interfaces = self:parseImplementsInterfaces()
+	local directives = self:parseDirectives(true)
+	local fields = self:parseFieldsDefinition()
+	return {
+		kind = Kind.OBJECT_TYPE_DEFINITION,
+		description = description,
+		name = name,
+		interfaces = interfaces,
+		directives = directives,
+		fields = fields,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * ImplementsInterfaces :
+--  *   - implements `&`? NamedType
+--  *   - ImplementsInterfaces & NamedType
+--  *]]
 function Parser:parseImplementsInterfaces()
-	error("Parser.parseImplementsInterfaces unimplemented")
+	local types = {}
+	if self:expectOptionalKeyword("implements") then
+		--   // Optional leading ampersand
+		self:expectOptionalToken(TokenKind.AMP)
+		repeat
+			table.insert(types, self:parseNamedType())
+		until not (
+			self:expectOptionalToken(TokenKind.AMP)
+			-- Legacy support for the SDL?
+ 			or (
+				(self._options and self._options.allowLegacySDLImplementsInterfaces) == true
+				and self:peek(TokenKind.NAME)
+			)
+		)
+	end
+	return types
 end
 
+--[[*
+--  * FieldsDefinition : { FieldDefinition+ }
+--  *]]
 function Parser:parseFieldsDefinition()
-	error("Parser.parseFieldsDefinition unimplemented")
+	-- Legacy support for the SDL?
+	if
+		(self._options and self._options.allowLegacySDLEmptyFields) == true
+		and self:peek(TokenKind.BRACE_L)
+		and self._lexer:lookahead().kind == TokenKind.BRACE_R
+	then
+		self._lexer:advance()
+		self._lexer:advance()
+		return {}
+	end
+	return self:optionalMany(
+		TokenKind.BRACE_L,
+		self.parseFieldDefinition,
+		TokenKind.BRACE_R
+	)
 end
 
+--[[*
+--  * FieldDefinition :
+--  *   - Description? Name ArgumentsDefinition? : Type Directives[Const]?
+--  *]]
 function Parser:parseFieldDefinition()
-	error("Parser.parseFieldDefinition unimplemented")
+	local start = self._lexer.token
+	local description = self:parseDescription()
+	local name = self:parseName()
+	local args = self:parseArgumentDefs()
+	self:expectToken(TokenKind.COLON)
+	local type = self:parseTypeReference()
+	local directives = self:parseDirectives(true)
+	return {
+		kind = Kind.FIELD_DEFINITION,
+		description = description,
+		name = name,
+		arguments = args,
+		type = type,
+		directives = directives,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * ArgumentsDefinition : ( InputValueDefinition+ )
+--  *]]
 function Parser:parseArgumentDefs()
-	error("Parser.parseArgumentDefs unimplemented")
+	return self:optionalMany(TokenKind.PAREN_L, self.parseInputValueDef, TokenKind.PAREN_R)
 end
 
+--[[*
+--  * InputValueDefinition :
+--  *   - Description? Name : Type DefaultValue? Directives[Const]?
+--  *]]
 function Parser:parseInputValueDef()
-	error("Parser.parseInputValueDef unimplemented")
+	local start = self._lexer.token
+	local description = self:parseDescription()
+	local name = self:parseName()
+	self:expectToken(TokenKind.COLON)
+	local type = self:parseTypeReference()
+	local defaultValue
+	if self:expectOptionalToken(TokenKind.EQUALS) then
+		defaultValue = self:parseValueLiteral(true)
+	end
+	local directives = self:parseDirectives(true)
+	return {
+		kind = Kind.INPUT_VALUE_DEFINITION,
+		description = description,
+		name = name,
+		type = type,
+		defaultValue = defaultValue,
+		directives = directives,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * InterfaceTypeDefinition :
+--  *   - Description? interface Name Directives[Const]? FieldsDefinition?
+--  *]]
 function Parser:parseInterfaceTypeDefinition()
-	error("Parser.parseInterfaceTypeDefinition unimplemented")
+	local start = self._lexer.token
+	local description = self:parseDescription()
+	self:expectKeyword("interface")
+	local name = self:parseName()
+	local interfaces = self:parseImplementsInterfaces()
+	local directives = self:parseDirectives(true)
+	local fields = self:parseFieldsDefinition()
+	return {
+		kind = Kind.INTERFACE_TYPE_DEFINITION,
+		description = description,
+		name = name,
+		interfaces = interfaces,
+		directives = directives,
+		fields = fields,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * UnionTypeDefinition :
+--  *   - Description? union Name Directives[Const]? UnionMemberTypes?
+--  *]]
 function Parser:parseUnionTypeDefinition()
-	error("Parser.parseUnionTypeDefinition unimplemented")
+	local start = self._lexer.token
+	local description = self:parseDescription()
+	self:expectKeyword("union")
+	local name = self:parseName()
+	local directives = self:parseDirectives(true)
+	local types = self:parseUnionMemberTypes()
+	return {
+		kind = Kind.UNION_TYPE_DEFINITION,
+		description = description,
+		name = name,
+		directives = directives,
+		types = types,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * UnionMemberTypes :
+--  *   - = `|`? NamedType
+--  *   - UnionMemberTypes | NamedType
+--  *]]
 function Parser:parseUnionMemberTypes()
-	error("Parser.parseUnionMemberTypes unimplemented")
+	local types = {}
+	if self:expectOptionalToken(TokenKind.EQUALS) then
+		--   // Optional leading pipe
+		self:expectOptionalToken(TokenKind.PIPE)
+		repeat
+			table.insert(types, self:parseNamedType())
+		until not self:expectOptionalToken(TokenKind.PIPE)
+	end
+	return types
 end
 
+--[[*
+--  * EnumTypeDefinition :
+--  *   - Description? enum Name Directives[Const]? EnumValuesDefinition?
+--  *]]
 function Parser:parseEnumTypeDefinition()
-	error("Parser.parseEnumTypeDefinition unimplemented")
+	local start = self._lexer.token
+	local description = self:parseDescription()
+	self:expectKeyword("enum")
+	local name = self:parseName()
+	local directives = self:parseDirectives(true)
+	local values = self:parseEnumValuesDefinition()
+	return {
+		kind = Kind.ENUM_TYPE_DEFINITION,
+		description = description,
+		name = name,
+		directives = directives,
+		values = values,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * EnumValuesDefinition : { EnumValueDefinition+ }
+--  *]]
 function Parser:parseEnumValuesDefinition()
-	error("Parser.parseEnumValuesDefinition unimplemented")
+	return self:optionalMany(
+		TokenKind.BRACE_L,
+		self.parseEnumValueDefinition,
+		TokenKind.BRACE_R
+	)
 end
 
+--[[*
+--  * EnumValueDefinition : Description? EnumValue Directives[Const]?
+--  *
+--  * EnumValue : Name
+--  *]]
 function Parser:parseEnumValueDefinition()
-	error("Parser.parseEnumValueDefinition unimplemented")
+	local start = self._lexer.token
+	local description = self:parseDescription()
+	local name = self:parseName()
+	local directives = self:parseDirectives(true)
+	return {
+		kind = Kind.ENUM_VALUE_DEFINITION,
+		description = description,
+		name = name,
+		directives = directives,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * InputObjectTypeDefinition :
+--  *   - Description? input Name Directives[Const]? InputFieldsDefinition?
+--  *]]
 function Parser:parseInputObjectTypeDefinition()
-	error("Parser.parseInputObjectTypeDefinition unimplemented")
+	local start = self._lexer.token
+	local description = self:parseDescription()
+	self:expectKeyword("input")
+	local name = self:parseName()
+	local directives = self:parseDirectives(true)
+	local fields = self:parseInputFieldsDefinition()
+	return {
+		kind = Kind.INPUT_OBJECT_TYPE_DEFINITION,
+		description = description,
+		name = name,
+		directives = directives,
+		fields = fields,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * InputFieldsDefinition : { InputValueDefinition+ }
+--  *]]
 function Parser:parseInputFieldsDefinition()
-	error("Parser.parseInputFieldsDefinition unimplemented")
+	return self:optionalMany(
+		TokenKind.BRACE_L,
+		self.parseInputValueDef,
+		TokenKind.BRACE_R
+	)
 end
 
+--[[*
+--  * TypeSystemExtension :
+--  *   - SchemaExtension
+--  *   - TypeExtension
+--  *
+--  * TypeExtension :
+--  *   - ScalarTypeExtension
+--  *   - ObjectTypeExtension
+--  *   - InterfaceTypeExtension
+--  *   - UnionTypeExtension
+--  *   - EnumTypeExtension
+--  *   - InputObjectTypeDefinition
+--  *]]
 function Parser:parseTypeSystemExtension()
-	error("Parser.parseTypeSystemExtension unimplemented")
+	local keywordToken = self._lexer:lookahead()
+
+	if keywordToken.kind == TokenKind.NAME then
+		local tokenValue = keywordToken.value
+		if tokenValue == "schema" then
+			return self:parseSchemaExtension()
+		elseif tokenValue == "scalar" then
+			return self:parseScalarTypeExtension()
+		elseif tokenValue == "type" then
+			return self:parseObjectTypeExtension()
+		elseif tokenValue == "interface" then
+			return self:parseInterfaceTypeExtension()
+		elseif tokenValue == "union" then
+			return self:parseUnionTypeExtension()
+		elseif tokenValue == "enum" then
+			return self:parseEnumTypeExtension()
+		elseif tokenValue == "input" then
+			return self:parseInputObjectTypeExtension()
+		end
+	end
+
+	error(self:unexpected(keywordToken))
 end
 
+--[[*
+--  * SchemaExtension :
+--  *  - extend schema Directives[Const]? { OperationTypeDefinition+ }
+--  *  - extend schema Directives[Const]
+--  *]]
 function Parser:parseSchemaExtension()
-	error("Parser.parseSchemaExtension unimplemented")
+	local start = self._lexer.token
+	self:expectKeyword("extend")
+	self:expectKeyword("schema")
+	local directives = self:parseDirectives(true)
+	local operationTypes = self:optionalMany(
+		TokenKind.BRACE_L,
+		self.parseOperationTypeDefinition,
+		TokenKind.BRACE_R
+	)
+	if #directives == 0 and #operationTypes == 0 then
+		error(self:unexpected())
+	end
+	return {
+		kind = Kind.SCHEMA_EXTENSION,
+		directives = directives,
+		operationTypes = operationTypes,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * ScalarTypeExtension :
+--  *   - extend scalar Name Directives[Const]
+--  *]]
 function Parser:parseScalarTypeExtension()
-	error("Parser.parseScalarTypeExtension unimplemented")
+	local start = self._lexer.token
+	self:expectKeyword("extend")
+	self:expectKeyword("scalar")
+	local name = self:parseName()
+	local directives = self:parseDirectives(true)
+	if #directives == 0 then
+		error(self:unexpected())
+	end
+	return {
+		kind = Kind.SCALAR_TYPE_EXTENSION,
+		name = name,
+		directives = directives,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * ObjectTypeExtension :
+--  *  - extend type Name ImplementsInterfaces? Directives[Const]? FieldsDefinition
+--  *  - extend type Name ImplementsInterfaces? Directives[Const]
+--  *  - extend type Name ImplementsInterfaces
+--  *]]
 function Parser:parseObjectTypeExtension()
-	error("Parser.parseObjectTypeExtension unimplemented")
+	local start = self._lexer.token
+	self:expectKeyword("extend")
+	self:expectKeyword("type")
+	local name = self:parseName()
+	local interfaces = self:parseImplementsInterfaces()
+	local directives = self:parseDirectives(true)
+	local fields = self:parseFieldsDefinition()
+	if #interfaces == 0 and #directives == 0 and #fields == 0 then
+		error(self:unexpected())
+	end
+	return {
+		kind = Kind.OBJECT_TYPE_EXTENSION,
+		name = name,
+		interfaces = interfaces,
+		directives = directives,
+		fields = fields,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * InterfaceTypeExtension :
+--  *  - extend interface Name ImplementsInterfaces? Directives[Const]? FieldsDefinition
+--  *  - extend interface Name ImplementsInterfaces? Directives[Const]
+--  *  - extend interface Name ImplementsInterfaces
+--  *]]
 function Parser:parseInterfaceTypeExtension()
-	error("Parser.parseInterfaceTypeExtension unimplemented")
+	local start = self._lexer.token
+	self:expectKeyword("extend")
+	self:expectKeyword("interface")
+	local name = self:parseName()
+	local interfaces = self:parseImplementsInterfaces()
+	local directives = self:parseDirectives(true)
+	local fields = self:parseFieldsDefinition()
+	if #interfaces == 0 and #directives == 0 and #fields == 0 then
+		error(self:unexpected())
+	end
+	return {
+		kind = Kind.INTERFACE_TYPE_EXTENSION,
+		name = name,
+		interfaces = interfaces,
+		directives = directives,
+		fields = fields,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * UnionTypeExtension :
+--  *   - extend union Name Directives[Const]? UnionMemberTypes
+--  *   - extend union Name Directives[Const]
+--  *]]
 function Parser:parseUnionTypeExtension()
-	error("Parser.parseUnionTypeExtension unimplemented")
+	local start = self._lexer.token
+	self:expectKeyword("extend")
+	self:expectKeyword("union")
+	local name = self:parseName()
+	local directives = self:parseDirectives(true)
+	local types = self:parseUnionMemberTypes()
+	if #directives == 0 and #types == 0 then
+		error(self:unexpected())
+	end
+	return {
+		kind = Kind.UNION_TYPE_EXTENSION,
+		name = name,
+		directives = directives,
+		types = types,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * EnumTypeExtension :
+--  *   - extend enum Name Directives[Const]? EnumValuesDefinition
+--  *   - extend enum Name Directives[Const]
+--  *]]
 function Parser:parseEnumTypeExtension()
-	error("Parser.parseEnumTypeExtension unimplemented")
+	local start = self._lexer.token
+	self:expectKeyword("extend")
+	self:expectKeyword("enum")
+	local name = self:parseName()
+	local directives = self:parseDirectives(true)
+	local values = self:parseEnumValuesDefinition()
+	if #directives == 0 and #values == 0 then
+		error(self:unexpected())
+	end
+	return {
+		kind = Kind.ENUM_TYPE_EXTENSION,
+		name = name,
+		directives = directives,
+		values = values,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * InputObjectTypeExtension :
+--  *   - extend input Name Directives[Const]? InputFieldsDefinition
+--  *   - extend input Name Directives[Const]
+--  *]]
 function Parser:parseInputObjectTypeExtension()
-	error("Parser.parseInputObjectTypeExtension unimplemented")
+	local start = self._lexer.token
+	self:expectKeyword("extend")
+	self:expectKeyword("input")
+	local name = self:parseName()
+	local directives = self:parseDirectives(true)
+	local fields = self:parseInputFieldsDefinition()
+	if #directives == 0 and #fields == 0 then
+		error(self:unexpected())
+	end
+	return {
+		kind = Kind.INPUT_OBJECT_TYPE_EXTENSION,
+		name = name,
+		directives = directives,
+		fields = fields,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * DirectiveDefinition :
+--  *   - Description? directive @ Name ArgumentsDefinition? `repeatable`? on DirectiveLocations
+--  *]]
 function Parser:parseDirectiveDefinition()
-	error("Parser.parseDirectiveDefinition unimplemented")
+	local start = self._lexer.token
+	local description = self:parseDescription()
+	self:expectKeyword("directive")
+	self:expectToken(TokenKind.AT)
+	local name = self:parseName()
+	local args = self:parseArgumentDefs()
+	local repeatable = self:expectOptionalKeyword("repeatable")
+	self:expectKeyword("on")
+	local locations = self:parseDirectiveLocations()
+	return {
+		kind = Kind.DIRECTIVE_DEFINITION,
+		description = description,
+		name = name,
+		arguments = args,
+		repeatable = repeatable,
+		locations = locations,
+		loc = self:loc(start),
+	}
 end
 
+--[[*
+--  * DirectiveLocations :
+--  *   - `|`? DirectiveLocation
+--  *   - DirectiveLocations | DirectiveLocation
+--  *]]
 function Parser:parseDirectiveLocations()
-	error("Parser.parseDirectiveLocations unimplemented")
+	-- Optional leading pipe
+	self:expectOptionalToken(TokenKind.PIPE)
+	local locations = {}
+	repeat
+		table.insert(locations, self:parseDirectiveLocation())
+	until not self:expectOptionalToken(TokenKind.PIPE)
+	return locations
 end
 
+--[[*
+--  * DirectiveLocation :
+--  *   - ExecutableDirectiveLocation
+--  *   - TypeSystemDirectiveLocation
+--  *
+--  * ExecutableDirectiveLocation : one of
+--  *   `QUERY`
+--  *   `MUTATION`
+--  *   `SUBSCRIPTION`
+--  *   `FIELD`
+--  *   `FRAGMENT_DEFINITION`
+--  *   `FRAGMENT_SPREAD`
+--  *   `INLINE_FRAGMENT`
+--  *
+--  * TypeSystemDirectiveLocation : one of
+--  *   `SCHEMA`
+--  *   `SCALAR`
+--  *   `OBJECT`
+--  *   `FIELD_DEFINITION`
+--  *   `ARGUMENT_DEFINITION`
+--  *   `INTERFACE`
+--  *   `UNION`
+--  *   `ENUM`
+--  *   `ENUM_VALUE`
+--  *   `INPUT_OBJECT`
+--  *   `INPUT_FIELD_DEFINITION`
+--  *]]
 function Parser:parseDirectiveLocation()
-	error("Parser.parseDirectiveLocation unimplemented")
+	local start = self._lexer.token
+	local name = self:parseName()
+	if DirectiveLocation[name.value] ~= nil then
+		return name
+	end
+	error(self:unexpected(start))
 end
 
+--[[*
+--  * Returns a location object, used to identify the place in
+--  * the source that created a given parsed object.
+--  *]]
 function Parser:loc(startToken)
 	if (self._options and self._options.noLocation) ~= true then
 		return Location.new(startToken, self._lexer.lastToken, self._lexer.source)
@@ -658,10 +1317,17 @@ function Parser:loc(startToken)
 	return
 end
 
+--[[*
+--  * Determines if the next token is of a given kind
+--  *]]
 function Parser:peek(kind)
 	return self._lexer.token.kind == kind
 end
 
+--[[*
+--  * If the next token is of the given kind, return that token after advancing
+--  * the lexer. Otherwise, do not change the parser state and throw an error.
+--  *]]
 function Parser:expectToken(kind)
 	local token = self._lexer.token
 	if token.kind == kind then
@@ -676,6 +1342,10 @@ function Parser:expectToken(kind)
 	))
 end
 
+--[[*
+--  * If the next token is of the given kind, return that token after advancing
+--  * the lexer. Otherwise, do not change the parser state and return undefined.
+--  *]]
 function Parser:expectOptionalToken(kind)
 	local token = self._lexer.token
 	if token.kind == kind then
@@ -685,6 +1355,10 @@ function Parser:expectOptionalToken(kind)
 	return nil
 end
 
+--[[*
+--  * If the next token is a given keyword, advance the lexer.
+--  * Otherwise, do not change the parser state and throw an error.
+--  *]]
 function Parser:expectKeyword(value)
 	local token = self._lexer.token
 	if token.kind == TokenKind.NAME and token.value == value then
@@ -698,10 +1372,10 @@ function Parser:expectKeyword(value)
 	end
 end
 
--- /**
+--[[*
 --  * If the next token is a given keyword, return "true" after advancing
 --  * the lexer. Otherwise, do not change the parser state and return "false".
---  */
+--  *]]
 function Parser:expectOptionalKeyword(value: string): boolean
 	local token = self._lexer.token
 	if token.kind == TokenKind.NAME and token.value == value then
@@ -711,6 +1385,10 @@ function Parser:expectOptionalKeyword(value: string): boolean
 	return false
 end
 
+--[[*
+--  * Helper function for creating an error when an unexpected lexed token
+--  * is encountered.
+--  *]]
 function Parser:unexpected(atToken)
 	local token = atToken ~= nil and atToken or self._lexer.token
 	return syntaxError(
@@ -720,6 +1398,12 @@ function Parser:unexpected(atToken)
 	)
 end
 
+--[[*
+--  * Returns a possibly empty list of parse nodes, determined by
+--  * the parseFn. This list begins with a lex token of openKind
+--  * and ends with a lex token of closeKind. Advances the parser
+--  * to the next lex token after the closing token.
+--  *]]
 function Parser:any(openKind, parseFn, closeKind)
 	self:expectToken(openKind)
 	local nodes = {}
@@ -729,6 +1413,13 @@ function Parser:any(openKind, parseFn, closeKind)
 	return nodes
 end
 
+--[[*
+--  * Returns a list of parse nodes, determined by the parseFn.
+--  * It can be empty only if open token is missing otherwise it will always
+--  * return non-empty list that begins with a lex token of openKind and ends
+--  * with a lex token of closeKind. Advances the parser to the next lex token
+--  * after the closing token.
+--  *]]
 function Parser:optionalMany(openKind, parseFn, closeKind)
 	if self:expectOptionalToken(openKind) then
 		local nodes = {}
@@ -740,6 +1431,12 @@ function Parser:optionalMany(openKind, parseFn, closeKind)
 	return {}
 end
 
+--[[*
+--  * Returns a non-empty list of parse nodes, determined by
+--  * the parseFn. This list begins with a lex token of openKind
+--  * and ends with a lex token of closeKind. Advances the parser
+--  * to the next lex token after the closing token.
+--  *]]
 function Parser:many(openKind, parseFn, closeKind)
 	self:expectToken(openKind)
 	local nodes = {}
@@ -749,33 +1446,24 @@ function Parser:many(openKind, parseFn, closeKind)
 	return nodes
 end
 
-function Parser:delimitedMany(delimiterKind, parseFn)
-	self:expectOptionalToken(delimiterKind)
-	local nodes = {}
-	repeat
-		table.insert(nodes, parseFn())
-	until not self:expectOptionalToken(delimiterKind)
-	return nodes
-end
-
+--[[*
+--  * A helper function to describe a token as a string for debugging
+--  *]]
 function getTokenDesc(token: Token): string
 	local value = token.value
 	return getTokenKindDesc(token.kind) .. (value ~= nil and " \"" .. value .. "\"" or "")
 end
 
+--[[*
+--  * A helper function to describe a token kind as a string for debugging
+--  *]]
 function getTokenKindDesc(kind: TokenKindEnum): string
 	return isPunctuatorTokenKind(kind) and "\"" .. kind .. "\"" or kind
 end
 
-------
--- TODO
-------
-
-local exports = {
+return {
 	Parser = Parser,
 	parse = parse,
 	parseValue = parseValue,
 	parseType = parseType,
 }
-
-return exports
