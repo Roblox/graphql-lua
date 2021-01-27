@@ -1,0 +1,4 @@
+return {
+	print = function()
+	end,
+}
