@@ -22,10 +22,10 @@ return function()
 	local HttpService = game:GetService("HttpService")
 
 	local source = Source.new(dedent([[
-		{
-		field
-		}
-	]]))
+  {
+    field
+  }
+]]))
 	local ast = parse(source)
 	local operationNode = ast.definitions[1]
 	invariant(operationNode.kind == Kind.OPERATION_DEFINITION)
@@ -67,7 +67,7 @@ return function()
 			expect(e.stack).to.be.a("string")
 		end)
 
-		itSKIP("converts nodes to positions and locations", function()
+		it("converts nodes to positions and locations", function()
 			local e = GraphQLError.new("msg", { fieldNode })
 			expect(e).toObjectContain({
 				nodes = { fieldNode },
@@ -77,7 +77,7 @@ return function()
 			expect(e.source).to.equal(source)
 		end)
 
-		itSKIP("converts single node to positions and locations", function()
+		it("converts single node to positions and locations", function()
 			local e = GraphQLError.new("msg", fieldNode)
 			expect(e).toObjectContain({
 				nodes = { fieldNode },
@@ -116,7 +116,7 @@ return function()
 			expect(HttpService:JSONEncode(testObj)).to.equal("{\"message\":\"msg\"}")
 		end)
 
-		itSKIP("serializes to include message and locations", function()
+		it("serializes to include message and locations", function()
 			local e = GraphQLError.new("msg", fieldNode)
 			-- ROBLOX deviation: GraphQLError has more objects than required for this test
 			local testObj = {
@@ -124,7 +124,9 @@ return function()
 				locations = e.locations,
 			}
 			-- ROBLOX deviation: key order is different
-			expect(HttpService:JSONEncode(testObj)).to.equal("{\"message\":\"msg\",\"locations\":[{\"line\":2,\"column\":3}]}")
+			expect(HttpService:JSONEncode(testObj)).to.equal(
+				"{\"locations\":[{\"line\":2,\"column\":3}],\"message\":\"msg\"}"
+			)
 		end)
 
 		it("serializes to include path", function()
