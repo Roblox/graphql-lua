@@ -19,7 +19,7 @@ local isPunctuatorTokenKind = lexer.isPunctuatorTokenKind
 local TokenKind = require(language.tokenKind).TokenKind
 local Kind = require(language.kinds).Kind
 
-local syntaxError = require(script.Parent.Parent.error.syntaxError)
+local syntaxError = require(script.Parent.Parent.error.syntaxError).syntaxError
 
 -- deviation: pre-declare functions
 local getTokenDesc

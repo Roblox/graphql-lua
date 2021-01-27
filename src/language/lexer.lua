@@ -7,7 +7,7 @@ local Packages = src.Parent.Packages
 local Number = require(Packages.LuauPolyfill).Number
 local isNaN = Number.isNaN
 
-local syntaxError = require(src.error.syntaxError)
+local syntaxError = require(src.error.syntaxError).syntaxError
 local TokenKind = require(language.tokenKind).TokenKind
 local Token = require(language.ast).Token
 local slice = require(src.luaUtils.slice).sliceString
