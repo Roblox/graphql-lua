@@ -14,3 +14,4 @@ Packages/*
 .vscode
 debug.log
 .idea
+.vscode/launch.json
