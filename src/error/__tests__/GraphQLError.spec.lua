@@ -1,15 +1,10 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/error/__tests__/GraphQLError-test.js
---!nolint ImportUnused
---!nolint LocalUnused
---!nolint UnknownGlobal
 
 return function()
 
 	-- directory
 	local errorWorkspace = script.Parent.Parent
 	local srcWorkspace = errorWorkspace.Parent
-	local rootWorkspace = srcWorkspace.Parent
-	local Packages = rootWorkspace.Packages
 	local languageWorkspace = srcWorkspace.language
 
 	-- require
@@ -19,12 +14,11 @@ return function()
 	local parse = require(languageWorkspace.parser).parse
 	local Source = require(languageWorkspace.source).Source
 	local GraphQLError = require(errorWorkspace.GraphQLError).GraphQLError
+	local printError = require(errorWorkspace.GraphQLError).printError
 
 	-- lua helpers & polyfills
 	local instanceOf = require(srcWorkspace.jsutils.instanceOf)
-	local LuauPolyfill = require(Packages.LuauPolyfill)
 	local Error = require(srcWorkspace.luaUtils.Error)
-	local devPrint = require(srcWorkspace.TestMatchers.devPrint)
 	local HttpService = game:GetService("HttpService")
 
 	local source = Source.new(dedent([[
@@ -153,70 +147,70 @@ return function()
 
 	describe("printError", function()
 
-		itSKIP("prints an error without location", function()
-			-- local error = GraphQLError.new('Error without location');
-			-- expect(printError(error)).to.equal('Error without location');
+		it("prints an error without location", function()
+			local error = GraphQLError.new('Error without location');
+			expect(printError(error)).toEqual('Error without location');
 		end)
 
-		itSKIP("prints an error using node without location", function()
-			-- const error = new GraphQLError(
-			--   'Error attached to node without location',
-			--   parse('{ foo }', { noLocation: true }),
-			-- );
-			-- expect(printError(error)).to.equal(
-			--   'Error attached to node without location',
-			-- );
+		it("prints an error using node without location", function()
+			local error = GraphQLError.new(
+			  'Error attached to node without location',
+			  parse('{ foo }', { noLocation = true })
+			);
+			expect(printError(error)).to.equal(
+			  'Error attached to node without location'
+			);
 		end)
 
-		itSKIP("prints an error with nodes from different sources", function()
-			-- const docA = parse(
-			--   new Source(
-			-- 	dedent`
-			-- 	  type Foo {
-			-- 		field: String
-			-- 	  }
-			-- 	`,
-			-- 	'SourceA',
-			--   ),
-			-- );
-			-- const opA = docA.definitions[0];
-			-- invariant(opA.kind === Kind.OBJECT_TYPE_DEFINITION && opA.fields);
-			-- const fieldA = opA.fields[0];
+		it("prints an error with nodes from different sources", function()
+			local docA = parse(
+			  Source.new(
+				dedent([[
+				  type Foo {
+				    field: String
+				  }
+				]]),
+				'SourceA'
+			  )
+			)
+			local opA = docA.definitions[1];
+			invariant(opA.kind == Kind.OBJECT_TYPE_DEFINITION and opA.fields);
+			local fieldA = opA.fields[1];
 
-			-- const docB = parse(
-			--   new Source(
-			-- 	dedent`
-			-- 	  type Foo {
-			-- 		field: Int
-			-- 	  }
-			-- 	`,
-			-- 	'SourceB',
-			--   ),
-			-- );
-			-- const opB = docB.definitions[0];
-			-- invariant(opB.kind === Kind.OBJECT_TYPE_DEFINITION && opB.fields);
-			-- const fieldB = opB.fields[0];
+			local docB = parse(
+				Source.new(
+				dedent([[
+				  type Foo {
+				    field: Int
+				  }
+				]]),
+				'SourceB'
+			  )
+			)
+			local opB = docB.definitions[1];
+			invariant(opB.kind == Kind.OBJECT_TYPE_DEFINITION and opB.fields);
+			local fieldB = opB.fields[1];
 
-			-- const error = new GraphQLError('Example error with two nodes', [
-			--   fieldA.type,
-			--   fieldB.type,
-			-- ]);
+			local error = GraphQLError.new('Example error with two nodes', {
+			  fieldA.type,
+			  fieldB.type
+			});
 
-			-- expect(printError(error) + '\n').to.equal(dedent`
-			--   Example error with two nodes
+			expect(printError(error) .. '\n').to.equal(dedent([[
+      			Example error with two nodes
 
-			--   SourceA:2:10
-			--   1 | type Foo {
-			--   2 |   field: String
-			-- 	|          ^
-			--   3 | }
+      			SourceA:2:10
+      			1 | type Foo {
+      			2 |   field: String
+      			  |          ^
+      			3 | }
 
-			--   SourceB:2:10
-			--   1 | type Foo {
-			--   2 |   field: Int
-			-- 	|          ^
-			--   3 | }
-			-- `);
+      			SourceB:2:10
+      			1 | type Foo {
+      			2 |   field: Int
+      			  |          ^
+      			3 | }
+			]]));
 		end)
 
 	end)
