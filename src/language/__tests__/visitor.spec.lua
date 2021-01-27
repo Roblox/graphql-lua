@@ -8,10 +8,13 @@ return function()
 	local Array = LuauPolyfill.Array
 	local Object = LuauPolyfill.Object
 
+	local invariant = require(srcWorkspace.jsutils.invariant)
+
 	local Kind = require(script.Parent.Parent.kinds).Kind
 	local parse = require(script.Parent.Parent.parser).parse
 	local visitorExports = require(script.Parent.Parent.visitor)
 	local visit = visitorExports.visit
+	local visitInParallel = visitorExports.visitInParallel
 	local BREAK = visitorExports.BREAK
 	local REMOVE = visitorExports.REMOVE
 	local QueryDocumentKeys = visitorExports.QueryDocumentKeys
@@ -1001,5 +1004,524 @@ return function()
 				})
 			end)
 		end)
+
+		describe("visitInParallel", function()
+			-- // Note: nearly identical to the above test of the same test but
+			-- // using visitInParallel.
+			it("allows skipping a sub-tree", function()
+				local visited = {}
+
+				local ast = parse("{ a, b { x }, c }")
+				visit(
+					ast,
+					visitInParallel({
+						{
+							enter = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "enter", node.kind, getValue(node) })
+								if node.kind == "Field" and node.name.value == "b" then
+									return false
+								end
+								return -- ROBLOX deviation: no implicit returns
+							end,
+
+							leave = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "leave", node.kind, getValue(node) })
+							end,
+						},
+					})
+				)
+
+				expect(visited).toEqual({
+					{ "enter", "Document" },
+					{ "enter", "OperationDefinition" },
+					{ "enter", "SelectionSet" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "a" },
+					{ "leave", "Name", "a" },
+					{ "leave", "Field" },
+					{ "enter", "Field" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "c" },
+					{ "leave", "Name", "c" },
+					{ "leave", "Field" },
+					{ "leave", "SelectionSet" },
+					{ "leave", "OperationDefinition" },
+					{ "leave", "Document" },
+				})
+			end)
+
+			it("allows skipping different sub-trees", function()
+				local visited = {}
+
+				local ast = parse("{ a { x }, b { y} }")
+				visit(
+					ast,
+					visitInParallel({
+						{
+							enter = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "no-a", "enter", node.kind, getValue(node) })
+								if node.kind == "Field" and node.name.value == "a" then
+									return false
+								end
+								return -- ROBLOX deviation: no implicit returns
+							end,
+							leave = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "no-a", "leave", node.kind, getValue(node) })
+							end,
+						},
+						{
+							enter = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "no-b", "enter", node.kind, getValue(node) })
+								if node.kind == "Field" and node.name.value == "b" then
+									return false
+								end
+								return -- ROBLOX deviation: no implicit returns
+							end,
+							leave = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "no-b", "leave", node.kind, getValue(node) })
+							end,
+						},
+					})
+				)
+
+				expect(visited).toEqual({
+					{ "no-a", "enter", "Document" },
+					{ "no-b", "enter", "Document" },
+					{ "no-a", "enter", "OperationDefinition" },
+					{ "no-b", "enter", "OperationDefinition" },
+					{ "no-a", "enter", "SelectionSet" },
+					{ "no-b", "enter", "SelectionSet" },
+					{ "no-a", "enter", "Field" },
+					{ "no-b", "enter", "Field" },
+					{ "no-b", "enter", "Name", "a" },
+					{ "no-b", "leave", "Name", "a" },
+					{ "no-b", "enter", "SelectionSet" },
+					{ "no-b", "enter", "Field" },
+					{ "no-b", "enter", "Name", "x" },
+					{ "no-b", "leave", "Name", "x" },
+					{ "no-b", "leave", "Field" },
+					{ "no-b", "leave", "SelectionSet" },
+					{ "no-b", "leave", "Field" },
+					{ "no-a", "enter", "Field" },
+					{ "no-b", "enter", "Field" },
+					{ "no-a", "enter", "Name", "b" },
+					{ "no-a", "leave", "Name", "b" },
+					{ "no-a", "enter", "SelectionSet" },
+					{ "no-a", "enter", "Field" },
+					{ "no-a", "enter", "Name", "y" },
+					{ "no-a", "leave", "Name", "y" },
+					{ "no-a", "leave", "Field" },
+					{ "no-a", "leave", "SelectionSet" },
+					{ "no-a", "leave", "Field" },
+					{ "no-a", "leave", "SelectionSet" },
+					{ "no-b", "leave", "SelectionSet" },
+					{ "no-a", "leave", "OperationDefinition" },
+					{ "no-b", "leave", "OperationDefinition" },
+					{ "no-a", "leave", "Document" },
+					{ "no-b", "leave", "Document" },
+				})
+			end)
+
+			-- // Note: nearly identical to the above test of the same test but
+			-- // using visitInParallel.
+			it("allows early exit while visiting", function()
+				local visited = {}
+
+				local ast = parse("{ a, b { x }, c }")
+				visit(
+					ast,
+					visitInParallel({
+						{
+							enter = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "enter", node.kind, getValue(node) })
+								if node.kind == "Name" and node.value == "x" then
+									return BREAK
+								end
+								return -- ROBLOX deviation: no implicit returns
+							end,
+							leave = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "leave", node.kind, getValue(node) })
+							end,
+						},
+					})
+				)
+
+				expect(visited).toEqual({
+					{ "enter", "Document" },
+					{ "enter", "OperationDefinition" },
+					{ "enter", "SelectionSet" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "a" },
+					{ "leave", "Name", "a" },
+					{ "leave", "Field" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "b" },
+					{ "leave", "Name", "b" },
+					{ "enter", "SelectionSet" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "x" },
+				})
+			end)
+
+			it("allows early exit from different points", function()
+				local visited = {}
+
+				local ast = parse("{ a { y }, b { x } }")
+				visit(
+					ast,
+					visitInParallel(
+						{
+							{
+								enter = function(self, ...)
+									local node = ...
+									checkVisitorFnArgs(expect, ast, { ... })
+									table.insert(visited, { "break-a", "enter", node.kind, getValue(node) })
+									if node.kind == "Name" and node.value == "a" then
+										return BREAK
+									end
+									return -- ROBLOX deviation: no implicit returns
+								end,
+								-- istanbul ignore next (Never called and used as a placeholder)
+								leave = function()
+									invariant(false)
+								end,
+							},
+							{
+								enter = function(self, ...)
+									local node = ...
+									checkVisitorFnArgs(expect, ast, { ... })
+									table.insert(visited, { "break-b", "enter", node.kind, getValue(node) })
+									if node.kind == "Name" and node.value == "b" then
+										return BREAK
+									end
+									return -- ROBLOX deviation: no implicit returns
+								end,
+								leave = function(self, ...)
+									local node = ...
+									checkVisitorFnArgs(expect, ast, { ... })
+									table.insert(visited, { "break-b", "leave", node.kind, getValue(node) })
+								end,
+							},
+						}
+					)
+				)
+
+				expect(visited).toEqual({
+					{ "break-a", "enter", "Document" },
+					{ "break-b", "enter", "Document" },
+					{ "break-a", "enter", "OperationDefinition" },
+					{ "break-b", "enter", "OperationDefinition" },
+					{ "break-a", "enter", "SelectionSet" },
+					{ "break-b", "enter", "SelectionSet" },
+					{ "break-a", "enter", "Field" },
+					{ "break-b", "enter", "Field" },
+					{ "break-a", "enter", "Name", "a" },
+					{ "break-b", "enter", "Name", "a" },
+					{ "break-b", "leave", "Name", "a" },
+					{ "break-b", "enter", "SelectionSet" },
+					{ "break-b", "enter", "Field" },
+					{ "break-b", "enter", "Name", "y" },
+					{ "break-b", "leave", "Name", "y" },
+					{ "break-b", "leave", "Field" },
+					{ "break-b", "leave", "SelectionSet" },
+					{ "break-b", "leave", "Field" },
+					{ "break-b", "enter", "Field" },
+					{ "break-b", "enter", "Name", "b" },
+				})
+			end)
+
+			-- // Note: nearly identical to the above test of the same test but
+			-- // using visitInParallel.
+			it("allows early exit while leaving", function()
+				local visited = {}
+
+				local ast = parse("{ a, b { x }, c }")
+				visit(
+					ast,
+					visitInParallel({
+						{
+							enter = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "enter", node.kind, getValue(node) })
+							end,
+							leave = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "leave", node.kind, getValue(node) })
+								if node.kind == "Name" and node.value == "x" then
+									return BREAK
+								end
+								return -- ROBLOX deviation: no implicit returns
+							end,
+						},
+					})
+				)
+
+				expect(visited).toEqual({
+					{ "enter", "Document" },
+					{ "enter", "OperationDefinition" },
+					{ "enter", "SelectionSet" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "a" },
+					{ "leave", "Name", "a" },
+					{ "leave", "Field" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "b" },
+					{ "leave", "Name", "b" },
+					{ "enter", "SelectionSet" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "x" },
+					{ "leave", "Name", "x" },
+				})
+			end)
+
+			it("allows early exit from leaving different points", function()
+				local visited = {}
+
+				local ast = parse("{ a { y }, b { x } }")
+				visit(
+					ast,
+					visitInParallel({
+						{
+							enter = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "break-a", "enter", node.kind, getValue(node) })
+							end,
+							leave = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "break-a", "leave", node.kind, getValue(node) })
+								if node.kind == "Field" and node.name.value == "a" then
+									return BREAK
+								end
+								return -- ROBLOX deviation: no implicit returns
+							end,
+						},
+						{
+							enter = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "break-b", "enter", node.kind, getValue(node) })
+							end,
+							leave = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "break-b", "leave", node.kind, getValue(node) })
+								if node.kind == "Field" and node.name.value == "b" then
+									return BREAK
+								end
+								return -- ROBLOX deviation: no implicit returns
+							end,
+						},
+					})
+				)
+
+				expect(visited).toEqual({
+					{ "break-a", "enter", "Document" },
+					{ "break-b", "enter", "Document" },
+					{ "break-a", "enter", "OperationDefinition" },
+					{ "break-b", "enter", "OperationDefinition" },
+					{ "break-a", "enter", "SelectionSet" },
+					{ "break-b", "enter", "SelectionSet" },
+					{ "break-a", "enter", "Field" },
+					{ "break-b", "enter", "Field" },
+					{ "break-a", "enter", "Name", "a" },
+					{ "break-b", "enter", "Name", "a" },
+					{ "break-a", "leave", "Name", "a" },
+					{ "break-b", "leave", "Name", "a" },
+					{ "break-a", "enter", "SelectionSet" },
+					{ "break-b", "enter", "SelectionSet" },
+					{ "break-a", "enter", "Field" },
+					{ "break-b", "enter", "Field" },
+					{ "break-a", "enter", "Name", "y" },
+					{ "break-b", "enter", "Name", "y" },
+					{ "break-a", "leave", "Name", "y" },
+					{ "break-b", "leave", "Name", "y" },
+					{ "break-a", "leave", "Field" },
+					{ "break-b", "leave", "Field" },
+					{ "break-a", "leave", "SelectionSet" },
+					{ "break-b", "leave", "SelectionSet" },
+					{ "break-a", "leave", "Field" },
+					{ "break-b", "leave", "Field" },
+					{ "break-b", "enter", "Field" },
+					{ "break-b", "enter", "Name", "b" },
+					{ "break-b", "leave", "Name", "b" },
+					{ "break-b", "enter", "SelectionSet" },
+					{ "break-b", "enter", "Field" },
+					{ "break-b", "enter", "Name", "x" },
+					{ "break-b", "leave", "Name", "x" },
+					{ "break-b", "leave", "Field" },
+					{ "break-b", "leave", "SelectionSet" },
+					{ "break-b", "leave", "Field" },
+				})
+			end)
+
+			it("allows for editing on enter", function()
+				local visited = {}
+
+				local ast = parse("{ a, b, c { a, b, c } }", { noLocation = true })
+				local editedAST = visit(
+					ast,
+					visitInParallel({
+						{
+							enter = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								if node.kind == "Field" and node.name.value == "b" then
+									return REMOVE
+								end
+								return -- ROBLOX deviation: no implicit returns
+							end,
+						},
+						{
+							enter = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "enter", node.kind, getValue(node) })
+							end,
+							leave = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(
+									expect,
+									ast,
+									{ ... },--[[ isEdited ]]
+									true
+								)
+								table.insert(visited, { "leave", node.kind, getValue(node) })
+							end,
+						},
+					})
+				)
+
+				expect(ast).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }))
+
+				expect(editedAST).toEqual(parse("{ a,    c { a,    c } }", { noLocation = true }))
+
+				expect(visited).toEqual({
+					{ "enter", "Document" },
+					{ "enter", "OperationDefinition" },
+					{ "enter", "SelectionSet" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "a" },
+					{ "leave", "Name", "a" },
+					{ "leave", "Field" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "c" },
+					{ "leave", "Name", "c" },
+					{ "enter", "SelectionSet" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "a" },
+					{ "leave", "Name", "a" },
+					{ "leave", "Field" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "c" },
+					{ "leave", "Name", "c" },
+					{ "leave", "Field" },
+					{ "leave", "SelectionSet" },
+					{ "leave", "Field" },
+					{ "leave", "SelectionSet" },
+					{ "leave", "OperationDefinition" },
+					{ "leave", "Document" },
+				})
+			end)
+
+			it("allows for editing on leave", function()
+				local visited = {}
+
+				local ast = parse("{ a, b, c { a, b, c } }", { noLocation = true })
+				local editedAST = visit(
+					ast,
+					visitInParallel({
+						{
+							leave = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(
+									expect,
+									ast,
+									{ ... },--[[ isEdited ]]
+									true
+								)
+								if node.kind == "Field" and node.name.value == "b" then
+									return REMOVE
+								end
+								return -- ROBLOX deviation: no implicit returns
+							end,
+						},
+						{
+							enter = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "enter", node.kind, getValue(node) })
+							end,
+							leave = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(
+									expect,
+									ast,
+									{ ... },--[[ isEdited ]]
+									true
+								)
+								table.insert(visited, { "leave", node.kind, getValue(node) })
+							end,
+						},
+					})
+				)
+
+				expect(ast).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }))
+
+				expect(editedAST).toEqual(parse("{ a,    c { a,    c } }", { noLocation = true }))
+
+				expect(visited).toEqual({
+					{ "enter", "Document" },
+					{ "enter", "OperationDefinition" },
+					{ "enter", "SelectionSet" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "a" },
+					{ "leave", "Name", "a" },
+					{ "leave", "Field" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "b" },
+					{ "leave", "Name", "b" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "c" },
+					{ "leave", "Name", "c" },
+					{ "enter", "SelectionSet" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "a" },
+					{ "leave", "Name", "a" },
+					{ "leave", "Field" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "b" },
+					{ "leave", "Name", "b" },
+					{ "enter", "Field" },
+					{ "enter", "Name", "c" },
+					{ "leave", "Name", "c" },
+					{ "leave", "Field" },
+					{ "leave", "SelectionSet" },
+					{ "leave", "Field" },
+					{ "leave", "SelectionSet" },
+					{ "leave", "OperationDefinition" },
+					{ "leave", "Document" },
+				})
+			end)
+        end)
 	end)
 end

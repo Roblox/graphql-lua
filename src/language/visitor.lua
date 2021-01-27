@@ -350,7 +350,57 @@ local function visit(root, visitor, visitorKeys)
 end
 
 function visitInParallel(visitors)
-	error("Not implemented")
+	-- ROBLOX deviation: no predefined Array length
+	local skipping = {}
+
+	return {
+		enter = function(self, ...)
+			local node = ...
+			for i = 1, #visitors do
+				if skipping[i] == nil then
+					local fn = getVisitFn(
+						visitors[i],
+						node.kind,--[[ isLeaving ]]
+						false
+					)
+					if fn then
+						local result = fn(visitors[i], ...)
+						if result == false then
+							skipping[i] = node
+						elseif result == BREAK then
+							skipping[i] = BREAK
+						elseif result ~= nil then
+							return result
+						end
+					end
+				end
+			end
+			return -- ROBLOX deviation: no implicit returns
+		end,
+		leave = function(self, ...)
+			local node = ...
+			for i = 1, #visitors do
+				if skipping[i] == nil then
+					local fn = getVisitFn(
+						visitors[i],
+						node.kind,--[[ isLeaving ]]
+						true
+					)
+					if fn then
+						local result = fn(visitors[i], ...)
+						if result == BREAK then
+							skipping[i] = BREAK
+						elseif result ~= nil and result ~= false then
+							return result
+						end
+					end
+				elseif skipping[i] == node then
+					skipping[i] = nil
+				end
+			end
+			return -- ROBLOX deviation: no implicit returns
+		end,
+	}
 end
 
 function getVisitFn(visitor: Visitor<any>, kind: string, isLeaving: boolean)
