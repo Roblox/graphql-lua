@@ -11,7 +11,7 @@ exports.TokenKind = {
 	PAREN_L = "(",
 	PAREN_R = ")",
 	SPREAD = "...",
-	COLON = "=",
+	COLON = ":",
 	EQUALS = "=",
 	AT = "@",
 	BRACKET_L = "[",

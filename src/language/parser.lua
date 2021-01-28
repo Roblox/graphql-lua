@@ -309,7 +309,12 @@ end
 --  * Arguments[Const] : ( Argument[?Const]+ )
 --  *]]
 function Parser:parseArguments(isConst)
-	local item = isConst and self.parseConstArgument or self.parseArgument
+	local item
+	if isConst then
+		item = self.parseConstArgument
+	else
+		item = self.parseArgument
+	end
 	return self:optionalMany(TokenKind.PAREN_L, item, TokenKind.PAREN_R)
 end
 
@@ -334,10 +339,10 @@ function Parser:parseConstArgument()
 	return {
 		kind = Kind.ARGUMENT,
 		name = self:parseName(),
-		value = function()
+		value = (function()
 			self:expectToken(TokenKind.COLON)
 			return self:parseValueLiteral(true)
-		end,
+		end)(),
 		loc = self:loc(start),
 	}
 end
