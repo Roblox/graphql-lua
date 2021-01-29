@@ -1,4 +1,4 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/jsutils/ObjMap.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/ObjMap.js
 
 export type ObjMap<T> = { [string]: T }
 export type ObjMapLike<T> = ObjMap<T> | { [string]: T };

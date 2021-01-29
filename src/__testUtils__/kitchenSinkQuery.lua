@@ -1,6 +1,6 @@
--- upstream: https://github.com/graphql/graphql-js/blob/661ff1a6b591eea1e7a7e7c9e6b8b2dcfabf3bd7/src/__testUtils__/kitchenSinkQuery.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/__testUtils__/kitchenSinkQuery.js
 
-return [[
+local kitchenSinkQuery: string = [[
 query queryName($foo: ComplexType, $site: Site = MOBILE) @onQuery {
   whoever123is: node(id: [123, 456]) {
     id
@@ -66,3 +66,7 @@ query {
   __typename
 }
 ]]
+
+return {
+	kitchenSinkQuery = kitchenSinkQuery,
+}

@@ -1,8 +1,8 @@
--- upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/jsutils/__tests__/suggestionList-test.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/__tests__/suggestionList-test.js
 return function()
 	local jsutils = script.Parent.Parent
 
-	local suggestionList = require(jsutils.suggestionList)
+	local suggestionList = require(jsutils.suggestionList).suggestionList
 
 	describe("suggestionList", function()
 		local function expectSuggestions(input, options)

@@ -1,4 +1,4 @@
--- upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/jsutils/suggestionList.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/suggestionList.js
 local jsutils = script.Parent
 local graphql = jsutils.Parent
 local Packages = graphql.Parent.Packages
@@ -7,9 +7,7 @@ local Object = LuauPolyfill.Object
 
 type Array<T> = { [number]: T }
 
-local function localeCompare(a, b)
-	return a < b
-end
+local naturalCompare = require(script.Parent.naturalCompare).naturalCompare
 
 local LexicalDistance = {}
 
@@ -40,7 +38,7 @@ local function suggestionList(
 		if distanceDiff ~= 0 then
 			return distanceDiff < 0
 		end
-		return localeCompare(a, b)
+		return naturalCompare(a, b) < 0
 	end)
 
 	return keys
@@ -163,4 +161,6 @@ function stringToArray(str: string): Array<number>
 	return array
 end
 
-return suggestionList
+return {
+	suggestionList = suggestionList
+}

@@ -1,13 +1,13 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/language/__tests__/lexer-test.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/__tests__/lexer-test.js
 
 return function()
 	local language = script.Parent.Parent
 	local src = language.Parent
 	local root = src.Parent
 
-	local inspect = require(src.jsutils.inspect)
+	local dedent = require(src.__testUtils__.dedent).dedent
+	local inspect = require(src.jsutils.inspect).inspect
 	local lexerExport = require(language.lexer)
-	local dedent = require(src.__testUtils__.dedent)
 	local sourceExport = require(language.source)
 	local tokenKindExport = require(language.tokenKind)
 	local Array = require(root.Packages.LuauPolyfill).Array

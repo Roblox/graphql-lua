@@ -1,9 +1,4 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/language/ast.js
-
-local language = script.Parent
-local src = language.Parent
-
-local defineInspect = require(src.jsutils.defineInspect)
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/ast.js
 
 local Location = {}
 Location.__index = Location
@@ -23,13 +18,20 @@ function Location:toJSON()
 	return { start = self.start, _end = self._end }
 end
 
--- `Print a simplified form when appearing in `inspect` and `util.inspect`.
-defineInspect(Location)
+-- ROBLOX deviation: don't implement since it's already slated for removal
+-- @deprecated: Will be removed in v17
+-- [Symbol.for('nodejs.util.inspect.custom')](): mixed {
+--     return this.toJSON();
+--   }
 
+--[[*
+ * Represents a range of characters represented by a lexical token
+ * within a Source.
+ ]]
 local Token = {}
 Token.__index = Token
 
-function Token.new(kind, start, _end, line, column, prev, value)
+function Token.new(kind, start: number, _end: number, line: number, column: number, prev, value: string)
 	local self = {}
 	self.kind = kind
 	self.start = start
@@ -52,8 +54,11 @@ function Token:toJSON()
 	}
 end
 
--- Print a simplified form when appearing in `inspect` and `util.inspect`.
-defineInspect(Token)
+-- ROBLOX deviation: don't implement since it's already slated for removal
+-- @deprecated: Will be removed in v17
+-- [Symbol.for('nodejs.util.inspect.custom')](): mixed {
+--     return this.toJSON();
+--   }
 
 local function isNode(maybeNode)
 	return maybeNode ~= nil and typeof(maybeNode.kind) == "string"

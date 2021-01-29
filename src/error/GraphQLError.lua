@@ -1,6 +1,6 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/error/GraphQLError.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/error/GraphQLError.js
 
--- directory
+-- ROBLOX directory
 local srcWorkspace = script.Parent.Parent
 local languageWorkspace = srcWorkspace.language
 
@@ -11,13 +11,11 @@ local printLocation = printLocationIndex.printLocation
 local printSourceLocation = printLocationIndex.printSourceLocation
 
 -- lua helpers & polyfills
-local isObjectLike = require(srcWorkspace.jsutils.isObjectLike)
-local symbols = require(srcWorkspace.polyfill.symbols)
-local SYMBOL_TO_STRING_TAG = symbols.SYMBOL_TO_STRING_TAG
+local isObjectLike = require(srcWorkspace.jsutils.isObjectLike).isObjectLike
 local Array = require(srcWorkspace.Parent.Packages.LuauPolyfill).Array
 local Error = require(srcWorkspace.luaUtils.Error)
 
--- deviation: pre-declare functions
+-- ROBLOX deviation: pre-declare functions
 local printError
 
 local GraphQLError = setmetatable({}, { __index = Error })
@@ -31,7 +29,7 @@ function GraphQLError.new(
 	nodes,
 	source,
 	positions: Array<number>,
-	path: Array<number | string>,
+	path: Array<string | number>,
 	originalError,
 	extensions
 )
@@ -52,7 +50,6 @@ function GraphQLError.new(
 		_source = _nodes[1].loc ~= nil and _nodes[1].loc.source or nil
 	end
 
-	-- REF: GraphQLError.js:104
 	local _positions = positions
 	if _positions == nil and _nodes ~= nil then
 		_positions = Array.reduce(_nodes, function(list, node)
@@ -66,7 +63,6 @@ function GraphQLError.new(
 		_positions = nil
 	end
 
-	-- REF: GraphQLError.js:117
 	local _locations
 	if positions ~= nil and source ~= nil then
 		_locations = Array.map(positions, function(pos)
@@ -81,7 +77,6 @@ function GraphQLError.new(
 		end, {})
 	end
 
-	-- REF: GraphQLError.js:129
 	local _extensions = extensions
 	if _extensions == nil and originalError ~= nil then
 		local originalExtensions = originalError.originalExtensions
@@ -91,7 +86,6 @@ function GraphQLError.new(
 	end
 
 	local self = Error.new(message)
-	-- REF: GraphQLError.js:137
 	self.name = "GraphQLError"
 	self.locations = _locations
 	self.path = path
@@ -111,8 +105,8 @@ function GraphQLError.new(
 	-- 	self.stack = Error.new().stack
 	-- end
 
-	-- getter for symbol to string
-	GraphQLError[SYMBOL_TO_STRING_TAG] = "Object"
+	-- FIXME: workaround to not break chai comparisons, should be remove in v16
+	-- ROBLOX deviation: remove already deprecated API only used for JS tests
 
 	return setmetatable(self, GraphQLError)
 end

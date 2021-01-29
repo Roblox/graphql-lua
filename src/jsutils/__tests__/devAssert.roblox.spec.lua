@@ -2,7 +2,7 @@
 
 return function()
 
-	local devAssert = require(script.Parent.Parent.devAssert)
+	local devAssert = require(script.Parent.Parent.devAssert).devAssert
 
 	describe("Source", function()
 

@@ -1,4 +1,4 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/language/__tests__/printLocation-test.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/__tests__/printLocation-test.js
 
 return function()
 	local languageWorkspace = script.Parent.Parent
@@ -6,7 +6,8 @@ return function()
 
 	local Source = require(languageWorkspace.source).Source
 	local printSourceLocation = require(languageWorkspace.printLocation).printSourceLocation
-	local dedent = require(srcWorkspace.__testUtils__.dedent)
+	local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
+
 	describe("printSourceLocation", function()
 		it("prints minified documents", function()
 			local minifiedSource = Source.new("query SomeMinifiedQueryWithErrorInside($foo:String!=FIRST_ERROR_HERE$bar:String){someField(foo:$foo bar:$bar baz:SECOND_ERROR_HERE){fieldA fieldB{fieldC fieldD...on THIRD_ERROR_HERE}}}")

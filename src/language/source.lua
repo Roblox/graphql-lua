@@ -1,10 +1,10 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/language/source.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/source.js
 
 local language = script.Parent
 local src = language.Parent
 
-local inspect = require(src.jsutils.inspect)
-local devAssert = require(src.jsutils.devAssert)
+local inspect = require(src.jsutils.inspect).inspect
+local devAssert = require(src.jsutils.devAssert).devAssert
 
 -- /**
 --  * A representation of source input to GraphQL. The `name` and `locationOffset` parameters are
@@ -16,7 +16,11 @@ local devAssert = require(src.jsutils.devAssert)
 local Source = {}
 Source.__index = Source
 
-function Source.new(body, _name, _locationOffset)
+function Source.new(
+	body: string,
+	_name: string,
+	_locationOffset
+)
 	local name = _name or "GraphQL request"
 	local locationOffset = _locationOffset or { line = 1, column = 1 }
 

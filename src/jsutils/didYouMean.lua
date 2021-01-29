@@ -1,4 +1,4 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/jsutils/didYouMean.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/didYouMean.js
 local MAX_SUGGESTIONS = 5
 
 --[[
@@ -38,4 +38,6 @@ local function didYouMean(firstArg, secondArg)
 	return message .. table.concat(selected, ", ") .. ", or " .. lastItem .. "?"
 end
 
-return didYouMean
+return {
+	didYouMean = didYouMean
+}

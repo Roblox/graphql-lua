@@ -1,4 +1,4 @@
--- upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/jsutils/memoize3.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/memoize3.js
 -- deviation: we need to replace 'nil' with a symbol
 -- in the table to support it
 local NULL = {}
@@ -17,7 +17,7 @@ end
 --[[
  * Memoizes the provided three-argument function.
  ]]
-return function(fn)
+local function memoize3(fn)
     local cache0
 
 	return function(a1, a2, a3)
@@ -62,3 +62,7 @@ return function(fn)
         return newValue
     end
 end
+
+return {
+	memoize3 = memoize3
+}

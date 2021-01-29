@@ -1,4 +1,4 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/__testUtils__/inspectStr.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/__testUtils__/inspectStr.js
 
 local HttpService = game:GetService("HttpService")
 
@@ -21,8 +21,8 @@ end
 -- /**
 --  * Special inspect function to produce readable string literal for error messages in tests
 --  */
-return function(str: string): string
-    if str == nil then
+local function inspectStr(str: string): string
+	if str == nil then
 		return "nil"
 	end
 	str = HttpService:JSONEncode(str)
@@ -31,3 +31,7 @@ return function(str: string): string
 	str = string.gsub(str, "\\\\", "\\")
 	return str
 end
+
+return {
+	inspectStr = inspectStr,
+}

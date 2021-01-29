@@ -1,12 +1,13 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/language/__tests__/parser-test.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/__tests__/parser-test.js
 
 return function()
 	local languageWorkspace = script.Parent.Parent
 	local srcWorkspace = languageWorkspace.Parent
 
-	local dedent = require(srcWorkspace.__testUtils__.dedent)
+	local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
+	local kitchenSinkQuery = require(srcWorkspace.__fixtures__).kitchenSinkQuery
 
-	local inspect = require(srcWorkspace.jsutils.inspect)
+	local inspect = require(srcWorkspace.jsutils.inspect).inspect
 
 	local Kind = require(languageWorkspace.kinds).Kind
 	local Source = require(languageWorkspace.source).Source
@@ -16,7 +17,7 @@ return function()
 	local parseValue = parser.parseValue
 	local parseType = parser.parseType
 
-	local kitchenSinkQuery = require(srcWorkspace.__fixtures__).kitchenSinkQuery
+	local toJSONDeep = require(script.Parent.toJSONDeep).toJSONDeep
 
 	local UtilArray = require(srcWorkspace.luaUtils.Array)
 
@@ -33,21 +34,8 @@ return function()
 		end)
 		return expect_(caughtError)
 	end
-	local toJSONDeep = require(script.Parent.toJSONDeep)
 
 	describe("Parser", function()
-		it("asserts that a source to parse was provided", function()
-			expect(function()
-				parse()
-			end).to.throw("Must provide Source. Received: nil.")
-		end)
-
-		it("asserts that an invalid source to parse was provided", function()
-			expect(function()
-				parse({})
-			end).to.throw("Must provide Source. Received: [].")
-		end)
-
 		it("parse provides useful errors", function()
 			local caughtError
 			xpcall(function()

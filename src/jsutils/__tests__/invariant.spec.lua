@@ -1,7 +1,7 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/jsutils/__tests__/invariant-test.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/__tests__/invariant-test.js
 return function()
 	local jsutils = script.Parent.Parent
-	local invariant = require(jsutils.invariant)
+	local invariant = require(jsutils.invariant).invariant
 
 	describe("invariant", function()
 		it("throws on false conditions", function()

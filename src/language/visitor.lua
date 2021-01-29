@@ -1,11 +1,11 @@
--- upstream https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/language/visitor.js
+-- upstream https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/visitor.js
 
 local srcWorkspace = script.Parent.Parent
 local LuauPolyfill = require(srcWorkspace.Parent.Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
 
-local inspect = require(script.Parent.Parent.jsutils.inspect)
+local inspect = require(srcWorkspace.jsutils.inspect).inspect
 
 local isNode = require(script.Parent.ast).isNode
 

@@ -1,4 +1,4 @@
--- upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/jsutils/inspect.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/inspect.js
 local HttpService = game:GetService("HttpService")
 
 local jsutils = script.Parent
@@ -7,7 +7,6 @@ local Packages = graphql.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
-local nodejsCustomInspectSymbol = require(jsutils.nodejsCustomInspectSymbol)
 
 local MAX_ARRAY_LENGTH = 10
 local MAX_RECURSIVE_DEPTH = 2
@@ -17,13 +16,12 @@ local formatValue
 local formatObjectValue
 local formatArray
 local formatObject
-local getCustomFn
 local getObjectTag
 
 --[[
  * Used to print values in error messages.
  ]]
-local function inspect(value)
+local function inspect(value): string
 	return formatValue(value, {})
 end
 
@@ -57,18 +55,17 @@ function formatObjectValue(value, previouslySeenValues)
 		return "[Circular]"
 	end
 
-	local seenValues = {unpack(previouslySeenValues)}
+	local seenValues = { unpack(previouslySeenValues) }
 	table.insert(seenValues, value)
-	local customInspectFn = getCustomFn(value)
 
-	if customInspectFn ~= nil then
-		local customValue = customInspectFn(value)
+	if typeof(value.toJSON) == "function" then
+		local jsonValue = value.toJSON(value)
 
-		if customValue ~= value then
-			if typeof(customValue) == "string" then
-				return customValue
+		if jsonValue ~= value then
+			if typeof(jsonValue) == "string" then
+				return jsonValue
 			else
-				return formatValue(customValue, seenValues)
+				return formatValue(jsonValue, seenValues)
 			end
 		end
 	elseif Array.isArray(value) then
@@ -99,7 +96,7 @@ function formatObject(object, seenValues)
 	return "{ " .. table.concat(properties, ", ") .. " }"
 end
 
-function formatArray(array, seenValues)
+function formatArray(array: Array<any>, seenValues: Array<any>): string
 	local length = #array
 	if length == 0 then
 		return "[]"
@@ -125,19 +122,7 @@ function formatArray(array, seenValues)
 	return "[" .. table.concat(items, ", ") .. "]"
 end
 
-function getCustomFn(object)
-	local customInspectFn = object[nodejsCustomInspectSymbol]
-
-	if typeof(customInspectFn) == "function" then
-		return customInspectFn
-	end
-	if typeof(object.inspect) == "function" then
-		return object.inspect
-	end
-	return nil
-end
-
-function getObjectTag(_object)
+function getObjectTag(_object): string
 	-- local tag = Object.prototype.toString
 	-- 	.call(object)
 	-- 	.replace("")
@@ -155,4 +140,6 @@ function getObjectTag(_object)
 	return "Object"
 end
 
-return inspect
+return {
+	inspect = inspect,
+}

@@ -1,9 +1,8 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/jsutils/__tests__/inspect-test.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/__tests__/inspect-test.js
 return function()
 	local jsutils = script.Parent.Parent
-	local inspect = require(jsutils.inspect)
-	local invariant = require(jsutils.invariant)
-	local nodejsCustomInspectSymbol = require(jsutils.nodejsCustomInspectSymbol)
+	local inspect = require(jsutils.inspect).inspect
+	local invariant = require(jsutils.invariant).invariant
 
 	describe("inspect", function()
 		-- it("undefined", function()
@@ -88,55 +87,40 @@ return function()
 			-- expect(inspect(map)).to.equal("{ a: true, b: null }")
 		end)
 
-		it("custom inspect", function()
+		it("use toJSON if provided", function()
 			local object = {
-				inspect = function()
-					return"<custom inspect>"
+				toJSON = function()
+					return "<json value>"
 				end,
 			}
 
-			expect(inspect(object)).to.equal("<custom inspect>")
+			expect(inspect(object)).to.equal("<json value>")
 		end)
 
-		it("custom inspect that return `this` should work", function()
+		it("handles toJSON that return `this` should work", function()
 			local object = {}
-			object.inspect = function()
+			object.toJSON = function()
 				return object
 			end
 
-			expect(inspect(object)).to.equal("{ inspect: [function] }")
+			expect(inspect(object)).to.equal("{ toJSON: [function] }")
 		end)
 
-		it("custom symbol inspect is take precedence", function()
+		it("handles toJSON returning object values", function()
 			local object = {
-				inspect = function()
-					invariant(false)
-				end,
-				[nodejsCustomInspectSymbol] = function()
-					return"<custom symbol inspect>"
-				end,
+				toJSON = function()
+					return { json = "value" }
+				end
 			}
 
-			expect(inspect(object)).to.equal("<custom symbol inspect>")
+			expect(inspect(object)).to.equal('{ json: "value" }')
 		end)
 
-		it("custom inspect returning object values", function()
-			local object = {
-				inspect = function()
-					return {
-						custom = "inspect",
-					}
-				end,
-			}
-
-			expect(inspect(object)).to.equal('{ custom: "inspect" }')
-		end)
-
-		it("custom inspect function that uses this", function()
+		it("handles toJSON function that uses this", function()
 			local object = {
 				str = "Hello World!",
 			}
-			function object.inspect()
+			function object.toJSON()
 				return object.str
 			end
 
@@ -166,12 +150,12 @@ return function()
 
 			local customB
 			local customA = {
-				inspect = function()
+				toJSON = function()
 					return customB
 				end,
 			}
 			customB = {
-				inspect = function()
+				toJSON = function()
 					return customA
 				end,
 			}

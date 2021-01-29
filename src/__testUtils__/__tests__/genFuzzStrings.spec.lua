@@ -1,7 +1,7 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/__testUtils__/__tests__/genFuzzStrings-test.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/__testUtils__/__tests__/genFuzzStrings-test.js
 
 return function()
-	local genFuzzStrings = require(script.Parent.Parent.genFuzzStrings)
+	local genFuzzStrings = require(script.Parent.Parent.genFuzzStrings).genFuzzStrings
 	local function expectFuzzStrings(options)
 		-- create an array from generator
 		local arr = {}

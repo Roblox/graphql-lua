@@ -1,4 +1,4 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/error/locatedError.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/error/locatedError.js
 
 -- directory
 local errorWorkspace = script.Parent
@@ -11,7 +11,10 @@ local GraphQLError = require(errorWorkspace.GraphQLError).GraphQLError
 
 local Array = LuauPolyfill.Array
 
-local function locatedError(originalError, nodes, path)
+local function locatedError(
+	originalError,
+	nodes,
+	path: Array<string | number>): GraphQLError
 	-- Note: this uses a brand-check to support GraphQL errors originating from other contexts.
 	if Array.isArray(originalError.path) then
 		return originalError
