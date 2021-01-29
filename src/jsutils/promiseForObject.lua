@@ -1,4 +1,4 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/jsutils/promiseForObject.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/promiseForObject.js
 local jsutils = script.Parent
 local graphql = jsutils.Parent
 local Packages = graphql.Parent.Packages
@@ -7,7 +7,10 @@ local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
 
-return function(object)
+local ObjMapModule = require(script.Parent.ObjMap)
+type ObjMap = ObjMapModule.ObjMap
+
+local function promiseForObject(object: ObjMap<any>)
 	local keys = Object.keys(object)
 	local valuesAndPromises = Array.map(keys, function(name)
 		-- deviation: Promise.all accepts only promises, so wrap
@@ -20,13 +23,13 @@ return function(object)
 	end)
 
 	return Promise.all(valuesAndPromises):andThen(function(values)
-		return Array.reduce(
-			values,
-			function(resolvedObject, value, i)
-				resolvedObject[keys[i]] = value
-				return resolvedObject
-			end,
-			{}
-		)
+		return Array.reduce(values, function(resolvedObject, value, i)
+			resolvedObject[keys[i]] = value
+			return resolvedObject
+		end, {})
 	end)
 end
+
+return {
+	promiseForObject = promiseForObject,
+}

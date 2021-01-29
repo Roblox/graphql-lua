@@ -1,7 +1,7 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/__testUtils__/__tests__/inspectStr-test.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/__testUtils__/__tests__/inspectStr-test.js
 
 return function()
-	local inspectStr = require(script.Parent.Parent.inspectStr)
+	local inspectStr = require(script.Parent.Parent.inspectStr).inspectStr
 
 	describe("inspectStr", function()
 		-- ROBLOX deviation: Lua has only nil value instead of null & undefined

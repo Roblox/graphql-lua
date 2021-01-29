@@ -1,11 +1,6 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/language/parser.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/parser.js
 
 local language = script.Parent
-local jsUtils = language.Parent.jsutils
-
-local inspect = require(jsUtils.inspect)
-local devAssert = require(jsUtils.devAssert)
-local instanceOf = require(jsUtils.instanceOf)
 
 local Location = require(language.ast).Location
 
@@ -75,11 +70,13 @@ local function parseType(source, options)
 end
 
 function Parser.new(source, options)
-	local sourceObj = type(source) == "string" and Source.new(source) or source
-	devAssert(
-		instanceOf(sourceObj, Source),
-		"Must provide Source. Received: " .. inspect(sourceObj) .. "."
-	)
+	local sourceObj
+	if typeof(source) == "string" then
+		sourceObj = Source.new(source)
+	else
+		sourceObj = source
+	end
+
 	local self = {}
 	self._lexer = Lexer.new(sourceObj)
 	self._options = options
@@ -707,11 +704,7 @@ function Parser:parseSchemaDefinition()
 	local description = self:parseDescription()
 	self:expectKeyword("schema")
 	local directives = self:parseDirectives(true)
-	local operationTypes = self:many(
-		TokenKind.BRACE_L,
-		self.parseOperationTypeDefinition,
-		TokenKind.BRACE_R
-	)
+	local operationTypes = self:many(TokenKind.BRACE_L, self.parseOperationTypeDefinition, TokenKind.BRACE_R)
 	return {
 		kind = Kind.SCHEMA_DEFINITION,
 		description = description,
@@ -784,44 +777,19 @@ end
 --  *   - implements `&`? NamedType
 --  *   - ImplementsInterfaces & NamedType
 --  *]]
-function Parser:parseImplementsInterfaces()
-	local types = {}
+function Parser:parseImplementsInterfaces(): Array<any>
 	if self:expectOptionalKeyword("implements") then
-		--   // Optional leading ampersand
-		self:expectOptionalToken(TokenKind.AMP)
-		repeat
-			table.insert(types, self:parseNamedType())
-		until not (
-			self:expectOptionalToken(TokenKind.AMP)
-			-- Legacy support for the SDL?
- 			or (
-				(self._options and self._options.allowLegacySDLImplementsInterfaces) == true
-				and self:peek(TokenKind.NAME)
-			)
-		)
+		return self:delimitedMany(TokenKind.AMP, self.parsedNameType)
+	else
+		return {}
 	end
-	return types
 end
 
 --[[*
 --  * FieldsDefinition : { FieldDefinition+ }
 --  *]]
 function Parser:parseFieldsDefinition()
-	-- Legacy support for the SDL?
-	if
-		(self._options and self._options.allowLegacySDLEmptyFields) == true
-		and self:peek(TokenKind.BRACE_L)
-		and self._lexer:lookahead().kind == TokenKind.BRACE_R
-	then
-		self._lexer:advance()
-		self._lexer:advance()
-		return {}
-	end
-	return self:optionalMany(
-		TokenKind.BRACE_L,
-		self.parseFieldDefinition,
-		TokenKind.BRACE_R
-	)
+	return self:optionalMany(TokenKind.BRACE_L, self.parseFieldDefinition, TokenKind.BRACE_R)
 end
 
 --[[*
@@ -966,11 +934,7 @@ end
 --  * EnumValuesDefinition : { EnumValueDefinition+ }
 --  *]]
 function Parser:parseEnumValuesDefinition()
-	return self:optionalMany(
-		TokenKind.BRACE_L,
-		self.parseEnumValueDefinition,
-		TokenKind.BRACE_R
-	)
+	return self:optionalMany(TokenKind.BRACE_L, self.parseEnumValueDefinition, TokenKind.BRACE_R)
 end
 
 --[[*
@@ -1017,11 +981,7 @@ end
 --  * InputFieldsDefinition : { InputValueDefinition+ }
 --  *]]
 function Parser:parseInputFieldsDefinition()
-	return self:optionalMany(
-		TokenKind.BRACE_L,
-		self.parseInputValueDef,
-		TokenKind.BRACE_R
-	)
+	return self:optionalMany(TokenKind.BRACE_L, self.parseInputValueDef, TokenKind.BRACE_R)
 end
 
 --[[*
@@ -1072,11 +1032,7 @@ function Parser:parseSchemaExtension()
 	self:expectKeyword("extend")
 	self:expectKeyword("schema")
 	local directives = self:parseDirectives(true)
-	local operationTypes = self:optionalMany(
-		TokenKind.BRACE_L,
-		self.parseOperationTypeDefinition,
-		TokenKind.BRACE_R
-	)
+	local operationTypes = self:optionalMany(TokenKind.BRACE_L, self.parseOperationTypeDefinition, TokenKind.BRACE_R)
 	if #directives == 0 and #operationTypes == 0 then
 		error(self:unexpected())
 	end

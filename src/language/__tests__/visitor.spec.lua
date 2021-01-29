@@ -1,4 +1,4 @@
--- upstream https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/language/__tests__/visitor-test.js
+-- upstream https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/__tests__/visitor-test.js
 
 return function()
 	local srcWorkspace = script.Parent.Parent.Parent
@@ -8,7 +8,9 @@ return function()
 	local Array = LuauPolyfill.Array
 	local Object = LuauPolyfill.Object
 
-	local invariant = require(srcWorkspace.jsutils.invariant)
+	local kitchenSinkQuery = require(srcWorkspace.__fixtures__).kitchenSinkQuery
+
+	local invariant = require(srcWorkspace.jsutils.invariant).invariant
 
 	local Kind = require(script.Parent.Parent.kinds).Kind
 	local parse = require(script.Parent.Parent.parser).parse
@@ -18,7 +20,6 @@ return function()
 	local BREAK = visitorExports.BREAK
 	local REMOVE = visitorExports.REMOVE
 	local QueryDocumentKeys = visitorExports.QueryDocumentKeys
-	local kitchenSinkQuery = require(srcWorkspace.__fixtures__).kitchenSinkQuery
 
 	-- ROBLOX deviation: expect cannot be called unless inside of an it
 	-- ROBLOX deviation: pass expect into this function and use local scope

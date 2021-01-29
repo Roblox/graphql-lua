@@ -1,4 +1,4 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/language/blockString.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/blockString.js
 
 local language = script.Parent
 local src = language.Parent
@@ -16,7 +16,7 @@ local getBlockStringIndentation
 local dedentBlockStringValue
 local printBlockString
 
-function dedentBlockStringValue(rawString)
+function dedentBlockStringValue(rawString: string): string
 	-- Expand a block string's raw value into independent lines.
 	local lines = String.split(rawString, { "\r\n", "\n", "\r" })
 
@@ -45,7 +45,7 @@ function dedentBlockStringValue(rawString)
 	return Array.join(PolyArray.slice(lines, startLine + 1, endLine + 1), "\n")
 end
 
-function isBlank(str)
+function isBlank(str: string): boolean
 	for i = 1, #str do
 		local charAtIndex = string.sub(str, i, i)
 		if charAtIndex ~= " " and charAtIndex ~= "\t" then
@@ -56,7 +56,7 @@ function isBlank(str)
 	return true
 end
 
-function getBlockStringIndentation(value)
+function getBlockStringIndentation(value: string): number
 	local isFirstLine = true
 	local isEmptyLine = true
 	local indent = 0
@@ -92,7 +92,7 @@ function getBlockStringIndentation(value)
 	return commonIndent and commonIndent or 0
 end
 
-function printBlockString(value, _indentation, preferMultipleLines)
+function printBlockString(value: string, _indentation: string, preferMultipleLines: boolean): string
 	local indentation = _indentation or ""
 	local isSingleLine = string.find(value, "\n") == nil
 	local hasLeadingSpace = string.sub(value, 1, 1) == " " or string.sub(value, 1, 1) == "\t"

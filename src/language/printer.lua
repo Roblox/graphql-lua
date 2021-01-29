@@ -1,4 +1,4 @@
--- upstream: https://github.com/graphql/graphql-js/blob/661ff1a6b591eea1e7a7e7c9e6b8b2dcfabf3bd7/src/language/printer.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/printer.js
 
 local srcWorkspace = script.Parent.Parent
 local root = srcWorkspace.Parent

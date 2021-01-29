@@ -1,15 +1,14 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/language/__tests__/blockString-fuzz.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/__tests__/blockString-fuzz.js
 
 return function()
-
 	local language = script.Parent.Parent
 	local src = language.Parent
 
-	local dedent = require(src.__testUtils__.dedent)
-	local inspectStr = require(src.__testUtils__.inspectStr)
-	local genFuzzStrings = require(src.__testUtils__.genFuzzStrings)
+	local dedent = require(src.__testUtils__.dedent).dedent
+	local inspectStr = require(src.__testUtils__.inspectStr).inspectStr
+	local genFuzzStrings = require(src.__testUtils__.genFuzzStrings).genFuzzStrings
 
-	local invariant = require(src.jsutils.invariant)
+	local invariant = require(src.jsutils.invariant).invariant
 
 	local Lexer = require(language.lexer).Lexer
 	local Source = require(language.source).Source

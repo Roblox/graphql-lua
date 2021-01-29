@@ -1,4 +1,4 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/error/__tests__/GraphQLError-test.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/error/__tests__/GraphQLError-test.js
 
 return function()
 
@@ -8,8 +8,8 @@ return function()
 	local languageWorkspace = srcWorkspace.language
 
 	-- require
-	local dedent = require(srcWorkspace.__testUtils__.dedent)
-	local invariant = require(srcWorkspace.jsutils.invariant)
+	local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
+	local invariant = require(srcWorkspace.jsutils.invariant).invariant
 	local Kind = require(languageWorkspace.kinds).Kind
 	local parse = require(languageWorkspace.parser).parse
 	local Source = require(languageWorkspace.source).Source

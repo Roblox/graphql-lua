@@ -3,7 +3,7 @@ return function()
 	local graphql = jsutils.Parent
 	local Packages = graphql.Parent.Packages
 	local Promise = require(Packages.Promise)
-	local promiseReduce = require(jsutils.promiseReduce)
+	local promiseReduce = require(jsutils.promiseReduce).promiseReduce
 
 	describe("promiseReduce", function()
 		it("should return the initial value when the list is empty", function()

@@ -1,4 +1,7 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/jsutils/keyMap.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/keyMap.js
+local ObjMapModule = require(script.Parent.ObjMap)
+type ObjMap = ObjMapModule.ObjMap
+
 --[[
  * Creates a keyed JS object from an array, given a function to produce the keys
  * for each value in the array.
@@ -22,7 +25,7 @@
  *     const jennyEntry = entriesByName['Jenny']
  *
  ]]
-return function(list, keyFn)
+local function keyMap(list: Array<any>, keyFn: (any) -> string): ObjMap<any>
 	local map = {}
 	for i = 1, #list do
 		local item = list[i]
@@ -30,3 +33,7 @@ return function(list, keyFn)
 	end
 	return map
 end
+
+return {
+	keyMap = keyMap,
+}

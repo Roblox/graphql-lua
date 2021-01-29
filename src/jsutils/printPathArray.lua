@@ -1,10 +1,12 @@
--- upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/jsutils/printPathArray.js
+-- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/printPathArray.js
 type Array<T> = { [number]: T }
 
 --[[
  * Build a string describing the path.
  ]]
-return function(path: Array<string | number>)
+local function printPathArray(
+	path: Array<string | number>
+): string
 	local keys = {}
 	for i = 1, #path do
 		local key = path[i]
@@ -14,3 +16,7 @@ return function(path: Array<string | number>)
 	end
 	table.concat(keys, "")
 end
+
+return {
+	printPathArray = printPathArray
+}

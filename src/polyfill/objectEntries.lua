@@ -2,4 +2,6 @@ local graphql = script.Parent.Parent
 local Packages = graphql.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 
-return LuauPolyfill.Object.entries
+return {
+	objectEntries = LuauPolyfill.Object.entries,
+}
