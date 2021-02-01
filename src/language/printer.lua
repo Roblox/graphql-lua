@@ -285,7 +285,7 @@ printDocASTReducer = {
 		local defaultValue = node.defaultValue
 		local directives = node.directives
 		return join(
-			{ name + ": " + type, wrap("= ", defaultValue), join(directives, " ") },
+			{ name .. ": " .. type, wrap("= ", defaultValue), join(directives, " ") },
 			" "
 		)
 	end),
@@ -318,7 +318,7 @@ printDocASTReducer = {
 				join(directives, " "),
 				(function()
 					if types and #types ~= 0 then
-						return "= " + join(types, " | ")
+						return "= " .. join(types, " | ")
 					else
 						return ""
 					end
