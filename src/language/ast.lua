@@ -31,7 +31,15 @@ end
 local Token = {}
 Token.__index = Token
 
-function Token.new(kind, start: number, _end: number, line: number, column: number, prev, value: string)
+function Token.new(
+	kind,
+	start: number,
+	_end: number,
+	line: number,
+	column: number,
+	prev,
+	value: string
+)
 	local self = {}
 	self.kind = kind
 	self.start = start

@@ -20,7 +20,9 @@ return function()
 				"    Yours,",
 				"      GraphQL."
 			)
-			expect(dedentBlockStringValue(rawValue)).to.equal(joinLines("Hello,", "  World!", "", "Yours,", "  GraphQL."))
+			expect(dedentBlockStringValue(rawValue)).to.equal(
+				joinLines("Hello,", "  World!", "", "Yours,", "  GraphQL.")
+			)
 		end)
 
 		it("removes empty leading and trailing lines", function()
@@ -35,7 +37,9 @@ return function()
 				"",
 				""
 			)
-			expect(dedentBlockStringValue(rawValue)).to.equal(joinLines("Hello,", "  World!", "", "Yours,", "  GraphQL."))
+			expect(dedentBlockStringValue(rawValue)).to.equal(
+				joinLines("Hello,", "  World!", "", "Yours,", "  GraphQL.")
+			)
 		end)
 
 		it("removes blank leading and trailing lines", function()
@@ -50,7 +54,9 @@ return function()
 				"        ",
 				"  "
 			)
-			expect(dedentBlockStringValue(rawValue)).to.equal(joinLines("Hello,", "  World!", "", "Yours,", "  GraphQL."))
+			expect(dedentBlockStringValue(rawValue)).to.equal(
+				joinLines("Hello,", "  World!", "", "Yours,", "  GraphQL.")
+			)
 		end)
 
 		it("retains indentation from first line", function()
@@ -61,7 +67,9 @@ return function()
 				"    Yours,",
 				"      GraphQL."
 			)
-			expect(dedentBlockStringValue(rawValue)).to.equal(joinLines("    Hello,", "  World!", "", "Yours,", "  GraphQL."))
+			expect(dedentBlockStringValue(rawValue)).to.equal(
+				joinLines("    Hello,", "  World!", "", "Yours,", "  GraphQL.")
+			)
 		end)
 
 		it("does not alter trailing spaces", function()

@@ -1,5 +1,5 @@
 local deepContains = require(script.Parent.Parent.luaUtils.deepContains)
-local inspect = require(script.Parent.inspect)
+local inspect = require(script.Parent.inspect).inspect
 
 local function toObjectContain(a, b)
 	local success = deepContains(a, b)

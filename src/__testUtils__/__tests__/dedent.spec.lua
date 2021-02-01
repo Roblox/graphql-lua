@@ -55,7 +55,12 @@ return function()
 		end)
 
 		it("does not escape special characters", function()
-			local output = dedent("\n" .. "      type Root {\n" .. "        field(arg: String = \"wi\th de\fault\"): String\n" .. "      }\n" .. "    ")
+			local output = dedent("\n" ..
+				"      type Root {\n" ..
+				"        field(arg: String = \"wi\th de\fault\"): String\n" ..
+				"      }\n" ..
+				"    "
+			)
 			expect(output).to.equal(Array.join(
 				{
 					"type Root {",
@@ -68,7 +73,12 @@ return function()
 		end)
 
 		it("also removes indentation using tabs", function()
-			local output = dedent("\n" .. "        \t\t    type Query {\n" .. "        \t\t      me: User\n" .. "        \t\t    }\n" .. "    ")
+			local output = dedent("\n" ..
+				"        \t\t    type Query {\n" ..
+				"        \t\t      me: User\n" ..
+				"        \t\t    }\n" ..
+				"    "
+			)
 			expect(output).to.equal(Array.join({
 				"type Query {",
 				"  me: User",
@@ -108,7 +118,12 @@ return function()
 		end)
 
 		it("removes all trailing spaces and tabs", function()
-			local output = dedent("\n" .. "      type Query {\n" .. "        me: User\n" .. "      }\n" .. "          \t\t  \t ")
+			local output = dedent("\n" ..
+				"      type Query {\n" ..
+				"        me: User\n" ..
+				"      }\n" ..
+				"          \t\t  \t "
+			)
 			expect(output).to.equal(Array.join({
 				"type Query {",
 				"  me: User",
@@ -118,7 +133,10 @@ return function()
 		end)
 
 		it("works on text without leading newline", function()
-			local output = dedent("      type Query {\n" .. "        me: User\n" .. "      }")
+			local output = dedent("      type Query {\n" ..
+				"        me: User\n" ..
+				"      }"
+			)
 			expect(output).to.equal(Array.join({
 				"type Query {",
 				"  me: User",

@@ -8,7 +8,7 @@ local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
 
 local ObjMapModule = require(script.Parent.ObjMap)
-type ObjMap = ObjMapModule.ObjMap
+type ObjMap<T> = ObjMapModule.ObjMap<T>
 
 local function promiseForObject(object: ObjMap<any>)
 	local keys = Object.keys(object)

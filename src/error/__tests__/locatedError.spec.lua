@@ -5,7 +5,7 @@ return function()
 	local locatedError = require(errorsWorkspace.locatedError).locatedError
 	local GraphQLError = require(errorsWorkspace.GraphQLError).GraphQLError
 
-	local LuauPolyfill = require(srcWorkspace.parent.Packages.LuauPolyfill)
+	local LuauPolyfill = require(srcWorkspace.Parent.Packages.LuauPolyfill)
 	local Error = LuauPolyfill.Error
 
 	describe("locatedError", function()

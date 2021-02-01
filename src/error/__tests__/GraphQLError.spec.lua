@@ -143,23 +143,25 @@ return function()
 				path = e.path,
 			}
 			-- ROBLOX deviation: key order is different
-			expect(HttpService:JSONEncode(testObj)).to.equal("{\"path\":[\"path\",3,\"to\",\"field\"],\"message\":\"msg\"}")
+			expect(HttpService:JSONEncode(testObj)).to.equal(
+				"{\"path\":[\"path\",3,\"to\",\"field\"],\"message\":\"msg\"}"
+			)
 		end)
 	end)
 
 	describe("printError", function()
 
 		it("prints an error without location", function()
-			local error = GraphQLError.new('Error without location');
-			expect(printError(error)).toEqual('Error without location');
+			local error_ = GraphQLError.new('Error without location');
+			expect(printError(error_)).toEqual('Error without location');
 		end)
 
 		it("prints an error using node without location", function()
-			local error = GraphQLError.new(
+			local error_ = GraphQLError.new(
 			  'Error attached to node without location',
 			  parse('{ foo }', { noLocation = true })
 			);
-			expect(printError(error)).to.equal(
+			expect(printError(error_)).to.equal(
 			  'Error attached to node without location'
 			);
 		end)
@@ -193,12 +195,12 @@ return function()
 			invariant(opB.kind == Kind.OBJECT_TYPE_DEFINITION and opB.fields);
 			local fieldB = opB.fields[1];
 
-			local error = GraphQLError.new('Example error with two nodes', {
+			local error_ = GraphQLError.new('Example error with two nodes', {
 			  fieldA.type,
 			  fieldB.type
 			});
 
-			expect(printError(error) .. '\n').to.equal(dedent([[
+			expect(printError(error_) .. '\n').to.equal(dedent([[
       			Example error with two nodes
 
       			SourceA:2:10

@@ -403,7 +403,7 @@ function visitInParallel(visitors)
 	}
 end
 
-function getVisitFn(visitor: Visitor<any>, kind: string, isLeaving: boolean)
+function getVisitFn(visitor, kind: string, isLeaving: boolean)
 	local kindVisitor = visitor[kind]
 	if kindVisitor then
 		if not isLeaving and type(kindVisitor) == "function" then

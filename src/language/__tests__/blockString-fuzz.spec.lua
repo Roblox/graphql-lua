@@ -45,14 +45,30 @@ return function()
 
 				invariant(
 					testValue == printedValue,
-					dedent("Expected lexValue(printBlockString(" .. inspectStr(testValue) .. "))\n" .. "to equal " .. inspectStr(testValue) .. "\n" .. "but got  " .. inspectStr(printedValue))
+					dedent("Expected lexValue(printBlockString(" ..
+						inspectStr(testValue) ..
+						"))\n" ..
+						"to equal " ..
+						inspectStr(testValue) ..
+						"\n" ..
+						"but got  " ..
+						inspectStr(printedValue)
+					)
 				)
 
 				local printedMultilineString = lexValue(printBlockString(testValue, " ", true))
 
 				invariant(
 					testValue == printedMultilineString,
-					dedent("Expected lexValue(printBlockString(" .. inspectStr(testValue) .. ", ' ', true))\n" .. "to equal " .. inspectStr(testValue) .. "\n" .. "but got  " .. inspectStr(printedMultilineString))
+					dedent("Expected lexValue(printBlockString(" ..
+						inspectStr(testValue) ..
+						", ' ', true))\n" ..
+						"to equal " ..
+						inspectStr(testValue) ..
+						"\n" ..
+						"but got  " ..
+						inspectStr(printedMultilineString)
+					)
 
 				)
 

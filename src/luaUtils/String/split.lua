@@ -1,8 +1,14 @@
+type Array<T> = { [number]: T }
 local findOr = require(script.Parent.findOr)
 local slice = require(script.Parent.Parent.slice)
 
 return function(str: string, _patterns: string | Array<string>)
-	local patterns: Array<string> = type(_patterns) == "string" and { _patterns } or _patterns
+	local patterns: string | Array<string>
+	if typeof(_patterns) == "string" then
+		patterns = { _patterns }
+	else
+		patterns = _patterns
+	end
 	local init = 1
 	local result = {}
 	local lastMatch

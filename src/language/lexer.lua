@@ -102,7 +102,10 @@ local function readName(source, start, line, col, prev)
 		return code >= 97 and code <= 122
 	end -- a - z
 	local thirdCondition = function()
-		return thirdConditionFirstPart() or thirdConditionSecondPart() or thirdConditionThirdPart() or thirdConditionFourthPart()
+		return thirdConditionFirstPart()
+			or thirdConditionSecondPart()
+			or thirdConditionThirdPart()
+			or thirdConditionFourthPart()
 	end
 
 	while firstCondition() and secondCondition() and thirdCondition() do
@@ -553,7 +556,9 @@ function readBlockString(source, start, line, col, prev, lexer)
 	while position <= string.len(body) and not isNaN(charCodeAt(body, position)) do
 		code = charCodeAt(body, position)
 		-- Closing Triple-Quote (""")
-		if code == 34 and charCodeAt(body, position + 1) == 34 and charCodeAt(body, position + 2) == 34 then
+		if code == 34
+			and charCodeAt(body, position + 1) == 34
+			and charCodeAt(body, position + 2) == 34 then
 			rawValue = rawValue .. slice(body, chunkStart, position)
 			return Token.new(
 				TokenKind.BLOCK_STRING,

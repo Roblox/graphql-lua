@@ -9,14 +9,14 @@ local exports = {}
 -- * Given a GraphQLError, format it according to the rules described by the
 -- * Response Format, Errors section of the GraphQL Specification.
 -- */
-exports.formatError = function(error)
+exports.formatError = function(error_)
 
-	devAssert(error, "Received nil error.")
+	devAssert(error_, "Received nil error.")
 
-	local message = error.message or "An unknown error occurred."
-	local locations = error.locations
-	local path = error.path
-	local extensions = error.extensions
+	local message = error_.message or "An unknown error occurred."
+	local locations = error_.locations
+	local path = error_.path
+	local extensions = error_.extensions
 
 	return extensions and {
 		message = message,

@@ -1,4 +1,4 @@
-local inspect = require(script.Parent.inspect)
+local inspect = require(script.Parent.inspect).inspect
 
 local function devPrint(...)
 	local inspected = {}

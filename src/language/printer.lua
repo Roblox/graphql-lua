@@ -1,5 +1,6 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/printer.js
 
+type Array<T> = { [number]: T }
 local srcWorkspace = script.Parent.Parent
 local root = srcWorkspace.Parent
 
@@ -25,7 +26,7 @@ local hasMultilineItems
 --  * Converts an AST into a string, using one set of reasonable
 --  * formatting rules.
 --  *]]
-local function print_(ast: ASTNode): string
+local function print_(ast): string
 	return visit(ast, { leave = printDocASTReducer })
 end
 
@@ -77,10 +78,10 @@ printDocASTReducer = {
 
 	VariableDefinition = function(self, node)
 		local variable = node.variable
-		local type = node.type
+		local type_ = node.type
 		local defaultValue = node.defaultValue
 		local directives = node.directives
-		return variable .. ": " .. type .. wrap(" = ", defaultValue) .. wrap(" ", join(directives, " "))
+		return variable .. ": " .. type_ .. wrap(" = ", defaultValue) .. wrap(" ", join(directives, " "))
 	end,
 
 	SelectionSet = function(self, node)
@@ -220,12 +221,12 @@ printDocASTReducer = {
 		return name
 	end,
 	ListType = function(self, node)
-		local type = node.type
-		return "[" .. type .. "]"
+		local type_ = node.type
+		return "[" .. type_ .. "]"
 	end,
 	NonNullType = function(self, node)
-		local type = node.type
-		return type .. "!"
+		local type_ = node.type
+		return type_ .. "!"
 	end,
 
 	-- Type System Definitions
@@ -238,8 +239,8 @@ printDocASTReducer = {
 
 	OperationTypeDefinition = function(self, node)
 		local operation = node.operation
-		local type = node.type
-		return operation .. ": " .. type
+		local type_ = node.type
+		return operation .. ": " .. type_
 	end,
 
 	ScalarTypeDefinition = addDescription(function(node)
@@ -268,7 +269,7 @@ printDocASTReducer = {
 	FieldDefinition = addDescription(function(node)
 		local name = node.name
 		local args = node.arguments
-		local type = node.type
+		local type_ = node.type
 		local directives = node.directives
 		return name .. (function()
 			if hasMultilineItems(args) then
@@ -276,16 +277,16 @@ printDocASTReducer = {
 			else
 				return wrap("(", join(args, ", "), ")")
 			end
-		end)() .. ": " .. type .. wrap(" ", join(directives, " "))
+		end)() .. ": " .. type_ .. wrap(" ", join(directives, " "))
 	end),
 
 	InputValueDefinition = addDescription(function(node)
 		local name = node.name
-		local type = node.type
+		local type_ = node.type
 		local defaultValue = node.defaultValue
 		local directives = node.directives
 		return join(
-			{ name .. ": " .. type, wrap("= ", defaultValue), join(directives, " ") },
+			{ name .. ": " .. type_, wrap("= ", defaultValue), join(directives, " ") },
 			" "
 		)
 	end),
@@ -482,7 +483,8 @@ end
 function wrap(start: string, maybeString: string?, end_: string?): string
 	end_ = end_ or ""
 	if maybeString ~= nil and maybeString ~= "" then
-		return start .. maybeString .. end_
+		-- ROBLOX FIXME: Luau nil refinement improvements needed to remove tostring(maybeString)
+		return start .. tostring(maybeString) .. tostring(end_)
 	else
 		return ""
 	end
