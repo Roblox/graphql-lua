@@ -779,7 +779,7 @@ end
 --  *]]
 function Parser:parseImplementsInterfaces(): Array<any>
 	if self:expectOptionalKeyword("implements") then
-		return self:delimitedMany(TokenKind.AMP, self.parsedNameType)
+		return self:delimitedMany(TokenKind.AMP, self.parseNamedType)
 	else
 		return {}
 	end
@@ -1406,6 +1406,23 @@ function Parser:many(openKind, parseFn, closeKind)
 	until self:expectOptionalToken(closeKind)
 	return nodes
 end
+
+--[[*
+* Returns a non-empty list of parse nodes, determined by the parseFn.
+* This list may begin with a lex token of delimiterKind followed by items separated by lex tokens of tokenKind.
+* Advances the parser to the next lex token after last item in the list.
+]]
+function Parser:delimitedMany(delimiterKind, parseFn: () -> any): Array<T>
+ self:expectOptionalToken(delimiterKind);
+
+ local nodes = {}
+ repeat
+	table.insert(nodes, parseFn(self))
+ until not (self:expectOptionalToken(delimiterKind))
+ return nodes
+end
+
+
 
 --[[*
 --  * A helper function to describe a token as a string for debugging
