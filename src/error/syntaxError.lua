@@ -1,7 +1,7 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/error/syntaxError.js
 
-local error = script.Parent
-local GraphQLError = require(error.GraphQLError).GraphQLError
+local error_ = script.Parent
+local GraphQLError = require(error_.GraphQLError).GraphQLError
 
 -- /**
 --  * Produces a GraphQLError representing a syntax error, containing useful

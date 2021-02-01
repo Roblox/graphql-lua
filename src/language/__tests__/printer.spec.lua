@@ -7,7 +7,7 @@ return function()
 	local parse = require(script.Parent.Parent.parser).parse
 	local print_ = require(script.Parent.Parent.printer).print
 
-	local inspect = require(script.Parent.Parent.Parent.TestMatchers.inspect)
+	local inspect = require(script.Parent.Parent.Parent.TestMatchers.inspect).inspect
 	describe("Printer: Query document", function()
 		it("does not alter ast", function()
 			-- ROBLOX deviation: no JSON.stringify in Lua. Using inspect instead

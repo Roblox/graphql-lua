@@ -1,4 +1,5 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/__tests__/predicates-test.js
+type Array<T> = { [number]: T }
 
 return function()
 	local LuauPolyfill = require(script.Parent.Parent.Parent.Parent.Packages.LuauPolyfill)

@@ -1,4 +1,5 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/error/GraphQLError.js
+type Array<T> = { [number]: T }
 
 -- ROBLOX directory
 local srcWorkspace = script.Parent.Parent
@@ -115,22 +116,22 @@ function GraphQLError:toString(): string
 	return printError(self)
 end
 
-function printError(error)
-	local output = error.message
+function printError(error_)
+	local output = error_.message
 
-	if error.nodes ~= nil then
-		local lengthOfNodes = #error.nodes
+	if error_.nodes ~= nil then
+		local lengthOfNodes = #error_.nodes
 		for i = 1, lengthOfNodes, 1 do
-			local node = error.nodes[i]
+			local node = error_.nodes[i]
 			if node.loc ~= nil then
 				output = output .. "\n\n" .. printLocation(node.loc)
 			end
 		end
-	elseif error.source ~= nil and error.locations ~= nil then
-		local lengthOfLocations = #error.locations
+	elseif error_.source ~= nil and error_.locations ~= nil then
+		local lengthOfLocations = #error_.locations
 		for i = 1, lengthOfLocations, 1 do
-			local location = error.locations[i]
-			output = output .. "\n\n" .. printSourceLocation(error.source, location)
+			local location = error_.locations[i]
+			output = output .. "\n\n" .. printSourceLocation(error_.source, location)
 		end
 	end
 

@@ -92,13 +92,20 @@ function getBlockStringIndentation(value: string): number
 	return commonIndent and commonIndent or 0
 end
 
-function printBlockString(value: string, _indentation: string, preferMultipleLines: boolean): string
+function printBlockString(
+	value: string,
+	_indentation: string,
+	preferMultipleLines: boolean
+): string
 	local indentation = _indentation or ""
 	local isSingleLine = string.find(value, "\n") == nil
 	local hasLeadingSpace = string.sub(value, 1, 1) == " " or string.sub(value, 1, 1) == "\t"
 	local hasTrailingQuote = string.sub(value, #value, #value) == "\""
 	local hasTrailingSlash = string.sub(value, #value, #value) == "\\"
-	local printAsMultipleLines = isSingleLine ~= true or hasTrailingQuote or hasTrailingSlash or preferMultipleLines
+	local printAsMultipleLines = isSingleLine ~= true
+		or hasTrailingQuote
+		or hasTrailingSlash
+		or preferMultipleLines
 
 	local result = ""
 	-- Format a multi-line block quote to account for leading space.

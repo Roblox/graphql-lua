@@ -23,10 +23,10 @@ local function instanceOf(subject, super)
 end
 
 -- return public facing API and allow recursion internally
-return function(instance: any, type: any)
+return function(instance: any, type_: any)
 	-- deviation: FIXME: Can we expose something from JSPolyfill that
 	-- will let us verify that this is specifically the Error object
 	-- defined there?
 
-	return instanceOf(instance, type)
+	return instanceOf(instance, type_)
 end

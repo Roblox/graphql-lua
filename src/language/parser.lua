@@ -1,4 +1,5 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/parser.js
+type Array<T> = { [number]: T }
 
 local language = script.Parent
 
@@ -64,9 +65,9 @@ end
 local function parseType(source, options)
 	local parser = Parser.new(source, options)
 	parser:expectToken(TokenKind.SOF)
-	local type = parser:parseTypeReference()
+	local type_ = parser:parseTypeReference()
 	parser:expectToken(TokenKind.EOF)
-	return type
+	return type_
 end
 
 function Parser.new(source, options)
@@ -599,27 +600,27 @@ end
 --  *]]
 function Parser:parseTypeReference()
 	local start = self._lexer.token
-	local type
+	local type_
 	if self:expectOptionalToken(TokenKind.BRACKET_L) then
-		type = self:parseTypeReference()
+		type_ = self:parseTypeReference()
 		self:expectToken(TokenKind.BRACKET_R)
-		type = {
+		type_ = {
 			kind = Kind.LIST_TYPE,
-			type = type,
+			type = type_,
 			loc = self:loc(start),
 		}
 	else
-		type = self:parseNamedType()
+		type_ = self:parseNamedType()
 	end
 
 	if self:expectOptionalToken(TokenKind.BANG) then
 		return {
 			kind = Kind.NON_NULL_TYPE,
-			type = type,
+			type = type_,
 			loc = self:loc(start),
 		}
 	end
-	return type
+	return type_
 end
 
 --[[*
@@ -721,11 +722,11 @@ function Parser:parseOperationTypeDefinition()
 	local start = self._lexer.token
 	local operation = self:parseOperationType()
 	self:expectToken(TokenKind.COLON)
-	local type = self:parseNamedType()
+	local type_ = self:parseNamedType()
 	return {
 		kind = Kind.OPERATION_TYPE_DEFINITION,
 		operation = operation,
-		type = type,
+		type = type_,
 		loc = self:loc(start),
 	}
 end
@@ -802,14 +803,14 @@ function Parser:parseFieldDefinition()
 	local name = self:parseName()
 	local args = self:parseArgumentDefs()
 	self:expectToken(TokenKind.COLON)
-	local type = self:parseTypeReference()
+	local type_ = self:parseTypeReference()
 	local directives = self:parseDirectives(true)
 	return {
 		kind = Kind.FIELD_DEFINITION,
 		description = description,
 		name = name,
 		arguments = args,
-		type = type,
+		type = type_,
 		directives = directives,
 		loc = self:loc(start),
 	}
@@ -831,7 +832,7 @@ function Parser:parseInputValueDef()
 	local description = self:parseDescription()
 	local name = self:parseName()
 	self:expectToken(TokenKind.COLON)
-	local type = self:parseTypeReference()
+	local type_ = self:parseTypeReference()
 	local defaultValue
 	if self:expectOptionalToken(TokenKind.EQUALS) then
 		defaultValue = self:parseValueLiteral(true)
@@ -841,7 +842,7 @@ function Parser:parseInputValueDef()
 		kind = Kind.INPUT_VALUE_DEFINITION,
 		description = description,
 		name = name,
-		type = type,
+		type = type_,
 		defaultValue = defaultValue,
 		directives = directives,
 		loc = self:loc(start),
@@ -1412,7 +1413,7 @@ end
 * This list may begin with a lex token of delimiterKind followed by items separated by lex tokens of tokenKind.
 * Advances the parser to the next lex token after last item in the list.
 ]]
-function Parser:delimitedMany(delimiterKind, parseFn: () -> any): Array<T>
+function Parser:delimitedMany(delimiterKind, parseFn: (any) -> any): Array<any>
  self:expectOptionalToken(delimiterKind);
 
  local nodes = {}
@@ -1427,7 +1428,7 @@ end
 --[[*
 --  * A helper function to describe a token as a string for debugging
 --  *]]
-function getTokenDesc(token: Token): string
+function getTokenDesc(token): string
 	local value = token.value
 	return getTokenKindDesc(token.kind) .. (value ~= nil and " \"" .. value .. "\"" or "")
 end
@@ -1435,7 +1436,7 @@ end
 --[[*
 --  * A helper function to describe a token kind as a string for debugging
 --  *]]
-function getTokenKindDesc(kind: TokenKindEnum): string
+function getTokenKindDesc(kind): string
 	return isPunctuatorTokenKind(kind) and "\"" .. kind .. "\"" or kind
 end
 

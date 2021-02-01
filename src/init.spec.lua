@@ -1,5 +1,3 @@
--- FIXME: roblox-cli has special, hard-coded types for TestEZ that break when we
--- use custom matchers added via `expect.extend`
 return function()
 	local TestMatchers = script.Parent.TestMatchers
 	local toEqual = require(TestMatchers.toEqual)
@@ -8,6 +6,9 @@ return function()
 	local toBeOneOf = require(TestMatchers.toBeOneOf)
 
 	beforeAll(function()
+		-- ROBLOX FIXME: roblox-cli has special, hard-coded types for TestEZ that break when we
+		-- use custom matchers added via `expect.extend`
+		local expect: any = expect
 		expect.extend({
 			toEqual = toEqual,
 			toArrayContains = toArrayContains,

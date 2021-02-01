@@ -14,7 +14,7 @@ local function printPathArray(
 			"[" .. tostring(key) .. "]" or
 			"." .. key
 	end
-	table.concat(keys, "")
+	return table.concat(keys, "")
 end
 
 return {

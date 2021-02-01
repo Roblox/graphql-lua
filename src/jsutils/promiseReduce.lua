@@ -1,4 +1,5 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/promiseReduce.js
+type Array<T> = { [number]: T }
 local jsutils = script.Parent
 local graphql = jsutils.Parent
 local Packages = graphql.Parent.Packages
@@ -13,7 +14,11 @@ local isPromise = require(jsutils.isPromise).isPromise
  * If the callback does not return a Promise, then this function will also not
  * return a Promise.
  ]]
-local function promiseReduce(values: Array<any>, callback: (U, T) -> any, initialValue: any)
+local function promiseReduce(
+	values: Array<any>,
+	callback: (any, any) -> any,
+	initialValue: any
+)
 	return Array.reduce(
 		values,
 		function(previous, value)

@@ -51,8 +51,8 @@ return function()
 		end)
 
 		it("should contain print function", function()
-			local print = require(script.Parent.Parent).print
-			expect(print).to.be.a("function")
+			local print_ = require(script.Parent.Parent).print
+			expect(print_).to.be.a("function")
 		end)
 
 		it("should contain visit function", function()

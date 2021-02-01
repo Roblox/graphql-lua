@@ -155,7 +155,9 @@ return function()
 				},
 				"\n"
 			))
-			expect(ast.definitions[1].selectionSet.selections[1].arguments[1].value.value).to.equal("Has a \u{0A0A} multi-byte character.")
+			expect(ast.definitions[1].selectionSet.selections[1].arguments[1].value.value).to.equal(
+				"Has a \u{0A0A} multi-byte character."
+			)
 		end)
 
 		it("parses kitchen sink", function()

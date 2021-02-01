@@ -43,16 +43,16 @@ return function()
 			loc = loc,
 		}
 	end
-	function fieldNode(name, type, loc)
-		return fieldNodeWithArgs(name, type, {}, loc)
+	function fieldNode(name, type_, loc)
+		return fieldNodeWithArgs(name, type_, {}, loc)
 	end
-	function fieldNodeWithArgs(name, type, args, loc)
+	function fieldNodeWithArgs(name, type_, args, loc)
 		return {
 			kind = "FieldDefinition",
 			description = nil,
 			name = name,
 			arguments = args,
-			type = type,
+			type = type_,
 			directives = {},
 			loc = loc,
 		}
@@ -66,12 +66,12 @@ return function()
 			loc = loc,
 		}
 	end
-	local function inputValueNode(name, type, defaultValue, loc)
+	local function inputValueNode(name, type_, defaultValue, loc)
 		return {
 			kind = "InputValueDefinition",
 			name = name,
 			description = nil,
-			type = type,
+			type = type_,
 			defaultValue = defaultValue,
 			directives = {},
 			loc = loc,
