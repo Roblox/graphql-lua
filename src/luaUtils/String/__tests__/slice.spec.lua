@@ -2,11 +2,21 @@ return function()
 	local slice = require(script.Parent.Parent.slice)
 
 	describe("String - slice", function()
-
 		it("returns a sliced string", function()
 			local str = "hello"
 			expect(slice(str, 2, 4)).to.equal("el")
 			expect(slice(str, 3)).to.equal("llo")
+		end)
+
+		it("returns a sliced string if start is below zero", function()
+			local str = "hello"
+			expect(slice(str, -1)).to.equal("o")
+			expect(slice(str, -2)).to.equal("lo")
+			expect(slice(str, -3)).to.equal("llo")
+			expect(slice(str, -4)).to.equal("ello")
+			expect(slice(str, -5)).to.equal("hello")
+			expect(slice(str, -6)).to.equal("hello")
+			expect(slice(str, -100)).to.equal("hello")
 		end)
 
 		it("returns empty string when start index is below zero", function()

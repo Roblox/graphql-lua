@@ -1,4 +1,4 @@
-local sliceString = require(script.Parent.slice).sliceString
+local String = require(script.Parent.String)
 
 -- used in lexer.printCharCode
 return function(code)
@@ -7,7 +7,7 @@ return function(code)
 	-- prepend 4 spaces
 	local pre = "0000" .. hex
 	-- take rightmost 4 characters
-	local val = sliceString(pre, -3):upper()
+	local val = String.slice(pre, -4):upper()
 	-- then combine with "\\u${}"
 	local out = "\"\\u" .. val .. "\""
 	return out

@@ -5,7 +5,7 @@ return function()
 	local languageWorkspace = script.Parent.Parent
 
 	local dedent = require(testUtilsWorkspace.dedent).dedent
-	local kitchenSinkSDL = require(testUtilsWorkspace.kitchenSinkSDL)
+	local kitchenSinkSDL = require(testUtilsWorkspace.kitchenSinkSDL).kitchenSinkSDL
 
 	local parse = require(languageWorkspace.parser).parse
 

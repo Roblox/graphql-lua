@@ -5,7 +5,7 @@ local srcWorkspace = languageWorkspace.Parent
 local testUtilsWorkspace = srcWorkspace.__testUtils__
 
 local dedent = require(testUtilsWorkspace.dedent).dedent
-local kitchenSinkSDL = require(testUtilsWorkspace.kitchenSinkSDL)
+local kitchenSinkSDL = require(testUtilsWorkspace.kitchenSinkSDL).kitchenSinkSDL
 
 local parse = require(languageWorkspace.parser).parse
 local print_ = require(languageWorkspace.printer).print

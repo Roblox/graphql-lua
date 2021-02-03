@@ -1,12 +1,16 @@
-return function(str, patternTable, init)
+return function(str, patternTable, initIndex)
 	-- loop through all options in patern patternTable
 
+	local init = utf8.offset(str, initIndex or 1)
 	local matches = {}
-	for _, value in pairs(patternTable) do
+	for _, value in ipairs(patternTable) do
 		local iStart, iEnd = string.find(str, value, init)
 		if iStart ~= nil then -- confirm truthy
+			local prefix = string.sub(str, 1, iStart - 1)
+			local prefixEnd = utf8.len(prefix)
+			local iStartIndex = prefixEnd + 1
 			local match = {
-				index = iStart,
+				index = iStartIndex,
 				match = string.sub(str, iStart, iEnd),
 			}
 			table.insert(matches, match)
@@ -22,7 +26,7 @@ return function(str, patternTable, init)
 	-- for each, if we get a hit, return the earliest index and matched term
 
 	local firstMatch
-	for _, value in pairs(matches) do
+	for _, value in ipairs(matches) do
 		-- load first condition
 		if firstMatch == nil then
 			firstMatch = value

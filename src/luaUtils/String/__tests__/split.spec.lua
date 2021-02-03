@@ -50,5 +50,13 @@ return function()
 			local str = "abc"
 			expect(split(str, { "d" })).toEqual({ "abc" })
 		end)
+
+		it('should split the string containing multi-byte character', function()
+			local str = '\u{FEFF}|# "Comment" string\n,|'
+			local spl = split(str, { "\r\n", "\n", "\r" })
+			expect(spl).toEqual({
+				'\u{FEFF}|# "Comment" string', ',|'
+			})
+		end)
 	end)
 end
