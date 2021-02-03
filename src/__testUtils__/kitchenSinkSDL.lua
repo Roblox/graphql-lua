@@ -160,4 +160,6 @@ extend schema @onSchema {
 }
 ]]
 
-return kitchenSinkSDL
+return {
+  kitchenSinkSDL = kitchenSinkSDL
+}

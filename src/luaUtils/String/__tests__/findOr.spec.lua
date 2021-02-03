@@ -2,7 +2,6 @@ return function()
 	local findOr = require(script.Parent.Parent.findOr)
 
 	describe("String.findOr", function()
-
 		it("returns nil when not found", function()
 			local str = "abc"
 			local terms = { "d" }
@@ -66,6 +65,30 @@ return function()
 			local expected = {
 				index = 2,
 				match = "bbb",
+			}
+			expect(actual.index).to.equal(expected.index)
+			expect(actual.match).to.equal(expected.match)
+		end)
+
+		it("returns matched element when multi-byte character present in the source string", function()
+			local str = "\u{FEFF}abbbc"
+			local terms = { "b" }
+			local actual = findOr(str, terms)
+			local expected = {
+				index = 3,
+				match = "b",
+			}
+			expect(actual.index).to.equal(expected.index)
+			expect(actual.match).to.equal(expected.match)
+		end)
+
+		it("returns matched element after init index when multi-byte character present in the source string", function()
+			local str = "\u{FEFF}ababc"
+			local terms = { "b" }
+			local actual = findOr(str, terms, 4)
+			local expected = {
+				index = 5,
+				match = "b",
 			}
 			expect(actual.index).to.equal(expected.index)
 			expect(actual.match).to.equal(expected.match)

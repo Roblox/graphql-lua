@@ -2,9 +2,9 @@ return function(str, startIndexStr, lastIndexStr)
 
 	local strLen = utf8.len(str)
 
-	if startIndexStr < 0 then
-		-- then start index is negative
-		startIndexStr = strLen + startIndexStr
+	if startIndexStr + utf8.len(str) < 0 then
+		-- then |start index| is greater than string length
+		startIndexStr = 1
 	end
 
 	if startIndexStr > strLen then
