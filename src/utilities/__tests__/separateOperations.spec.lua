@@ -4,7 +4,7 @@ return function()
 	local srcWorkspace = script.Parent.Parent.Parent
 	local languageWorkspace = srcWorkspace.language
 	local parse = require(languageWorkspace.parser).parse
-	local mapValue = require(srcWorkspace.jsutils.mapValue)
+	local mapValue = require(srcWorkspace.jsutils.mapValue).mapValue
 	local separateOperations = require(srcWorkspace.utilities.separateOperations).separateOperations
 	local print_ = require(srcWorkspace.language.printer).print
 	local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
