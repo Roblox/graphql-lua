@@ -4,6 +4,7 @@ return function()
 	local toArrayContains = require(TestMatchers.toArrayContains)
 	local toObjectContain = require(TestMatchers.toObjectContain)
 	local toBeOneOf = require(TestMatchers.toBeOneOf)
+	local toThrow = require(TestMatchers.toThrow)
 
 	beforeAll(function()
 		-- ROBLOX FIXME: roblox-cli has special, hard-coded types for TestEZ that break when we
@@ -14,6 +15,7 @@ return function()
 			toArrayContains = toArrayContains,
 			toObjectContain = toObjectContain,
 			toBeOneOf = toBeOneOf,
+			toThrow = toThrow
 		})
 	end)
 end
