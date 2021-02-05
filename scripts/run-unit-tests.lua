@@ -56,4 +56,4 @@ end
 local plan = TestEZ.TestPlanner.createPlan(modules, nil, {})
 local results = TestEZ.TestRunner.runPlan(plan)
 
-TestEZ.Reporters.TextReporter.report(results)
+TestEZ.Reporters.TextReporterQuiet.report(results)

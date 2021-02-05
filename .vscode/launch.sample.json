@@ -12,7 +12,7 @@
         "test-bundle.project.json",
         "--debug.on",
         "--run",
-        "scripts/spec.lua"
+        "scripts/run-unit-tests.lua"
       ],
       "cwd": "${workspaceFolder}",
       "stopOnEntry": false
