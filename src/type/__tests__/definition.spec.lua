@@ -391,14 +391,12 @@ return function()
 		end)
 
 		it("rejects an Object type with incorrectly typed interfaces", function()
-			local objType = GraphQLObjectType.new(
-				{
-					name = "SomeObject",
-					fields = {},
-					-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty object
-					interfaces = { key = "value" },
-				}
-			)
+			local objType = GraphQLObjectType.new({
+				name = "SomeObject",
+				fields = {},
+				-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty object
+				interfaces = { key = "value" },
+			})
 
 			expect(function()
 				return objType:getInterfaces()
@@ -512,14 +510,12 @@ return function()
 		end)
 
 		it("rejects an Interface type with incorrectly typed interfaces", function()
-			local objType = GraphQLInterfaceType.new(
-				{
-					name = "AnotherInterface",
-					fields = {},
-					-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty object
-					interfaces = { key = "value" },
-				}
-			)
+			local objType = GraphQLInterfaceType.new({
+				name = "AnotherInterface",
+				fields = {},
+				-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty object
+				interfaces = { key = "value" },
+			})
 
 			expect(function()
 				return objType:getInterfaces()
@@ -651,45 +647,41 @@ return function()
 
 		-- ROBLOX FIXME: this test (or behavior) needs to be Lua-specific for multiple reasons
 		itSKIP("defines an enum type with a value of `null` and `undefined`", function()
-			local EnumTypeWithNullishValue = GraphQLEnumType.new(
-				{
-					name = "EnumWithNullishValue",
-					values = {
-						NULL = { value = nil },
-						NAN = { value = 0 / 0 }, -- ROBLOX deviation: no NaN keyword in Lua
-						NO_CUSTOM_VALUE = { value = nil },
-					},
-				}
-			)
+			local EnumTypeWithNullishValue = GraphQLEnumType.new({
+				name = "EnumWithNullishValue",
+				values = {
+					NULL = { value = nil },
+					NAN = { value = 0 / 0 }, -- ROBLOX deviation: no NaN keyword in Lua
+					NO_CUSTOM_VALUE = { value = nil },
+				},
+			})
 
-			expect(EnumTypeWithNullishValue:getValues()).toEqual(
+			expect(EnumTypeWithNullishValue:getValues()).toEqual({
 				{
-					{
-						name = "NULL",
-						description = nil,
-						value = nil,
-						deprecationReason = nil,
-						extensions = nil,
-						astNode = nil,
-					},
-					{
-						name = "NAN",
-						description = nil,
-						value = 0 / 0, -- ROBLOX deviation: no NaN keyword in Lua
-						deprecationReason = nil,
-						extensions = nil,
-						astNode = nil,
-					},
-					{
-						name = "NO_CUSTOM_VALUE",
-						description = nil,
-						value = "NO_CUSTOM_VALUE",
-						deprecationReason = nil,
-						extensions = nil,
-						astNode = nil,
-					},
-				}
-			)
+					name = "NULL",
+					description = nil,
+					value = nil,
+					deprecationReason = nil,
+					extensions = nil,
+					astNode = nil,
+				},
+				{
+					name = "NAN",
+					description = nil,
+					value = 0 / 0, -- ROBLOX deviation: no NaN keyword in Lua
+					deprecationReason = nil,
+					extensions = nil,
+					astNode = nil,
+				},
+				{
+					name = "NO_CUSTOM_VALUE",
+					description = nil,
+					value = "NO_CUSTOM_VALUE",
+					deprecationReason = nil,
+					extensions = nil,
+					astNode = nil,
+				},
+			})
 		end)
 
 		it("accepts a well defined Enum type with empty value definition", function()
@@ -809,13 +801,11 @@ return function()
 			end)
 
 			it("rejects an Input Object type with incorrect fields", function()
-				local inputObjType = GraphQLInputObjectType.new(
-					{
-						name = "SomeInputObject",
-						-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty array
-						fields = { "foo" },
-					}
-				)
+				local inputObjType = GraphQLInputObjectType.new({
+					name = "SomeInputObject",
+					-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty array
+					fields = { "foo" },
+				})
 
 				expect(function()
 					return inputObjType:getFields()

@@ -108,16 +108,14 @@ return function()
 		end)
 		itSKIP("rejects a directive with incorrectly typed args", function()
 			expect(function()
-				return GraphQLDirective.new(
-					{
-						name = "Foo",
-						locations = {
-							"QUERY",
-						},
-						-- ROBLOX FIXME? we can't distinguish between an empty table/object and empty array
-						args = {},
-					}
-				)
+				return GraphQLDirective.new({
+					name = "Foo",
+					locations = {
+						"QUERY",
+					},
+					-- ROBLOX FIXME? we can't distinguish between an empty table/object and empty array
+					args = {},
+				})
 			end).toThrow("@Foo args must be an object with argument names as keys.")
 		end)
 		it("rejects a directive with undefined locations", function()
@@ -129,13 +127,11 @@ return function()
 		end)
 		it("rejects a directive with incorrectly typed locations", function()
 			expect(function()
-				return GraphQLDirective.new(
-					{
-						name = "Foo",
-						-- ROBLOX deviation: because empty object is same as Array, make this a non-empty object
-						locations = { key = "value" },
-					}
-				)
+				return GraphQLDirective.new({
+					name = "Foo",
+					-- ROBLOX deviation: because empty object is same as Array, make this a non-empty object
+					locations = { key = "value" },
+				})
 			end).toThrow("@Foo locations must be an Array.")
 		end)
 	end)

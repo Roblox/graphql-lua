@@ -156,12 +156,13 @@ function serializeObject(outputValue)
 			end
 		end
 		if typeof(outputValue.toJSON) == "function" then
-			return outputValue.toJSON()
+			return outputValue:toJSON()
 		end
 	end
 
 	return outputValue
 end
+
 function serializeString(outputValue): string
 	local coercedValue = serializeObject(outputValue)
 
@@ -261,6 +262,7 @@ function serializeID(outputValue): string
 
 	error(GraphQLError.new(("ID cannot represent value: %s"):format(inspect(outputValue))))
 end
+
 function coerceID(inputValue): string
 	if typeof(inputValue) == "string" then
 		return inputValue

@@ -486,14 +486,12 @@ GraphQLScalarType.__index = GraphQLScalarType
 
 function GraphQLScalarType.new(config)
 	local self = {}
-	local parseValue = (function()
-		local _ref = config.parseValue
-
-		if _ref == nil then
-			_ref = identityFunc
-		end
-		return _ref
-	end)()
+	local parseValue
+	if config.parseValue then
+		parseValue = config.parseValue
+	else
+		parseValue = identityFunc
+	end
 	self.name = config.name
 	self.description = config.description
 	self.specifiedByUrl = config.specifiedByUrl
@@ -1043,9 +1041,9 @@ function GraphQLEnumType.new(config)
 	self.extensionASTNodes = undefineIfEmpty(config.extensionASTNodes)
 
 	self._values = defineEnumValues(self.name, config.values)
-	-- ROBLOX FIXME? not sure this translated correctly
-	self._valueLookup = Array.map(self._values, function(enumValue)
-		return { enumValue.value, enumValue }
+	self._valueLookup = {}
+	Array.map(self._values, function(enumValue)
+		self._valueLookup[enumValue.value] = enumValue
 	end)
 	self._nameLookup = keyMap(self._values, function(value)
 		return value.name
@@ -1067,7 +1065,7 @@ end
 function GraphQLEnumType:serialize(outputValue)
 	local enumValue = self._valueLookup[outputValue]
 	if enumValue == nil then
-		error(GraphQLError.new(("Enum %s cannot represent value: %s"):format(self.name, inspect(outputValue))))
+		error(GraphQLError.new(("Enum \"%s\" cannot represent value: %s"):format(self.name, inspect(outputValue))))
 	end
 	return enumValue.name
 end
@@ -1075,7 +1073,7 @@ end
 function GraphQLEnumType:parseValue(inputValue)
 	if typeof(inputValue) ~= "string" then
 		local valueStr = inspect(inputValue)
-		error(GraphQLError.new(("Enum %s cannot represent non-string value: %s." .. didYouMeanEnumValue(self, valueStr)):format(self.name, valueStr)))
+		error(GraphQLError.new(("Enum \"%s\" cannot represent non-string value: %s." .. didYouMeanEnumValue(self, valueStr)):format(self.name, valueStr)))
 	end
 
 	local enumValue = self:getValue(inputValue)
