@@ -16,7 +16,7 @@ return function()
 		describe("GraphQLInt", function()
 			it("parseValue", function()
 				local function parseValue(value)
-					return GraphQLInt.parseValue(value)
+					return GraphQLInt:parseValue(value)
 				end
 
 				expect(parseValue(1)).to.equal(1)
@@ -65,7 +65,7 @@ return function()
 			end)
 			it("parseLiteral", function()
 				local function parseLiteral(str)
-					return GraphQLInt.parseLiteral(parseValueToAST(str))
+					return GraphQLInt:parseLiteral(parseValueToAST(str))
 				end
 
 				expect(parseLiteral("1")).to.equal(1)
@@ -107,7 +107,7 @@ return function()
 			end)
 			it("serialize", function()
 				local function serialize(value)
-					return GraphQLInt.serialize(value)
+					return GraphQLInt:serialize(value)
 				end
 
 				expect(serialize(1)).to.equal(1)
@@ -171,7 +171,7 @@ return function()
 		describe("GraphQLFloat", function()
 			it("parseValue", function()
 				local function parseValue(value)
-					return GraphQLFloat.parseValue(value)
+					return GraphQLFloat:parseValue(value)
 				end
 
 				expect(parseValue(1)).to.equal(1)
@@ -216,7 +216,7 @@ return function()
 			end)
 			it("parseLiteral", function()
 				local function parseLiteral(str)
-					return GraphQLFloat.parseLiteral(parseValueToAST(str))
+					return GraphQLFloat:parseLiteral(parseValueToAST(str))
 				end
 
 				expect(parseLiteral("1")).to.equal(1)
@@ -254,7 +254,7 @@ return function()
 			end)
 			it("serialize", function()
 				local function serialize(value)
-					return GraphQLFloat.serialize(value)
+					return GraphQLFloat:serialize(value)
 				end
 
 				expect(serialize(1)).to.equal(1)
@@ -297,7 +297,7 @@ return function()
 		describe("GraphQLString", function()
 			it("parseValue", function()
 				local function parseValue(value)
-					return GraphQLString.parseValue(value)
+					return GraphQLString:parseValue(value)
 				end
 
 				expect(parseValue("foo")).to.equal("foo")
@@ -330,7 +330,7 @@ return function()
 			end)
 			it("parseLiteral", function()
 				local function parseLiteral(str)
-					return GraphQLString.parseLiteral(parseValueToAST(str))
+					return GraphQLString:parseLiteral(parseValueToAST(str))
 				end
 
 				expect(parseLiteral("\"foo\"")).to.equal("foo")
@@ -362,7 +362,7 @@ return function()
 			end)
 			it("serialize", function()
 				local function serialize(value)
-					return GraphQLString.serialize(value)
+					return GraphQLString:serialize(value)
 				end
 
 				expect(serialize("string")).to.equal("string")
@@ -413,7 +413,7 @@ return function()
 		describe("GraphQLBoolean", function()
 			it("parseValue", function()
 				local function parseValue(value)
-					return GraphQLBoolean.parseValue(value)
+					return GraphQLBoolean:parseValue(value)
 				end
 
 				expect(parseValue(true)).to.equal(true)
@@ -449,7 +449,7 @@ return function()
 			end)
 			it("parseLiteral", function()
 				local function parseLiteral(str)
-					return GraphQLBoolean.parseLiteral(parseValueToAST(str))
+					return GraphQLBoolean:parseLiteral(parseValueToAST(str))
 				end
 
 				expect(parseLiteral("true")).to.equal(true)
@@ -487,7 +487,7 @@ return function()
 			end)
 			it("serialize", function()
 				local function serialize(value)
-					return GraphQLBoolean.serialize(value)
+					return GraphQLBoolean:serialize(value)
 				end
 
 				expect(serialize(1)).to.equal(true)
@@ -526,7 +526,7 @@ return function()
 		describe("GraphQLID", function()
 			it("parseValue", function()
 				local function parseValue(value)
-					return GraphQLID.parseValue(value)
+					return GraphQLID:parseValue(value)
 				end
 
 				expect(parseValue("")).to.equal("")
@@ -558,19 +558,19 @@ return function()
 					return parseValue(false)
 				end).toThrow("ID cannot represent value: false")
 				expect(function()
-					return GraphQLID.parseValue({
+					return GraphQLID:parseValue({
 						"1",
 					})
 				end).toThrow("ID cannot represent value: [\"1\"]")
 				expect(function()
-					return GraphQLID.parseValue({
+					return GraphQLID:parseValue({
 						value = "1",
 					})
 				end).toThrow("ID cannot represent value: { value: \"1\" }")
 			end)
 			it("parseLiteral", function()
 				local function parseLiteral(str)
-					return GraphQLID.parseLiteral(parseValueToAST(str))
+					return GraphQLID:parseLiteral(parseValueToAST(str))
 				end
 
 				expect(parseLiteral("\"\"")).to.equal("")
@@ -606,7 +606,7 @@ return function()
 			end)
 			it("serialize", function()
 				local function serialize(value)
-					return GraphQLID.serialize(value)
+					return GraphQLID:serialize(value)
 				end
 
 				expect(serialize("string")).to.equal("string")

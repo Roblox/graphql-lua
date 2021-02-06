@@ -18,7 +18,7 @@ return function()
 	local visit = visitorExports.visit
 	local visitInParallel = visitorExports.visitInParallel
 	local BREAK = visitorExports.BREAK
-	local REMOVE = visitorExports.REMOVE
+	local NULL = require(srcWorkspace.luaUtils.null)
 	local QueryDocumentKeys = visitorExports.QueryDocumentKeys
 
 	-- ROBLOX deviation: expect cannot be called unless inside of an it
@@ -251,7 +251,7 @@ return function()
 					local node = ...
 					checkVisitorFnArgs(expect, ast, { ... })
 					if node.kind == "Field" and node.name.value == "b" then
-						return REMOVE -- ROBLOX deviation: returning REMOVE instead of null in JS to distinguish between undefined
+						return NULL -- ROBLOX deviation: returning NULL instead of null in JS to distinguish between undefined
 					end
 					return -- ROBLOX deviation: no implicit returns
 				end,
@@ -274,7 +274,7 @@ return function()
 						true
 					)
 					if node.kind == "Field" and node.name.value == "b" then
-						return REMOVE -- ROBLOX deviation: returning REMOVE instead of null in JS to distinguish between undefined
+						return NULL -- ROBLOX deviation: returning NULL instead of null in JS to distinguish between undefined
 					end
 					return -- ROBLOX deviation: no implicit returns
 				end,
@@ -1387,7 +1387,7 @@ return function()
 								local node = ...
 								checkVisitorFnArgs(expect, ast, { ... })
 								if node.kind == "Field" and node.name.value == "b" then
-									return REMOVE
+									return NULL
 								end
 								return -- ROBLOX deviation: no implicit returns
 							end,
@@ -1461,7 +1461,7 @@ return function()
 									true
 								)
 								if node.kind == "Field" and node.name.value == "b" then
-									return REMOVE
+									return NULL
 								end
 								return -- ROBLOX deviation: no implicit returns
 							end,

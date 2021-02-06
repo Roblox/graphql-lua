@@ -98,7 +98,7 @@ local QueryDocumentKeys = {
 
 local BREAK = Object.freeze({})
 
-local REMOVE = Object.freeze({})
+local NULL = require(srcWorkspace.luaUtils.null)
 
 -- deviation: pre-declare functions
 local visitInParallel
@@ -124,7 +124,8 @@ local getVisitFn
 --  *         //   nil: no action
 --  *         //   false: skip visiting this node
 --  *         //   visitor.BREAK: stop visiting altogether
--- ROBLOX deviation: to distinguish no action from deleting node we need to use a const REMOVE
+-- ROBLOX deviation: to distinguish no action from deleting node we need to use a const NULL
+--  *         //   NULL: delete this node
 --  *         //   visitor.REMOVE: delete this node
 --  *         //   any value: replace this node with the returned value
 --  *       },
@@ -133,7 +134,8 @@ local getVisitFn
 --  *         //   nil: no action
 --  *         //   false: no action
 --  *         //   visitor.BREAK: stop visiting altogether
--- ROBLOX deviation: to distinguish no action from deleting node we need to use a const REMOVE
+-- ROBLOX deviation: to distinguish no action from deleting node we need to use a const NULL
+--  *         //   NULL: delete this node
 --  *         //   visitor.REMOVE: delete this node
 --  *         //   any value: replace this node with the returned value
 --  *       }
@@ -294,9 +296,9 @@ local function visit(root, visitor, visitorKeys)
 						continue
 					end
 				-- ROBLOX deviation: in JS returning null from visit results in removing the node
-				-- in order to distinguish implicit return of nil from intend to remove it we use REMOVE const
-				elseif result ~= nil or result == REMOVE then
-					if result == REMOVE then
+				-- in order to distinguish implicit return of nil from intend to remove it we use NULL const
+				elseif result ~= nil or result == NULL then
+					if result == NULL then
 						result = nil
 					end
 					table.insert(edits, { key, result })
@@ -447,7 +449,7 @@ end
 
 return {
 	BREAK = BREAK,
-	REMOVE = REMOVE,
+	REMOVE = NULL,
 	visit = visit,
 	visitInParallel = visitInParallel,
 	getVisitFn = getVisitFn,

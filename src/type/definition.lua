@@ -27,6 +27,8 @@ local print_ = require(languageWorkspace.printer).print
 local valueFromASTUntyped = require(srcWorkspace.utilities.valueFromASTUntyped).valueFromASTUntyped
 
 local Error = require(srcWorkspace.luaUtils.Error)
+-- ROBLOX deviation: no distinction between undefined and null in Lua so we need to go around this with custom NULL like constant
+local NULL = require(srcWorkspace.luaUtils.null)
 local Array = require(srcWorkspace.Parent.Packages.LuauPolyfill).Array
 
 -- ROBLOX deviation: predeclare functions
@@ -495,7 +497,8 @@ function GraphQLScalarType.new(config)
 	self.name = config.name
 	self.description = config.description
 	self.specifiedByUrl = config.specifiedByUrl
-	self.serialize = (function()
+	-- ROBLOX devation: we need to wrap the actual function to handle the `self` param correctly
+	local serialize = (function()
 		local _ref = config.serialize
 
 		if _ref == nil then
@@ -503,8 +506,15 @@ function GraphQLScalarType.new(config)
 		end
 		return _ref
 	end)()
-	self.parseValue = parseValue
-	self.parseLiteral = (function()
+	self.serialize = function(_, ...)
+		return serialize(...)
+	end
+	-- ROBLOX devation: we need to wrap the actual function to handle the `self` param correctly
+	self.parseValue = function(_, ...)
+		return parseValue(...)
+	end
+	-- ROBLOX devation: we need to wrap the actual function to handle the `self` param correctly
+	local parseLiteral = (function()
 		local _ref = config.parseLiteral
 
 		if _ref == nil then
@@ -514,6 +524,9 @@ function GraphQLScalarType.new(config)
 		end
 		return _ref
 	end)()
+	self.parseLiteral = function(_, ...)
+		return parseLiteral(...)
+	end
 	self.extensions = config.extensions and toObjMap(config.extensions)
 	self.astNode = config.astNode
 	self.extensionASTNodes = undefineIfEmpty(config.extensionASTNodes)
@@ -1352,4 +1365,6 @@ return {
 	argsToArgsConfig = argsToArgsConfig,
 	isRequiredArgument = isRequiredArgument,
 	isRequiredInputField = isRequiredInputField,
+	-- ROBLOX deviation: no distinction between undefined and null in Lua so we need to go around this with custom NULL like constant
+	NULL = NULL,
 }
