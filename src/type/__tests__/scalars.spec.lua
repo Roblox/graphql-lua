@@ -494,17 +494,13 @@ return function()
 				expect(serialize(0)).to.equal(false)
 				expect(serialize(true)).to.equal(true)
 				expect(serialize(false)).to.equal(false)
-				expect(
-					serialize(
-						{
-							value = true,
-							-- ROBLOX deviation: pass self in explicitly
-							valueOf = function(self)
-								return self.value
-							end,
-						}
-					)
-				).to.equal(true)
+				expect(serialize({
+					value = true,
+					-- ROBLOX deviation: pass self in explicitly
+					valueOf = function(self)
+						return self.value
+					end,
+				})).to.equal(true)
 				expect(function()
 					return serialize(NaN)
 				end).toThrow("Boolean cannot represent a non boolean value: NaN")
