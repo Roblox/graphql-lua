@@ -66,8 +66,16 @@ return function()
 				name = "Foo",
 			})
 
-			expect(scalar.serialize).to.equal(identityFunc)
-			expect(scalar.parseValue).to.equal(identityFunc)
+			--[[ ROBLOX deviation: this is not exactly the identifyFunc but rather wrapped by another function
+	  		--   because we have to wrap it with another function to handle `self` parameter correctly
+			--   but it returns exactly the same object as is passed to it]]
+			local value = {}
+			expect(scalar:serialize(value)).to.equal(value)
+			expect(scalar:serialize(value)).to.equal(identityFunc(value))
+			expect(scalar:parseValue(value)).to.equal(value)
+			expect(scalar:parseValue(value)).to.equal(identityFunc(value))
+			-- expect(scalar.serialize).to.equal(identityFunc)
+			-- expect(scalar.parseValue).to.equal(identityFunc)
 			expect(scalar.parseLiteral).to.be.a("function")
 		end)
 
@@ -79,9 +87,9 @@ return function()
 				end,
 			})
 
-			expect(scalar.parseLiteral(parseValue("null"))).to.equal("parseValue: nil")
-			expect(scalar.parseLiteral(parseValue("{ foo: \"bar\" }"))).to.equal("parseValue: { foo: \"bar\" }")
-			expect(scalar.parseLiteral(parseValue("{ foo: { bar: $var } }"), {
+			expect(scalar:parseLiteral(parseValue("null"))).to.equal("parseValue: nil")
+			expect(scalar:parseLiteral(parseValue("{ foo: \"bar\" }"))).to.equal("parseValue: { foo: \"bar\" }")
+			expect(scalar:parseLiteral(parseValue("{ foo: { bar: $var } }"), {
 				var = "baz",
 			})).to.equal("parseValue: { foo: { bar: \"baz\" } }")
 		end)
