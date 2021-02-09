@@ -69,7 +69,9 @@ local function isTypeSubTypeOf(schema, maybeSubType, superType)
 
 	-- If superType type is an abstract type, check if it is super type of maybeSubType.
 	-- Otherwise, the child type is not a valid subtype of the parent type.
-	return isAbstractType(superType) and (isInterfaceType(maybeSubType) or isObjectType(maybeSubType)) and schema.isSubType(superType, maybeSubType)
+	return isAbstractType(superType)
+		and (isInterfaceType(maybeSubType) or isObjectType(maybeSubType))
+		and schema:isSubType(superType, maybeSubType)
 end
 
 --[[*
@@ -91,16 +93,16 @@ local function doTypesOverlap(schema, typeA, typeB)
 			-- If both types are abstract, then determine if there is any intersection
 			-- between possible concrete types of each.
 			return schema.getPossibleTypes(typeA).some(function(type_)
-				return schema.isSubType(typeB, type_)
+				return schema:isSubType(typeB, type_)
 			end)
 		end
 
 		-- Determine if the latter type is a possible concrete type of the former.
-		return schema.isSubType(typeA, typeB)
+		return schema:isSubType(typeA, typeB)
 	end
 	if isAbstractType(typeB) then
 		-- Determine if the former type is a possible concrete type of the latter.
-		return schema.isSubType(typeB, typeA)
+		return schema:isSubType(typeB, typeA)
 	end
 
 	-- Otherwise the types do not overlap.

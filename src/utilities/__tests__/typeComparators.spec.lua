@@ -4,7 +4,7 @@ return function()
 	local utilitiesWorkspace = script.Parent.Parent
 	local srcWorkspace = utilitiesWorkspace.Parent
 
-	local GraphQLSchema = {} -- require(srcWorkspace.type.schema).GraphQLSchema
+	local GraphQLSchema = require(srcWorkspace.type.schema).GraphQLSchema
 	local scalarsImport = require(srcWorkspace.type.scalars)
 	local GraphQLString = scalarsImport.GraphQLString
 	local GraphQLInt = scalarsImport.GraphQLInt
@@ -57,7 +57,7 @@ return function()
 				})
 			end
 
-			itSKIP("same reference is subtype", function()
+			it("same reference is subtype", function()
 				local schema = testSchema({
 					field = { type = GraphQLString },
 				})
@@ -65,7 +65,7 @@ return function()
 				expect(isTypeSubTypeOf(schema, GraphQLString, GraphQLString)).to.equal(true)
 			end)
 
-			itSKIP("int is not subtype of float", function()
+			it("int is not subtype of float", function()
 				local schema = testSchema({
 					field = { type = GraphQLString },
 				})
@@ -73,7 +73,7 @@ return function()
 				expect(isTypeSubTypeOf(schema, GraphQLInt, GraphQLFloat)).to.equal(false)
 			end)
 
-			itSKIP("non-null is subtype of nullable", function()
+			it("non-null is subtype of nullable", function()
 				local schema = testSchema({
 					field = { type = GraphQLString },
 				})
@@ -81,7 +81,7 @@ return function()
 				expect(isTypeSubTypeOf(schema, GraphQLNonNull.new(GraphQLInt), GraphQLInt)).to.equal(true)
 			end)
 
-			itSKIP("nullable is not subtype of non-null", function()
+			it("nullable is not subtype of non-null", function()
 				local schema = testSchema({
 					field = { type = GraphQLString },
 				})
@@ -89,7 +89,7 @@ return function()
 				expect(isTypeSubTypeOf(schema, GraphQLInt, GraphQLNonNull.new(GraphQLInt))).to.equal(false)
 			end)
 
-			itSKIP("item is not subtype of list", function()
+			it("item is not subtype of list", function()
 				local schema = testSchema({
 					field = { type = GraphQLString },
 				})
@@ -97,7 +97,7 @@ return function()
 				expect(isTypeSubTypeOf(schema, GraphQLInt, GraphQLList.new(GraphQLInt))).to.equal(false)
 			end)
 
-			itSKIP("list is not subtype of item", function()
+			it("list is not subtype of item", function()
 				local schema = testSchema({
 					field = { type = GraphQLString },
 				})
@@ -105,7 +105,7 @@ return function()
 				expect(isTypeSubTypeOf(schema, GraphQLList.new(GraphQLInt), GraphQLInt)).to.equal(false)
 			end)
 
-			itSKIP("member is subtype of union", function()
+			it("member is subtype of union", function()
 				local member = GraphQLObjectType.new({
 					name = "Object",
 					fields = {
@@ -123,7 +123,7 @@ return function()
 				expect(isTypeSubTypeOf(schema, member, union)).to.equal(true)
 			end)
 
-			itSKIP("implementing object is subtype of interface", function()
+			it("implementing object is subtype of interface", function()
 				local iface = GraphQLInterfaceType.new({
 					name = "Interface",
 					fields = {
@@ -144,7 +144,7 @@ return function()
 				expect(isTypeSubTypeOf(schema, impl, iface)).to.equal(true)
 			end)
 
-			itSKIP("implementing interface is subtype of interface", function()
+			it("implementing interface is subtype of interface", function()
 				local iface = GraphQLInterfaceType.new({
 					name = "Interface",
 					fields = {
