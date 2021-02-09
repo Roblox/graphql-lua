@@ -12,6 +12,7 @@ local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Number = LuauPolyfill.Number
 local Object = LuauPolyfill.Object
+local Array = LuauPolyfill.Array
 
 local inspect = require(script.Parent.Parent.jsutils.inspect).inspect
 local isObjectLike = require(script.Parent.Parent.jsutils.isObjectLike).isObjectLike
@@ -299,9 +300,8 @@ local specifiedScalarTypes = Object.freeze({
 })
 
 function isSpecifiedScalarType(type_): boolean
-	return specifiedScalarTypes.some(function(_ref)
-		local name = _ref.name
-
+	return Array.some(specifiedScalarTypes, function(scalarType)
+		local name = scalarType.name
 		return type_.name == name
 	end)
 end

@@ -448,7 +448,7 @@ end
 
 local function undefineIfEmpty(arr)
 	return (function()
-		if arr and arr.length > 0 then
+		if arr and #arr > 0 then
 			return arr
 		end
 
