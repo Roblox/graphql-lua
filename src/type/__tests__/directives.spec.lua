@@ -25,6 +25,7 @@ return function()
 				},
 			})
 		end)
+
 		it("defines a directive with multiple args", function()
 			local directive = GraphQLDirective.new({
 				name = "Foo",
@@ -66,6 +67,7 @@ return function()
 				},
 			})
 		end)
+
 		it("defines a repeatable directive", function()
 			local directive = GraphQLDirective.new({
 				name = "Foo",
@@ -84,7 +86,15 @@ return function()
 				},
 			})
 		end)
+
 		it("can be stringified, JSON.stringified and Object.toStringified", function()
+			-- ROBLOX deviation: no JSON.stringify in Lua
+			local JSON = {
+				stringify = function(v)
+					return "\"" .. v:toJSON() .. "\""
+				end,
+			}
+
 			local directive = GraphQLDirective.new({
 				name = "Foo",
 				locations = {
@@ -93,7 +103,8 @@ return function()
 			})
 
 			expect(tostring(directive)).to.equal("@Foo")
-			-- expect(JSON.stringify(directive)).to.equal('"@Foo"')
+			expect(JSON.stringify(directive)).to.equal("\"@Foo\"")
+			-- ROBLOX deviation: there's only one way to convert object to string in Lua. We're using and testing the __tostring method
 			-- expect(Object.toString(directive)).to.equal('[object GraphQLDirective]')
 		end)
 
@@ -106,18 +117,20 @@ return function()
 				})
 			end).toThrow("Directive must be named.")
 		end)
-		itSKIP("rejects a directive with incorrectly typed args", function()
+
+		it("rejects a directive with incorrectly typed args", function()
 			expect(function()
 				return GraphQLDirective.new({
 					name = "Foo",
 					locations = {
 						"QUERY",
 					},
-					-- ROBLOX FIXME? we can't distinguish between an empty table/object and empty array
-					args = {},
+					-- ROBLOX deviation: we can't distinguish between an empty table/object and empty array so we explicitly pass an array in here
+					args = { "foo" },
 				})
 			end).toThrow("@Foo args must be an object with argument names as keys.")
 		end)
+
 		it("rejects a directive with undefined locations", function()
 			expect(function()
 				return GraphQLDirective.new({
@@ -125,6 +138,7 @@ return function()
 				})
 			end).toThrow("@Foo locations must be an Array.")
 		end)
+
 		it("rejects a directive with incorrectly typed locations", function()
 			expect(function()
 				return GraphQLDirective.new({
