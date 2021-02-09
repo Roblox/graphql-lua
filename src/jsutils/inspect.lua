@@ -60,7 +60,7 @@ function formatObjectValue(value, previouslySeenValues)
 	table.insert(seenValues, value)
 
 	if typeof(value.toJSON) == "function" then
-		local jsonValue = value.toJSON(value)
+		local jsonValue = value:toJSON(value)
 
 		if jsonValue ~= value then
 			if typeof(jsonValue) == "string" then

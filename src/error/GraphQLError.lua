@@ -5,8 +5,13 @@ type Array<T> = { [number]: T }
 local srcWorkspace = script.Parent.Parent
 local languageWorkspace = srcWorkspace.language
 
+local _sourceModule = require(languageWorkspace.source)
+type Source = _sourceModule.Source
+
 -- require
-local getLocation = require(languageWorkspace.location).getLocation
+local locationModule = require(languageWorkspace.location)
+type SourceLocation = locationModule.SourceLocation
+local getLocation = locationModule.getLocation
 local printLocationIndex = require(languageWorkspace.printLocation)
 local printLocation = printLocationIndex.printLocation
 local printSourceLocation = printLocationIndex.printSourceLocation
@@ -19,11 +24,75 @@ local Error = require(srcWorkspace.luaUtils.Error)
 -- ROBLOX deviation: pre-declare functions
 local printError
 
+-- ROBLOX deviation: type not implemented yet
+type ASTNode = any
+type Error = any
+
 local GraphQLError = setmetatable({}, { __index = Error })
 GraphQLError.__index = GraphQLError
 GraphQLError.__tostring = function(self)
 	return printError(self)
 end
+
+export type GraphQLError = {
+	-- /**
+	--  * A message describing the Error for debugging purposes.
+	--  *
+	--  * Enumerable, and appears in the result of JSON.stringify().
+	--  *
+	--  * Note: should be treated as readonly, despite invariant usage.
+	--  */
+	message: string,
+
+	-- /**
+	--  * An array of { line, column } locations within the source GraphQL document
+	--  * which correspond to this error.
+	--  *
+	--  * Errors during validation often contain multiple locations, for example to
+	--  * point out two things with the same name. Errors during execution include a
+	--  * single location, the field which produced the error.
+	--  *
+	--  * Enumerable, and appears in the result of JSON.stringify().
+	--  */
+	locations: Array<SourceLocation> | nil,
+
+	-- /**
+	--  * An array describing the JSON-path into the execution response which
+	--  * corresponds to this error. Only included for errors during execution.
+	--  *
+	--  * Enumerable, and appears in the result of JSON.stringify().
+	--  */
+	path: Array<string | number> | nil,
+
+	-- /**
+	--  * An array of GraphQL AST Nodes corresponding to this error.
+	--  */
+	nodes: Array<ASTNode> | nil,
+
+	-- /**
+	--  * The source GraphQL document for the first location of this error.
+	--  *
+	--  * Note that if this Error represents more than one node, the source may not
+	--  * represent nodes after the first node.
+	--  */
+	source: Source | nil,
+
+	-- /**
+	--  * An array of character offsets within the source GraphQL document
+	--  * which correspond to this error.
+	--  */
+	positions: Array<number> | nil,
+
+	-- /**
+	--  * The original error thrown from a field resolver during execution.
+	--  */
+	originalError: Error?,
+
+	-- /**
+	--  * Extension fields to add to the formatted error.
+	--  */
+	extensions: { [string]: any } | nil,
+}
 
 function GraphQLError.new(
 	message: string,
@@ -33,7 +102,7 @@ function GraphQLError.new(
 	path: Array<string | number>,
 	originalError,
 	extensions
-)
+): GraphQLError
 
 	-- Compute list of blame nodes.
 	local _nodes = nil

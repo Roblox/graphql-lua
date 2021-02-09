@@ -7,6 +7,17 @@ local inspect = require(src.jsutils.inspect).inspect
 local devAssert = require(src.jsutils.devAssert).devAssert
 local instanceOf = require(src.jsutils.instanceOf)
 
+type Location = {
+	line: number,
+	column: number,
+}
+
+export type Source = {
+	body: string,
+	name: string,
+	locationOffset: Location
+}
+
 --[[*
 --  * A representation of source input to GraphQL. The `name` and `locationOffset` parameters are
 --  * optional, but they are useful for clients who store GraphQL documents in source files.
