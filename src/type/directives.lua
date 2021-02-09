@@ -80,7 +80,7 @@ function GraphQLDirective.new(config)
 
 	-- ROBLOX deviation: empty table doesn't necessarily mean an array
 	devAssert(
-		isObjectLike(args) and not (Array.isArray(args) and args == {}),
+		isObjectLike(args) and not (Array.isArray(args) and next(args) ~= nil),
 		("@%s args must be an object with argument names as keys."):format(config.name)
 	)
 
@@ -121,7 +121,7 @@ function GraphQLDirective:toString()
 	return "@" .. self.name
 end
 function GraphQLDirective:toJSON()
-	return self.toString()
+	return self:toString()
 end
 
 --[[**
