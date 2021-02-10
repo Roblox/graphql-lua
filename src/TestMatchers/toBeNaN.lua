@@ -7,7 +7,7 @@ local function toBeNaN(a)
 	end
 	return {
 		pass = false,
-		message = ("expected: NaN (number), got: \"%s\" (%s)"):format(tostring(a), typeof(a))
+		message = ("expected: NaN (number), got: \"%s\" (%s) instead"):format(tostring(a), typeof(a)),
 	}
 end
 
