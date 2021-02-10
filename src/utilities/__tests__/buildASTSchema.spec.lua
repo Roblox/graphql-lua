@@ -12,24 +12,24 @@ return function()
 	local parse = require(srcWorkspace.language.parser).parse
 	local print_ = require(srcWorkspace.language.printer).print
 
-	local GraphQLSchema: any = {} -- require(srcWorkspace.type.schema).GraphQLSchema
+	local GraphQLSchema = require(srcWorkspace.type.schema).GraphQLSchema
 	local validateSchema: any = {} -- require(srcWorkspace.type.validate).validateSchema
 	local introspectionImport: any = {} -- require(srcWorkspace.type.introspection)
 	local __Schema = introspectionImport.__Schema
 	local __EnumValue = introspectionImport.__EnumValue
-	local directivesImport: any = {} -- require(srcWorkspace.type.directives)
+	local directivesImport = require(srcWorkspace.type.directives)
 	local assertDirective = directivesImport.assertDirective
 	local GraphQLSkipDirective = directivesImport.GraphQLSkipDirective
 	local GraphQLIncludeDirective = directivesImport.GraphQLIncludeDirective
 	local GraphQLDeprecatedDirective = directivesImport.GraphQLDeprecatedDirective
 	local GraphQLSpecifiedByDirective = directivesImport.GraphQLSpecifiedByDirective
-	local scalarsImport: any = {} -- require(srcWorkspace.type.scalars)
+	local scalarsImport = require(srcWorkspace.type.scalars)
 	local GraphQLID = scalarsImport.GraphQLID
 	local GraphQLInt = scalarsImport.GraphQLInt
 	local GraphQLFloat = scalarsImport.GraphQLFloat
 	local GraphQLString = scalarsImport.GraphQLString
 	local GraphQLBoolean = scalarsImport.GraphQLBoolean
-	local definitionImport: any = {} -- require(srcWorkspace.type.definition)
+	local definitionImport = require(srcWorkspace.type.definition)
 	local assertObjectType = definitionImport.assertObjectType
 	local assertInputObjectType = definitionImport.assertInputObjectType
 	local assertEnumType = definitionImport.assertEnumType
@@ -39,9 +39,14 @@ return function()
 
 	local graphqlSync = {} -- require(srcWorkspace.graphql).graphqlSync
 
-	local printSchemaImport: any = {} -- require(utilitiesWorkspace.printSchema)
-	local printType = printSchemaImport.printType
-	local printSchema = printSchemaImport.printSchema
+	-- ROBLOX FIXME: use actual module when available
+	-- local printSchemaImport: any = {} -- require(utilitiesWorkspace.printSchema)
+	local printType = function(v)
+		return v
+	end -- printSchemaImport.printType
+	local printSchema = function(v)
+		return v
+	end-- printSchemaImport.printSchema
 	local buildASTSchemaImport = require(utilitiesWorkspace.buildASTSchema)
 	local buildASTSchema = buildASTSchemaImport.buildASTSchema
 	local buildSchema = buildASTSchemaImport.buildSchema
@@ -135,8 +140,8 @@ return function()
 			end).never.toThrow()
 		end)
 
-		itSKIP("Match order of default types and directives", function()
-			local schema = GraphQLSchema({})
+		it("Match order of default types and directives", function()
+			local schema = GraphQLSchema.new({})
 			local sdlSchema = buildASTSchema({
 				kind = Kind.DOCUMENT,
 				definitions = {},
@@ -156,7 +161,7 @@ return function()
 			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("Simple type", function()
+		it("Simple type", function()
 			local sdl = dedent([[
 
       type Query {
@@ -167,7 +172,8 @@ return function()
         bool: Boolean
       }
     ]])
-			expect(cycleSDL(sdl)).to.equal(sdl)
+	  		-- ROBLOX FIXME: uncomment when printSchema is available
+			-- expect(cycleSDL(sdl)).to.equal(sdl)
 
 			local schema = buildSchema(sdl)
 			-- Built-ins are used
@@ -178,7 +184,7 @@ return function()
 			expect(schema:getType("ID")).to.equal(GraphQLID)
 		end)
 
-		itSKIP("include standard type only if it is used", function()
+		it("include standard type only if it is used", function()
 			local schema = buildSchema("type Query")
 
 			-- String and Boolean are always included through introspection types
@@ -247,7 +253,7 @@ return function()
 			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("Maintains @include, @skip & @specifiedBy", function()
+		it("Maintains @include, @skip & @specifiedBy", function()
 			local schema = buildSchema("type Query")
 
 			expect(#schema:getDirectives()).to.equal(4)
@@ -273,7 +279,7 @@ return function()
 			expect(schema:getDirective("specifiedBy")).never.to.equal(GraphQLSpecifiedByDirective)
 		end)
 
-		itSKIP("Adding directives maintains @include, @skip & @specifiedBy", function()
+		it("Adding directives maintains @include, @skip & @specifiedBy", function()
 			local schema = buildSchema([[
 
       directive @foo(arg: Int) on FIELD
@@ -356,15 +362,17 @@ return function()
 			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("Empty interface", function()
+		it("Empty interface", function()
 			local sdl = dedent([[
 
       interface EmptyInterface
     ]])
-			local definition = parse(sdl).definitions[0]
+			local parsed = parse(sdl)
+			local definition = parsed.definitions[1]
 
 			expect(definition.kind == "InterfaceTypeDefinition" and definition.interfaces).toEqual({}, "The interfaces property must be an empty array.")
-			expect(cycleSDL(sdl)).to.equal(sdl)
+			-- ROBLOX FIXME: uncomment when printSchema is available
+			-- expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
 		itSKIP("Simple type with interface", function()
@@ -681,7 +689,7 @@ return function()
 			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("Supports @deprecated", function()
+		it("Supports @deprecated", function()
 			local sdl = dedent([[
 
       enum MyEnum {
@@ -706,61 +714,70 @@ return function()
       }
     ]])
 
-			expect(cycleSDL(sdl)).to.equal(sdl)
+	  		-- ROBLOX FIXME: uncomment then printSchema is available
+			-- expect(cycleSDL(sdl)).to.equal(sdl)
 
 			local schema = buildSchema(sdl)
 			local myEnum = assertEnumType(schema:getType("MyEnum"))
-			local value = myEnum.getValue("VALUE")
+			local value = myEnum:getValue("VALUE")
 
-			expect(value).to.include({ deprecationReason = nil })
+			expect(value).toObjectContain({ deprecationReason = nil })
 
-			local oldValue = myEnum.getValue("OLD_VALUE")
+			local oldValue = myEnum:getValue("OLD_VALUE")
 
-			expect(oldValue).to.include({
+			expect(oldValue).toObjectContain({
 				deprecationReason = "No longer supported",
 			})
 
-			local otherValue = myEnum.getValue("OTHER_VALUE")
+			local otherValue = myEnum:getValue("OTHER_VALUE")
 
-			expect(otherValue).to.include({
+			expect(otherValue).toObjectContain({
 				deprecationReason = "Terrible reasons",
 			})
 
-			local rootFields = assertObjectType(schema:getType("Query")).getFields()
+			local rootFields = assertObjectType(schema:getType("Query")):getFields()
 
-			expect(rootFields.field1).to.include({
+			expect(rootFields.field1).toObjectContain({
 				deprecationReason = "No longer supported",
 			})
-			expect(rootFields.field2).to.include({
+			expect(rootFields.field2).toObjectContain({
 				deprecationReason = "Because I said so",
 			})
 
-			local inputFields = assertInputObjectType(schema:getType("MyInput")).getFields()
+			local inputFields = assertInputObjectType(schema:getType("MyInput")):getFields()
 			local newInput = inputFields.newInput
 
-			expect(newInput).to.include({ deprecationReason = nil })
+			expect(newInput).toObjectContain({ deprecationReason = nil })
 
 			local oldInput = inputFields.oldInput
 
-			expect(oldInput).to.include({
+			expect(oldInput).toObjectContain({
 				deprecationReason = "No longer supported",
 			})
 
 			local otherInput = inputFields.otherInput
 
-			expect(otherInput).to.include({
+			expect(otherInput).toObjectContain({
 				deprecationReason = "Use newInput",
 			})
 
-			local field3OldArg = rootFields.field3.args[0]
+			--[[
+			--  ROBLOX deviation: oldField is second rather than first
+			--  I believe this is working in JS version because Object.entries iterates over properties in order they where added (at least in most browsers and node?)
+			--  This is probably a small bug/issue in upstream as according to MDN developer should not depend on the order of entries execution
+			-- 	ROBLOX FIXME: #142 https://github.com/Roblox/graphql-lua/issues/142
+			--]]
+			local field3OldArg = rootFields.field3.args[2]
 
-			expect(field3OldArg).to.include({
+			expect(field3OldArg).toObjectContain({
 				deprecationReason = "No longer supported",
 			})
 
-			local field4OldArg = rootFields.field4.args[0]
+			-- ROBLOX deviation: oldField is second rather than first
+			-- ROBLOX FIXME: #142 https://github.com/Roblox/graphql-lua/issues/142
+			local field4OldArg = rootFields.field4.args[2]
 
-			expect(field4OldArg).to.include({
+			expect(field4OldArg).toObjectContain({
 				deprecationReason = "Why not?",
 			})
 		end)
@@ -779,7 +796,7 @@ return function()
 
 			local schema = buildSchema(sdl)
 
-			expect(schema:getType("Foo")).to.include({
+			expect(schema:getType("Foo")).toObjectContain({
 				specifiedByUrl = "https://example.com/foo_spec",
 			})
 		end)
@@ -955,7 +972,7 @@ return function()
 			expect(printAllASTNodes(someInput)).to.equal(inputSDL)
 		end)
 
-		itSKIP("Correctly assign AST nodes", function()
+		it("Correctly assign AST nodes", function()
 			local sdl = dedent([[
 
       schema {
@@ -1009,20 +1026,20 @@ return function()
 				testType.astNode,
 				testScalar.astNode,
 				testDirective.astNode,
-			}).to.be.deep.equal(ast.definitions)
+			}).toObjectContain(ast.definitions)
 
-			local testField = query.getFields().testField
+			local testField = query:getFields().testField
 
 			expect(printASTNode(testField)).to.equal("testField(testArg: TestInput): TestUnion")
-			expect(printASTNode(testField.args[0])).to.equal("testArg: TestInput")
-			expect(printASTNode(testInput.getFields().testInputField)).to.equal("testInputField: TestEnum")
-			expect(printASTNode(testEnum.getValue("TEST_VALUE"))).to.equal("TEST_VALUE")
-			expect(printASTNode(testInterface.getFields().interfaceField)).to.equal("interfaceField: String")
-			expect(printASTNode(testType.getFields().interfaceField)).to.equal("interfaceField: String")
-			expect(printASTNode(testDirective.args[0])).to.equal("arg: TestScalar")
+			expect(printASTNode(testField.args[1])).to.equal("testArg: TestInput")
+			expect(printASTNode(testInput:getFields().testInputField)).to.equal("testInputField: TestEnum")
+			expect(printASTNode(testEnum:getValue("TEST_VALUE"))).to.equal("TEST_VALUE")
+			expect(printASTNode(testInterface:getFields().interfaceField)).to.equal("interfaceField: String")
+			expect(printASTNode(testType:getFields().interfaceField)).to.equal("interfaceField: String")
+			expect(printASTNode(testDirective.args[1])).to.equal("arg: TestScalar")
 		end)
 
-		itSKIP("Root operation types with custom names", function()
+		it("Root operation types with custom names", function()
 			local schema = buildSchema([[
 
       schema {
@@ -1035,18 +1052,18 @@ return function()
       type SomeSubscription
     ]])
 
-			expect(schema.getQueryType()).to.include({
+			expect(schema:getQueryType()).toObjectContain({
 				name = "SomeQuery",
 			})
-			expect(schema.getMutationType()).to.include({
+			expect(schema:getMutationType()).toObjectContain({
 				name = "SomeMutation",
 			})
-			expect(schema.getSubscriptionType()).to.include({
+			expect(schema:getSubscriptionType()).toObjectContain({
 				name = "SomeSubscription",
 			})
 		end)
 
-		itSKIP("Default root operation type names", function()
+		it("Default root operation type names", function()
 			local schema = buildSchema([[
 
       type Query
@@ -1054,13 +1071,13 @@ return function()
       type Subscription
     ]])
 
-			expect(schema.getQueryType()).to.include({
+			expect(schema:getQueryType()).toObjectContain({
 				name = "Query",
 			})
-			expect(schema.getMutationType()).to.include({
+			expect(schema:getMutationType()).toObjectContain({
 				name = "Mutation",
 			})
-			expect(schema.getSubscriptionType()).to.include({
+			expect(schema:getSubscriptionType()).toObjectContain({
 				name = "Subscription",
 			})
 		end)
@@ -1093,7 +1110,7 @@ return function()
     ]])
 			local queryType = assertObjectType(schema:getType("Query"))
 
-			expect(queryType.getFields()).to.have.nested.property("introspectionField.type", __EnumValue)
+			expect(queryType:getFields()).to.have.nested.property("introspectionField.type", __EnumValue)
 			expect(schema:getType("__EnumValue")).to.equal(__EnumValue)
 		end)
 
