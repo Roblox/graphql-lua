@@ -541,6 +541,12 @@ function extendSchemaImpl(
 				fieldConfigMap[field.name.value] = {
 					type = getWrappedType(field.type),
 					description = field.description and field.description.value,
+					--[[
+					--	ROBLOX FIXME: we're losing the order of arguments in here. 
+					--  It works in JS because (for most Js engine implementations) Object.keys and Object.entries returns values in order of them being added
+					--  but in Lua this is not the case
+					-- 	ROBLOX FIXME: #142 https://github.com/Roblox/graphql-lua/issues/142
+					--]]
 					args = buildArgumentMap(field.arguments),
 					deprecationReason = getDeprecationReason(field),
 					astNode = field,
