@@ -1154,7 +1154,7 @@ end
 -- }
 
 function didYouMeanEnumValue(enumType, unknownValueStr: string): string
-	local allNames = Array.map(enumType.getValues(), function(value)
+	local allNames = Array.map(enumType:getValues(), function(value)
 		return value.name
 	end)
 	local suggestedValues = suggestionList(unknownValueStr, allNames)

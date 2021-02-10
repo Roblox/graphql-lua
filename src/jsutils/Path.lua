@@ -32,8 +32,8 @@ function exports.pathToArray(path: Path?): Array<string | number>
 	-- return Array.reverse(flattened)
 	local length = #flattened
 	local reversed = {}
-	for i = 1, length do
-		reversed[i] = length + 1 - i
+	for i = length, 1, -1 do
+		table.insert(reversed, flattened[i])
 	end
 	return reversed
 end
