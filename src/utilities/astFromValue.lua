@@ -27,10 +27,35 @@ local isNonNullType = definitionImport.isNonNullType
 local _Number = require(srcWorkspace.Parent.Packages.LuauPolyfill).Number
 local RegExp = require(srcWorkspace.Parent.Packages.LuauPolyfill).RegExp
 local Error = require(srcWorkspace.luaUtils.Error)
+local NULL = require(srcWorkspace.luaUtils.null)
 
 -- ROBLOX deviation: predeclare local variables
 local integerStringRegExp
 
+--[[
+ * Produces a GraphQL Value AST given a JavaScript object.
+ * Function will match JavaScript/JSON values to GraphQL AST schema format
+ * by using suggested GraphQLInputType. For example:
+ *
+ *     astFromValue("value", GraphQLString)
+ *
+ * A GraphQL type must be provided, which will be used to interpret different
+ * JavaScript values.
+ *
+ * | JSON Value    | GraphQL Value        |
+ * | ------------- | -------------------- |
+ * | Object        | Input Object         |
+ * | Array         | List                 |
+ * | Boolean       | Boolean              |
+ * | String        | String / Enum Value  |
+ * | Number        | Int / Float          |
+ * | Mixed         | Enum Value           |
+ * | null          | NullValue            |
+ *
+ * ROBLOX deviation
+ * passing nil will return nil
+ * passing NULL will return Kind.NULL
+ *]]
 local function astFromValue(value, type_)
 	if isNonNullType(type_) then
 		local astValue = astFromValue(value, type_.ofType)
@@ -44,10 +69,15 @@ local function astFromValue(value, type_)
 
 	-- ROBLOX devication: no difference between null and undefined
 	-- only explicit null, not undefined, NaN
-	if value == nil then
+	if value == NULL then
 		return {
 			kind = Kind.NULL,
 		}
+	end
+
+	-- undefined
+	if value == nil then
+		return nil
 	end
 
 	-- Convert JavaScript array to GraphQL list. If the GraphQLType is a list, but
@@ -56,21 +86,21 @@ local function astFromValue(value, type_)
 		local itemType = type_.ofType
 
 		if isIteratableObject(value) then
-		    local valuesNodes = {}
-		    -- Since we transpile for-of in loose mode it doesn't support iterators
-		    -- and it's required to first convert iteratable into array
-		    for _, item in pairs(value) do
-		        local itemNode = astFromValue(item, itemType)
+			local valuesNodes = {}
+			-- Since we transpile for-of in loose mode it doesn't support iterators
+			-- and it's required to first convert iteratable into array
+			for _, item in pairs(value) do
+				local itemNode = astFromValue(item, itemType)
 
-		        if itemNode ~= nil then
-		            table.insert(valuesNodes, itemNode)
-		        end
-		    end
+				if itemNode ~= nil then
+					table.insert(valuesNodes, itemNode)
+				end
+			end
 
-		    return{
-		        kind = Kind.LIST,
-		        values = valuesNodes,
-		    }
+			return {
+				kind = Kind.LIST,
+				values = valuesNodes,
+			}
 		end
 
 		return astFromValue(value, itemType)
@@ -181,4 +211,5 @@ integerStringRegExp = RegExp("^-?(?:0|[1-9][0-9]*)$")
 
 return {
 	astFromValue = astFromValue,
+	NULL = NULL
 }

@@ -16,6 +16,9 @@ return function()
 
 	local astFromValue = require(script.Parent.Parent.astFromValue).astFromValue
 
+	-- ROBLOX deviation: bring in NULL type
+	local NULL = require(script.Parent.Parent.astFromValue).NULL
+
 	describe("astFromValue", function()
 		it("converts boolean values to ASTs", function()
 			expect(astFromValue(true, GraphQLBoolean)).toEqual({
@@ -28,10 +31,10 @@ return function()
 				value = false,
 			})
 
-			-- ROBLOX deviation: no undefined in Lua
-			-- expect(astFromValue(undefined, GraphQLBoolean)).toEqual(nil)
+			expect(astFromValue(nil, GraphQLBoolean)).toEqual(nil)
 
-			expect(astFromValue(nil, GraphQLBoolean)).toEqual({
+			-- ROBLOX deviation: use NULL const to deferentiate undefined and null
+			expect(astFromValue(NULL, GraphQLBoolean)).toEqual({
 				kind = "NullValue",
 			})
 
@@ -137,13 +140,12 @@ return function()
 				value = "false",
 			})
 
-			-- ROBLOX FIXME: this was a null value in JS
-			expect(astFromValue(nil, GraphQLString)).toEqual({
+			-- ROBLOX deviation: use NULL const to deferentiate undefined and null
+			expect(astFromValue(NULL, GraphQLString)).toEqual({
 				kind = "NullValue",
 			})
 
-			-- ROBLOX deviation: no undefined in Lua
-			-- expect(astFromValue(undefined, GraphQLString)).toEqual(nil)
+			expect(astFromValue(nil, GraphQLString)).toEqual(nil)
 		end)
 
 		it("converts ID values to Int/String ASTs", function()
@@ -188,12 +190,12 @@ return function()
 				return astFromValue(false, GraphQLID)
 			end).toThrow("ID cannot represent value: false")
 
-			expect(astFromValue(nil, GraphQLID)).toEqual({
+			-- ROBLOX deviation: use NULL const to deferentiate undefined and null
+			expect(astFromValue(NULL, GraphQLID)).toEqual({
 				kind = "NullValue",
 			})
 
-			-- ROBLOX deviation: no undefined in Lua
-			-- expect(astFromValue(undefined, GraphQLID)).toEqual(nil)
+			expect(astFromValue(nil, GraphQLID)).toEqual(nil)
 		end)
 
 		it("converts using serialize from a custom scalar type", function()
@@ -321,12 +323,12 @@ return function()
 				},
 			})
 
-            -- ROBLOX FIXME: implement generator like solution (generators are Iterable in JS)
+			-- ROBLOX FIXME: implement generator like solution (generators are Iterable in JS)
 			-- function* listGenerator() {
 			-- local function listGenerator()
-				-- yield 1;
-				-- yield 2;
-				-- yield 3;
+			-- yield 1;
+			-- yield 2;
+			-- yield 3;
 			-- end
 
 			-- expect(astFromValue(listGenerator(), GraphQLList.new(GraphQLInt))).toEqual({

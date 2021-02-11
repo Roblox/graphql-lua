@@ -89,7 +89,7 @@ exports.__Schema = GraphQLObjectType.new({
 
 exports.__Directive = GraphQLObjectType.new({
 	name = "__Directive",
-	description = 'A Directive provides a way to describe alternate runtime execution and type validation behavior in a GraphQL document.\n\nIn some cases, you need to provide options to alter GraphQL"s execution behavior in ways field arguments will not suffice, such as conditionally including or skipping a field. Directives provide this by describing additional information to the executor.',
+	description = "A Directive provides a way to describe alternate runtime execution and type validation behavior in a GraphQL document.\n\nIn some cases, you need to provide options to alter GraphQL\"s execution behavior in ways field arguments will not suffice, such as conditionally including or skipping a field. Directives provide this by describing additional information to the executor.",
 	fields = function()
 		return {
 			name = {
@@ -244,7 +244,7 @@ exports.__Type = GraphQLObjectType.new({
 					end
 
 					-- // istanbul ignore next (Not reachable. All possible types have been considered)
-					invariant(false, ('Unexpected type: "%s".'):format(inspect(type_)))
+					invariant(false, ("Unexpected type: \"%s\"."):format(inspect(type_)))
 					return nil
 				end,
 			},
@@ -446,7 +446,7 @@ exports.__Field = GraphQLObjectType.new({
 })
 
 exports.__InputValue = GraphQLObjectType.new({
-	name = '__InputValue',
+	name = "__InputValue",
 	description = "Arguments provided to Fields or Directives and the input fields of an InputObject are represented as Input Values which describe their type and optionally a default value.",
 	fields = function()
 		return {
@@ -587,9 +587,9 @@ exports.__TypeKind = GraphQLEnumType.new({
 --  */
 
 exports.SchemaMetaFieldDef = {
-	name = '__schema',
+	name = "__schema",
 	type = GraphQLNonNull.new(exports.__Schema),
-	description = 'Access the current type schema of this server.',
+	description = "Access the current type schema of this server.",
 	args = {},
 	resolve = function(_source, _args, _context, _ref)
 		local schema = _ref.schema
@@ -602,12 +602,12 @@ exports.SchemaMetaFieldDef = {
 }
 
 exports.TypeMetaFieldDef = {
-	name = '__type',
+	name = "__type",
 	type = exports.__Type,
-	description = 'Request the type information of a single type.',
+	description = "Request the type information of a single type.",
 	args = {
 		{
-			name = 'name',
+			name = "name",
 			description = nil,
 			type = GraphQLNonNull.new(GraphQLString),
 			defaultValue = nil,
