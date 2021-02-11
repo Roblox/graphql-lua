@@ -980,7 +980,7 @@ return function()
 				})
 				-- ROBLOX deviation: TestEZ expectation does not let us to that and we
 				-- can't extract the errors array and manually do the check
-				-- expectedErrors.to.have.nested.property("[0].originalError.message", "Invalid scalar is always invalid: 123")
+				-- expectedErrors.to.have.nested.property("[1].originalError.message", "Invalid scalar is always invalid: 123")
 			end)
 
 			itSKIP("reports error for custom scalar that returns undefined", function()

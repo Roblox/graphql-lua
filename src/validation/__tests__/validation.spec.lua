@@ -95,21 +95,23 @@ return function()
 		itSKIP("validates using a custom rule", function()
 			local expect: any = expect
 			local schema = buildSchema([[
-				directive @custom(arg: String) on FIELD
 
-				type Query {
-					foo: String
-				}
-			]])
+      directive @custom(arg: String) on FIELD
+
+      type Query {
+        foo: String
+      }
+    ]])
 			local doc = parse([[
+
       query {
         name @custom
       }
-			]])
+    ]])
 
 			local function customRule(context)
 				return {
-					Directive = function(node)
+					Directive = function(_self, node)
 						local directiveDef = context:getDirective()
 						local error_ = GraphQLError.new(
 							"Reporting directive: " .. tostring(directiveDef),
@@ -121,6 +123,9 @@ return function()
 			end
 
 			local errors = validate(schema, doc, {customRule})
+			--[[ ROBLOX FIXME: after fixing missing newlines in the multiline text above the element is in the array but contains more props
+			--   I believe that currently we don't have a matcher for such usecases
+			--]]
 			expect(errors).toEqual({
 				{
 					message = "Reporting directive: @custom",

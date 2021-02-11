@@ -51,7 +51,7 @@ exports.PossibleTypeExtensionsRule = function(context)
 
 		local existingType = nil
 		if schema then
-			existingType = schema.getType(typeName)
+			existingType = schema:getType(typeName)
 		end
 		local expectedKind
 
@@ -74,7 +74,7 @@ exports.PossibleTypeExtensionsRule = function(context)
 		else
 			local allTypeNames = Object.keys(definedTypes)
 			if schema then
-				allTypeNames = Array.concat(allTypeNames, Object.keys(schema.getTypeMap()))
+				allTypeNames = Array.concat(allTypeNames, Object.keys(schema:getTypeMap()))
 			end
 
 			local suggestedTypes = suggestionList(typeName, allTypeNames)
@@ -88,13 +88,17 @@ exports.PossibleTypeExtensionsRule = function(context)
 		end
 	end
 
+	-- ROBLOX deviation
+	local checkExtensionWithSelf = function(_self, ...)
+		return checkExtension(...)
+	end
 	return {
-		ScalarTypeExtension = checkExtension,
-		ObjectTypeExtension = checkExtension,
-		InterfaceTypeExtension = checkExtension,
-		UnionTypeExtension = checkExtension,
-		EnumTypeExtension = checkExtension,
-		InputObjectTypeExtension = checkExtension,
+		ScalarTypeExtension = checkExtensionWithSelf,
+		ObjectTypeExtension = checkExtensionWithSelf,
+		InterfaceTypeExtension = checkExtensionWithSelf,
+		UnionTypeExtension = checkExtensionWithSelf,
+		EnumTypeExtension = checkExtensionWithSelf,
+		InputObjectTypeExtension = checkExtensionWithSelf,
 	}
 end
 

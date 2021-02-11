@@ -39,8 +39,9 @@ local function toThrow(fn: () -> any, errorString: string?)
 			return {
 				pass = false,
 				message = string.format(
-					"Expected function to throw with '%s'",
-					errorString
+					"Expected function to throw with\n'%s'\nbut threw\n'%s'\ninstead",
+					errorString,
+					resultErrorString
 				),
 			}
 		end
