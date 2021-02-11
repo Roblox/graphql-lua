@@ -14,7 +14,7 @@ return function()
 
 	local GraphQLSchema = require(srcWorkspace.type.schema).GraphQLSchema
 	local validateSchema: any = {} -- require(srcWorkspace.type.validate).validateSchema
-	local introspectionImport: any = {} -- require(srcWorkspace.type.introspection)
+	local introspectionImport = require(srcWorkspace.type.introspection)
 	local __Schema = introspectionImport.__Schema
 	local __EnumValue = introspectionImport.__EnumValue
 	local directivesImport = require(srcWorkspace.type.directives)
@@ -1090,6 +1090,9 @@ return function()
 		end)
 
 		itSKIP("Do not override standard types", function()
+			-- NOTE: not sure it's desired behaviour to just silently ignore override
+    		-- attempts so just documenting it here.
+
 			local schema = buildSchema([[
 
       scalar ID
@@ -1098,7 +1101,7 @@ return function()
     ]])
 
 			expect(schema:getType("ID")).to.equal(GraphQLID)
-			expect(schema("__Schema")).to.equal(__Schema)
+			expect(schema:getType("__Schema")).to.equal(__Schema)
 		end)
 
 		itSKIP("Allows to reference introspection types", function()

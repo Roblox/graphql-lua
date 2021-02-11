@@ -2,9 +2,9 @@
 
 local srcWorkspace = script.Parent.Parent
 local root = srcWorkspace.Parent
-local LuauPolyfill = require(root.Packages.LuauPolyfill)
-local Object = LuauPolyfill.Object
+
 local objectValues = require(srcWorkspace.polyfills.objectValues).objectValues
+
 local jsutils = srcWorkspace.jsutils
 local keyMap = require(jsutils.keyMap).keyMap
 local inspect = require(jsutils.inspect).inspect
@@ -12,91 +12,92 @@ local mapValue = require(jsutils.mapValue).mapValue
 local invariant = require(jsutils.invariant).invariant
 local devAssert = require(jsutils.devAssert).devAssert
 
-local _astModule = require(srcWorkspace.language.ast)
-type DocumentNode = _astModule.DocumentNode
-type TypeNode = _astModule.TypeNode
-type NamedTypeNode = _astModule.NamedTypeNode
-type SchemaDefinitionNode = _astModule.SchemaDefinitionNode
-type SchemaExtensionNode = _astModule.SchemaExtensionNode
-type TypeDefinitionNode = _astModule.TypeDefinitionNode
-type InterfaceTypeDefinitionNode = _astModule.InterfaceTypeDefinitionNode
-type InterfaceTypeExtensionNode = _astModule.InterfaceTypeExtensionNode
-type ObjectTypeDefinitionNode = _astModule.ObjectTypeDefinitionNode
-type ObjectTypeExtensionNode = _astModule.ObjectTypeExtensionNode
-type UnionTypeDefinitionNode = _astModule.UnionTypeDefinitionNode
-type UnionTypeExtensionNode = _astModule.UnionTypeExtensionNode
-type FieldDefinitionNode = _astModule.FieldDefinitionNode
-type InputObjectTypeDefinitionNode = _astModule.InputObjectTypeDefinitionNode
-type InputObjectTypeExtensionNode = _astModule.InputObjectTypeExtensionNode
-type InputValueDefinitionNode = _astModule.InputValueDefinitionNode
-type EnumTypeDefinitionNode = _astModule.EnumTypeDefinitionNode
-type EnumTypeExtensionNode = _astModule.EnumTypeExtensionNode
-type EnumValueDefinitionNode = _astModule.EnumValueDefinitionNode
-type DirectiveDefinitionNode = _astModule.DirectiveDefinitionNode
-type ScalarTypeDefinitionNode = _astModule.ScalarTypeDefinitionNode
-type ScalarTypeExtensionNode = _astModule.ScalarTypeExtensionNode
-
+local _astImport = require(srcWorkspace.language.ast)
+type DocumentNode = _astImport.DocumentNode
+type TypeNode = _astImport.TypeNode
+type NamedTypeNode = _astImport.NamedTypeNode
+type SchemaDefinitionNode = _astImport.SchemaDefinitionNode
+type SchemaExtensionNode = _astImport.SchemaExtensionNode
+type TypeDefinitionNode = _astImport.TypeDefinitionNode
+type InterfaceTypeDefinitionNode = _astImport.InterfaceTypeDefinitionNode
+type InterfaceTypeExtensionNode = _astImport.InterfaceTypeExtensionNode
+type ObjectTypeDefinitionNode = _astImport.ObjectTypeDefinitionNode
+type ObjectTypeExtensionNode = _astImport.ObjectTypeExtensionNode
+type UnionTypeDefinitionNode = _astImport.UnionTypeDefinitionNode
+type UnionTypeExtensionNode = _astImport.UnionTypeExtensionNode
+type FieldDefinitionNode = _astImport.FieldDefinitionNode
+type InputObjectTypeDefinitionNode = _astImport.InputObjectTypeDefinitionNode
+type InputObjectTypeExtensionNode = _astImport.InputObjectTypeExtensionNode
+type InputValueDefinitionNode = _astImport.InputValueDefinitionNode
+type EnumTypeDefinitionNode = _astImport.EnumTypeDefinitionNode
+type EnumTypeExtensionNode = _astImport.EnumTypeExtensionNode
+type EnumValueDefinitionNode = _astImport.EnumValueDefinitionNode
+type DirectiveDefinitionNode = _astImport.DirectiveDefinitionNode
+type ScalarTypeDefinitionNode = _astImport.ScalarTypeDefinitionNode
+type ScalarTypeExtensionNode = _astImport.ScalarTypeExtensionNode
 local Kind = require(srcWorkspace.language.kinds).Kind
 
 local predicates = require(srcWorkspace.language.predicates)
 local isTypeDefinitionNode = predicates.isTypeDefinitionNode
 local isTypeExtensionNode = predicates.isTypeExtensionNode
--- ROBLOX FIXME: reintroduce when validation branch is merged
--- local validate = require(srcWorkspace.validation.validate)
--- local assertValidSDLExtension = validate.assertValidSDLExtension
-local values = require(srcWorkspace.execution.values)
-local getDirectiveValues = values.getDirectiveValues
+
+local assertValidSDLExtension = require(srcWorkspace.validation.validate).assertValidSDLExtension
+
+local getDirectiveValues = require(srcWorkspace.execution.values).getDirectiveValues
+
 local typeWorkspace = srcWorkspace.type
 local schemaImport = require(typeWorkspace.schema)
 type GraphQLSchemaValidationOptions = schemaImport.GraphQLSchemaValidationOptions
 local assertSchema = schemaImport.assertSchema
 local GraphQLSchema = schemaImport.GraphQLSchema
-local scalars = require(typeWorkspace.scalars)
-local specifiedScalarTypes = scalars.specifiedScalarTypes
-local isSpecifiedScalarType = scalars.isSpecifiedScalarType
-local introspection = require(typeWorkspace.introspection)
-local introspectionTypes = introspection.introspectionTypes
-local isIntrospectionType = introspection.isIntrospectionType
+local scalarsImport = require(typeWorkspace.scalars)
+local specifiedScalarTypes = scalarsImport.specifiedScalarTypes
+local isSpecifiedScalarType = scalarsImport.isSpecifiedScalarType
+local introspectionImport = require(typeWorkspace.introspection)
+local introspectionTypes = introspectionImport.introspectionTypes
+local isIntrospectionType = introspectionImport.isIntrospectionType
 local directives = require(typeWorkspace.directives)
 type GraphQLDirective = any -- directives.GraphQLDirective
 local GraphQLDirective = directives.GraphQLDirective
 local GraphQLDeprecatedDirective = directives.GraphQLDeprecatedDirective
 local GraphQLSpecifiedByDirective = directives.GraphQLSpecifiedByDirective
 
-local definition = require(typeWorkspace.definition)
-type GraphQLType = any -- definition.GraphQLType
-type GraphQLNamedType = any -- definition.GraphQLNamedType
-type GraphQLFieldConfig<T, U> = any -- definition.GraphQLFieldConfig
-type GraphQLFieldConfigMap<T, U> = any -- definition.GraphQLFieldConfigMap
-type GraphQLArgumentConfig = any -- definition.GraphQLArgumentConfig
-type GraphQLFieldConfigArgumentMap = any -- definition.GraphQLFieldConfigArgumentMap
-type GraphQLEnumValueConfigMap = any -- definition.GraphQLEnumValueConfigMap
-type GraphQLInputFieldConfigMap = any -- definition.GraphQLInputFieldConfigMap
-
-local isScalarType = definition.isScalarType
-local isObjectType = definition.isObjectType
-local isInterfaceType = definition.isInterfaceType
-local isUnionType = definition.isUnionType
-local isListType = definition.isListType
-local isNonNullType = definition.isNonNullType
-local isEnumType = definition.isEnumType
-local isInputObjectType = definition.isInputObjectType
-local GraphQLList = definition.GraphQLList
-local GraphQLNonNull = definition.GraphQLNonNull
-local GraphQLScalarType = definition.GraphQLScalarType
-type GraphQLScalarType = any -- definition.GraphQLScalarType
-local GraphQLObjectType = definition.GraphQLObjectType
-type GraphQLObjectType = any -- definition.GraphQLObjectType
-local GraphQLInterfaceType = definition.GraphQLInterfaceType
-type GraphQLInterfaceType = any -- definition.GraphQLInterfaceType
-local GraphQLUnionType = definition.GraphQLUnionType
-type GraphQLUnionType = any -- definition.GraphQLUnionType
-local GraphQLEnumType = definition.GraphQLEnumType
-type GraphQLEnumType = any -- definition.GraphQLEnumType
-local GraphQLInputObjectType = definition.GraphQLInputObjectType
-type GraphQLInputObjectType = any -- definition.GraphQLInputObjectType
+local definitionImport = require(typeWorkspace.definition)
+type GraphQLType = any -- definitionImport.GraphQLType
+type GraphQLNamedType = any -- definitionImport.GraphQLNamedType
+type GraphQLFieldConfig<T, U> = any -- definitionImport.GraphQLFieldConfig
+type GraphQLFieldConfigMap<T, U> = any -- definitionImport.GraphQLFieldConfigMap
+type GraphQLArgumentConfig = any -- definitionImport.GraphQLArgumentConfig
+type GraphQLFieldConfigArgumentMap = any -- definitionImport.GraphQLFieldConfigArgumentMap
+type GraphQLEnumValueConfigMap = any -- definitionImport.GraphQLEnumValueConfigMap
+type GraphQLInputFieldConfigMap = any -- definitionImport.GraphQLInputFieldConfigMap
+local isScalarType = definitionImport.isScalarType
+local isObjectType = definitionImport.isObjectType
+local isInterfaceType = definitionImport.isInterfaceType
+local isUnionType = definitionImport.isUnionType
+local isListType = definitionImport.isListType
+local isNonNullType = definitionImport.isNonNullType
+local isEnumType = definitionImport.isEnumType
+local isInputObjectType = definitionImport.isInputObjectType
+local GraphQLList = definitionImport.GraphQLList
+local GraphQLNonNull = definitionImport.GraphQLNonNull
+local GraphQLScalarType = definitionImport.GraphQLScalarType
+type GraphQLScalarType = any -- definitionImport.GraphQLScalarType
+local GraphQLObjectType = definitionImport.GraphQLObjectType
+type GraphQLObjectType = any -- definitionImport.GraphQLObjectType
+local GraphQLInterfaceType = definitionImport.GraphQLInterfaceType
+type GraphQLInterfaceType = any -- definitionImport.GraphQLInterfaceType
+local GraphQLUnionType = definitionImport.GraphQLUnionType
+type GraphQLUnionType = any -- definitionImport.GraphQLUnionType
+local GraphQLEnumType = definitionImport.GraphQLEnumType
+type GraphQLEnumType = any -- definitionImport.GraphQLEnumType
+local GraphQLInputObjectType = definitionImport.GraphQLInputObjectType
+type GraphQLInputObjectType = any -- definitionImport.GraphQLInputObjectType
 
 local valueFromAST = require(script.Parent.valueFromAST).valueFromAST
+
+local LuauPolyfillImport = require(root.Packages.LuauPolyfill)
+local Object = LuauPolyfillImport.Object
 local Error = require(srcWorkspace.luaUtils.Error)
 local Array = require(srcWorkspace.luaUtils.Array)
 
@@ -104,12 +105,6 @@ local Array = require(srcWorkspace.luaUtils.Array)
 local stdTypeMap
 local getDeprecationReason
 local getSpecifiedByUrl
--- local buildUnionTypes, buildInterfaces, buildEnumValueMap, buildArgumentMap,
--- 	buildType, buildInputFieldMap, buildFieldMap, buildDirective,
--- 	extendSchemaImpl, extendNamedType, extendUnionType, extendField,
--- 	extendInterfaceType, extendObjectType, extendEnumType, extendScalarType,
--- 	extendInputObjectType, getOperationTypes,
--- 	getNamedType, replaceNamedType, replaceDirective
 
 type Array<T> = { [number]: T }
 type Options = GraphQLSchemaValidationOptions & {
@@ -145,16 +140,19 @@ local function extendSchema(
 		"Must provide valid Document AST."
 	)
 
-	-- ROBLOX FIXME: reintroduce when validation branch is merged
-	-- if options ~= nil and not options.assumeValid and not options.assumeValidSDL then
-	-- assertValidSDLExtension(documentAST, schema)
-	-- end
+	if (options and options.assumeValid) ~= true and (options and options.assumeValidSDL) ~= true then
+		assertValidSDLExtension(documentAST, schema)
+	end
 
 	local schemaConfig = schema:toConfig()
 	local extendedConfig = extendSchemaImpl(schemaConfig, documentAST, options)
-	return schemaConfig == extendedConfig
-		and schema
-		or GraphQLSchema.new(extendedConfig)
+	return (function ()
+		if schemaConfig == extendedConfig then
+			return schema
+		else
+			return GraphQLSchema.new(extendedConfig)
+		end
+	end)()
 end
 
 -- /**
@@ -165,7 +163,6 @@ function extendSchemaImpl(
 	documentAST,
 	options: Options
 )
-	local _schemaDef, _schemaDef_descriptio
 	-- // Collect the type definitions and extensions found in the document.
 	local typeDefs: Array<any> = {} -- ROBLOX FIXME: use `TypeDefinitionNode` type
 	local typeExtensionsMap = {}
@@ -188,9 +185,13 @@ function extendSchemaImpl(
 		elseif isTypeExtensionNode(def) then
 			local extendedTypeName = def.name.value
 			local existingTypeExtensions = typeExtensionsMap[extendedTypeName]
-			typeExtensionsMap[extendedTypeName] = existingTypeExtensions
-				and Array.concat({ def }, existingTypeExtensions)
-				or { def }
+			typeExtensionsMap[extendedTypeName] = (function()
+				if existingTypeExtensions then
+					return Array.concat({ existingTypeExtensions }, { def })
+				else
+					return { def }
+				end
+			end)()
 		elseif def.kind == Kind.DIRECTIVE_DEFINITION then
 			table.insert(directiveDefs, def)
 		end
@@ -425,10 +426,12 @@ function extendSchemaImpl(
 			{},
 			config,
 			{
-				types = Array.concat(
-					Array.map(type_:getTypes(), replaceNamedType),
-					buildUnionTypes(extensions)
-				),
+				types = function()
+					return Array.concat(
+						Array.map(type_:getTypes(), replaceNamedType),
+						buildUnionTypes(extensions)
+					)
+				end,
 				extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
 			}
 		))
@@ -486,7 +489,6 @@ function extendSchemaImpl(
 		if type_ == nil then
 			error(Error.new(("Unknown type: \"%s\"."):format(name)))
 		end
-
 		return type_
 	end
 
@@ -553,7 +555,6 @@ function extendSchemaImpl(
 				}
 			end
 		end
-
 		return fieldConfigMap
 	end
 
@@ -654,8 +655,8 @@ function extendSchemaImpl(
 		nodes: Array<UnionTypeDefinitionNode | UnionTypeExtensionNode>
 	): Array<GraphQLObjectType>
 		local types = {}
-
 		for _, node in ipairs(nodes) do
+			-- istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
 			local typeNodes = node.types or {}
 
 			for _, type_ in ipairs(typeNodes) do
@@ -757,6 +758,7 @@ function extendSchemaImpl(
 
 		-- // istanbul ignore next (Not reachable. All possible type definition nodes have been considered)
 		invariant(false, "Unexpected type definition node: " .. inspect(astNode))
+		-- ROBLOX deviation: no implicit return
 		return nil
 	end
 
@@ -838,7 +840,6 @@ function getSpecifiedByUrl(
 	node: ScalarTypeDefinitionNode | ScalarTypeExtensionNode
 ): string?
 	local specifiedBy = getDirectiveValues(GraphQLSpecifiedByDirective, node)
-
 	return specifiedBy and specifiedBy.url
 end
 

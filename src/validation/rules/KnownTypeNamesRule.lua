@@ -54,7 +54,7 @@ exports.KnownTypeNamesRule = function(context)
 		NamedType = function(_self, node, _1, parent, _2, ancestors)
 			local typeName = node.name.value
 			if not existingTypesMap[typeName] and not definedTypes[typeName] then
-				local definitionNode = ancestors[2] or parent
+				local definitionNode = ancestors[3] or parent
 				local isSDL = definitionNode ~= nil and isSDLNode(definitionNode)
 				if isSDL and isStandardTypeName(typeName) then
 					return

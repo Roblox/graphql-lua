@@ -85,49 +85,49 @@ function getDirectiveLocationForASTPath(ancestors)
 	local appliedToKind = appliedTo.kind
 	if appliedToKind == Kind.OPERATION_DEFINITION then
 		return getDirectiveLocationForOperation(appliedTo.operation)
-  	elseif Kind.FIELD then
+  	elseif appliedToKind == Kind.FIELD then
 		return DirectiveLocation.FIELD
-  	elseif Kind.FRAGMENT_SPREAD then
+  	elseif appliedToKind == Kind.FRAGMENT_SPREAD then
 		return DirectiveLocation.FRAGMENT_SPREAD
-  	elseif Kind.INLINE_FRAGMENT then
+  	elseif appliedToKind == Kind.INLINE_FRAGMENT then
 		return DirectiveLocation.INLINE_FRAGMENT
-  	elseif Kind.FRAGMENT_DEFINITION then
+  	elseif appliedToKind == Kind.FRAGMENT_DEFINITION then
 		return DirectiveLocation.FRAGMENT_DEFINITION
-  	elseif Kind.VARIABLE_DEFINITION then
+  	elseif appliedToKind == Kind.VARIABLE_DEFINITION then
 		return DirectiveLocation.VARIABLE_DEFINITION
-	elseif Kind.SCHEMA_DEFINITION
-		or Kind.SCHEMA_EXTENSION
+	elseif appliedToKind == Kind.SCHEMA_DEFINITION
+		or appliedToKind == Kind.SCHEMA_EXTENSION
 	then
 		return DirectiveLocation.SCHEMA
-  	elseif Kind.SCALAR_TYPE_DEFINITION
-		or Kind.SCALAR_TYPE_EXTENSION
+  	elseif appliedToKind == Kind.SCALAR_TYPE_DEFINITION
+		or appliedToKind == Kind.SCALAR_TYPE_EXTENSION
 	then
 		return DirectiveLocation.SCALAR
-  	elseif Kind.OBJECT_TYPE_DEFINITION
-		or Kind.OBJECT_TYPE_EXTENSION
+  	elseif appliedToKind == Kind.OBJECT_TYPE_DEFINITION
+		or appliedToKind == Kind.OBJECT_TYPE_EXTENSION
 	then
 		return DirectiveLocation.OBJECT
-  	elseif Kind.FIELD_DEFINITION then
+  	elseif appliedToKind == Kind.FIELD_DEFINITION then
 		return DirectiveLocation.FIELD_DEFINITION
-  	elseif Kind.INTERFACE_TYPE_DEFINITION
-		or Kind.INTERFACE_TYPE_EXTENSION
+  	elseif appliedToKind == Kind.INTERFACE_TYPE_DEFINITION
+		or appliedToKind == Kind.INTERFACE_TYPE_EXTENSION
 	then
 		return DirectiveLocation.INTERFACE
-  	elseif Kind.UNION_TYPE_DEFINITION
-		or Kind.UNION_TYPE_EXTENSION
+  	elseif appliedToKind == Kind.UNION_TYPE_DEFINITION
+		or appliedToKind == Kind.UNION_TYPE_EXTENSION
 	then
 		return DirectiveLocation.UNION
-  	elseif Kind.ENUM_TYPE_DEFINITION
-		or Kind.ENUM_TYPE_EXTENSION
+  	elseif appliedToKind == Kind.ENUM_TYPE_DEFINITION
+		or appliedToKind == Kind.ENUM_TYPE_EXTENSION
 	then
 		return DirectiveLocation.ENUM
-  	elseif Kind.ENUM_VALUE_DEFINITION then
+  	elseif appliedToKind == Kind.ENUM_VALUE_DEFINITION then
 		return DirectiveLocation.ENUM_VALUE
-  	elseif Kind.INPUT_OBJECT_TYPE_DEFINITION
-		or Kind.INPUT_OBJECT_TYPE_EXTENSION
+  	elseif appliedToKind == Kind.INPUT_OBJECT_TYPE_DEFINITION
+		or appliedToKind == Kind.INPUT_OBJECT_TYPE_EXTENSION
 	then
 		return DirectiveLocation.INPUT_OBJECT
-  	elseif Kind.INPUT_VALUE_DEFINITION then
+  	elseif appliedToKind == Kind.INPUT_VALUE_DEFINITION then
 		local parentNode = ancestors[#ancestors - 2]
 		return parentNode.kind == Kind.INPUT_OBJECT_TYPE_DEFINITION
 			and DirectiveLocation.INPUT_FIELD_DEFINITION

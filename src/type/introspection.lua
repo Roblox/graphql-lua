@@ -620,7 +620,7 @@ exports.TypeMetaFieldDef = {
 		local name = args.name
 		local schema = _ref.schema
 
-		return schema.getType(name)
+		return schema:getType(name)
 	end,
 	deprecationReason = nil,
 	extensions = nil,
@@ -643,14 +643,14 @@ exports.TypeNameMetaFieldDef = {
 }
 
 local introspectionTypes = Object.freeze({
-	__Schema = exports.__Schema,
-	__Directive = exports.__Directive,
-	__DirectiveLocation = exports.__DirectiveLocation,
-	__Type = exports.__Type,
-	__Field = exports.__Field,
-	__InputValue = exports.__InputValue,
-	__EnumValue = exports.__EnumValue,
-	__TypeKind = exports.__TypeKind,
+	exports.__Schema,
+	exports.__Directive,
+	exports.__DirectiveLocation,
+	exports.__Type,
+	exports.__Field,
+	exports.__InputValue,
+	exports.__EnumValue,
+	exports.__TypeKind,
 })
 
 function exports.isIntrospectionType(type_ --[[: GraphQLNamedType ]])
