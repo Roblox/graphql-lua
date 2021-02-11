@@ -216,7 +216,7 @@ local specifiedDirectives = Object.freeze({
 })
 
 local function isSpecifiedDirective(directive)
-	return specifiedDirectives.some(function(specifiedDirective)
+	return Array.some(specifiedDirectives, function(specifiedDirective)
 		local name = specifiedDirective.name
 
 		return name == directive.name
