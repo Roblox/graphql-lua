@@ -642,7 +642,7 @@ exports.TypeNameMetaFieldDef = {
 	astNode = nil,
 }
 
-local introspectionTypes = Object.freeze({
+exports.introspectionTypes = Object.freeze({
 	exports.__Schema,
 	exports.__Directive,
 	exports.__DirectiveLocation,
@@ -654,7 +654,7 @@ local introspectionTypes = Object.freeze({
 })
 
 function exports.isIntrospectionType(type_ --[[: GraphQLNamedType ]])
-	return Array.some(introspectionTypes, function(currentType_)
+	return Array.some(exports.introspectionTypes, function(currentType_)
 		local name = currentType_.name
 		return type_.name == name
 	end)
