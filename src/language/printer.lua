@@ -35,28 +35,28 @@ local MAX_LINE_LENGTH = 80
 -- ROBLOX deviation: addDescription needs to be declared above printDocASTReducer
 -- addDescription is called when declaring printDocASTReducer and Lua doesn't hoist functions
 function addDescription(cb)
-	return function(self, node)
+	return function(_self, node)
 		return join({ node.description, cb(node) }, "\n")
 	end
 end
 
 -- TODO: provide better type coverage in future
 printDocASTReducer = {
-	Name = function(self, node)
+	Name = function(_self, node)
 		return node.value
 	end,
 
-	Variable = function(self, node)
+	Variable = function(_self, node)
 		return "$" .. node.name
 	end,
 
 	-- Document
 
-	Document = function(self, node)
+	Document = function(_self, node)
 		return join(node.definitions, "\n\n") .. "\n"
 	end,
 
-	OperationDefinition = function(self, node)
+	OperationDefinition = function(_self, node)
 		local op = node.operation
 		local name = node.name
 		local varDefs = wrap("(", join(node.variableDefinitions, ", "), ")")
@@ -76,7 +76,7 @@ printDocASTReducer = {
 		end
 	end,
 
-	VariableDefinition = function(self, node)
+	VariableDefinition = function(_self, node)
 		local variable = node.variable
 		local type_ = node.type
 		local defaultValue = node.defaultValue
@@ -84,11 +84,11 @@ printDocASTReducer = {
 		return variable .. ": " .. type_ .. wrap(" = ", defaultValue) .. wrap(" ", join(directives, " "))
 	end,
 
-	SelectionSet = function(self, node)
+	SelectionSet = function(_self, node)
 		return block(node.selections)
 	end,
 
-	Field = function(self, node)
+	Field = function(_self, node)
 		local alias = node.alias
 		local name = node.name
 		local args = node.arguments
@@ -104,7 +104,7 @@ printDocASTReducer = {
 		return join({ argsLine, join(directives, " "), selectionSet }, " ")
 	end,
 
-	Argument = function(self, node)
+	Argument = function(_self, node)
 		local name = node.name
 		local value = node.value
 		return name .. ": " .. value
@@ -112,13 +112,13 @@ printDocASTReducer = {
 
 	-- Fragments
 
-	FragmentSpread = function(self, node)
+	FragmentSpread = function(_self, node)
 		local name = node.name
 		local directives = node.directives
 		return "..." .. name .. wrap(" ", join(directives, " "))
 	end,
 
-	InlineFragment = function(self, node)
+	InlineFragment = function(_self, node)
 		local typeCondition = node.typeCondition
 		local directives = node.directives
 		local selectionSet = node.selectionSet
@@ -128,7 +128,7 @@ printDocASTReducer = {
 		)
 	end,
 
-	FragmentDefinition = function(self, node)
+	FragmentDefinition = function(_self, node)
 		local name = node.name
 		local typeCondition = node.typeCondition
 		local variableDefinitions = node.variableDefinitions
@@ -151,15 +151,15 @@ printDocASTReducer = {
 
 	-- Value
 
-	IntValue = function(self, node)
+	IntValue = function(_self, node)
 		local value = node.value
 		return value
 	end,
-	FloatValue = function(self, node)
+	FloatValue = function(_self, node)
 		local value = node.value
 		return value
 	end,
-	StringValue = function(self, node, key)
+	StringValue = function(_self, node, key)
 		local value = node.value
 		local isBlockingString = node.block
 		if isBlockingString then
@@ -177,7 +177,7 @@ printDocASTReducer = {
 			return HttpService:JSONEncode(value)
 		end
 	end,
-	BooleanValue = function(self, node)
+	BooleanValue = function(_self, node)
 		local value = node.value
 		if value then
 			return "true"
@@ -185,22 +185,22 @@ printDocASTReducer = {
 			return "false"
 		end
 	end,
-	NullValue = function(self)
+	NullValue = function(_self)
 		return "null"
 	end,
-	EnumValue = function(self, node)
+	EnumValue = function(_self, node)
 		local value = node.value
 		return value
 	end,
-	ListValue = function(self, node)
+	ListValue = function(_self, node)
 		local values = node.values
 		return "[" .. join(values, ", ") .. "]"
 	end,
-	ObjectValue = function(self, node)
+	ObjectValue = function(_self, node)
 		local fields = node.fields
 		return "{" .. join(fields, ", ") .. "}"
 	end,
-	ObjectField = function(self, node)
+	ObjectField = function(_self, node)
 		local name = node.name
 		local value = node.value
 		return name .. ": " .. value
@@ -208,7 +208,7 @@ printDocASTReducer = {
 
 	-- Directive
 
-	Directive = function(self, node)
+	Directive = function(_self, node)
 		local name = node.name
 		local args = node.arguments
 		return "@" .. name .. wrap("(", join(args, ", "), ")")
@@ -216,15 +216,15 @@ printDocASTReducer = {
 
 	-- Type
 
-	NamedType = function(self, node)
+	NamedType = function(_self, node)
 		local name = node.name
 		return name
 	end,
-	ListType = function(self, node)
+	ListType = function(_self, node)
 		local type_ = node.type
 		return "[" .. type_ .. "]"
 	end,
-	NonNullType = function(self, node)
+	NonNullType = function(_self, node)
 		local type_ = node.type
 		return type_ .. "!"
 	end,
@@ -237,7 +237,7 @@ printDocASTReducer = {
 		return join({ "schema", join(directives, " "), block(operationTypes) }, " ")
 	end),
 
-	OperationTypeDefinition = function(self, node)
+	OperationTypeDefinition = function(_self, node)
 		local operation = node.operation
 		local type_ = node.type
 		return operation .. ": " .. type_
@@ -369,19 +369,19 @@ printDocASTReducer = {
 		end)() .. " on " .. join(locations, " | ")
 	end),
 
-	SchemaExtension = function(self, node)
+	SchemaExtension = function(_self, node)
 		local directives = node.directives
 		local operationTypes = node.operationTypes
 		return join({ "extend schema", join(directives, " "), block(operationTypes) }, " ")
 	end,
 
-	ScalarTypeExtension = function(self, node)
+	ScalarTypeExtension = function(_self, node)
 		local name = node.name
 		local directives = node.directives
 		return join({ "extend scalar", name, join(directives, " ") }, " ")
 	end,
 
-	ObjectTypeExtension = function(self, node)
+	ObjectTypeExtension = function(_self, node)
 		local name = node.name
 		local interfaces = node.interfaces
 		local directives = node.directives
@@ -398,7 +398,7 @@ printDocASTReducer = {
 		)
 	end,
 
-	InterfaceTypeExtension = function(self, node)
+	InterfaceTypeExtension = function(_self, node)
 		local name = node.name
 		local interfaces = node.interfaces
 		local directives = node.directives
@@ -415,7 +415,7 @@ printDocASTReducer = {
 		)
 	end,
 
-	UnionTypeExtension = function(self, node)
+	UnionTypeExtension = function(_self, node)
 		local name = node.name
 		local directives = node.directives
 		local types = node.types
@@ -436,14 +436,14 @@ printDocASTReducer = {
 		)
 	end,
 
-	EnumTypeExtension = function(self, node)
+	EnumTypeExtension = function(_self, node)
 		local name = node.name
 		local directives = node.directives
 		local values = node.values
 		return join({ "extend enum", name, join(directives, " "), block(values) }, " ")
 	end,
 
-	InputObjectTypeExtension = function(self, node)
+	InputObjectTypeExtension = function(_self, node)
 		local name = node.name
 		local directives = node.directives
 		local fields = node.fields

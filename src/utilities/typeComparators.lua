@@ -1,11 +1,14 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/typeComparators.js
 
-local definitionImport = require(script.Parent.Parent.type.definition)
+local root = script.Parent.Parent
+local definitionImport = require(root.type.definition)
 local isInterfaceType = definitionImport.isInterfaceType
 local isObjectType = definitionImport.isObjectType
 local isListType = definitionImport.isListType
 local isNonNullType = definitionImport.isNonNullType
 local isAbstractType = definitionImport.isAbstractType
+
+local Array = require(root.luaUtils.Array)
 
 --[[*
 --  * Provided two types, return true if the types are equal (invariant).
@@ -92,7 +95,7 @@ local function doTypesOverlap(schema, typeA, typeB)
 		if isAbstractType(typeB) then
 			-- If both types are abstract, then determine if there is any intersection
 			-- between possible concrete types of each.
-			return schema.getPossibleTypes(typeA).some(function(type_)
+			return Array.some(schema:getPossibleTypes(typeA), function(type_)
 				return schema:isSubType(typeB, type_)
 			end)
 		end

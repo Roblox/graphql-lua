@@ -186,8 +186,8 @@ return function()
 						checkVisitorFnArgs(
 							expect,
 							ast,
-							{ ... },--[[ isEdited ]]
-							true
+							{ ... },
+							true --[[ isEdited ]]
 						)
 						return Object.assign({}, node, {
 							selectionSet = selectionSet,
@@ -227,8 +227,8 @@ return function()
 						checkVisitorFnArgs(
 							expect,
 							ast,
-							{ ... },--[[ isEdited ]]
-							true
+							{ ... },
+							true --[[ isEdited ]]
 						)
 						return Object.assign({}, node, {
 							definitions = definitions,
@@ -270,8 +270,8 @@ return function()
 					checkVisitorFnArgs(
 						expect,
 						ast,
-						{ ... },--[[ isEdited ]]
-						true
+						{ ... },
+						true --[[ isEdited ]]
 					)
 					if node.kind == "Field" and node.name.value == "b" then
 						return NULL -- ROBLOX deviation: returning NULL instead of null in JS to distinguish between undefined
@@ -314,8 +314,8 @@ return function()
 					checkVisitorFnArgs(
 						expect,
 						ast,
-						{ ... },--[[ isEdited ]]
-						true
+						{ ... },
+						true --[[ isEdited ]]
 					)
 					if node.kind == "Field" and node.name.value == "a" then
 						return {
@@ -1403,8 +1403,8 @@ return function()
 								checkVisitorFnArgs(
 									expect,
 									ast,
-									{ ... },--[[ isEdited ]]
-									true
+									{ ... },
+									true --[[ isEdited ]]
 								)
 								table.insert(visited, { "leave", node.kind, getValue(node) })
 							end,
@@ -1457,8 +1457,8 @@ return function()
 								checkVisitorFnArgs(
 									expect,
 									ast,
-									{ ... },--[[ isEdited ]]
-									true
+									{ ... },
+									true --[[ isEdited ]]
 								)
 								if node.kind == "Field" and node.name.value == "b" then
 									return NULL

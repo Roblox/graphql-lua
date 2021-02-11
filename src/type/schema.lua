@@ -147,6 +147,9 @@ export type GraphQLSchema = {
 
 	-- // Used as a cache for validateSchema().
 	__validationErrors: Array<GraphQLError>?,
+
+	-- functions
+	getQueryType: (GraphQLSchema) -> GraphQLObjectType?,
 }
 
 GraphQLSchema = {}

@@ -144,8 +144,12 @@ end
 --     return this.toJSON();
 --   }
 
-local function isNode(maybeNode)
-	return maybeNode ~= nil and typeof(maybeNode.kind) == "string"
+local function isNode(maybeNode: any): boolean
+	-- ROBLOX deviation: we need to check for a table in Lua, because we
+	-- need to check if `maybeNode.kind` is a string. In JS, this function
+	-- can be given a boolean which can be indexed safely, but in Lua it will
+	-- throw.
+	return typeof(maybeNode) == "table" and typeof(maybeNode.kind) == "string"
 end
 
 -- // Name

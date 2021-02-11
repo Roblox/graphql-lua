@@ -136,7 +136,7 @@ local GraphQLIncludeDirective = GraphQLDirective.new({
 		DirectiveLocation.INLINE_FRAGMENT,
 	},
 	args = {
-		if_ = {
+		["if"] = {
 			type = GraphQLNonNull.new(GraphQLBoolean),
 			description = "Included when true.",
 		},
@@ -155,7 +155,7 @@ local GraphQLSkipDirective = GraphQLDirective.new({
 		DirectiveLocation.INLINE_FRAGMENT,
 	},
 	args = {
-		if_ = {
+		["if"] = {
 			type = GraphQLNonNull.new(GraphQLBoolean),
 			description = "Skipped when true.",
 		},
