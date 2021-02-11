@@ -1,58 +1,56 @@
--- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/57d614807e74c3d5a2fda11849941ad9cbf55007/src/utilities/TypeInfo.js
+-- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/TypeInfo.js
 
-local root = script.Parent.Parent
-local language = root.language
+local srcWorkspace = script.Parent.Parent
+local language = srcWorkspace.language
+local typeWorkspace = srcWorkspace.type
 
+local visitorImport = require(language.visitor)
+local astImport = require(language.ast)
+type Visitor<T> = any -- visitorImport.Visitor<T>
+type ASTNode = any -- astImport.ASTNode
+type ASTKindToNode = any -- astImport.ASTKindToNode
+type FieldNode = astImport.FieldNode
 local Kind = require(language.kinds).Kind
-local astExports = require(language.ast)
-local isNode = astExports.isNode
-type ASTNode = any -- astExports.ASTNode
-type ASTKindToNode = any -- astExports.ASTKindToNode
-type FieldNode = astExports.FieldNode
-local visitorExports = require(language.visitor)
-local getVisitFn = visitorExports.getVisitFn
-type Visitor<T> = any -- visitorExports.Visitor<T>
+local isNode = astImport.isNode
+local getVisitFn = visitorImport.getVisitFn
 
-local typeWorkspace = root.type
-local definition = require(typeWorkspace.definition)
-local isObjectType = definition.isObjectType
-local isInterfaceType = definition.isInterfaceType
-local isEnumType = definition.isEnumType
-local isInputObjectType = definition.isInputObjectType
-local isListType = definition.isListType
-local isCompositeType = definition.isCompositeType
-local isInputType = definition.isInputType
-local isOutputType = definition.isOutputType
-local getNullableType = definition.getNullableType
-local getNamedType = definition.getNamedType
-type GraphQLType = any -- definition.GraphQLType
-type GraphQLInputType = any -- definition.GraphQLInputType
-type GraphQLOutputType = any -- definition.GraphQLOutputType
-type GraphQLCompositeType = any -- definition.GraphQLCompositeType
-type GraphQLField<T, U> = any -- definition.GraphQLField<T, U>
-type GraphQLArgument = any -- definition.GraphQLArgument
-type GraphQLInputField = any -- definition.GraphQLInputField
-type GraphQLEnumValue = any -- definition.GraphQLEnumValue
+local schemaImport = require(typeWorkspace.schema)
+type GraphQLSchema = schemaImport.GraphQLSchema
+-- local _directivesImport = require(typeWorkspace.directives)
+type GraphQLDirective = any -- _directivesImport.GraphQLDirective
+local definitionImport = require(typeWorkspace.definition)
+type GraphQLType = any -- definitionImport.GraphQLType
+type GraphQLInputType = any -- definitionImport.GraphQLInputType
+type GraphQLOutputType = any -- definitionImport.GraphQLOutputType
+type GraphQLCompositeType = any -- definitionImport.GraphQLCompositeType
+type GraphQLField<T, U> = any -- definitionImport.GraphQLField<T, U>
+type GraphQLArgument = any -- definitionImport.GraphQLArgument
+type GraphQLInputField = any -- definitionImport.GraphQLInputField
+type GraphQLEnumValue = any -- definitionImport.GraphQLEnumValue
+local isObjectType = definitionImport.isObjectType
+local isInterfaceType = definitionImport.isInterfaceType
+local isEnumType = definitionImport.isEnumType
+local isInputObjectType = definitionImport.isInputObjectType
+local isListType = definitionImport.isListType
+local isCompositeType = definitionImport.isCompositeType
+local isInputType = definitionImport.isInputType
+local isOutputType = definitionImport.isOutputType
+local getNullableType = definitionImport.getNullableType
+local getNamedType = definitionImport.getNamedType
+local introspectionImport = require(typeWorkspace.introspection)
+local SchemaMetaFieldDef = introspectionImport.SchemaMetaFieldDef
+local TypeMetaFieldDef = introspectionImport.TypeMetaFieldDef
+local TypeNameMetaFieldDef = introspectionImport.TypeNameMetaFieldDef
 
-local _schemaExports = require(typeWorkspace.schema)
-type GraphQLSchema = _schemaExports.GraphQLSchema
--- local _directivesExports = require(typeWorkspace.directives)
-type GraphQLDirective = any -- _directivesExports.GraphQLDirective
+local typeFromAST = require(srcWorkspace.utilities.typeFromAST).typeFromAST
 
-local introspection = require(typeWorkspace.introspection)
-local SchemaMetaFieldDef = introspection.SchemaMetaFieldDef
-local TypeMetaFieldDef = introspection.TypeMetaFieldDef
-local TypeNameMetaFieldDef = introspection.TypeNameMetaFieldDef
-
-local typeFromAST = require(root.utilities.typeFromAST).typeFromAST
-
-local Array = require(root.luaUtils.Array)
+local Array = require(srcWorkspace.luaUtils.Array)
 
 type Array<T> = { [number]: T }
 
 -- ROBLOX deviation: use the following table as a symbol to represent
 -- a `null` value within the arrays
-local NULL = function() end -- {}
+local NULL = {}
 local function unwrapNull(value)
 	if value == NULL then
 		return nil
@@ -263,7 +261,7 @@ function TypeInfo:enter(node: ASTNode)
 			return _ref
 		end)()
 		if fieldOrDirective then
-			argDef = Array.find(fieldOrDirective, function(arg)
+			argDef = Array.find(fieldOrDirective.args, function(arg)
 				return arg.name == node.name.value
 			end)
 			if argDef then

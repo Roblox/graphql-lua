@@ -1,21 +1,22 @@
--- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/validation/__tests__/harness.js
+-- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/validation/__tests__/harness.js
 
 local validationWorkspace = script.Parent.Parent
-local root = validationWorkspace.Parent
-local parser = require(root.language.parser)
-local parse = parser.parse
--- local schema = require(root.type.schema)
--- local GraphQLSchema = schema.GraphQLSchema
-local buildSchema = require(root.utilities.buildASTSchema).buildSchema
-local validateExports = require(validationWorkspace.validate)
-local validate = validateExports.validate
-local validateSDL = validateExports.validateSDL
+local srcWorkspace = validationWorkspace.Parent
 
-local Array = require(root.luaUtils.Array)
+local parse = require(srcWorkspace.language.parser).parse
 
-local exports = {}
+local _schemaImport = require(srcWorkspace.type.schema)
+type GraphQLSchema = _schemaImport.GraphQLSchema
 
-exports.testSchema = buildSchema([[
+local buildSchema = require(srcWorkspace.utilities.buildASTSchema).buildSchema
+
+local validateImport = require(validationWorkspace.validate)
+local validate = validateImport.validate
+local validateSDL = validateImport.validateSDL
+
+local Array = require(srcWorkspace.luaUtils.Array)
+
+local testSchema = buildSchema([[
   interface Being {
     name(surname: Boolean): String
   }
@@ -150,12 +151,12 @@ exports.testSchema = buildSchema([[
 
 -- deviation: expect needs to be passed because it can't be injected
 -- in this file
-exports.expectValidationErrorsWithSchema = function(
-	expect,
-	schema,
+local function expectValidationErrorsWithSchema(
+	expect_,
+	schema: GraphQLSchema,
 	rule,
 	queryStr: string
-)
+): any
 	local doc = parse(queryStr)
 	local errors = validate(schema, doc, {rule})
 	-- ROBLOX deviation: our toEqual does not have a special case when
@@ -166,25 +167,25 @@ exports.expectValidationErrorsWithSchema = function(
 			locations = errorObject.locations,
 		}
 	end)
-	return expect(reshapedErrors)
+	return expect_(reshapedErrors)
 end
 
-exports.expectValidationErrors = function(
+local function expectValidationErrors(
 	expect,
 	rule,
 	queryStr: string
 )
-	return exports.expectValidationErrorsWithSchema(
+	return expectValidationErrorsWithSchema(
 		expect,
-		exports.testSchema,
+		testSchema,
 		rule,
 		queryStr
 	)
 end
 
-exports.expectSDLValidationErrors = function(
+local function expectSDLValidationErrors(
 	expect,
-	schema,
+	schema: GraphQLSchema,
 	rule,
 	sdlStr: string
 )
@@ -201,4 +202,9 @@ exports.expectSDLValidationErrors = function(
 	return expect(reshapedErrors)
 end
 
-return exports
+return {
+  testSchema = testSchema,
+  expectValidationErrorsWithSchema = expectValidationErrorsWithSchema,
+  expectValidationErrors = expectValidationErrors,
+  expectSDLValidationErrors = expectSDLValidationErrors,
+}
