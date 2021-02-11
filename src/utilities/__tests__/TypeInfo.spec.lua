@@ -1,28 +1,26 @@
--- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/833da8281c06b720b56f513818d13bfdf13a06e7/src/utilities/__tests__/TypeInfo-test.js
+-- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/__tests__/TypeInfo-test.js
 
 return function()
-	local root = script.Parent.Parent.Parent
-	local invariant = require(root.jsutils.invariant).invariant
-	local language = root.language
-	local parser = require(language.parser)
-	local parse = parser.parse
-	local parseValue = parser.parseValue
-	local print_ = require(language.printer).print
-	local visitor = require(language.visitor)
-	local visit = visitor.visit
-	local definition = require(root.type.definition)
-	local getNamedType = definition.getNamedType
-	local isCompositeType = definition.isCompositeType
-	local utilities = root.utilities
-	local buildASTSchema = require(utilities.buildASTSchema)
+	local utilitiesWorkspace = script.Parent.Parent
+	local srcWorkspace = utilitiesWorkspace.Parent
+	local invariant = require(srcWorkspace.jsutils.invariant).invariant
+	local languageWorkspace = srcWorkspace.language
+	local parserImport = require(languageWorkspace.parser)
+	local parse = parserImport.parse
+	local parseValue = parserImport.parseValue
+	local print_ = require(languageWorkspace.printer).print
+	local visit = require(languageWorkspace.visitor).visit
+	local definitionImport = require(srcWorkspace.type.definition)
+	local getNamedType = definitionImport.getNamedType
+	local isCompositeType = definitionImport.isCompositeType
+	local buildASTSchema = require(utilitiesWorkspace.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local TypeInfoExports = require(utilities.TypeInfo)
-	local TypeInfo = TypeInfoExports.TypeInfo
-	local visitWithTypeInfo = TypeInfoExports.visitWithTypeInfo
-	local harness = require(root.validation.__tests__.harness)
-	local testSchema = harness.testSchema
+	local TypeInfoImport = require(utilitiesWorkspace.TypeInfo)
+	local TypeInfo = TypeInfoImport.TypeInfo
+	local visitWithTypeInfo = TypeInfoImport.visitWithTypeInfo
+	local testSchema = require(srcWorkspace.validation.__tests__.harness).testSchema
 
-	local Packages = root.Parent.Packages
+	local Packages = srcWorkspace.Parent.Packages
 	local LuauPolyfill = require(Packages.LuauPolyfill)
 	local Object = LuauPolyfill.Object
 
@@ -59,38 +57,37 @@ return function()
 	describe("visitWithTypeInfo", function()
 		it("supports different operation types", function()
 			local schema = buildSchema([[
-				schema {
-					query: QueryRoot
-					mutation: MutationRoot
-					subscription: SubscriptionRoot
-				}
+      schema {
+        query: QueryRoot
+        mutation: MutationRoot
+        subscription: SubscriptionRoot
+      }
 
-				type QueryRoot {
-					foo: String
-				}
+      type QueryRoot {
+        foo: String
+      }
 
-				type MutationRoot {
-					bar: String
-				}
+      type MutationRoot {
+        bar: String
+      }
 
-				type SubscriptionRoot {
-					baz: String
-				}
-			]])
+      type SubscriptionRoot {
+        baz: String
+      }
+    ]])
 			local ast = parse([[
-				query { foo }
-				mutation { bar }
-				subscription { baz }
-			]])
+      query { foo }
+      mutation { bar }
+      subscription { baz }
+    ]])
 			local typeInfo = TypeInfo.new(schema)
 
 			local rootTypes = {}
-
 			visit(
 				ast,
 				visitWithTypeInfo(typeInfo, {
 					OperationDefinition = function(_self, node)
-						rootTypes[node.operation] = typeInfo:getType():toString()
+						rootTypes[node.operation] = tostring(typeInfo:getType())
 					end,
 				})
 			)
@@ -105,6 +102,7 @@ return function()
 			local ast = parse(
 				"{ human(id: 4) { name, pets { ... { name } }, unknown } }"
 			)
+
 			local visitorArgs = {}
 			visit(ast, {
 				enter = function(_self, ...)
@@ -129,9 +127,11 @@ return function()
 			expect(visitorArgs).toEqual(wrappedVisitorArgs)
 		end)
 
-		itSKIP("maintains type info during visit", function()
+		it("maintains type info during visit", function()
 			local visited = {}
+
 			local typeInfo = TypeInfo.new(testSchema)
+
 			local ast = parse("{ human(id: 4) { name, pets { ... { name } }, unknown } }")
 
 			visit(ast, visitWithTypeInfo(typeInfo, {
@@ -144,9 +144,9 @@ return function()
 						"enter",
 						node.kind,
 						node.kind == "Name" and node.value or NULL,
-						parentType and parentType:toString() or NULL,
-						type_ and type_:toString() or NULL,
-						inputType and inputType:toString() or NULL,
+						parentType and tostring(parentType) or NULL,
+						type_ and tostring(type_) or NULL,
+						inputType and tostring(inputType) or NULL,
 					})
 				end,
 				leave = function(_self, node)
@@ -158,9 +158,9 @@ return function()
 						"leave",
 						node.kind,
 						node.kind == "Name" and node.value or NULL,
-						parentType and parentType:toString() or NULL,
-						type_ and type_:toString() or NULL,
-						inputType and inputType:toString() or NULL,
+						parentType and tostring(parentType) or NULL,
+						type_ and tostring(type_) or NULL,
+						inputType and tostring(inputType) or NULL,
 					})
 				end,
 			}))
@@ -209,7 +209,7 @@ return function()
 			})
 		end)
 
-		itSKIP("maintains type info during edit", function()
+		it("maintains type info during edit", function()
 			local visited = {}
 			local typeInfo = TypeInfo.new(testSchema)
 
@@ -225,18 +225,18 @@ return function()
 							"enter",
 							node.kind,
 							node.kind == "Name" and node.value or NULL,
-							parentType and parentType:toString() or NULL,
-							type_ and type_:toString() or NULL,
-							inputType and inputType:toString() or NULL,
+							parentType and tostring(parentType) or NULL,
+							type_ and tostring(type_) or NULL,
+							inputType and tostring(inputType) or NULL,
 						})
 
 						-- // Make a query valid by adding missing selection sets.
 						if
 							node.kind == "Field" and
 							not node.selectionSet and
-							isCompositeType(getNamedType(type))
+							isCompositeType(getNamedType(type_))
 						then
-							return Object.Assign(
+							return Object.assign(
 								{},
 								node,
 								{
@@ -262,18 +262,18 @@ return function()
 							"leave",
 							node.kind,
 							node.kind == "Name" and node.value or NULL,
-							parentType and parentType:toString() or NULL,
-							type_ and type_:toString() or NULL,
-							inputType and inputType:toString() or NULL,
+							parentType and tostring(parentType) or NULL,
+							type_ and tostring(type_) or NULL,
+							inputType and tostring(inputType) or NULL,
 						})
 					end,
 				})
 			)
 
-			expect(print_(ast)).toEqual(
+			expect(print_(ast)).to.equal(
 				print_(parse("{ human(id: 4) { name, pets }, alien }"))
 			)
-			expect(print_(editedAST)).toEqual(
+			expect(print_(editedAST)).to.equal(
 				print_(
 					parse(
 						"{ human(id: 4) { name, pets { __typename } }, alien { __typename } }"
@@ -345,7 +345,7 @@ return function()
 							"enter",
 							node.kind,
 							node.kind == "Name" and node.value or NULL,
-							type_:toString(),
+							tostring(type_),
 						})
 					end,
 					leave = function(_self, node)
@@ -354,7 +354,7 @@ return function()
 							"leave",
 							node.kind,
 							node.kind == "Name" and node.value or NULL,
-							type_:toString(),
+							tostring(type_),
 						})
 					end,
 				})
@@ -395,8 +395,8 @@ return function()
 							"enter",
 							node.kind,
 							node.kind == "Name" and node.value or NULL,
-							parentType:toString(),
-							type_:toString(),
+							tostring(parentType),
+							tostring(type_),
 						})
 					end,
 					leave = function(_self, node)
@@ -406,8 +406,8 @@ return function()
 							"leave",
 							node.kind,
 							node.kind == "Name" and node.value or NULL,
-							parentType:toString(),
-							type_:toString(),
+							tostring(parentType),
+							tostring(type_),
 						})
 					end,
 				})
