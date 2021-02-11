@@ -628,9 +628,9 @@ exports.TypeMetaFieldDef = {
 }
 
 exports.TypeNameMetaFieldDef = {
-	name = '__typename',
+	name = "__typename",
 	type = GraphQLNonNull.new(GraphQLString),
-	description = 'The name of the current Object type at runtime.',
+	description = "The name of the current Object type at runtime.",
 	args = {},
 	resolve = function(_source, _args, _context, _ref)
 		local parentType = _ref.parentType
