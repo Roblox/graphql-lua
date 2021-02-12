@@ -119,7 +119,7 @@ return function()
 				]])
 			end)
 
-			itSKIP("reports error when a deprecated argument is used", function()
+			it("reports error when a deprecated argument is used", function()
 				expectErrors(expect, [[
         {
           someField(deprecatedArg: "")
@@ -164,7 +164,7 @@ return function()
 				]])
 			end)
 
-			itSKIP("reports error when a deprecated argument is used", function()
+			it("reports error when a deprecated argument is used", function()
 				expectErrors(expect, [[
         {
           someField @someDirective(deprecatedArg: "")
@@ -222,7 +222,7 @@ return function()
 				]])
 			end)
 
-			itSKIP("reports error when a deprecated input field is used", function()
+			it("reports error when a deprecated input field is used", function()
 				local message = "The input field InputType.deprecatedField is deprecated. Some input field reason."
 
 				expectErrors(expect, [[
@@ -283,7 +283,7 @@ return function()
 				]])
 			end)
 
-			itSKIP("reports error when a deprecated enum value is used", function()
+			it("reports error when a deprecated enum value is used", function()
 				local message = 'The enum value "EnumType.DEPRECATED_VALUE" is deprecated. Some enum reason.'
 
 				expectErrors(expect, [[
