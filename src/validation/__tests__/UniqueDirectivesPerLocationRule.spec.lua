@@ -2,22 +2,22 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	-- local root = validationWorkspace.Parent
-	-- local parse = require(root.language.parser).parse
-	-- local extendSchema = require(root.utilities.extendSchema).extendSchema
+	local root = validationWorkspace.Parent
+	local parse = require(root.language.parser).parse
+	local extendSchema = require(root.utilities.extendSchema).extendSchema
 	local UniqueDirectivesPerLocationRule = require(validationWorkspace.rules.UniqueDirectivesPerLocationRule)
 		.UniqueDirectivesPerLocationRule
 	local harness = require(script.Parent.harness)
-	-- local testSchema = harness.testSchema
+	local testSchema = harness.testSchema
 	local expectValidationErrorsWithSchema = harness.expectValidationErrorsWithSchema
 	local expectSDLValidationErrors = harness.expectSDLValidationErrors
-	-- local extensionSDL = [[
-	-- 	directive @directive on FIELD | FRAGMENT_DEFINITION
-	-- 	directive @directiveA on FIELD | FRAGMENT_DEFINITION
-	-- 	directive @directiveB on FIELD | FRAGMENT_DEFINITION
-	-- 	directive @repeatable repeatable on FIELD | FRAGMENT_DEFINITION
-	-- ]]
-	local schemaWithDirectives = nil -- = extendSchema(testSchema, parse(extensionSDL))
+	local extensionSDL = [[
+		directive @directive on FIELD | FRAGMENT_DEFINITION
+		directive @directiveA on FIELD | FRAGMENT_DEFINITION
+		directive @directiveB on FIELD | FRAGMENT_DEFINITION
+		directive @repeatable repeatable on FIELD | FRAGMENT_DEFINITION
+	]]
+	local schemaWithDirectives = extendSchema(testSchema, parse(extensionSDL))
 
 	local function expectErrors(expect_, queryStr: string)
 		-- ROBLOX deviation: we append a new line at the begining of the
@@ -43,7 +43,7 @@ return function()
 	end
 
 	describe("Validate: Directives Are Unique Per Location", function()
-		itSKIP("no directives", function()
+		it("no directives", function()
 			expectValid(expect, [[
 				fragment Test on Type {
 					field
@@ -51,6 +51,7 @@ return function()
 			]])
 		end)
 
+		-- ROBLOX FIXME: this test is passing sometimes
 		itSKIP("unique directives in different locations", function()
 			expectValid(expect, [[
 				fragment Test on Type @directiveA {

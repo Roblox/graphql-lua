@@ -40,7 +40,7 @@ return function()
 	end
 
 	describe("Validate: Known argument names", function()
-		itSKIP("single arg is known", function()
+		it("single arg is known", function()
 			expectValid(expect, [[
 				fragment argOnRequiredArg on Dog {
 					doesKnowCommand(dogCommand: SIT)

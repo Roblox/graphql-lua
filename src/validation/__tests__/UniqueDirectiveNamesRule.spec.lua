@@ -69,7 +69,7 @@ return function()
 			})
 		end)
 
-		itSKIP("adding new directive to existing schema", function()
+		it("adding new directive to existing schema", function()
 			local schema = buildSchema("directive @foo on SCHEMA")
 
 			expectValidSDL(expect, "directive @bar on SCHEMA", schema)
@@ -86,7 +86,7 @@ return function()
 			})
 		end)
 
-		itSKIP("adding new directive to existing schema with same-named type", function()
+		it("adding new directive to existing schema with same-named type", function()
 			local schema = buildSchema("type foo")
 
 			expectValidSDL(expect, "directive @foo on SCHEMA", schema)
