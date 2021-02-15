@@ -18,7 +18,7 @@ end
  * Memoizes the provided three-argument function.
  ]]
 local function memoize3(fn)
-    local cache0
+	local cache0
 
 	return function(a1, a2, a3)
 		-- deviation: we replace 'nil' with a table to support
@@ -28,16 +28,16 @@ local function memoize3(fn)
 		local key3 = replaceNil(a3)
 
 		if not cache0 then
-			cache0 = newWeakMap
-        end
-        local cache1 = cache0[key1]
-        local cache2
+			cache0 = newWeakMap()
+		end
+		local cache1 = cache0[key1]
+		local cache2
 
-        if cache1 then
-            cache2 = cache1[key2]
+		if cache1 then
+			cache2 = cache1[key2]
 
-            if cache2 then
-                local cachedValue = cache2[key3]
+			if cache2 then
+				local cachedValue = cache2[key3]
 
 				if cachedValue ~= nil then
 					-- deviation: since we store nil as NULL
@@ -45,24 +45,26 @@ local function memoize3(fn)
 					if cachedValue == NULL then
 						return nil
 					end
-                    return cachedValue
-                end
-            end
-        else
-            cache0[key1] = cache1
-        end
-        if not cache2 then
-            cache1[key2] = cache2
-        end
+					return cachedValue
+				end
+			end
+		else
+			cache1 = newWeakMap()
+			cache0[key1] = cache1
+		end
+		if not cache2 then
+			cache2 = newWeakMap()
+			cache1[key2] = cache2
+		end
 
-        local newValue = fn(a1, a2, a3)
+		local newValue = fn(a1, a2, a3)
 
 		cache2[key3] = replaceNil(newValue)
 
-        return newValue
-    end
+		return newValue
+	end
 end
 
 return {
-	memoize3 = memoize3
+	memoize3 = memoize3,
 }

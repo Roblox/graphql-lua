@@ -231,7 +231,7 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 	self._implementationsMap = {}
 
 	for _, namedType in allReferencedTypes:ipairs() do
-		-- ROBLOX deviation: there is `nil` element in a Lua list
+		-- ROBLOX FIXME: there is `nil` element in a Lua list
 		-- if namedType == nil then
 		-- 	continue
 		-- end
