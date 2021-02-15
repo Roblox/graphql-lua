@@ -1,3 +1,5 @@
+-- ROBLOX deviation: no upstream tests
+
 return function()
 	local languageWorkspace = script.Parent.Parent
 

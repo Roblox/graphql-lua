@@ -4,7 +4,7 @@ local srcWorkspace = script.Parent.Parent
 local devAssert = require(srcWorkspace.jsutils.devAssert).devAssert
 local GraphQLError = require(srcWorkspace.error.GraphQLError).GraphQLError
 
-local isValidNameErr
+local isValidNameError
 local assertValidName
 
 local NAME_RX = "[_%a][_%a%d]*"
@@ -13,7 +13,7 @@ local NAME_RX = "[_%a][_%a%d]*"
  	* Upholds the spec rules about naming.
  	*]]
 function assertValidName(name: string): string
-	local error_ = isValidNameErr(name)
+	local error_ = isValidNameError(name)
 	if error_ then
 		error(error_)
 	end
@@ -23,7 +23,7 @@ end
 --[[**
 	* Returns an Error if a name is invalid.
 	*]]
-function isValidNameErr(name: string)
+function isValidNameError(name: string)
 	devAssert(type(name) == "string", "Expected name to be a string.")
 	if string.len(name) > 1 and name:sub(1, 1) == "_" and name:sub(2, 2) == "_" then
 		return GraphQLError.new("Name \"" .. name .. "\" must not begin with \"__\", which is reserved by GraphQL introspection.")
@@ -40,4 +40,5 @@ end
 
 return {
 	assertValidName = assertValidName,
+	isValidNameError = isValidNameError,
 }
