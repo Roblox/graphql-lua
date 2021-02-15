@@ -1,10 +1,12 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/aa650618426a301e3f0f61ead3adcd755055a627/src/type/schema.js
 local root = script.Parent.Parent
-type Array<T> = { [number]: T }
-type Set<T> = { [T]: boolean }
 local Packages = root.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
+local Set = LuauPolyfill.Set
+-- ROBLOX TODO: add implemenation of types from LuauPolyfill
+type Set<T> = any -- LuauPolyfill.Set<T> 
+type Array<T> = { [number]: T } -- LuauPolyfill.Array<T>
 local Error = require(root.luaUtils.Error)
 
 local objectValues = require(root.polyfills.objectValues).objectValues
@@ -169,13 +171,11 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 	devAssert(isObjectLike(config), "Must provide configuration object.")
 	devAssert(
 		not config.types or Array.isArray(config.types),
-		('"types" must be Array if provided but got: %s.'):format(inspect(config.types))
+		("\"types\" must be Array if provided but got: %s."):format(inspect(config.types))
 	)
 	devAssert(
 		not config.directives or Array.isArray(config.directives),
-		'"directives" must be Array if provided but got: ' .. ('%s.'):format(
-			inspect(config.directives)
-		)
+		"\"directives\" must be Array if provided but got: " .. ("%s."):format(inspect(config.directives))
 	)
 
 	self.description = config.description
@@ -191,15 +191,15 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 
 	-- // To preserve order of user-provided types, we add first to add them to
 	-- // the set of "collected" types, so `collectReferencedTypes` ignore them.
-	local allReferencedTypes: Set<GraphQLNamedType> = {}
+	local allReferencedTypes: Set<GraphQLNamedType> = Set.new()
 	for _, type_ in ipairs(config.types or {}) do
-		allReferencedTypes[type_] = true
+		allReferencedTypes:add(type_)
 	end
 	if config.types ~= nil then
 		for _, type_ in ipairs(config.types) do
 			-- // When we ready to process this type, we remove it from "collected" types
 			-- // and then add it together with all dependent types in the correct position.
-			allReferencedTypes[type_] = nil
+			allReferencedTypes:delete(type_)
 			collectReferencedTypes(type_, allReferencedTypes)
 		end
 	end
@@ -230,7 +230,7 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 	-- // Keep track of all implementations by interface name.
 	self._implementationsMap = {}
 
-	for namedType, _ in pairs(allReferencedTypes) do
+	for _, namedType in allReferencedTypes:ipairs() do
 		-- ROBLOX deviation: there is `nil` element in a Lua list
 		-- if namedType == nil then
 		-- 	continue
@@ -242,10 +242,7 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 			"One of the provided types for building the Schema is missing a name."
 		)
 		if self._typeMap[typeName] ~= nil then
-			error(Error.new(
-				('Schema must contain uniquely named types but contains multiple types named "%s".')
-					:format(typeName)
-			))
+			error(Error.new(("Schema must contain uniquely named types but contains multiple types named \"%s\"."):format(typeName)))
 		end
 		self._typeMap[typeName] = namedType
 
@@ -408,7 +405,7 @@ export type GraphQLSchemaConfig = {
 	extensions: ObjMapLike<any>?,
 	astNode: SchemaDefinitionNode?,
 	extensionASTNodes: Array<SchemaExtensionNode>?,
-	-- ...GraphQLSchemaValidationOptions,
+-- ...GraphQLSchemaValidationOptions,
 } & GraphQLSchemaValidationOptions
 
 -- /**
@@ -430,8 +427,8 @@ function collectReferencedTypes(
 )
 	local namedType = getNamedType(type_)
 
-	if not typeSet[namedType] then
-		typeSet[namedType] = true
+	if not typeSet:has(namedType) then
+		typeSet:add(namedType)
 		if isUnionType(namedType) then
 			for _, memberType in ipairs(namedType:getTypes()) do
 				collectReferencedTypes(memberType, typeSet)
