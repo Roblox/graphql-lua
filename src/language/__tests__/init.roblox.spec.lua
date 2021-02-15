@@ -1,3 +1,5 @@
+-- ROBLOX deviation: no upstream tests
+
 return function()
 	describe("Language - init", function()
 		it("should contain Source table", function()
