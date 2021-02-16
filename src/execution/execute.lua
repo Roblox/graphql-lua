@@ -1055,7 +1055,8 @@ defaultFieldResolver = function(source: any, args, contextValue, info)
 	if isObjectLike(source) or typeof(source) == "function" then
 		local property = source[info.fieldName]
 		if typeof(property) == "function" then
-			return source[info.fieldName](args, contextValue, info)
+			-- ROBLOX deviation: pass source as self
+			return source[info.fieldName](source, args, contextValue, info)
 		end
 		return property
 	end
