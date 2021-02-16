@@ -19,7 +19,7 @@ local Array = require(luaUtilsWorkspace.Array)
 local Error = require(luaUtilsWorkspace.Error)
 local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
 local Promise = require(srcWorkspace.Parent.Packages.Promise)
-local instanceof = require(jsUtilsWorkspace.instanceOf)
+local instanceOf = require(jsUtilsWorkspace.instanceOf)
 
 local inspect = require(jsUtilsWorkspace.inspect).inspect
 local memoize3 = require(jsUtilsWorkspace.memoize3).memoize3
@@ -721,7 +721,7 @@ end
 --  *]]
 function completeValue(exeContext, returnType, fieldNodes, info, path, result)
 	-- If result is an Error, throw a located error.
-	if instanceof(result, Error) then
+	if instanceOf(result, Error) then
 		error(result)
 	end
 
