@@ -9,7 +9,6 @@ return function()
 			local result = toArrayContains(tbl, item)
 
 			expect(result.pass).to.equal(false)
-			expect(result.message).to.equal("item not found in tbl")
 		end)
 
 		it("should pass if given value in array", function()
@@ -27,6 +26,5 @@ return function()
 
 			expect(result.pass).to.equal(true)
 		end)
-
 	end)
 end

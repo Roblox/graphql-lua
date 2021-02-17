@@ -1173,11 +1173,16 @@ function defineEnumValues(typeName, valueMap)
 
 		devAssert(
 			isPlainObj(valueConfig),
-			("%s.%s must refer to an object with a \"value\" key "):format(tostring(typeName), valueName) .. ("representing an internal value but got: %s."):format(inspect(valueConfig))
+			("%s.%s must refer to an object with a \"value\" key "):format(
+				tostring(typeName),
+				tostring(valueName)
+			) ..
+			("representing an internal value but got: %s."):format(inspect(valueConfig))
 		)
 
 		return {
-			name = valueName,
+			-- ROBLOX deviation: in the case where an enum key is a boolean, JS somehow coerces it into a string
+			name = tostring(valueName),
 			description = valueConfig.description,
 			value = (function()
 				if valueConfig.value ~= nil then

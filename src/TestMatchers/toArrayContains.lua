@@ -8,8 +8,7 @@ local function toArrayContains(tbl, item, looseEquals)
 	local message = ""
 	if not success then
 		-- TODO: find way to pretty print variables into output and expect it
-		message = "recieved tbl: " .. inspect(item) .. " expected item to be in table: " .. inspect(tbl)
-		message = "item not found in tbl"
+		message = "received tbl: " .. inspect(item) .. " expected item to be in table: " .. inspect(tbl)
 	end
 
 	return {
