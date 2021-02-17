@@ -1,20 +1,33 @@
--- upstream: https://github.com/graphql/graphql-js/blob/f505b4d6542d339e7eac15d3b16b03294ab54d8a/src/graphql.js
+-- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/graphql.js
 
---!nolint LocalUnused
+local rootWorkspace = script.Parent
 
-local root = script.Parent
-local isPromise = require(root.jsutils.isPromise).isPromise
--- local parse = require(root.language.parser).parse
--- local validate = require(root.validation.validate).validate
--- local validateSchema = require(root.type.validate).validateSchema
--- local execute = require(root.execution.execute).execute
-local Error = require(root.luaUtils.Error)
-local Packages = root.Parent.Packages
+-- ROBLOX deviation: add polyfills
+local Error = require(rootWorkspace.luaUtils.Error)
+local Packages = rootWorkspace.Parent.Packages
 local Promise = require(Packages.Promise)
+
+local isPromise = require(rootWorkspace.jsutils.isPromise).isPromise
+
+local sourceModule = require(rootWorkspace.language.source)
+type Source = sourceModule.Source
+local parse = require(rootWorkspace.language.parser).parse
+
+-- ROBLOX FIXME: add types once available from definition
+--local definitionModule = require(rootWorkspace.type.definition)
+type GraphQLFieldResolver<T, V> = any -- definitionModule.GraphQLFieldResolver<T, V>
+type GraphQLTypeResolver<T, V> = any -- definitionModule.GraphQLTypeResolver<T, V>
+local schemaModule = require(rootWorkspace.type.schema)
+type GraphQLSchema = schemaModule.GraphQLSchema
+local validate = require(rootWorkspace.validation.validate).validate
+
+local validateSchema = require(rootWorkspace.type.validate).validateSchema
+
+local execute = require(rootWorkspace.execution.execute).execute
 
 local exports = {}
 
--- /**
+--[[**
 --  * This is the primary entry point function for fulfilling GraphQL operations
 --  * by parsing, validating, and executing a GraphQL document along side a
 --  * GraphQL schema.
@@ -52,38 +65,38 @@ local exports = {}
 --  *    A type resolver function to use when none is provided by the schema.
 --  *    If not provided, the default type resolver is used (which looks for a
 --  *    `__typename` field or alternatively calls the `isTypeOf` method).
---  */
+--  *]]
 export type GraphQLArgs = {
-	schema: any, -- GraphQLSchema,
-	source: string, -- string | Source,
+	schema: GraphQLSchema,
+	source: string | Source,
 	rootValue: any?,
 	contextValue: any?,
 	variableValues: { [string]: any }?,
 	operationName: string?,
-	fieldResolver: any, -- GraphQLFieldResolver<any, any>?,
-	typeResolver: any, -- GraphQLTypeResolver<any, any>?,
+	fieldResolver: GraphQLFieldResolver<any, any>?,
+	typeResolver: GraphQLTypeResolver<any, any>?,
 }
 
 -- ROBLOX deviation: pre-declare variables
 local graphqlImpl
 
 exports.graphql = function(args: GraphQLArgs) -- :Promise<ExecutionResult>
-	-- // Always return a Promise for a consistent API.
+	-- Always return a Promise for a consistent API.
 	return Promise.new(function(resolve)
 		return resolve(graphqlImpl(args))
 	end)
 end
 
--- /**
+--[[**
 --  * The graphqlSync function also fulfills GraphQL operations by parsing,
 --  * validating, and executing a GraphQL document along side a GraphQL schema.
 --  * However, it guarantees to complete synchronously (or throw an error) assuming
 --  * that all field resolvers are also synchronous.
---  */
+--  *]]
 exports.graphqlSync = function(args: GraphQLArgs) --: ExecutionResult
 	local result = graphqlImpl(args)
 
-	-- // Assert that the execution was synchronous.
+	-- Assert that the execution was synchronous.
 	if isPromise(result) then
 		error(Error.new("GraphQL execution failed to complete synchronously."))
 	end
@@ -92,52 +105,47 @@ exports.graphqlSync = function(args: GraphQLArgs) --: ExecutionResult
 end
 
 function graphqlImpl(args: GraphQLArgs) -- :PromiseOrValue<ExecutionResult>
-	local _schema = args.schema
-	local _source = args.source
-	local _rootValue = args.rootValue
-	local _contextValue = args.contextValue
-	local _variableValues = args.variableValues
-	local _operationName = args.operationName
-	local _fieldResolver = args.fieldResolver
-	local _typeResolver = args.typeResolver
+	local schema = args.schema
+	local source = args.source
+	local rootValue = args.rootValue
+	local contextValue = args.contextValue
+	local variableValues = args.variableValues
+	local operationName = args.operationName
+	local fieldResolver = args.fieldResolver
+	local typeResolver = args.typeResolver
 
 	-- Validate Schema
-	-- ROBLOX FIXME: reintroduce as part of validation merge
-	-- local schemaValidationErrors = validateSchema(schema)
+	local schemaValidationErrors = validateSchema(schema)
+	if #schemaValidationErrors > 0 then
+		return { errors = schemaValidationErrors }
+	end
 
-	-- if #schemaValidationErrors > 0 then
-	-- 	return {errors = schemaValidationErrors}
-	-- end
-
-	-- // Parse
-	-- local document
-	-- local ok, syntaxError = pcall(function()
-	-- 	document = parse(source)
-	-- end)
-	-- if not ok then
-	-- 	return { errors = {syntaxError} }
-	-- end
+	-- Parse
+	local document
+	local ok, syntaxError = pcall(function()
+		document = parse(source)
+	end)
+	if not ok then
+		return { errors = { syntaxError } }
+	end
 
 	-- Validate
-	-- ROBLOX FIXME: reintroduce as part of validation merge
-	-- local validationErrors = validate(schema, document)
-	-- if #validationErrors > 0 then
-	-- 	return { errors = validationErrors }
-	-- end
+	local validationErrors = validate(schema, document)
+	if #validationErrors > 0 then
+		return { errors = validationErrors }
+	end
 
-	-- // Execute
-	-- ROBLOX FIXME: execution not implemented!
-	error("Execution not implemented")
-	-- return execute({
-	-- 	schema = schema,
-	-- 	document = document,
-	-- 	rootValue = rootValue,
-	-- 	contextValue = contextValue,
-	-- 	variableValues = variableValues,
-	-- 	operationName = operationName,
-	-- 	fieldResolver = fieldResolver,
-	-- 	typeResolver = typeResolver,
-	-- })
+	-- Execute
+	return execute({
+		schema = schema,
+		document = document,
+		rootValue = rootValue,
+		contextValue = contextValue,
+		variableValues = variableValues,
+		operationName = operationName,
+		fieldResolver = fieldResolver,
+		typeResolver = typeResolver,
+	})
 end
 
 return exports
