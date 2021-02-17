@@ -6,6 +6,7 @@ return function()
 
 	-- ROBLOX deviation: utilities
 	local instanceOf = require(srcWorkspace.jsutils.instanceOf)
+	local NULL = require(srcWorkspace.luaUtils.null)
 
 	local invariant = require(srcWorkspace.jsutils.invariant).invariant
 
@@ -245,8 +246,8 @@ return function()
 								name = "Person",
 							},
 						},
-						enumValues = nil,
-						inputFields = nil,
+						enumValues = NULL,
+						inputFields = NULL,
 					},
 					Mammal = {
 						kind = "INTERFACE",
@@ -280,14 +281,14 @@ return function()
 								name = "Person",
 							},
 						},
-						enumValues = nil,
-						inputFields = nil,
+						enumValues = NULL,
+						inputFields = NULL,
 					},
 					Pet = {
 						kind = "UNION",
 						name = "Pet",
-						fields = nil,
-						interfaces = nil,
+						fields = NULL,
+						interfaces = NULL,
 						possibleTypes = {
 							{
 								name = "Dog",
@@ -296,8 +297,8 @@ return function()
 								name = "Cat",
 							},
 						},
-						enumValues = nil,
-						inputFields = nil,
+						enumValues = NULL,
+						inputFields = NULL,
 					},
 				},
 			})
@@ -470,7 +471,7 @@ return function()
 						{
 							__typename = "Person",
 							name = "Liz",
-							mother = nil,
+							mother = NULL,
 						},
 						{
 							__typename = "Dog",

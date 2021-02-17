@@ -6,6 +6,7 @@ return function()
 	-- ROBLOX deviation: get JS primitives
 	local NaN = 0 / 0
 	local Error = require(srcWorkspace.luaUtils.Error)
+	local NULL = require(srcWorkspace.luaUtils.null)
 
 	local invariant = require(srcWorkspace.jsutils.invariant).invariant
 
@@ -68,12 +69,12 @@ return function()
 			end)
 
 			it("returns an error for null value", function()
-				local result = coerceValue(nil, TestNonNull)
+				local result = coerceValue(NULL, TestNonNull)
 				expectErrors(expect, result).toEqual({
 					{
 						error = "Expected non-nullable type \"Int!\" not to be null.",
 						path = {},
-						value = nil,
+						value = NULL,
 					},
 				})
 			end)
@@ -83,8 +84,8 @@ return function()
 			local TestScalar = GraphQLScalarType.new({
 				name = "TestScalar",
 				parseValue = function(input)
-					invariant(typeof(input) == "table" and input ~= nil)
-					if input.error ~= nil then
+					invariant(typeof(input) == "table" and input ~= NULL)
+					if input.error ~= nil and input.error ~= NULL then
 						error(Error.new(input.error))
 					end
 					return input.value
@@ -96,11 +97,9 @@ return function()
 				expectValue(expect, result).to.equal(1)
 			end)
 
-			itSKIP("returns no error for null result", function()
-				-- ROBLOX Deviation: when you assign nil to a key in a table, that key would not exist
-				-- which means an empty table is passed to coerceValue
-				local result = coerceValue({ value = "nil" }, TestScalar)
-				expectValue(expect, result).to.equal("nil")
+			it("returns no error for null result", function()
+				local result = coerceValue({ value = NULL }, TestScalar)
+				expectValue(expect, result).to.equal(NULL)
 			end)
 
 			it("returns no error for NaN result", function()
@@ -108,7 +107,7 @@ return function()
 				expectValue(expect, result).toBeNaN()
 			end)
 
-			itSKIP("returns an error for undefined result", function()
+			it("returns an error for undefined result", function()
 				-- ROBLOX Deviation: when you assign nil to a key in a table, that key would not exist
 				-- which means an empty table is passed to coerceValue
 				local result = coerceValue({ value = nil }, TestScalar)
@@ -292,8 +291,8 @@ return function()
 			end)
 
 			it("returns null as value", function()
-				local result = coerceValue({}, makeTestInputObject(nil))
-				expectValue(expect, result).toEqual({ foo = nil })
+				local result = coerceValue({}, makeTestInputObject(NULL))
+				expectValue(expect, result).toEqual({ foo = NULL })
 			end)
 
 			it("returns NaN as value", function()
@@ -370,8 +369,8 @@ return function()
 			end)
 
 			it("returns null for a null value", function()
-				local result = coerceValue(nil, TestList)
-				expectValue(expect, result).toEqual(nil)
+				local result = coerceValue(NULL, TestList)
+				expectValue(expect, result).toEqual(NULL)
 			end)
 		end)
 
@@ -389,8 +388,8 @@ return function()
 			end)
 
 			it("returns null for a null value", function()
-				local result = coerceValue(nil, TestNestedList)
-				expectValue(expect, result).toEqual(nil)
+				local result = coerceValue(NULL, TestNestedList)
+				expectValue(expect, result).toEqual(NULL)
 			end)
 
 			it("returns nested lists for nested non-list values", function()
@@ -399,24 +398,22 @@ return function()
 			end)
 
 			it("returns nested null for nested null values", function()
-				local result = coerceValue({ 42, { nil }, nil }, TestNestedList)
-				expectValue(expect, result).toEqual({ { 42 }, { nil }, nil })
+				local result = coerceValue({ 42, { NULL }, NULL }, TestNestedList)
+				expectValue(expect, result).toEqual({ { 42 }, { NULL }, NULL })
 			end)
 		end)
 
 		describe("with default onError", function()
 			it("throw error without path", function()
 				expect(function()
-					return coerceInputValue(nil, GraphQLNonNull.new(GraphQLInt))
-				end).toThrow("Invalid value nil: Expected non-nullable type \"Int!\" not to be null.")
+					return coerceInputValue(NULL, GraphQLNonNull.new(GraphQLInt))
+				end).toThrow("Invalid value null: Expected non-nullable type \"Int!\" not to be null.")
 			end)
 
-			-- ROBLOX Deviation: when you assign nil to a key in a table, that key would not exist
-			-- which means an empty table is passed to coerceValue
-			itSKIP("throw error with path", function()
+			it("throw error with path", function()
 				expect(function()
-					return coerceInputValue({ nil }, GraphQLList.new(GraphQLNonNull.new(GraphQLInt)))
-				end).toThrow("Invalid value nil at \"value{0}\": Expected non-nullable type \"Int!\" not to be null.")
+					return coerceInputValue({ NULL }, GraphQLList.new(GraphQLNonNull.new(GraphQLInt)))
+				end).toThrow("Invalid value null at \"value[1]\": Expected non-nullable type \"Int!\" not to be null.")
 			end)
 		end)
 	end)

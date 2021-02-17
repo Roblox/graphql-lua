@@ -5,6 +5,7 @@ local srcWorkspace = script.Parent.Parent
 local root = srcWorkspace.Parent
 local LuauPolyfill = require(root.Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
+local NULL = require(srcWorkspace.luaUtils.null)
 
 local keyMap = require(srcWorkspace.jsutils.keyMap).keyMap
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
@@ -105,7 +106,7 @@ function coerceVariableValues(schema, varDefNodes, inputs, onError)
 		end
 
 		local value = inputs[varName]
-		if value == nil and isNonNullType(varType) then
+		if value == NULL and isNonNullType(varType) then
 			local varTypeStr = inspect(varType)
 			onError(GraphQLError.new(
 				("Variable \"$%s\" of non-null type \"%s\" must not be null."):format(varName, varTypeStr),
@@ -197,7 +198,7 @@ getArgumentValues = function(def, node, variableValues)
 				end
 				continue
 			end
-			isNull = variableValues[variableName] == nil
+			isNull = variableValues[variableName] == nil or variableValues[variableName] == NULL
 		end
 
 		if isNull and isNonNullType(argType) then

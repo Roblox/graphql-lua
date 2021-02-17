@@ -1,12 +1,13 @@
--- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/error/__tests__/locatedError-test.js
+-- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/error/__tests__/locatedError-test.js
+
 return function()
 	local errorsWorkspace = script.Parent.Parent
 	local srcWorkspace = script.Parent.Parent.Parent
-	local locatedError = require(errorsWorkspace.locatedError).locatedError
-	local GraphQLError = require(errorsWorkspace.GraphQLError).GraphQLError
 
-	local LuauPolyfill = require(srcWorkspace.Parent.Packages.LuauPolyfill)
-	local Error = LuauPolyfill.Error
+	local GraphQLError = require(errorsWorkspace.GraphQLError).GraphQLError
+	local locatedError = require(errorsWorkspace.locatedError).locatedError
+
+	local Error = require(srcWorkspace.luaUtils.Error)
 
 	describe("locatedError", function()
 		it("passes GraphQLError through", function()
@@ -21,7 +22,7 @@ return function()
 		end)
 
 		it("passes GraphQLError-ish through", function()
-			local e = Error("I have a different prototype chain")
+			local e = Error.new("I have a different prototype chain")
 			e.locations = {}
 			e.path = {}
 			e.nodes = {}
@@ -33,7 +34,7 @@ return function()
 		end)
 
 		it("does not pass through elasticsearch-like errors", function()
-			local e = Error("I am from elasticsearch")
+			local e = Error.new("I am from elasticsearch")
 			e.path = "/something/feed/_search"
 
 			expect(locatedError(e, {}, {})).never.toEqual(e)

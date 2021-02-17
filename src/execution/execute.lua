@@ -20,6 +20,7 @@ local Error = require(luaUtilsWorkspace.Error)
 local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
 local Promise = require(srcWorkspace.Parent.Packages.Promise)
 local instanceOf = require(jsUtilsWorkspace.instanceOf)
+local NULL = require(luaUtilsWorkspace.null)
 
 local inspect = require(jsUtilsWorkspace.inspect).inspect
 local memoize3 = require(jsUtilsWorkspace.memoize3).memoize3
@@ -695,7 +696,7 @@ function handleFieldError(error_, returnType, exeContext)
 	-- Otherwise, error protection is applied, logging the error and resolving
 	-- a null value for this field if one is encountered.
 	table.insert(exeContext.errors, error_)
-	return nil
+	return NULL
 end
 
 --[[*
@@ -730,7 +731,7 @@ function completeValue(exeContext, returnType, fieldNodes, info, path, result)
 	if isNonNullType(returnType) then
 		local completed = completeValue(exeContext, returnType.ofType, fieldNodes, info, path, result)
 
-		if completed == nil then
+		if completed == nil or completed == NULL then
 			error(Error.new(("Cannot return null for non-nullable field %s.%s."):format(info.parentType.name, info.fieldName)))
 		end
 
@@ -738,8 +739,8 @@ function completeValue(exeContext, returnType, fieldNodes, info, path, result)
 	end
 
 	-- If result value is null or undefined then return null.
-	if result == nil then
-		return nil
+	if result == nil or result == NULL then
+		return NULL
 	end
 
 	-- If field type is List, complete each item in the list with the inner type
