@@ -16,8 +16,7 @@ return function()
 	local GraphQLString = require(srcWorkspace.type.scalars).GraphQLString
 	local GraphQLObjectType = require(srcWorkspace.type.definition).GraphQLObjectType
 
-	local graphqlSync = function()
-	end -- require(srcWorkspace.graphql).graphqlSync
+	local graphqlSync = require(srcWorkspace.graphql).graphqlSync
 
 	local executeImport = require(executionWorkspace.execute)
 	local execute = executeImport.execute
@@ -195,7 +194,7 @@ return function()
 		end)
 
 		describe("graphqlSync", function()
-			itSKIP("report errors raised during schema validation", function()
+			it("report errors raised during schema validation", function()
 				local badSchema = GraphQLSchema.new({})
 				local result = graphqlSync({
 					schema = badSchema,
@@ -216,7 +215,7 @@ return function()
 				)
 			end)
 
-			itSKIP("does not return a Promise for syntax errors", function()
+			it("does not return a Promise for syntax errors", function()
 				local doc = "fragment Example on Query { { { syncField }"
 				local result = graphqlSync({
 					schema = schema,
@@ -229,11 +228,13 @@ return function()
 				expect(Object.keys(result)).toEqual({ "errors" })
 				expect(result.errors).toHaveSameMembers(
 					{
-						message = "Syntax Error: Expected Name, found \"{\".",
-						locations = {
-							{
-								line = 1,
-								column = 29,
+						{
+							message = "Syntax Error: Expected Name, found \"{\".",
+							locations = {
+								{
+									line = 1,
+									column = 29,
+								},
 							},
 						},
 					},
@@ -274,6 +275,7 @@ return function()
 			itSKIP("throws if encountering async execution", function()
 				local doc = "query Example { syncField, asyncField }"
 
+				-- ROBLOX FIXME: integrate validation
 				expect(function()
 					graphqlSync({
 						schema = schema,
