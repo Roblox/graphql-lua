@@ -187,7 +187,7 @@ function extendSchemaImpl(
 			local existingTypeExtensions = typeExtensionsMap[extendedTypeName]
 			typeExtensionsMap[extendedTypeName] = (function()
 				if existingTypeExtensions then
-					return Array.concat({ existingTypeExtensions }, { def })
+					return Array.concat(existingTypeExtensions, { def })
 				else
 					return { def }
 				end

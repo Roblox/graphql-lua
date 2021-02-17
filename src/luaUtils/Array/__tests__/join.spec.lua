@@ -1,3 +1,5 @@
+-- ROBLOX deviation: no upstream tests
+
 return function()
 	local join = require(script.Parent.Parent.join)
 
@@ -21,6 +23,14 @@ return function()
 			expect(join({"foo"}, ", ")).to.equal("foo")
 			expect(join({"foo"}, " + ")).to.equal("foo")
 			expect(join({"foo"}, "")).to.equal("foo")
+		end)
+		it("should not join objects with tostring metamethod", function()
+			local obj = setmetatable({}, {__tostring = function()
+				return "tostring"
+			end})
+			expect(join({obj, obj}, ", ")).to.equal("tostring, tostring")
+			expect(join({obj, obj}, " + ")).to.equal("tostring + tostring")
+			expect(join({obj, obj}, "")).to.equal("tostringtostring")
 		end)
 	end)
 end
