@@ -5,7 +5,7 @@ local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Set = LuauPolyfill.Set
 -- ROBLOX TODO: add implemenation of types from LuauPolyfill
-type Set<T> = any -- LuauPolyfill.Set<T> 
+type Set<T> = any -- LuauPolyfill.Set<T>
 type Array<T> = { [number]: T } -- LuauPolyfill.Array<T>
 local Error = require(root.luaUtils.Error)
 
@@ -231,12 +231,19 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 	self._implementationsMap = {}
 
 	for _, namedType in allReferencedTypes:ipairs() do
-		-- ROBLOX FIXME: there is `nil` element in a Lua list
+		-- ROBLOX FIXME: there is no `nil` element in a Lua list
 		-- if namedType == nil then
 		-- 	continue
 		-- end
 
-		local typeName = namedType.name
+		-- ROBLOX deviation: can't attempt to access the name property on a function
+		local typeName
+		if typeof(namedType) == "table" then
+			typeName = namedType.name
+		else
+			typeName = tostring(namedType)
+		end
+
 		devAssert(
 			typeName and typeName ~= "",
 			"One of the provided types for building the Schema is missing a name."

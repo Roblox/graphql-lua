@@ -152,6 +152,103 @@ local function isNode(maybeNode: any): boolean
 	return typeof(maybeNode) == "table" and typeof(maybeNode.kind) == "string"
 end
 
+--[[*
+ * The list of all possible AST node types.
+ ]]
+export type ASTNode =
+  NameNode
+  | DocumentNode
+  | OperationDefinitionNode
+  | VariableDefinitionNode
+  | VariableNode
+  | SelectionSetNode
+  | FieldNode
+  | ArgumentNode
+  | FragmentSpreadNode
+  | InlineFragmentNode
+  | FragmentDefinitionNode
+  | IntValueNode
+  | FloatValueNode
+  | StringValueNode
+  | BooleanValueNode
+  | NullValueNode
+  | EnumValueNode
+  | ListValueNode
+  | ObjectValueNode
+  | ObjectFieldNode
+  | DirectiveNode
+  | NamedTypeNode
+  | ListTypeNode
+  | NonNullTypeNode
+  | SchemaDefinitionNode
+  | OperationTypeDefinitionNode
+  | ScalarTypeDefinitionNode
+  | ObjectTypeDefinitionNode
+  | FieldDefinitionNode
+  | InputValueDefinitionNode
+  | InterfaceTypeDefinitionNode
+  | UnionTypeDefinitionNode
+  | EnumTypeDefinitionNode
+  | EnumValueDefinitionNode
+  | InputObjectTypeDefinitionNode
+  | DirectiveDefinitionNode
+  | SchemaExtensionNode
+  | ScalarTypeExtensionNode
+  | ObjectTypeExtensionNode
+  | InterfaceTypeExtensionNode
+  | UnionTypeExtensionNode
+  | EnumTypeExtensionNode
+  | InputObjectTypeExtensionNode;
+
+--[[*
+ * Utility type listing all nodes indexed by their kind.
+ ]]
+export type ASTKindToNode = {
+  Name: NameNode,
+  Document: DocumentNode,
+  OperationDefinition: OperationDefinitionNode,
+  VariableDefinition: VariableDefinitionNode,
+  Variable: VariableNode,
+  SelectionSet: SelectionSetNode,
+  Field: FieldNode,
+  Argument: ArgumentNode,
+  FragmentSpread: FragmentSpreadNode,
+  InlineFragment: InlineFragmentNode,
+  FragmentDefinition: FragmentDefinitionNode,
+  IntValue: IntValueNode,
+  FloatValue: FloatValueNode,
+  StringValue: StringValueNode,
+  BooleanValue: BooleanValueNode,
+  NullValue: NullValueNode,
+  EnumValue: EnumValueNode,
+  ListValue: ListValueNode,
+  ObjectValue: ObjectValueNode,
+  ObjectField: ObjectFieldNode,
+  Directive: DirectiveNode,
+  NamedType: NamedTypeNode,
+  ListType: ListTypeNode,
+  NonNullType: NonNullTypeNode,
+  SchemaDefinition: SchemaDefinitionNode,
+  OperationTypeDefinition: OperationTypeDefinitionNode,
+  ScalarTypeDefinition: ScalarTypeDefinitionNode,
+  ObjectTypeDefinition: ObjectTypeDefinitionNode,
+  FieldDefinition: FieldDefinitionNode,
+  InputValueDefinition: InputValueDefinitionNode,
+  InterfaceTypeDefinition: InterfaceTypeDefinitionNode,
+  UnionTypeDefinition: UnionTypeDefinitionNode,
+  EnumTypeDefinition: EnumTypeDefinitionNode,
+  EnumValueDefinition: EnumValueDefinitionNode,
+  InputObjectTypeDefinition: InputObjectTypeDefinitionNode,
+  DirectiveDefinition: DirectiveDefinitionNode,
+  SchemaExtension: SchemaExtensionNode,
+  ScalarTypeExtension: ScalarTypeExtensionNode,
+  ObjectTypeExtension: ObjectTypeExtensionNode,
+  InterfaceTypeExtension: InterfaceTypeExtensionNode,
+  UnionTypeExtension: UnionTypeExtensionNode,
+  EnumTypeExtension: EnumTypeExtensionNode,
+  InputObjectTypeExtension: InputObjectTypeExtensionNode,
+}
+
 -- // Name
 
 export type NameNode = {
@@ -304,6 +401,43 @@ export type StringValueNode = {
 	value: string,
 	block: boolean?,
 }
+
+export type BooleanValueNode = {
+  kind: string,
+  loc: Location?,
+  value: boolean,
+}
+
+export type NullValueNode = {
+  kind: string,
+  loc: Location?,
+}
+
+export type EnumValueNode = {
+  kind: string,
+  loc: Location?,
+  value: string,
+}
+
+export type ListValueNode = {
+  kind: string,
+  loc: Location?,
+  values: Array<ValueNode>,
+}
+
+export type ObjectValueNode = {
+  kind: string,
+  loc: Location?,
+  fields: Array<ObjectFieldNode>,
+}
+
+export type ObjectFieldNode = {
+  kind: string,
+  loc: Location?,
+  name: NameNode,
+  value: ValueNode,
+}
+
 
 -- ...
 

@@ -656,7 +656,8 @@ exports.introspectionTypes = Object.freeze({
 function exports.isIntrospectionType(type_ --[[: GraphQLNamedType ]])
 	return Array.some(exports.introspectionTypes, function(currentType_)
 		local name = currentType_.name
-		return type_.name == name
+		-- ROBLOX deviation: Lua doesn't allow indexing into a function
+		return typeof(type_) == "table" and type_.name == name
 	end)
 end
 
