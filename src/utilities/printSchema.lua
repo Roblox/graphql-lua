@@ -206,7 +206,7 @@ end
 function printUnion(type_): string
 	local types = type_:getTypes()
 	local possibleTypes = (function()
-		if #types then
+		if #types > 0 then
 			return " = " .. Array.join(types, " | ")
 		end
 
@@ -218,7 +218,7 @@ end
 
 function printEnum(type_): string
 	local values = Array.map(type_:getValues(), function(value, i)
-		return printDescription(value, "  ", not i) 
+		return printDescription(value, "  ", i == 1) 
 			.. "  " 
 			.. value.name 
 			.. printDeprecated(value.deprecationReason)
@@ -229,7 +229,7 @@ end
 
 function printInputObject(type_)
 	local fields = Array.map(objectValues(type_:getFields()), function(f, i)
-		return printDescription(f, "  ", not i) .. "  " .. printInputValue(f)
+		return printDescription(f, "  ", i == 1) .. "  " .. printInputValue(f)
 	end)
 
 	return printDescription(type_) .. ("input %s"):format(type_.name) .. printBlock(fields)
@@ -237,7 +237,7 @@ end
 
 function printFields(type_): string
 	local fields = Array.map(objectValues(type_:getFields()), function(f, i)
-		return printDescription(f, "  ", not i)
+		return printDescription(f, "  ", i == 1)
 			.. "  "
 			.. f.name
 			.. printArgs(f.args, "  ")
@@ -281,10 +281,10 @@ function printArgs(args, indentation_: string?)
 
 	return "(\n" .. Array.join(
 		Array.map(args, function(arg, i)
-			return printDescription(arg, "  " 
-				.. indentation, not i) 
-				.. "  " 
-				.. indentation 
+			return printDescription(arg, "  "
+				.. indentation, i == 1)
+				.. "  "
+				.. indentation
 				.. printInputValue(arg)
 		end),
 		"\n"
