@@ -33,8 +33,7 @@ return function()
 	local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
 	local Promise = require(srcWorkspace.Parent.Packages.Promise)
 	local instanceOf = require(srcWorkspace.jsutils.instanceOf)
-
-	local NULL = {}
+	local NULL = require(luaUtilsWorkspace.null)
 
 	local function _await(value, thenFunc, direct)
 		if direct then
@@ -923,7 +922,7 @@ return function()
 			end)
 		)
 
-		itSKIP("Full response path is included for non-nullable fields", function()
+		it("Full response path is included for non-nullable fields", function()
 			-- ROBLOX deviation: predeclare variable used recursively
 			local A
 			A = GraphQLObjectType.new({
@@ -967,6 +966,7 @@ return function()
 				}),
 			})
 			local document = parse([[
+
       query {
         nullableA {
           aliasedA: nullableA {
@@ -984,11 +984,15 @@ return function()
 				document = document,
 			})
 
-			expect(result).toEqual({
-				data = {
-					nullableA = { aliasedA = nil },
-				},
-				errors = {
+			--[[
+			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+			--]]
+			expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
+			expect(result.data).toEqual({
+				nullableA = { aliasedA = NULL },
+			})
+			expect(result.errors).toHaveSameMembers(
+				{
 					{
 						message = "Catch me if you can",
 						locations = {
@@ -1006,7 +1010,8 @@ return function()
 						},
 					},
 				},
-			})
+				true
+			)
 		end)
 
 		it("uses the inline operation if no operation name is provided", function()
@@ -1673,7 +1678,7 @@ return function()
 			})
 
 			expect(result).toEqual({
-				data = { foo = nil },
+				data = { foo = NULL },
 			})
 		end)
 

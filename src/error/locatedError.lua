@@ -1,4 +1,5 @@
--- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/error/locatedError.js
+-- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/error/locatedError.js
+
 type Array<T> = { [number]: T }
 
 -- directory
@@ -11,11 +12,23 @@ local LuauPolyfill = require(Packages.LuauPolyfill)
 local GraphQLError = require(errorWorkspace.GraphQLError).GraphQLError
 
 local Array = LuauPolyfill.Array
+local instanceOf = require(srcWorkspace.jsutils.instanceOf)
+local inspect = require(srcWorkspace.jsutils.inspect).inspect
+local Error = require(srcWorkspace.luaUtils.Error)
 
 local function locatedError(
-	originalError,
+	rawOriginalError,
 	nodes,
-	path: Array<string | number>)
+	path: Array<string | number>
+)
+	-- Sometimes a non-error is thrown, wrap it as an Error instance to ensure a consistent Error interface.
+	local originalError
+	if instanceOf(rawOriginalError, Error) then
+		originalError = rawOriginalError
+	else
+		originalError = Error.new("Unexpected error value: " .. inspect(rawOriginalError))
+	end
+
 	-- Note: this uses a brand-check to support GraphQL errors originating from other contexts.
 	if Array.isArray(originalError.path) then
 		return originalError
@@ -23,8 +36,8 @@ local function locatedError(
 
 	local output = GraphQLError.new(
 		originalError.message,
-		originalError.nodes or nil,
-		originalError.source or nil,
+		originalError.nodes or nodes,
+		originalError.source,
 		originalError.positions,
 		path,
 		originalError

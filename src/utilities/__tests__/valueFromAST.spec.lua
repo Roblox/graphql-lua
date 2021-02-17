@@ -102,8 +102,7 @@ return function()
 					GREEN = { value = 2 },
 					BLUE = { value = 3 },
 					NULL = { value = NULL },
-					-- ROBLOX FIXME: results in using NaN as a table index, which Lua does not allow
-					-- NAN = { value = 0 / 0 },
+					NAN = { value = 0 / 0 },
 					NO_CUSTOM_VALUE = { value = nil },
 				},
 			})
@@ -115,7 +114,7 @@ return function()
 			expectValueFrom(expect, "null", testEnum).to.equal(NULL)
 			expectValueFrom(expect, "NULL", testEnum).to.equal(NULL)
 			expectValueFrom(expect, "NULL", GraphQLNonNull.new(testEnum)).to.equal(NULL)
-			-- expectValueFrom(expect, "NAN", testEnum).toBeNaN()
+			expectValueFrom(expect, "NAN", testEnum).toBeNaN()
 			expectValueFrom(expect, "NO_CUSTOM_VALUE", testEnum).to.equal("NO_CUSTOM_VALUE")
 		end)
 

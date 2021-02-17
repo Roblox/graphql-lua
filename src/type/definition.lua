@@ -29,7 +29,10 @@ local valueFromASTUntyped = require(srcWorkspace.utilities.valueFromASTUntyped).
 local Error = require(srcWorkspace.luaUtils.Error)
 -- ROBLOX deviation: no distinction between undefined and null in Lua so we need to go around this with custom NULL like constant
 local NULL = require(srcWorkspace.luaUtils.null)
-local Array = require(srcWorkspace.Parent.Packages.LuauPolyfill).Array
+local LuauPolyfillImport = require(srcWorkspace.Parent.Packages.LuauPolyfill)
+local Array = LuauPolyfillImport.Array
+local Object = LuauPolyfillImport.Object
+local NaN_KEY = Object.freeze({})
 
 -- ROBLOX deviation: predeclare functions
 local isType
@@ -1043,7 +1046,16 @@ function GraphQLEnumType.new(config)
 	self._values = defineEnumValues(self.name, config.values)
 	self._valueLookup = {}
 	Array.map(self._values, function(enumValue)
-		self._valueLookup[enumValue.value] = enumValue
+		--[[
+			ROBLOX deviation: we can't use NaN as a key
+			we're using it's property that it's the only value that returns false when compared to itself
+			NaN ~= NaN
+		--]]
+		if enumValue.value == enumValue.value then
+			self._valueLookup[enumValue.value] = enumValue
+		else
+			self._valueLookup[NaN_KEY] = enumValue
+		end
 	end)
 	self._nameLookup = keyMap(self._values, function(value)
 		return value.name
@@ -1063,7 +1075,17 @@ function GraphQLEnumType:getValue(name: string)
 end
 
 function GraphQLEnumType:serialize(outputValue)
-	local enumValue = self._valueLookup[outputValue]
+	local enumValue
+	--[[
+		ROBLOX deviation: we can't use NaN as a key
+		we're using it's property that it's the only value that returns false when compared to itself
+		NaN ~= NaN
+	--]]
+	if outputValue == outputValue then
+		enumValue = self._valueLookup[outputValue]
+	else
+		enumValue = self._valueLookup[NaN_KEY]
+	end
 	if enumValue == nil then
 		error(GraphQLError.new(("Enum \"%s\" cannot represent value: %s"):format(self.name, inspect(outputValue))))
 	end

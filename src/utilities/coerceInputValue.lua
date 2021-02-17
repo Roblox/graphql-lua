@@ -2,23 +2,24 @@
 
 local srcWorkspace = script.Parent.Parent
 local rootWorkspace = srcWorkspace.Parent
-local jsutils = srcWorkspace.jsutils
+local jsutilsWorkspace = srcWorkspace.jsutils
 
 local LuauPolyfill = require(rootWorkspace.Packages.LuauPolyfill)
 
 local Object = LuauPolyfill.Object
 local Array = LuauPolyfill.Array
-local inspect = require(jsutils.inspect).inspect
-local invariant = require(jsutils.invariant).invariant
-local didYouMean = require(jsutils.didYouMean).didYouMean
-local isObjectLike = require(jsutils.isObjectLike).isObjectLike
-local suggestionList = require(jsutils.suggestionList).suggestionList
-local printPathArray = require(jsutils.printPathArray).printPathArray
-local addPath = require(jsutils.Path).addPath
-local instanceOf = require(jsutils.instanceOf)
+local inspect = require(jsutilsWorkspace.inspect).inspect
+local invariant = require(jsutilsWorkspace.invariant).invariant
+local didYouMean = require(jsutilsWorkspace.didYouMean).didYouMean
+local isObjectLike = require(jsutilsWorkspace.isObjectLike).isObjectLike
+local suggestionList = require(jsutilsWorkspace.suggestionList).suggestionList
+local printPathArray = require(jsutilsWorkspace.printPathArray).printPathArray
+local addPath = require(jsutilsWorkspace.Path).addPath
+local instanceOf = require(jsutilsWorkspace.instanceOf)
+local NULL = require(srcWorkspace.luaUtils.null)
 
-local pathToArray = require(jsutils.Path).pathToArray
-local isIteratableObject = require(jsutils.isIteratableObject).isIteratableObject
+local pathToArray = require(jsutilsWorkspace.Path).pathToArray
+local isIteratableObject = require(jsutilsWorkspace.isIteratableObject).isIteratableObject
 local GraphQLError = require(srcWorkspace.error.GraphQLError).GraphQLError
 local definition = require(srcWorkspace.type.definition)
 local objectValues = require(srcWorkspace.polyfills.objectValues).objectValues
@@ -50,7 +51,7 @@ end
 
 function coerceInputValueImpl(inputValue, type_, onError, path)
 	if isNonNullType(type_) then
-		if inputValue ~= nil then
+		if inputValue ~= nil and inputValue ~= NULL then
 			return coerceInputValueImpl(inputValue, type_.ofType, onError, path)
 		end
 		onError(
@@ -61,9 +62,9 @@ function coerceInputValueImpl(inputValue, type_, onError, path)
 		return
 	end
 
-	if inputValue == nil then
-		-- Explicitly return the value nil.
-		return nil
+	if inputValue == nil or inputValue == NULL then
+		-- Explicitly return the value null.
+		return NULL
 	end
 
 	if isListType(type_) then

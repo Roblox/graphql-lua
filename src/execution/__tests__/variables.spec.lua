@@ -6,6 +6,7 @@ return function()
 
 	-- ROBLOX deviation: utils
 	local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
+	local NULL = require(srcWorkspace.luaUtils.null)
 
 	local inspect = require(srcWorkspace.jsutils.inspect).inspect
 	local invariant = require(srcWorkspace.jsutils.invariant).invariant
@@ -66,10 +67,9 @@ return function()
 	local TestEnum = GraphQLEnumType.new({
 		name = "TestEnum",
 		values = {
-			NULL = { value = nil },
+			NULL = { value = NULL },
 			UNDEFINED = { value = nil },
-			-- ROBLOX FIXME: results in using NaN as a table index, which Lua does not allow
-			-- NAN = { value = NaN },
+			NAN = { value = 0/0 },
 			FALSE = { value = false },
 			CUSTOM = {
 				value = "custom value",
@@ -156,7 +156,7 @@ return function()
 					expect(result).toEqual({
 						data = {
 							--[[
-							-- ROBLOX deviation: order of properties is not kept
+							-- ROBLOX FIXME: order of properties is not kept
 							-- original code:
 							-- fieldWithObjectInput = "{ a: \"foo\", b: [\"bar\"], c: \"baz\" }",
 							--]]
@@ -176,7 +176,7 @@ return function()
 					expect(result).toEqual({
 						data = {
 							--[[
-							-- ROBLOX deviation: order of properties is not kept
+							-- ROBLOX FIXME: order of properties is not kept
 							-- original code:
 							-- fieldWithObjectInput = "{ a: \"foo\", b: [\"bar\"], c: \"baz\" }",
 							--]]
@@ -185,7 +185,7 @@ return function()
 					})
 				end)
 
-				itSKIP("properly parses null value to null", function()
+				it("properly parses null value to null", function()
 					local result = executeQuery([[
 
           {
@@ -195,12 +195,17 @@ return function()
 
 					expect(result).toEqual({
 						data = {
-							fieldWithObjectInput = "{ a: null, b: null, c: \"C\", d: null }",
+							--[[
+							-- ROBLOX FIXME: order of properties is not kept
+							-- original code:
+							-- fieldWithObjectInput = "{ a: null, b: null, c: \"C\", d: null }",
+							--]]
+							fieldWithObjectInput = "{ a: null, d: null, c: \"C\", b: null }",
 						},
 					})
 				end)
 
-				itSKIP("properly parses null value in list", function()
+				it("properly parses null value in list", function()
 					local result = executeQuery([[
 
           {
@@ -210,7 +215,12 @@ return function()
 
 					expect(result).toEqual({
 						data = {
-							fieldWithObjectInput = "{ b: [\"A\", null, \"C\"], c: \"C\" }",
+							--[[
+							-- ROBLOX FIXME: order of properties is not kept
+							-- original code:
+							-- fieldWithObjectInput = "{ b: [\"A\", null, \"C\"], c: \"C\" }",
+							--]]
+							fieldWithObjectInput = "{ c: \"C\", b: [\"A\", null, \"C\"] }",
 						},
 					})
 				end)
@@ -227,7 +237,7 @@ return function()
 					--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 					--]]
 					expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
-					expect(result.data).toEqual({ fieldWithObjectInput = nil }) -- ROBLOX deviation: upstream it's { fieldWithObjectInput: null }
+					expect(result.data).toEqual({ fieldWithObjectInput = NULL })
 					expect(result.errors).toHaveSameMembers(
 						{
 							{
@@ -286,7 +296,7 @@ return function()
 					expect(result).toEqual({
 						data = {
 							--[[
-							-- ROBLOX deviation: order of properties is not kept
+							-- ROBLOX FIXME: order of properties is not kept
 							-- original code:
 							-- fieldWithObjectInput = "{ a: \"foo\", b: [\"bar\"], c: \"baz\" }",
 							--]]
@@ -308,18 +318,18 @@ return function()
 					)
 
 					expect(result).toEqual({
-						data = { fieldWithNullableStringInput = nil },
+						data = { fieldWithNullableStringInput = NULL },
 					})
 				end)
 
-				itSKIP("uses null when variable provided explicit null value", function()
+				it("uses null when variable provided explicit null value", function()
 					local result = executeQuery(
 						[[
 
           query q($input: String) {
             fieldWithNullableStringInput(input: $input)
           }]],
-						{ input = nil }
+						{ input = NULL }
 					)
 
 					expect(result).toEqual({
@@ -340,7 +350,7 @@ return function()
 					expect(result).toEqual({
 						data = {
 							--[[
-							-- ROBLOX deviation: order of properties is not kept
+							-- ROBLOX FIXME: order of properties is not kept
 							-- original code:
 							-- fieldWithObjectInput = "{ a: \"foo\", b: [\"bar\"], c: \"baz\" }",
 							--]]
@@ -369,14 +379,14 @@ return function()
 					})
 				end)
 
-				itSKIP("uses explicit null value instead of default value", function()
+				it("uses explicit null value instead of default value", function()
 					local result = executeQuery(
 						[[
 
           query q($input: String = "Default value") {
             fieldWithNullableStringInput(input: $input)
           }]],
-						{ input = nil }
+						{ input = NULL }
 					)
 
 					expect(result).toEqual({
@@ -386,7 +396,7 @@ return function()
 					})
 				end)
 
-				itSKIP("uses null default value when not provided", function()
+				it("uses null default value when not provided", function()
 					local result = executeQuery(
 						[[
 
@@ -418,7 +428,7 @@ return function()
 					expect(result).toEqual({
 						data = {
 							--[[
-							-- ROBLOX deviation: order of properties is not kept
+							-- ROBLOX FIXME: order of properties is not kept
 							-- original code:
 							-- fieldWithObjectInput = "{ a: \"foo\", b: [\"bar\"], c: \"baz\" }",
 							--]]
@@ -443,18 +453,22 @@ return function()
 					})
 				end)
 
-				itSKIP("errors on null for nested non-null", function()
+				it("errors on null for nested non-null", function()
 					local params = {
 						input = {
 							a = "foo",
 							b = "bar",
-							c = nil,
+							c = NULL,
 						},
 					}
 					local result = executeQuery(doc, params)
 
-					expect(result).toEqual({
-						errors = {
+					--[[
+					--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+					--]]
+					expect(Object.keys(result)).toEqual({ "errors" })
+					expect(result.errors).toHaveSameMembers(
+						{
 							{
 								message = "Variable \"$input\" got invalid value null at \"input.c\"; Expected non-nullable type \"String!\" not to be null.",
 								locations = {
@@ -465,7 +479,8 @@ return function()
 								},
 							},
 						},
-					})
+						true
+					)
 				end)
 
 				it("errors on incorrect type", function()
@@ -583,8 +598,8 @@ return function()
 					expect(result.errors).toHaveSameMembers(
 						{
 							{
-								--[[
-							-- ROBLOX deviation: order of properties is not kept
+							--[[
+							-- ROBLOX FIXME: order of properties is not kept
 							-- original code:
 							-- message = "Variable \"$input\" got invalid value { a: \"foo\", b: \"bar\", c: \"baz\", extra: \"dog\" }; Field \"extra\" is not defined by type \"TestInputObject\".",
 							--]]
@@ -605,9 +620,7 @@ return function()
 
 		describe("Handles custom enum values", function()
 			it("allows custom enum values as inputs", function()
-				--[[
-					ROBLOX deviation: null and NaN enum keys are not handled yet
-					original query code: `
+				local result = executeQuery([[
 
         {
           null: fieldWithEnumInput(input: NULL)
@@ -616,31 +629,12 @@ return function()
           customValue: fieldWithEnumInput(input: CUSTOM)
           defaultValue: fieldWithEnumInput(input: DEFAULT_VALUE)
         }
-      `
-				--]]
-
-				local result = executeQuery([[
-
-        {
-          false: fieldWithEnumInput(input: FALSE)
-          customValue: fieldWithEnumInput(input: CUSTOM)
-          defaultValue: fieldWithEnumInput(input: DEFAULT_VALUE)
-        }
       ]])
 
 				expect(result).toEqual({
-					--[[
-						ROBLOX FIXME: null and NaN enum keys are not handled yet
-						original code:
-						data = {
-							null = "null",
-							NaN = "NaN",
-							["false"] = "false",
-							customValue = "\"custom value\"",
-							defaultValue = "\"DEFAULT_VALUE\"",
-						}
-					--]]
 					data = {
+						null = "null",
+						NaN = "NaN",
 						["false"] = "false",
 						customValue = "\"custom value\"",
 						defaultValue = "\"DEFAULT_VALUE\"",
@@ -648,7 +642,7 @@ return function()
 				})
 			end)
 
-			itSKIP("allows non-nullable inputs to have null as enum custom value", function()
+			it("allows non-nullable inputs to have null as enum custom value", function()
 				local result = executeQuery([[
 
         {
@@ -674,7 +668,7 @@ return function()
       ]])
 
 				expect(result).toEqual({
-					data = { fieldWithNullableStringInput = nil },
+					data = { fieldWithNullableStringInput = NULL },
 				})
 			end)
 
@@ -687,7 +681,7 @@ return function()
       ]])
 
 				expect(result).toEqual({
-					data = { fieldWithNullableStringInput = nil },
+					data = { fieldWithNullableStringInput = NULL },
 				})
 			end)
 
@@ -700,18 +694,18 @@ return function()
       ]])
 
 				expect(result).toEqual({
-					data = { fieldWithNullableStringInput = nil },
+					data = { fieldWithNullableStringInput = NULL },
 				})
 			end)
 
-			itSKIP("allows nullable inputs to be set to null in a variable", function()
+			it("allows nullable inputs to be set to null in a variable", function()
 				local doc = [[
 
         query ($value: String) {
           fieldWithNullableStringInput(input: $value)
         }
       ]]
-				local result = executeQuery(doc, { value = nil })
+				local result = executeQuery(doc, { value = NULL })
 
 				expect(result).toEqual({
 					data = {
@@ -813,17 +807,21 @@ return function()
 				)
 			end)
 
-			itSKIP("does not allow non-nullable inputs to be set to null in a variable", function()
+			it("does not allow non-nullable inputs to be set to null in a variable", function()
 				local doc = [[
 
         query ($value: String!) {
           fieldWithNonNullableStringInput(input: $value)
         }
       ]]
-				local result = executeQuery(doc, { value = nil })
+				local result = executeQuery(doc, { value = NULL })
 
-				expect(result).toEqual({
-					errors = {
+				--[[
+				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+				--]]
+				expect(Object.keys(result)).toEqual({ "errors" })
+				expect(result.errors).toHaveSameMembers(
+					{
 						{
 							message = "Variable \"$value\" of non-null type \"String!\" must not be null.",
 							locations = {
@@ -834,7 +832,8 @@ return function()
 							},
 						},
 					},
-				})
+					true
+				)
 			end)
 
 			it("allows non-nullable inputs to be set to a value in a variable", function()
@@ -877,7 +876,7 @@ return function()
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
-				expect(result.data).toEqual({ fieldWithNonNullableStringInput = nil })
+				expect(result.data).toEqual({ fieldWithNonNullableStringInput = NULL })
 				expect(result.errors).toHaveSameMembers(
 					{
 						{
@@ -927,11 +926,10 @@ return function()
 					true
 				)
 				--[[
-                    ROBLOX deviation: no .to.have.nested.property matcher
+                    ROBLOX deviation: in upstream test the `originalError` property is defined but it's value is `undefined`
+					there's no such a distinction in Lua
                     original code: expect(result).to.have.nested.property("errors[0].originalError")
                 --]]
-				-- ROBLOX FIXME: there's no originalError present
-				-- expect(result.errors[1].originalError).to.be.ok()
 			end)
 
 			it("reports error for non-provided variables for non-nullable inputs", function()
@@ -951,7 +949,7 @@ return function()
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
-				expect(result.data).toEqual({ fieldWithNonNullableStringInput = nil })
+				expect(result.data).toEqual({ fieldWithNonNullableStringInput = NULL })
 				expect(result.errors).toHaveSameMembers(
 					{
 						{
@@ -973,14 +971,14 @@ return function()
 		end)
 
 		describe("Handles lists and nullability", function()
-			itSKIP("allows lists to be null", function()
+			it("allows lists to be null", function()
 				local doc = [[
 
         query ($input: [String]) {
           list(input: $input)
         }
       ]]
-				local result = executeQuery(doc, { input = nil })
+				local result = executeQuery(doc, { input = NULL })
 
 				expect(result).toEqual({
 					data = {
@@ -1009,7 +1007,7 @@ return function()
 				})
 			end)
 
-			itSKIP("allows lists to contain null", function()
+			it("allows lists to contain null", function()
 				local doc = [[
 
         query ($input: [String]) {
@@ -1019,7 +1017,7 @@ return function()
 				local result = executeQuery(doc, {
 					input = {
 						"A",
-						nil,
+						NULL,
 						"B",
 					},
 				})
@@ -1031,17 +1029,21 @@ return function()
 				})
 			end)
 
-			itSKIP("does not allow non-null lists to be null", function()
+			it("does not allow non-null lists to be null", function()
 				local doc = [[
 
         query ($input: [String]!) {
           nnList(input: $input)
         }
       ]]
-				local result = executeQuery(doc, { input = nil })
+				local result = executeQuery(doc, { input = NULL })
 
-				expect(result).toEqual({
-					errors = {
+				--[[
+				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+				--]]
+				expect(Object.keys(result)).toEqual({ "errors" })
+				expect(result.errors).toHaveSameMembers(
+					{
 						{
 							message = "Variable \"$input\" of non-null type \"[String]!\" must not be null.",
 							locations = {
@@ -1052,7 +1054,8 @@ return function()
 							},
 						},
 					},
-				})
+					true
+				)
 			end)
 
 			it("allows non-null lists to contain values", function()
@@ -1075,7 +1078,7 @@ return function()
 				})
 			end)
 
-			itSKIP("allows non-null lists to contain null", function()
+			it("allows non-null lists to contain null", function()
 				local doc = [[
 
         query ($input: [String]!) {
@@ -1085,7 +1088,7 @@ return function()
 				local result = executeQuery(doc, {
 					input = {
 						"A",
-						nil,
+						NULL,
 						"B",
 					},
 				})
@@ -1097,14 +1100,14 @@ return function()
 				})
 			end)
 
-			itSKIP("allows lists of non-nulls to be null", function()
+			it("allows lists of non-nulls to be null", function()
 				local doc = [[
 
         query ($input: [String!]) {
           listNN(input: $input)
         }
       ]]
-				local result = executeQuery(doc, { input = nil })
+				local result = executeQuery(doc, { input = NULL })
 
 				expect(result).toEqual({
 					data = {
@@ -1133,7 +1136,7 @@ return function()
 				})
 			end)
 
-			itSKIP("does not allow lists of non-nulls to contain null", function()
+			it("does not allow lists of non-nulls to contain null", function()
 				local doc = [[
 
         query ($input: [String!]) {
@@ -1143,13 +1146,17 @@ return function()
 				local result = executeQuery(doc, {
 					input = {
 						"A",
-						nil,
+						NULL,
 						"B",
 					},
 				})
 
-				expect(result).toEqual({
-					errors = {
+				--[[
+				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+				--]]
+				expect(Object.keys(result)).toEqual({ "errors" })
+				expect(result.errors).toHaveSameMembers(
+					{
 						{
 							message = "Variable \"$input\" got invalid value null at \"input[2]\"; Expected non-nullable type \"String!\" not to be null.",
 							locations = {
@@ -1160,20 +1167,25 @@ return function()
 							},
 						},
 					},
-				})
+					true
+				)
 			end)
 
-			itSKIP("does not allow non-null lists of non-nulls to be null", function()
+			it("does not allow non-null lists of non-nulls to be null", function()
 				local doc = [[
 
         query ($input: [String!]!) {
           nnListNN(input: $input)
         }
       ]]
-				local result = executeQuery(doc, { input = nil })
+				local result = executeQuery(doc, { input = NULL })
 
-				expect(result).toEqual({
-					errors = {
+				--[[
+				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+				--]]
+				expect(Object.keys(result)).toEqual({ "errors" })
+				expect(result.errors).toHaveSameMembers(
+					{
 						{
 							message = "Variable \"$input\" of non-null type \"[String!]!\" must not be null.",
 							locations = {
@@ -1184,7 +1196,8 @@ return function()
 							},
 						},
 					},
-				})
+					true
+				)
 			end)
 
 			it("allows non-null lists of non-nulls to contain values", function()
@@ -1207,7 +1220,7 @@ return function()
 				})
 			end)
 
-			itSKIP("does not allow non-null lists of non-nulls to contain null", function()
+			it("does not allow non-null lists of non-nulls to contain null", function()
 				local doc = [[
 
         query ($input: [String!]!) {
@@ -1217,13 +1230,17 @@ return function()
 				local result = executeQuery(doc, {
 					input = {
 						"A",
-						nil,
+						NULL,
 						"B",
 					},
 				})
 
-				expect(result).toEqual({
-					errors = {
+				--[[
+				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+				--]]
+				expect(Object.keys(result)).toEqual({ "errors" })
+				expect(result.errors).toHaveSameMembers(
+					{
 						{
 							message = "Variable \"$input\" got invalid value null at \"input[2]\"; Expected non-nullable type \"String!\" not to be null.",
 							locations = {
@@ -1234,7 +1251,8 @@ return function()
 							},
 						},
 					},
-				})
+					true
+				)
 			end)
 
 			it("does not allow invalid types to be used as values", function()
@@ -1343,7 +1361,7 @@ return function()
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
-				expect(result.data).toEqual({ fieldWithDefaultArgumentValue = nil })
+				expect(result.data).toEqual({ fieldWithDefaultArgumentValue = NULL })
 				expect(result.errors).toHaveSameMembers(
 					{
 						{

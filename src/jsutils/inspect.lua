@@ -3,11 +3,13 @@ type Array<T> = { [number]: T }
 local HttpService = game:GetService("HttpService")
 
 local jsutils = script.Parent
+local srcWorkspace = jsutils.Parent
 local graphql = jsutils.Parent
 local Packages = graphql.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
+local NULL = require(srcWorkspace.luaUtils.null)
 
 local MAX_ARRAY_LENGTH = 10
 local MAX_RECURSIVE_DEPTH = 2
@@ -45,6 +47,9 @@ function formatValue(value, seenValues)
 		-- deviation: functions don't have names in Lua
 		return "[function]"
 	elseif valueType == "table" then
+		if value == NULL then
+			return 'null'
+		end
 		return formatObjectValue(value, seenValues)
 	else
 		return tostring(value)
