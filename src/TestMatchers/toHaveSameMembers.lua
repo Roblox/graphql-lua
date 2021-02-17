@@ -1,7 +1,7 @@
 local arrayContains = require(script.Parent.Parent.luaUtils.arrayContains)
 local inspect = require(script.Parent.inspect).inspect
 
-local function toHaveSameMembers(arrA, arrB)
+local function toHaveSameMembers(arrA, arrB, looseEquals)
 
 	local sameLength = #arrA == #arrB
 	if not sameLength then
@@ -11,12 +11,12 @@ local function toHaveSameMembers(arrA, arrB)
 		}
 	end
 
-	for _, itemA in ipairs(arrA) do
-		local foundItem = arrayContains(arrB, itemA)
+	for _, itemB in ipairs(arrB) do
+		local foundItem = arrayContains(arrA, itemB, looseEquals)
 		if not foundItem then
 			return {
 				pass = false,
-				message = ("Expected item %s to be in Array %s"):format(inspect(itemA), inspect(arrB)),
+				message = ("Expected item %s to be in Array %s"):format(inspect(itemB), inspect(arrA)),
 			}
 		end
 	end

@@ -8,7 +8,7 @@ local Array = LuauPolyfill.Array
 
 local keyMap = require(srcWorkspace.jsutils.keyMap).keyMap
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
-local printPathArray = require(srcWorkspace.jsutils.printPathArray).printArrayPath
+local printPathArray = require(srcWorkspace.jsutils.printPathArray).printPathArray
 
 local GraphQLError = require(srcWorkspace.error.GraphQLError).GraphQLError
 
@@ -21,11 +21,7 @@ local isNonNullType = definition.isNonNullType
 
 local typeFromAST = require(srcWorkspace.utilities.typeFromAST).typeFromAST
 local valueFromAST = require(srcWorkspace.utilities.valueFromAST).valueFromAST
--- ROBLOX FIXME: use the real coerceInputValue once that branch is merged
--- local coerceInputValue = require(srcWorkspace.utilities.coerceInputValue).coerceInputValue
-local function coerceInputValue(value, _, __)
- return value
-end
+local coerceInputValue = require(srcWorkspace.utilities.coerceInputValue).coerceInputValue
 
 -- ROBLOX deviation: predeclare functions
 local getVariableValues
