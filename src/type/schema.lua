@@ -4,6 +4,9 @@ local Packages = root.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Set = LuauPolyfill.Set
+local Map = require(script.Parent.Parent.luaUtils.Map)
+type Map<T, V> = Map.Map<T, V>
+
 -- ROBLOX TODO: add implemenation of types from LuauPolyfill
 type Set<T> = any -- LuauPolyfill.Set<T>
 type Array<T> = { [number]: T } -- LuauPolyfill.Array<T>
@@ -141,8 +144,8 @@ export type GraphQLSchema = {
 	_subscriptionType: GraphQLObjectType?,
 	_directives: Array<GraphQLDirective>,
 	_typeMap: TypeMap,
-	_subTypeMap: ObjMap<ObjMap<boolean>>,
-	_implementationsMap: ObjMap<{
+	_subTypeMap: Map<string, ObjMap<boolean>>,
+	_implementationsMap: Map<string, {
 		objects: Array<GraphQLObjectType>,
 		interfaces: Array<GraphQLInterfaceType>,
 	}>,
@@ -225,10 +228,10 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 	collectReferencedTypes(__Schema, allReferencedTypes)
 
 	-- // Storing the resulting map for reference by the schema.
-	self._typeMap = {}
-	self._subTypeMap = {}
+	self._typeMap = Map.new()
+	self._subTypeMap = Map.new()
 	-- // Keep track of all implementations by interface name.
-	self._implementationsMap = {}
+	self._implementationsMap = Map.new()
 
 	for _, namedType in allReferencedTypes:ipairs() do
 		-- ROBLOX FIXME: there is no `nil` element in a Lua list
@@ -248,22 +251,22 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 			typeName and typeName ~= "",
 			"One of the provided types for building the Schema is missing a name."
 		)
-		if self._typeMap[typeName] ~= nil then
+		if self._typeMap:has(typeName) then
 			error(Error.new(("Schema must contain uniquely named types but contains multiple types named \"%s\"."):format(typeName)))
 		end
-		self._typeMap[typeName] = namedType
+		self._typeMap:set(typeName, namedType)
 
 		if isInterfaceType(namedType) then
 			-- // Store implementations by interface.
 			for _, iface in ipairs(namedType:getInterfaces()) do
 				if isInterfaceType(iface) then
-					local implementations = self._implementationsMap[iface.name]
+					local implementations = self._implementationsMap:get(iface.name)
 					if implementations == nil then
 						implementations = {
 							objects = {},
 							interfaces = {},
 						}
-						self._implementationsMap[iface.name] = implementations
+						self._implementationsMap:set(iface.name, implementations)
 					end
 
 					table.insert(implementations.interfaces, namedType)
@@ -273,14 +276,14 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 			-- // Store implementations by objects.
 			for _, iface in ipairs(namedType:getInterfaces()) do
 				if isInterfaceType(iface) then
-					local implementations = self._implementationsMap[iface.name]
+					local implementations = self._implementationsMap:get(iface.name)
 
 					if implementations == nil then
 						implementations = {
 							objects = {},
 							interfaces = {},
 						}
-						self._implementationsMap[iface.name] = implementations
+						self._implementationsMap:set(iface.name, implementations)
 					end
 
 					table.insert(implementations.objects, namedType)
@@ -309,7 +312,7 @@ function GraphQLSchema:getTypeMap(): TypeMap
 end
 
 function GraphQLSchema:getType(name): GraphQLNamedType?
-	return self:getTypeMap()[name]
+	return self:getTypeMap():get(name)
 end
 
 function GraphQLSchema:getPossibleTypes(
@@ -328,7 +331,7 @@ function GraphQLSchema:getImplementations(
 	objects: Array<GraphQLObjectType>,
 	interfaces: Array<GraphQLInterfaceType>,
 }
-	local implementations = self._implementationsMap[interfaceType.name]
+	local implementations = self._implementationsMap:get(interfaceType.name)
 	return implementations or { objects = {}, interfaces = {} }
 end
 
@@ -336,7 +339,7 @@ function GraphQLSchema:isSubType(
 	abstractType: GraphQLAbstractType,
 	maybeSubType: GraphQLObjectType | GraphQLInterfaceType
 ): boolean
-	local map = self._subTypeMap[abstractType.name]
+	local map = self._subTypeMap:get(abstractType.name)
 	if map == nil then
 		map = {}
 
@@ -354,7 +357,7 @@ function GraphQLSchema:isSubType(
 			end
 		end
 
-		self._subTypeMap[abstractType.name] = map
+		self._subTypeMap:set(abstractType.name, map)
 	end
 
 	return map[maybeSubType.name] ~= nil
@@ -376,7 +379,8 @@ function GraphQLSchema:toConfig(): GraphQLSchemaNormalizedConfig
 		query = self:getQueryType(),
 		mutation = self:getMutationType(),
 		subscription = self:getSubscriptionType(),
-		types = objectValues(self:getTypeMap()),
+		-- ROBLOX deviation: use Map type
+		types = self:getTypeMap():values(),
 		directives = Array.slice(self:getDirectives()),
 		extensions = self.extensions,
 		astNode = self.astNode,
@@ -389,7 +393,8 @@ function GraphQLSchema:__tostring()
 	return "GraphQLSchema"
 end
 
-type TypeMap = ObjMap<GraphQLNamedType>
+-- ROBLOX deviation - use custom map type
+type TypeMap = Map<string, GraphQLNamedType>
 
 export type GraphQLSchemaValidationOptions = {
 	-- /**

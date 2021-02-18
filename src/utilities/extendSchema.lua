@@ -3,7 +3,8 @@
 local srcWorkspace = script.Parent.Parent
 local root = srcWorkspace.Parent
 
-local objectValues = require(srcWorkspace.polyfills.objectValues).objectValues
+-- ROBLOX deviation: use Map type
+local Map = require(srcWorkspace.luaUtils.Map)
 
 local jsutils = srcWorkspace.jsutils
 local keyMap = require(jsutils.keyMap).keyMap
@@ -146,7 +147,7 @@ local function extendSchema(
 
 	local schemaConfig = schema:toConfig()
 	local extendedConfig = extendSchemaImpl(schemaConfig, documentAST, options)
-	return (function ()
+	return (function()
 		if schemaConfig == extendedConfig then
 			return schema
 		else
@@ -165,7 +166,8 @@ function extendSchemaImpl(
 )
 	-- // Collect the type definitions and extensions found in the document.
 	local typeDefs: Array<any> = {} -- ROBLOX FIXME: use `TypeDefinitionNode` type
-	local typeExtensionsMap = {}
+	-- ROBLOX deviation: use Map type
+	local typeExtensionsMap = Map.new()
 
 	-- // New directives and types are separate because a directives and types can
 	-- // have the same name. For example, a type named "skip".
@@ -184,14 +186,18 @@ function extendSchemaImpl(
 			table.insert(typeDefs, def)
 		elseif isTypeExtensionNode(def) then
 			local extendedTypeName = def.name.value
-			local existingTypeExtensions = typeExtensionsMap[extendedTypeName]
-			typeExtensionsMap[extendedTypeName] = (function()
-				if existingTypeExtensions then
-					return Array.concat(existingTypeExtensions, { def })
-				else
-					return { def }
-				end
-			end)()
+			-- ROBLOX deviation: use Map type
+			local existingTypeExtensions = typeExtensionsMap:get(extendedTypeName)
+			typeExtensionsMap:set(
+				extendedTypeName,
+				(function()
+					if existingTypeExtensions then
+						return Array.concat(existingTypeExtensions, { def })
+					else
+						return { def }
+					end
+				end)()
+			)
 		elseif def.kind == Kind.DIRECTIVE_DEFINITION then
 			table.insert(directiveDefs, def)
 		end
@@ -200,7 +206,8 @@ function extendSchemaImpl(
 	-- // If this document contains no new types, extensions, or directives then
 	-- // return the same unmodified GraphQLSchema instance.
 	if
-		#Object.keys(typeExtensionsMap) == 0
+		-- ROBLOX deviation: use Map type
+		#typeExtensionsMap:keys() == 0
 		and #typeDefs == 0
 		and #directiveDefs == 0
 		and #schemaExtensions == 0
@@ -213,7 +220,8 @@ function extendSchemaImpl(
 	-- the function declarations, because they are called within this scope, we can't
 	-- pre-declare them like it's usually done. We still need to pre-declare some
 	-- functions in relation to each other, and that is safe to do
-	local typeMap = {}
+	-- ROBLOX deviation: use Map type
+	local typeMap = Map.new()
 
 	-- ROBLOX deviation: pre-declare variables
 	local replaceNamedType
@@ -252,7 +260,8 @@ function extendSchemaImpl(
 		-- // Note: While this could make early assertions to get the correctly
 		-- // typed values, that would throw immediately while type system
 		-- // validation with validateSchema() will produce more actionable results.
-		return typeMap[type_.name]
+		-- ROBLOX deviation: use Map type
+		return typeMap:get(type_.name)
 	end
 
 	local function replaceDirective(directive: GraphQLDirective): GraphQLDirective
@@ -299,7 +308,8 @@ function extendSchemaImpl(
 		type_: GraphQLInputObjectType
 	): GraphQLInputObjectType
 		local config = type_:toConfig()
-		local extensions = typeExtensionsMap[config.name] or {}
+		-- ROBLOX deviation: use Map type
+		local extensions = typeExtensionsMap:get(config.name) or {}
 
 		return GraphQLInputObjectType.new(Object.assign(
 			{},
@@ -325,7 +335,8 @@ function extendSchemaImpl(
 
 	function extendEnumType(type_: GraphQLEnumType): GraphQLEnumType
 		local config = type_:toConfig()
-		local extensions = typeExtensionsMap[type_.name] or {}
+		-- ROBLOX deviation: use Map type
+		local extensions = typeExtensionsMap:get(type_.name) or {}
 
 		return GraphQLEnumType.new(
 			Object.assign(
@@ -345,7 +356,8 @@ function extendSchemaImpl(
 
 	function extendScalarType(type_: GraphQLScalarType): GraphQLScalarType
 		local config = type_:toConfig()
-		local extensions = typeExtensionsMap[config.name] or {}
+		-- ROBLOX deviation: use Map type
+		local extensions = typeExtensionsMap:get(config.name) or {}
 
 		local specifiedByUrl = config.specifiedByUrl
 		for _, extensionNode in ipairs(extensions) do
@@ -366,7 +378,8 @@ function extendSchemaImpl(
 		type_: GraphQLObjectType
 	): GraphQLObjectType
 		local config = type_:toConfig()
-		local extensions = typeExtensionsMap[config.name] or {}
+		-- ROBLOX deviation: use Map type
+		local extensions = typeExtensionsMap:get(config.name) or {}
 
 		return GraphQLObjectType.new(Object.assign(
 			{},
@@ -392,7 +405,8 @@ function extendSchemaImpl(
 		type_: GraphQLInterfaceType
 	): GraphQLInterfaceType
 		local config = type_:toConfig()
-		local extensions = typeExtensionsMap[config.name] or {}
+		-- ROBLOX deviation: use Map type
+		local extensions = typeExtensionsMap:get(config.name) or {}
 
 		return GraphQLInterfaceType.new(Object.assign(
 			{},
@@ -420,7 +434,8 @@ function extendSchemaImpl(
 		type_: GraphQLUnionType
 	): GraphQLUnionType
 		local config = type_:toConfig()
-		local extensions = typeExtensionsMap[config.name] or {}
+		-- ROBLOX deviation: use Map type
+		local extensions = typeExtensionsMap:get(config.name) or {}
 
 		return GraphQLUnionType.new(Object.assign(
 			{},
@@ -484,7 +499,8 @@ function extendSchemaImpl(
 
 	function getNamedType(node: NamedTypeNode): GraphQLNamedType
 		local name = node.name.value
-		local type_ = stdTypeMap[name] or typeMap[name]
+		-- ROBLOX deviation: use Map type
+		local type_ = stdTypeMap[name] or typeMap:get(name)
 
 		if type_ == nil then
 			error(Error.new(("Unknown type: \"%s\"."):format(name)))
@@ -544,7 +560,7 @@ function extendSchemaImpl(
 					type = getWrappedType(field.type),
 					description = field.description and field.description.value,
 					--[[
-					--	ROBLOX FIXME: we're losing the order of arguments in here. 
+					--	ROBLOX FIXME: we're losing the order of arguments in here.
 					--  It works in JS because (for most Js engine implementations) Object.keys and Object.entries returns values in order of them being added
 					--  but in Lua this is not the case
 					-- 	ROBLOX FIXME: #142 https://github.com/Roblox/graphql-lua/issues/142
@@ -672,7 +688,8 @@ function extendSchemaImpl(
 
 	local function buildType(astNode: TypeDefinitionNode): GraphQLNamedType
 		local name = astNode.name.value
-		local extensionNodes = typeExtensionsMap[name] or {}
+		-- ROBLOX deviation: use Map type
+		local extensionNodes = typeExtensionsMap:get(name) or {}
 
 		local astNodeKind = astNode.kind
 		if astNodeKind == Kind.OBJECT_TYPE_DEFINITION then
@@ -753,7 +770,7 @@ function extendSchemaImpl(
 				end,
 				astNode = astNode,
 				extensionASTNodes = extensionASTNodes,
-			});
+			})
 		end
 
 		-- // istanbul ignore next (Not reachable. All possible type definition nodes have been considered)
@@ -763,12 +780,14 @@ function extendSchemaImpl(
 	end
 
 	for _, existingType in ipairs(schemaConfig.types) do
-		typeMap[existingType.name] = extendNamedType(existingType)
+		-- ROBLOX deviation: use Map type
+		typeMap:set(existingType.name, extendNamedType(existingType))
 	end
 
 	for _, typeNode in ipairs(typeDefs) do
 		local name = typeNode.name.value
-		typeMap[name] = stdTypeMap[name] or buildType(typeNode)
+		-- ROBLOX deviation: use Map type
+		typeMap:set(name, stdTypeMap[name] or buildType(typeNode))
 	end
 
 	local operationTypes = Object.assign(
@@ -793,24 +812,20 @@ function extendSchemaImpl(
 		assumeValid = options.assumeValid
 	end
 	-- // Then produce and return a Schema config with these types.
-	local schemaExtension = Object.assign(
-		{},
-		{ description = description },
-		operationTypes,
-		{
-			types = objectValues(typeMap),
-			directives = Array.concat(
-				Array.map(schemaConfig.directives, replaceDirective),
-				Array.map(directiveDefs, buildDirective)
-			),
-			-- ROBLOX deviation: we can't remove a property by mapping it to `nil` in Lua
-			-- so we have to manually remove it on the next statement.
-			-- extensions = nil,
-			astNode = schemaDef or schemaConfig.astNode,
-			extensionASTNodes = Array.concat(schemaConfig.extensionASTNodes, schemaExtensions),
-			assumeValid = assumeValid,
-		}
-	)
+	local schemaExtension = Object.assign({}, { description = description }, operationTypes, {
+		-- ROBLOX deviation: use Map type
+		types = typeMap:values(),
+		directives = Array.concat(
+			Array.map(schemaConfig.directives, replaceDirective),
+			Array.map(directiveDefs, buildDirective)
+		),
+		-- ROBLOX deviation: we can't remove a property by mapping it to `nil` in Lua
+		-- so we have to manually remove it on the next statement.
+		-- extensions = nil,
+		astNode = schemaDef or schemaConfig.astNode,
+		extensionASTNodes = Array.concat(schemaConfig.extensionASTNodes, schemaExtensions),
+		assumeValid = assumeValid,
+	})
 	schemaExtension.extensions = nil
 	return schemaExtension
 end

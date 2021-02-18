@@ -450,12 +450,11 @@ return function()
 			})
 
 			-- ROBLOX deviation: TestEZ can't seem to do a partial object match within an array
-			-- ROBLOX deviation: ordering of the messages is different
-			expect(validateSchema(schema)[2]).toObjectContain({
-				message = "Expected GraphQL named type but got: { name: \"SomeType\" }.",
-			})
 			expect(#validateSchema(schema)).to.equal(2)
 			expect(validateSchema(schema)[1]).toObjectContain({
+				message = "Expected GraphQL named type but got: { name: \"SomeType\" }.",
+			})
+			expect(validateSchema(schema)[2]).toObjectContain({
 				message = "Expected GraphQL named type but got: @SomeDirective.",
 				locations = {
 					{
@@ -3066,7 +3065,7 @@ return function()
       }
     ]])
 
-			expect(validateSchema(schema)[2]).toObjectContain({
+			expect(validateSchema(schema)[1]).toObjectContain({
 				message = "Type FooInterface cannot implement BarInterface because it would create a circular reference.",
 				locations = {
 					{
@@ -3079,7 +3078,7 @@ return function()
 					},
 				},
 			})
-			expect(validateSchema(schema)[1]).toObjectContain({
+			expect(validateSchema(schema)[2]).toObjectContain({
 				message = "Type BarInterface cannot implement FooInterface because it would create a circular reference.",
 				locations = {
 					{

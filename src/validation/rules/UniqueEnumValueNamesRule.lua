@@ -1,6 +1,10 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/validation/rules/UniqueEnumValueNamesRule.js
 
 local root = script.Parent.Parent.Parent
+
+-- ROBLOX deviation: use Map type
+local Map = require(root.luaUtils.Map)
+
 local GraphQLError = require(root.error.GraphQLError).GraphQLError
 local definition = require(root.type.definition)
 local isEnumType = definition.isEnumType
@@ -14,7 +18,8 @@ local exports = {}
 --  */
 exports.UniqueEnumValueNamesRule = function(context)
 	local schema = context:getSchema()
-	local existingTypeMap = schema and schema:getTypeMap() or {}
+	-- ROBLOX deviation: use Map type
+	local existingTypeMap = schema and schema:getTypeMap() or Map.new()
 	local knownValueNames = {}
 
 	-- ROBLOX deviation: function needs to be defined before the
@@ -33,7 +38,8 @@ exports.UniqueEnumValueNamesRule = function(context)
 		for _, valueDef in ipairs(valueNodes) do
 			local valueName = valueDef.name.value
 
-			local existingType = existingTypeMap[typeName]
+			-- ROBLOX deviation: use Map type
+			local existingType = existingTypeMap:get(typeName)
 			if isEnumType(existingType) and existingType:getValue(valueName) then
 				context:reportError(
 					GraphQLError.new(

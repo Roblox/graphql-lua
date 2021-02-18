@@ -2,6 +2,10 @@
 
 local root = script.Parent.Parent.Parent
 local jsutils = root.jsutils
+
+-- ROBLOX deviation: use Map type
+local Map = require(root.luaUtils.Map)
+
 local didYouMean = require(jsutils.didYouMean).didYouMean
 local suggestionList = require(jsutils.suggestionList).suggestionList
 local GraphQLError = require(root.error.GraphQLError).GraphQLError
@@ -33,7 +37,8 @@ local isSDLNode
 --  */
 exports.KnownTypeNamesRule = function(context)
 	local schema = context:getSchema()
-	local existingTypesMap = {}
+	-- ROBLOX deviation: use Map type
+	local existingTypesMap = Map.new()
 	if schema then
 		existingTypesMap = schema:getTypeMap()
 	end
@@ -46,14 +51,16 @@ exports.KnownTypeNamesRule = function(context)
 	end
 
 	local typeNames = Array.concat(
-		Object.keys(existingTypesMap),
+		-- ROBLOX deviation: use Map type
+		existingTypesMap:keys(),
 		Object.keys(definedTypes)
 	)
 
 	return {
 		NamedType = function(_self, node, _1, parent, _2, ancestors)
 			local typeName = node.name.value
-			if not existingTypesMap[typeName] and not definedTypes[typeName] then
+			-- ROBLOX deviation: use Map type
+			if not existingTypesMap:get(typeName) and not definedTypes[typeName] then
 				local definitionNode = ancestors[3] or parent
 				local isSDL = definitionNode ~= nil and isSDLNode(definitionNode)
 				if isSDL and isStandardTypeName(typeName) then
@@ -65,32 +72,25 @@ exports.KnownTypeNamesRule = function(context)
 					isSDL and Array.concat(standardTypeNames, typeNames) or typeNames
 				)
 
-				context:reportError(
-					GraphQLError.new(
-						('Unknown type "%s".'):format(typeName)
-							.. didYouMean(suggestedTypes),
-						node
-					)
-				)
+				context:reportError(GraphQLError.new(
+					("Unknown type \"%s\"."):format(typeName) .. didYouMean(suggestedTypes),
+					node
+				))
 			end
 		end,
 	}
 end
 
-standardTypeNames = Array.map(
-	Array.concat(specifiedScalarTypes, introspectionTypes),
-	function(type_)
-		return type_.name
-	end
-)
+standardTypeNames = Array.map(Array.concat(specifiedScalarTypes, introspectionTypes), function(type_)
+	return type_.name
+end)
 
 function isStandardTypeName(typeName: string): boolean
 	return Array.indexOf(standardTypeNames, typeName) ~= -1
 end
 
 function isSDLNode(value): boolean
-	return not Array.isArray(value) and
-		(isTypeSystemDefinitionNode(value) or isTypeSystemExtensionNode(value))
+	return not Array.isArray(value) and (isTypeSystemDefinitionNode(value) or isTypeSystemExtensionNode(value))
 end
 
 return exports
