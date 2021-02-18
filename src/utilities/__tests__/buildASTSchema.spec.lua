@@ -13,7 +13,7 @@ return function()
 	local print_ = require(srcWorkspace.language.printer).print
 
 	local GraphQLSchema = require(srcWorkspace.type.schema).GraphQLSchema
-	local validateSchema: any = {} -- require(srcWorkspace.type.validate).validateSchema
+	local validateSchema = require(srcWorkspace.type.validate).validateSchema
 	local introspectionImport = require(srcWorkspace.type.introspection)
 	local __Schema = introspectionImport.__Schema
 	local __EnumValue = introspectionImport.__EnumValue
@@ -37,8 +37,7 @@ return function()
 	local assertInterfaceType = definitionImport.assertInterfaceType
 	local assertScalarType = definitionImport.assertScalarType
 
-	-- ROBLOX FIXME: use actual module when available
-	local graphqlSync = {} -- require(srcWorkspace.graphql).graphqlSync
+	local graphqlSync = require(srcWorkspace.graphql).graphqlSync
 
 	local printSchemaImport = require(utilitiesWorkspace.printSchema)
 	local printType = printSchemaImport.printType
@@ -76,7 +75,7 @@ return function()
 	end
 
 	describe("Schema Builder", function()
-		itSKIP("can use built schema for limited execution", function()
+		it("can use built schema for limited execution", function()
 			local schema = buildASTSchema(parse([[
 
         type Query {
@@ -94,7 +93,7 @@ return function()
 			})
 		end)
 
-		itSKIP("can build a schema directly from the source", function()
+		it("can build a schema directly from the source", function()
 			local schema = buildSchema([[
 
       type Query {
@@ -104,8 +103,8 @@ return function()
 
 			local source = "{ add(x: 34, y: 55) }"
 			local rootValue = {
-				add = function(_ref)
-					local x, y = _ref.x, _ref.y
+				add = function(self, node)
+					local x, y = node.x, node.y
 
 					return x + y
 				end,
@@ -168,7 +167,7 @@ return function()
         bool: Boolean
       }
     ]])
-			-- ROBLOX FIXME: uncomment when printSchema is available
+			-- ROBLOX FIXME: ordering is not preserved
 			-- expect(cycleSDL(sdl)).to.equal(sdl)
 
 			local schema = buildSchema(sdl)
@@ -600,7 +599,7 @@ return function()
 			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("Can build recursive Union", function()
+		it("Can build recursive Union", function()
 			local schema = buildSchema([[
 
       union Hello = Hello
@@ -1192,7 +1191,7 @@ return function()
 			})
 		end)
 
-		itSKIP("can build invalid schema", function()
+		it("can build invalid schema", function()
 			local schema = buildSchema("type Mutation")
 			local errors = validateSchema(schema)
 
@@ -1231,7 +1230,7 @@ return function()
 			expect(schema:getType("__EnumValue")).to.equal(__EnumValue)
 		end)
 
-		itSKIP("Rejects invalid SDL", function()
+		it("Rejects invalid SDL", function()
 			local sdl = [[
 
       type Query {

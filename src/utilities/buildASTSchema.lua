@@ -1,4 +1,5 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/aa650618426a301e3f0f61ead3adcd755055a627/src/utilities/buildASTSchema.js
+
 local Array = require(script.Parent.Parent.Parent.Packages.LuauPolyfill).Array
 local devAssertModule = require(script.Parent.Parent.jsutils.devAssert)
 local devAssert = devAssertModule.devAssert
@@ -6,8 +7,7 @@ local kinds = require(script.Parent.Parent.language.kinds)
 local Kind = kinds.Kind
 local parser = require(script.Parent.Parent.language.parser)
 local parse = parser.parse
--- local validate = require(script.Parent.Parent.validation.validate)
--- local assertValidSDL = validate.assertValidSDL
+local assertValidSDL = require(script.Parent.Parent.validation.validate).assertValidSDL
 local schema = require(script.Parent.Parent.type.schema)
 local GraphQLSchema = schema.GraphQLSchema
 local directivesModule = require(script.Parent.Parent.type.directives)
@@ -21,10 +21,9 @@ local buildASTSchema = function(documentAST, options)
 		"Must provide valid Document AST."
 	)
 
-	-- if  options ~= nil and not (options.assumeValid or options.assumeValidSDL) then
-	--     -- ROBLOX FIXME: introduce this when validation directory is merged
-	-- 	-- assertValidSDL(documentAST)
-	-- end
+	if  options ~= nil and not (options.assumeValid or options.assumeValidSDL) then
+		assertValidSDL(documentAST)
+	end
 
 	local emptySchemaConfig = {
 		description = nil,
