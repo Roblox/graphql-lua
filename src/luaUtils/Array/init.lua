@@ -6,5 +6,6 @@ local Object = LuauPolyfill.Object
 
 return Object.assign({}, Array, {
 	concat = require(script.concat),
+	includes = require(script.includes),
 	join = require(script.join),
 })
