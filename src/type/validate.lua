@@ -294,7 +294,8 @@ function validateTypes(context: SchemaValidationContext): ()
 	local validateInputObjectCircularRefs = createInputObjectCircularRefsValidator(context)
 	local typeMap = context.schema:getTypeMap()
 
-	for _, type_ in ipairs(objectValues(typeMap)) do
+	-- ROBLOX deviation: use Map type
+	for _, type_ in ipairs(typeMap:values()) do
 		-- Ensure all provided types are in fact GraphQL type.
 		-- ROBLOX deviation: Lua doesn't allow indexing into a function
 		local typeAstNode
@@ -345,7 +346,10 @@ function validateFields(
 
 	-- Objects and Interfaces both must define one or more fields.
 	if #fields == 0 then
-		context:reportError(("Type %s must define one or more fields."):format(type_.name), getAllNodes(type_))
+		context:reportError(
+			("Type %s must define one or more fields."):format(type_.name),
+			getAllNodes(type_)
+		)
 	end
 
 	for _, field in ipairs(fields) do
@@ -466,12 +470,9 @@ function validateTypeImplementsInterface(
 		if not typeField then
 			context:reportError(
 				("Interface field %s.%s expected but %s does not provide it."):format(iface.name, fieldName, type_.name),
-				Array.concat(
-					{
-						ifaceField.astNode,
-					},
-					getAllNodes(type_)
-				)
+				Array.concat({
+					ifaceField.astNode,
+				}, getAllNodes(type_))
 			)
 			continue
 		end

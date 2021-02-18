@@ -160,6 +160,7 @@ return function()
 			it("defines a query root", function()
 				local schema = GraphQLSchema.new({ query = testType })
 				expect(schema:getQueryType()).to.equal(testType)
+
 				expect(schema:getTypeMap().TestType).never.to.equal(nil)
 			end)
 
@@ -335,9 +336,11 @@ return function()
 				"__Directive",
 				"__DirectiveLocation",
 			}) do
-				expect(typeMap[key]).to.be.ok()
+				-- ROBLOX deviation: use Map type
+				expect(typeMap:get(key)).to.be.ok()
 			end
-			-- local typeNames = Object.keys(schema:getTypeMap())
+			-- ROBLOX deviation: use Map type
+			-- local typeNames = schema:getTypeMap():keys()
 			-- expect(typeNames).toEqual({
 			-- 	"Z",
 			-- 	"ZSub",
@@ -363,7 +366,8 @@ return function()
 
 			-- // Also check that this order is stable
 			-- local copySchema = GraphQLSchema.new(schema:toConfig())
-			-- expect(Object.keys(copySchema:getTypeMap())).toEqual(typeNames)
+			-- ROBLOX deviation: use Map type
+			-- expect(copySchema:getTypeMap():keys()).toEqual(typeNames)
 		end)
 
 		it("can be Object.toStringified", function()

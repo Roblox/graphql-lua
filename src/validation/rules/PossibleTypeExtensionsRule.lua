@@ -74,7 +74,8 @@ exports.PossibleTypeExtensionsRule = function(context)
 		else
 			local allTypeNames = Object.keys(definedTypes)
 			if schema then
-				allTypeNames = Array.concat(allTypeNames, Object.keys(schema:getTypeMap()))
+				-- ROBLOX deviation: use Map type
+				allTypeNames = Array.concat(allTypeNames, schema:getTypeMap():keys())
 			end
 
 			local suggestedTypes = suggestionList(typeName, allTypeNames)

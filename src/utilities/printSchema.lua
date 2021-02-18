@@ -61,7 +61,8 @@ function printFilteredSchema(
 	typeFilter: (any) -> boolean
 ): string
 	local directives = Array.filter(schema:getDirectives(), directiveFilter)
-	local types = Array.filter(objectValues(schema:getTypeMap()), typeFilter)
+	-- ROBLOX deviation: use Map type
+	local types = Array.filter(schema:getTypeMap():values(), typeFilter)
 
 	local combined = Array.concat(
 		{

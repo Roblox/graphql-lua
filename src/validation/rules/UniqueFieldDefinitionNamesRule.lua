@@ -1,6 +1,10 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/validation/rules/UniqueFieldDefinitionNamesRule.js
 
 local root = script.Parent.Parent.Parent
+
+-- ROBLOX deviation: use Map type
+local Map = require(root.luaUtils.Map)
+
 local GraphQLError = require(root.error.GraphQLError).GraphQLError
 local definition = require(root.type.definition)
 local isObjectType = definition.isObjectType
@@ -19,7 +23,8 @@ local hasField
 --  */
 exports.UniqueFieldDefinitionNamesRule = function(context)
 	local schema = context:getSchema()
-	local existingTypeMap = schema and schema:getTypeMap() or {}
+	-- ROBLOX deviation: use Map type
+	local existingTypeMap = schema and schema:getTypeMap() or Map.new()
 	local knownFieldNames = {}
 
 	-- ROBLOX deviation: function needs to be defined before the
@@ -38,7 +43,7 @@ exports.UniqueFieldDefinitionNamesRule = function(context)
 		for _, fieldDef in ipairs(fieldNodes)do
 			local fieldName = fieldDef.name.value
 
-			if hasField(existingTypeMap[typeName], fieldName) then
+			if hasField(existingTypeMap:get(typeName), fieldName) then
 				context:reportError(
 					GraphQLError.new(
 						('Field "%s.%s" already exists in the schema. It cannot also be defined in this type extension.')

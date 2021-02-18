@@ -48,7 +48,6 @@ return function()
 	local buildSchema = buildASTSchemaImport.buildSchema
 
 	local UtilArray = require(srcWorkspace.luaUtils.Array)
-	local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
 
 	--[[*
 	--  * This function does a full cycle of going from a string with the contents of
@@ -146,7 +145,8 @@ return function()
 			expect(sdlSchema:getDirectives()).toEqual(schema:getDirectives())
 
 			expect(sdlSchema:getTypeMap()).toEqual(schema:getTypeMap())
-			expect(Object.keys(sdlSchema:getTypeMap())).toEqual(Object.keys(schema:getTypeMap()))
+			-- ROBLOX deviation: use Map type
+			expect(sdlSchema:getTypeMap():keys()).toEqual(schema:getTypeMap():keys())
 		end)
 
 		it("Empty type", function()
@@ -168,7 +168,7 @@ return function()
         bool: Boolean
       }
     ]])
-	  		-- ROBLOX FIXME: uncomment when printSchema is available
+			-- ROBLOX FIXME: uncomment when printSchema is available
 			-- expect(cycleSDL(sdl)).to.equal(sdl)
 
 			local schema = buildSchema(sdl)
@@ -248,7 +248,7 @@ return function()
     ]])
 
 	  		--[[
-				ROBLOX FIXME: ordering is not preserved
+				ROBLOX FIXME: ordering of enums is not preserved
 				original code: expect(cycleSDL(sdl)).to.equal(sdl)
 			--]]
 			expect(cycleSDL(sdl)).to.equal(dedent([[
@@ -264,23 +264,8 @@ return function()
         arg: Int
       ) on FIELD
 
-      """With an enum"""
-      enum Color {
-        RED
-        BLUE
-
-        """Not a creative color"""
-        GREEN
-      }
-
-      """There is nothing inside!"""
-      union BlackHole
-
-      """What a great type"""
-      type Query {
-        """And a field to boot"""
-        str: String
-      }
+      """Who knows what inside this scalar?"""
+      scalar MysteryScalar
 
       """This is a input object type"""
       input FooInput {
@@ -294,8 +279,23 @@ return function()
         str: String
       }
 
-      """Who knows what inside this scalar?"""
-      scalar MysteryScalar
+      """There is nothing inside!"""
+      union BlackHole
+
+      """With an enum"""
+      enum Color {
+        RED
+        BLUE
+
+        """Not a creative color"""
+        GREEN
+      }
+
+      """What a great type"""
+      type Query {
+        """And a field to boot"""
+        str: String
+      }
     ]]))
 		end)
 
@@ -407,7 +407,7 @@ return function()
       }
     ]])
 
-	  		--[[
+			--[[
 				ROBLOX FIXME: ordering is not preserved
 				original code: expect(cycleSDL(sdl)).to.equal(sdl)
 			--]]
@@ -458,20 +458,7 @@ return function()
       }
     ]])
 
-			--[[
-				ROBLOX FIXME: ordering is not preserved
-				original code: expect(cycleSDL(sdl)).to.equal(sdl)
-			--]]
-			expect(cycleSDL(sdl)).to.equal(dedent([[
-
-      interface WorldInterface {
-        str: String
-      }
-
-      type Query implements WorldInterface {
-        str: String
-      }
-    ]]))
+			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
 		it("Simple interface hierarchy", function()
@@ -494,28 +481,7 @@ return function()
       }
     ]])
 
-			--[[
-				ROBLOX FIXME: ordering is not preserved
-				original code: expect(cycleSDL(sdl)).to.equal(sdl)
-			--]]
-			expect(cycleSDL(sdl)).to.equal(dedent([[
-
-      schema {
-        query: Child
-      }
-
-      interface Parent {
-        str: String
-      }
-
-      interface Child implements Parent {
-        str: String
-      }
-
-      type Hello implements Parent & Child {
-        str: String
-      }
-    ]]))
+			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
 		it("Empty enum", function()
@@ -570,7 +536,7 @@ return function()
       }
     ]])
 
-	  		--[[
+			--[[
 				ROBLOX FIXME: ordering is not preserved
 				original code: expect(cycleSDL(sdl)).to.equal(sdl)
 			--]]
@@ -631,26 +597,7 @@ return function()
       }
     ]])
 
-	  		--[[
-				ROBLOX FIXME: ordering is not preserved
-				original code: expect(cycleSDL(sdl)).to.equal(sdl)
-			--]]
-			expect(cycleSDL(sdl)).to.equal(dedent([[
-
-      union Hello = WorldOne | WorldTwo
-
-      type WorldOne {
-        str: String
-      }
-
-      type Query {
-        hello: Hello
-      }
-
-      type WorldTwo {
-        str: String
-      }
-    ]]))
+			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
 		itSKIP("Can build recursive Union", function()
@@ -701,20 +648,7 @@ return function()
       }
     ]])
 
-	  		--[[
-				ROBLOX FIXME: ordering is not preserved
-				original code: expect(cycleSDL(sdl)).to.equal(sdl)
-			--]]
-			expect(cycleSDL(sdl)).to.equal(dedent([[
-
-      type Query {
-        field(in: Input): String
-      }
-
-      input Input {
-        int: Int
-      }
-    ]]))
+			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
 		it("Simple argument field with default", function()
@@ -782,27 +716,7 @@ return function()
       }
     ]])
 
-	  		--[[
-				ROBLOX FIXME: ordering is not preserved
-				original code: expect(cycleSDL(sdl)).to.equal(sdl)
-			--]]
-			expect(cycleSDL(sdl)).to.equal(dedent([[
-
-      schema {
-        query: HelloScalars
-        subscription: Subscription
-      }
-
-      type Subscription {
-        subscribeHelloScalars(str: String, int: Int, bool: Boolean): HelloScalars
-      }
-
-      type HelloScalars {
-        str: String
-        int: Int
-        bool: Boolean
-      }
-    ]]))
+			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
 		it("Unreferenced type implementing referenced interface", function()
@@ -821,24 +735,7 @@ return function()
       }
     ]])
 
-	  		--[[
-				ROBLOX FIXME: ordering is not preserved
-				original code: expect(cycleSDL(sdl)).to.equal(sdl)
-			--]]
-			expect(cycleSDL(sdl)).to.equal(dedent([[
-
-      type Query {
-        interface: Interface
-      }
-
-      type Concrete implements Interface {
-        key: String
-      }
-
-      interface Interface {
-        key: String
-      }
-    ]]))
+			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
 		it("Unreferenced interface implementing referenced interface", function()
@@ -874,22 +771,7 @@ return function()
       union Union = Concrete
     ]])
 
-	  		--[[
-				ROBLOX FIXME: ordering is not preserved
-				original code: expect(cycleSDL(sdl)).to.equal(sdl)
-			--]]
-			expect(cycleSDL(sdl)).to.equal(dedent([[
-
-      union Union = Concrete
-
-      type Query {
-        union: Union
-      }
-
-      type Concrete {
-        key: String
-      }
-    ]]))
+			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
 		it("Supports @deprecated", function()
@@ -917,7 +799,7 @@ return function()
       }
     ]])
 
-	  		--[[
+			--[[
 				ROBLOX FIXME: ordering is not preserved
 				original code: expect(cycleSDL(sdl)).to.equal(sdl)
 			--]]
@@ -1020,18 +902,7 @@ return function()
       }
     ]])
 
-	  		--[[
-				ROBLOX FIXME: ordering is not preserved
-				original code: expect(cycleSDL(sdl)).to.equal(sdl)
-			--]]
-			expect(cycleSDL(sdl)).to.equal(dedent([[
-
-      type Query {
-        foo: Foo @deprecated
-      }
-
-      scalar Foo @specifiedBy(url: "https://example.com/foo_spec")
-    ]]))
+			expect(cycleSDL(sdl)).to.equal(sdl)
 
 			local schema = buildSchema(sdl)
 
@@ -1330,7 +1201,7 @@ return function()
 
 		it("Do not override standard types", function()
 			-- NOTE: not sure it's desired behaviour to just silently ignore override
-    		-- attempts so just documenting it here.
+			-- attempts so just documenting it here.
 
 			local schema = buildSchema([[
 

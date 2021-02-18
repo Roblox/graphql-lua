@@ -52,7 +52,8 @@ exports.__Schema = GraphQLObjectType.new({
 				description = "A list of all types supported by this server.",
 				type = GraphQLNonNull.new(GraphQLList.new(GraphQLNonNull.new(exports.__Type))),
 				resolve = function(schema)
-					return objectValues(schema:getTypeMap())
+					-- ROBLOX deviation: use Map type
+					return schema:getTypeMap():values()
 				end,
 			},
 			queryType = {

@@ -374,7 +374,7 @@ return function()
     ]]))
 		end)
 
-		itSKIP("Print Interface", function()
+		it("Print Interface", function()
 			local FooType = GraphQLInterfaceType.new({
 				name = "Foo",
 				fields = {
@@ -403,7 +403,7 @@ return function()
     ]]))
 		end)
 
-		itSKIP("Print Multiple Interface", function()
+		it("Print Multiple Interface", function()
 			local FooType = GraphQLInterfaceType.new({
 				name = "Foo",
 				fields = {
@@ -444,7 +444,7 @@ return function()
     ]]))
 		end)
 
-		itSKIP("Print Hierarchical Interface", function()
+		it("Print Hierarchical Interface", function()
 			local FooType = GraphQLInterfaceType.new({
 				name = "Foo",
 				fields = {
@@ -499,7 +499,7 @@ return function()
     ]]))
 		end)
 
-		itSKIP("Print Unions", function()
+		it("Print Unions", function()
 			local FooType = GraphQLObjectType.new({
 				name = "Foo",
 				fields = {
@@ -607,7 +607,7 @@ return function()
     ]]))
 		end)
 
-		itSKIP("Prints empty types", function()
+		it("Prints empty types", function()
 			local schema = GraphQLSchema.new({
 				types = {
 					GraphQLEnumType.new({
@@ -646,14 +646,14 @@ return function()
     ]]))
 		end)
 
-		itSKIP("Prints custom directives", function()
-			local SimpleDirective = GraphQLDirective({
+		it("Prints custom directives", function()
+			local SimpleDirective = GraphQLDirective.new({
 				name = "simpleDirective",
 				locations = {
 					DirectiveLocation.FIELD,
 				},
 			})
-			local ComplexDirective = GraphQLDirective({
+			local ComplexDirective = GraphQLDirective.new({
 				name = "complexDirective",
 				description = "Complex Directive",
 				args = {
@@ -681,7 +681,7 @@ return function()
     ]]))
 		end)
 
-		itSKIP("Prints an empty description", function()
+		it("Prints an empty description", function()
 			local schema = buildSingleFieldSchema({
 				type = GraphQLString,
 				description = "",
@@ -695,7 +695,7 @@ return function()
     ]]))
 		end)
 
-		itSKIP("One-line prints a short description", function()
+		it("One-line prints a short description", function()
 			local schema = buildSingleFieldSchema({
 				type = GraphQLString,
 				description = "This field is awesome",
