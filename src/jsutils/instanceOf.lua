@@ -5,6 +5,14 @@ local function instanceOf(subject, super)
 		return false
 	end
 
+	if typeof(subject) ~= "table" or typeof(super) ~= "table" then
+		return false
+	end
+
+	if super.new ~= nil and subject.new == super.new then
+		return true
+	end
+
 	local mt = getmetatable(subject)
 	while true do
 		if mt == nil then

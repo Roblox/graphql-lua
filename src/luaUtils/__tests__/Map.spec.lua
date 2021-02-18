@@ -1,5 +1,6 @@
 return function()
 	local Map = require(script.Parent.Parent.Map)
+	local instanceOf = require(script.Parent.Parent.Parent.jsutils.instanceOf)
 
 	local AN_ITEM = "bar"
 	local ANOTHER_ITEM = "baz"
@@ -31,6 +32,18 @@ return function()
 				end).to.throw("cannot create array from value of type `number`")
 			end)
 
+		end)
+
+		describe("type", function()
+			it("instanceOf return true for an actual Map object", function()
+				local foo = Map.new()
+				expect(instanceOf(foo, Map)).to.equal(true)
+			end)
+
+			it("instanceOf return false for an regular plain object", function()
+				local foo = {}
+				expect(instanceOf(foo, Map)).to.equal(false)
+			end)
 		end)
 
 		describe("set", function()
