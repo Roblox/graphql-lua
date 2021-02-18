@@ -12,10 +12,7 @@ return function()
 
 	local typeWorkspace = root.type
 	local GraphQLSchema = require(typeWorkspace.schema).GraphQLSchema
-	-- local validate = require(typeWorkspace.validate).validateSchema
-	local validateSchema = function(...)
-		return {}
-	end --validate.validateSchema
+	local validateSchema = require(typeWorkspace.validate).validateSchema
 	local directives = require(typeWorkspace.directives)
 	local assertDirective = directives.assertDirective
 
@@ -35,10 +32,7 @@ return function()
 	local assertScalarType = definition.assertScalarType
 	local utilities = root.utilities
 	local concatAST = require(utilities.concatAST).concatAST
-	-- local printSchema = require(utilities.printSchema).printSchema
-	local function printSchema(...)
-		error("not implemented")
-	end
+	local printSchema = require(utilities.printSchema).printSchema
 	local extendSchema = require(utilities.extendSchema).extendSchema
 	local buildSchema = require(utilities.buildASTSchema).buildSchema
 
@@ -61,7 +55,7 @@ return function()
 		return print_({
 			kind = Kind.DOCUMENT,
 			definitions = Array.filter(ast.definitions, function(node)
-				return not schemaDefinitions.includes(print_(node))
+				return not Array.includes(schemaDefinitions, print_(node))
 			end),
 		})
 	end
@@ -78,13 +72,14 @@ return function()
 			expect(extendedSchema).to.equal(schema)
 		end)
 
-		itSKIP("can be used for limited execution", function()
+		it("can be used for limited execution", function()
 			local schema = buildSchema("type Query")
 			local extendAST = parse([[
-				extend type Query {
-					newField: String
-				}
-			]])
+
+      extend type Query {
+        newField: String
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			local result = graphqlSync({
@@ -99,44 +94,47 @@ return function()
 
 		itSKIP("extends objects by adding new fields", function()
 			local schema = buildSchema([[
-				type Query {
-					someObject: SomeObject
-				}
 
-				type SomeObject implements AnotherInterface & SomeInterface {
-					self: SomeObject
-					tree: [SomeObject]!
-					"""Old field description."""
-					oldField: String
-				}
+      type Query {
+        someObject: SomeObject
+      }
 
-				interface SomeInterface {
-					self: SomeInterface
-				}
+      type SomeObject implements AnotherInterface & SomeInterface {
+        self: SomeObject
+        tree: [SomeObject]!
+        """Old field description."""
+        oldField: String
+      }
 
-				interface AnotherInterface {
-					self: SomeObject
-				}
-			]])
+      interface SomeInterface {
+        self: SomeInterface
+      }
+
+      interface AnotherInterface {
+        self: SomeObject
+      }
+    ]])
 			local extensionSDL = dedent([[
-				extend type SomeObject {
-					"""New field description."""
-					newField(arg: Boolean): String
-				}
-			]])
+
+      extend type SomeObject {
+        """New field description."""
+        newField(arg: Boolean): String
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, parse(extensionSDL))
 
 			expect(validateSchema(extendedSchema)).toEqual({})
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(dedent([[
-				type SomeObject implements AnotherInterface & SomeInterface {
-					self: SomeObject
-					tree: [SomeObject]!
-					"""Old field description."""
-					oldField: String
-					"""New field description."""
-					newField(arg: Boolean): String
-				}
-			]]))
+
+      type SomeObject implements AnotherInterface & SomeInterface {
+        self: SomeObject
+        tree: [SomeObject]!
+        """Old field description."""
+        oldField: String
+        """New field description."""
+        newField(arg: Boolean): String
+      }
+    ]]))
 		end)
 
 		it("extends objects with standard type fields", function()
@@ -150,10 +148,11 @@ return function()
 			expect(schema:getType("ID")).to.equal(nil)
 
 			local extendAST = parse([[
-				extend type Query {
-					bool: Boolean
-				}
-			]])
+
+      extend type Query {
+        bool: Boolean
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			-- ROBLOX FIXME: uncomment when dependency available
@@ -165,16 +164,16 @@ return function()
 			expect(extendedSchema:getType("ID")).to.equal(nil)
 
 			local extendTwiceAST = parse([[
-				extend type Query {
-					int: Int
-					float: Float
-					id: ID
-				}
-			]])
+
+      extend type Query {
+        int: Int
+        float: Float
+        id: ID
+      }
+    ]])
 			local extendedTwiceSchema = extendSchema(schema, extendTwiceAST)
 
-			-- ROBLOX FIXME: uncomment when dependency available
-			-- expect(validateSchema(extendedTwiceSchema)).toEqual({})
+			expect(validateSchema(extendedTwiceSchema)).toEqual({})
 			expect(extendedTwiceSchema:getType("Int")).to.equal(GraphQLInt)
 			expect(extendedTwiceSchema:getType("Float")).to.equal(GraphQLFloat)
 			expect(extendedTwiceSchema:getType("String")).to.equal(GraphQLString)
@@ -182,125 +181,140 @@ return function()
 			expect(extendedTwiceSchema:getType("ID")).to.equal(GraphQLID)
 		end)
 
-		itSKIP("extends enums by adding new values", function()
+		it("extends enums by adding new values", function()
 			local schema = buildSchema([[
-				type Query {
-					someEnum(arg: SomeEnum): SomeEnum
-				}
 
-				directive @foo(arg: SomeEnum) on SCHEMA
+      type Query {
+        someEnum(arg: SomeEnum): SomeEnum
+      }
 
-				enum SomeEnum {
-					"""Old value description."""
-					OLD_VALUE
-				}
-			]])
+      directive @foo(arg: SomeEnum) on SCHEMA
+
+      enum SomeEnum {
+        """Old value description."""
+        OLD_VALUE
+      }
+    ]])
 			local extendAST = parse([[
-				extend enum SomeEnum {
-					"""New value description."""
-					NEW_VALUE
-				}
-			]])
+
+      extend enum SomeEnum {
+        """New value description."""
+        NEW_VALUE
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			expect(validateSchema(extendedSchema)).toEqual({})
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(dedent([[
-				enum SomeEnum {
-					"""Old value description."""
-					OLD_VALUE
-					"""New value description."""
-					NEW_VALUE
-				}
-			]]))
+
+      enum SomeEnum {
+        """Old value description."""
+        OLD_VALUE
+        """New value description."""
+        NEW_VALUE
+      }
+    ]]))
 		end)
 
-		itSKIP("extends unions by adding new types", function()
+		it("extends unions by adding new types", function()
 			local schema = buildSchema([[
-				type Query {
-					someUnion: SomeUnion
-				}
 
-				union SomeUnion = Foo | Biz
+      type Query {
+        someUnion: SomeUnion
+      }
 
-				type Foo { foo: String }
-				type Biz { biz: String }
-				type Bar { bar: String }
-			]])
+      union SomeUnion = Foo | Biz
+
+      type Foo { foo: String }
+      type Biz { biz: String }
+      type Bar { bar: String }
+    ]])
 			local extendAST = parse([[
-				extend union SomeUnion = Bar
-			]])
+
+      extend union SomeUnion = Bar
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			expect(validateSchema(extendedSchema)).toEqual({})
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(dedent([[
-				union SomeUnion = Foo | Biz | Bar
-			]]))
+
+      union SomeUnion = Foo | Biz | Bar
+    ]]))
 		end)
 
-		itSKIP("allows extension of union by adding itself", function()
+		it("allows extension of union by adding itself", function()
 			local schema = buildSchema([[
-				union SomeUnion
-			]])
+
+      union SomeUnion
+    ]])
 			local extendAST = parse([[
-				extend union SomeUnion = SomeUnion
-			]])
+
+      extend union SomeUnion = SomeUnion
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
-			expect(validateSchema(extendedSchema)).to.have.lengthOf.above(0)
+			expect(#validateSchema(extendedSchema) > 0).to.equal(true)
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(dedent([[
-				union SomeUnion = SomeUnion
-			]]))
+
+      union SomeUnion = SomeUnion
+    ]]))
 		end)
 
+		-- ROBLOX FIXME: ordering is not preserved
 		itSKIP("extends inputs by adding new fields", function()
 			local schema = buildSchema([[
-				type Query {
-					someInput(arg: SomeInput): String
-				}
 
-				directive @foo(arg: SomeInput) on SCHEMA
+      type Query {
+        someInput(arg: SomeInput): String
+      }
 
-				input SomeInput {
-					"""Old field description."""
-					oldField: String
-				}
-			]])
+      directive @foo(arg: SomeInput) on SCHEMA
+
+      input SomeInput {
+        """Old field description."""
+        oldField: String
+      }
+    ]])
 			local extendAST = parse([[
-				extend input SomeInput {
-					"""New field description."""
-					newField: String
-				}
-			]])
+
+      extend input SomeInput {
+        """New field description."""
+        newField: String
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			expect(validateSchema(extendedSchema)).toEqual({})
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(dedent([[
-				input SomeInput {
-					"""Old field description."""
-					oldField: String
-					"""New field description."""
-					newField: String
-				}
-			]]))
+
+      input SomeInput {
+        """Old field description."""
+        oldField: String
+        """New field description."""
+        newField: String
+      }
+    ]]))
 		end)
 
-		itSKIP("extends scalars by adding new directives", function()
+		it("extends scalars by adding new directives", function()
 			local schema = buildSchema([[
-				type Query {
-					someScalar(arg: SomeScalar): SomeScalar
-				}
 
-				directive @foo(arg: SomeScalar) on SCALAR
+      type Query {
+        someScalar(arg: SomeScalar): SomeScalar
+      }
 
-				input FooInput {
-					foo: SomeScalar
-				}
+      directive @foo(arg: SomeScalar) on SCALAR
 
-				scalar SomeScalar
-			]])
+      input FooInput {
+        foo: SomeScalar
+      }
+
+      scalar SomeScalar
+    ]])
 			local extensionSDL = dedent([[
-				extend scalar SomeScalar @foo
-			]])
+
+      extend scalar SomeScalar @foo
+    ]])
 			local extendedSchema = extendSchema(schema, parse(extensionSDL))
 			local someScalar = extendedSchema:getType("SomeScalar")
 
@@ -308,21 +322,23 @@ return function()
 			expect(printExtensionNodes(someScalar)).toEqual(extensionSDL)
 		end)
 
-		itSKIP("extends scalars by adding specifiedBy directive", function()
+		it("extends scalars by adding specifiedBy directive", function()
 			local schema = buildSchema([[
-				type Query {
-					foo: Foo
-				}
 
-				scalar Foo
+      type Query {
+        foo: Foo
+      }
 
-				directive @foo on SCALAR
-			]])
+      scalar Foo
+
+      directive @foo on SCALAR
+    ]])
 			local extensionSDL = dedent([[
-				extend scalar Foo @foo
 
-				extend scalar Foo @specifiedBy(url: "https://example.com/foo_spec")
-			]])
+      extend scalar Foo @foo
+
+      extend scalar Foo @specifiedBy(url: "https://example.com/foo_spec")
+    ]])
 			local extendedSchema = extendSchema(schema, parse(extensionSDL))
 			local foo = assertScalarType(extendedSchema:getType("Foo"))
 
@@ -332,83 +348,86 @@ return function()
 			expect(printExtensionNodes(foo)).toEqual(extensionSDL)
 		end)
 
-		itSKIP("correctly assign AST nodes to new and extended types", function()
+		it("correctly assign AST nodes to new and extended types", function()
 			local schema = buildSchema([[
-				type Query
 
-				scalar SomeScalar
-				enum SomeEnum
-				union SomeUnion
-				input SomeInput
-				type SomeObject
-				interface SomeInterface
+      type Query
 
-				directive @foo on SCALAR
-			]])
+      scalar SomeScalar
+      enum SomeEnum
+      union SomeUnion
+      input SomeInput
+      type SomeObject
+      interface SomeInterface
+
+      directive @foo on SCALAR
+    ]])
 			local firstExtensionAST = parse([[
-				extend type Query {
-					newField(testArg: TestInput): TestEnum
-				}
 
-				extend scalar SomeScalar @foo
+      extend type Query {
+        newField(testArg: TestInput): TestEnum
+      }
 
-				extend enum SomeEnum {
-					NEW_VALUE
-				}
+      extend scalar SomeScalar @foo
 
-				extend union SomeUnion = SomeObject
+      extend enum SomeEnum {
+        NEW_VALUE
+      }
 
-				extend input SomeInput {
-					newField: String
-				}
+      extend union SomeUnion = SomeObject
 
-				extend interface SomeInterface {
-					newField: String
-				}
+      extend input SomeInput {
+        newField: String
+      }
 
-				enum TestEnum {
-					TEST_VALUE
-				}
+      extend interface SomeInterface {
+        newField: String
+      }
 
-				input TestInput {
-					testInputField: TestEnum
-				}
-			]])
+      enum TestEnum {
+        TEST_VALUE
+      }
+
+      input TestInput {
+        testInputField: TestEnum
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, firstExtensionAST)
 
 			local secondExtensionAST = parse([[
-				extend type Query {
-					oneMoreNewField: TestUnion
-				}
 
-				extend scalar SomeScalar @test
+      extend type Query {
+        oneMoreNewField: TestUnion
+      }
 
-				extend enum SomeEnum {
-					ONE_MORE_NEW_VALUE
-				}
+      extend scalar SomeScalar @test
 
-				extend union SomeUnion = TestType
+      extend enum SomeEnum {
+        ONE_MORE_NEW_VALUE
+      }
 
-				extend input SomeInput {
-					oneMoreNewField: String
-				}
+      extend union SomeUnion = TestType
 
-				extend interface SomeInterface {
-					oneMoreNewField: String
-				}
+      extend input SomeInput {
+        oneMoreNewField: String
+      }
 
-				union TestUnion = TestType
+      extend interface SomeInterface {
+        oneMoreNewField: String
+      }
 
-				interface TestInterface {
-					interfaceField: String
-				}
+      union TestUnion = TestType
 
-				type TestType implements TestInterface {
-					interfaceField: String
-				}
+      interface TestInterface {
+        interfaceField: String
+      }
 
-				directive @test(arg: Int) repeatable on FIELD | SCALAR
-			]])
+      type TestType implements TestInterface {
+        interfaceField: String
+      }
+
+      directive @test(arg: Int) repeatable on FIELD | SCALAR
+    ]])
 			local extendedTwiceSchema = extendSchema(
 				extendedSchema,
 				secondExtensionAST
@@ -476,7 +495,7 @@ return function()
 				someUnion.extensionASTNodes,
 				someInput.extensionASTNodes,
 				someInterface.extensionASTNodes
-			)).to.have.members(Array.concat(
+			)).toHaveSameMembers(Array.concat(
 				firstExtensionAST.definitions,
 				secondExtensionAST.definitions
 			))
@@ -528,14 +547,15 @@ return function()
 		it("builds types with deprecated fields/values", function()
 			local schema = GraphQLSchema.new({})
 			local extendAST = parse([[
-				type SomeObject {
-					deprecatedField: String @deprecated(reason: "not used anymore")
-				}
 
-				enum SomeEnum {
-					DEPRECATED_VALUE @deprecated(reason: "do not use")
-				}
-			]])
+      type SomeObject {
+        deprecatedField: String @deprecated(reason: "not used anymore")
+      }
+
+      enum SomeEnum {
+        DEPRECATED_VALUE @deprecated(reason: "do not use")
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			local someType = assertObjectType(extendedSchema:getType("SomeObject"))
@@ -552,10 +572,11 @@ return function()
 		it("extends objects with deprecated fields", function()
 			local schema = buildSchema("type SomeObject")
 			local extendAST = parse([[
-				extend type SomeObject {
-					deprecatedField: String @deprecated(reason: "not used anymore")
-				}
-			]])
+
+      extend type SomeObject {
+        deprecatedField: String @deprecated(reason: "not used anymore")
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			local someType = assertObjectType(extendedSchema:getType("SomeObject"))
@@ -567,10 +588,11 @@ return function()
 		it("extends enums with deprecated values", function()
 			local schema = buildSchema("enum SomeEnum")
 			local extendAST = parse([[
-				extend enum SomeEnum {
-					DEPRECATED_VALUE @deprecated(reason: "do not use")
-				}
-			]])
+
+      extend enum SomeEnum {
+        DEPRECATED_VALUE @deprecated(reason: "do not use")
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			local someEnum = assertEnumType(extendedSchema:getType("SomeEnum"))
@@ -579,563 +601,606 @@ return function()
 			})
 		end)
 
+		-- ROBLOX FIXME: order is not preserved
 		itSKIP("adds new unused types", function()
 			local schema = buildSchema([[
-				type Query {
-					dummy: String
-				}
-			]])
+
+      type Query {
+        dummy: String
+      }
+    ]])
 			local extensionSDL = dedent([[
-				type DummyUnionMember {
-					someField: String
-				}
 
-				enum UnusedEnum {
-					SOME_VALUE
-				}
+      type DummyUnionMember {
+        someField: String
+      }
 
-				input UnusedInput {
-					someField: String
-				}
+      enum UnusedEnum {
+        SOME_VALUE
+      }
 
-				interface UnusedInterface {
-					someField: String
-				}
+      input UnusedInput {
+        someField: String
+      }
 
-				type UnusedObject {
-					someField: String
-				}
+      interface UnusedInterface {
+        someField: String
+      }
 
-				union UnusedUnion = DummyUnionMember
-			]])
+      type UnusedObject {
+        someField: String
+      }
+
+      union UnusedUnion = DummyUnionMember
+    ]])
 			local extendedSchema = extendSchema(schema, parse(extensionSDL))
 
 			expect(validateSchema(extendedSchema)).toEqual({})
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(extensionSDL)
 		end)
 
+		-- ROBLOX FIXME: order is not preserved
 		itSKIP("extends objects by adding new fields with arguments", function()
 			local schema = buildSchema([[
-				type SomeObject
 
-				type Query {
-					someObject: SomeObject
-				}
-				]])
+      type SomeObject
+
+      type Query {
+        someObject: SomeObject
+      }
+    ]])
 					local extendAST = parse([[
-				input NewInputObj {
-					field1: Int
-					field2: [Float]
-					field3: String!
-				}
 
-				extend type SomeObject {
-					newField(arg1: String, arg2: NewInputObj!): String
-				}
-			]])
+      input NewInputObj {
+        field1: Int
+        field2: [Float]
+        field3: String!
+      }
+
+      extend type SomeObject {
+        newField(arg1: String, arg2: NewInputObj!): String
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			expect(validateSchema(extendedSchema)).toEqual({})
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(dedent([[
-				type SomeObject {
-					newField(arg1: String, arg2: NewInputObj!): String
-				}
 
-				input NewInputObj {
-					field1: Int
-					field2: [Float]
-					field3: String!
-				}
-			]]))
+      type SomeObject {
+        newField(arg1: String, arg2: NewInputObj!): String
+      }
+
+      input NewInputObj {
+        field1: Int
+        field2: [Float]
+        field3: String!
+      }
+    ]]))
 		end)
 
-		itSKIP("extends objects by adding new fields with existing types", function()
+		it("extends objects by adding new fields with existing types", function()
 			local schema = buildSchema([[
-				type Query {
-					someObject: SomeObject
-				}
 
-				type SomeObject
-				enum SomeEnum { VALUE }
-			]])
+      type Query {
+        someObject: SomeObject
+      }
+
+      type SomeObject
+      enum SomeEnum { VALUE }
+    ]])
 			local extendAST = parse([[
-				extend type SomeObject {
-					newField(arg1: SomeEnum!): SomeEnum
-				}
-			]])
+
+      extend type SomeObject {
+        newField(arg1: SomeEnum!): SomeEnum
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			expect(validateSchema(extendedSchema)).toEqual({})
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(dedent([[
-				type SomeObject {
-					newField(arg1: SomeEnum!): SomeEnum
-				}
-			]]))
+
+      type SomeObject {
+        newField(arg1: SomeEnum!): SomeEnum
+      }
+    ]]))
 		end)
 
 		itSKIP("extends objects by adding implemented interfaces", function()
 			local schema = buildSchema([[
-				type Query {
-					someObject: SomeObject
-				}
 
-				type SomeObject {
-					foo: String
-				}
+      type Query {
+        someObject: SomeObject
+      }
 
-				interface SomeInterface {
-					foo: String
-				}
-			]])
+      type SomeObject {
+        foo: String
+      }
+
+      interface SomeInterface {
+        foo: String
+      }
+    ]])
 			local extendAST = parse([[
-				extend type SomeObject implements SomeInterface
-			]])
+
+      extend type SomeObject implements SomeInterface
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			expect(validateSchema(extendedSchema)).toEqual({})
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(dedent([[
-				type SomeObject implements SomeInterface {
-					foo: String
-				}
-			]]))
+
+      type SomeObject implements SomeInterface {
+        foo: String
+      }
+    ]]))
 		end)
 
+		-- ROBLOX FIXME: probably order is not preserved
 		itSKIP("extends objects by including new types", function()
 			local schema = buildSchema([[
-				type Query {
-					someObject: SomeObject
-				}
 
-				type SomeObject {
-					oldField: String
-				}
-			]])
+      type Query {
+        someObject: SomeObject
+      }
+
+      type SomeObject {
+        oldField: String
+      }
+    ]])
 			local newTypesSDL = dedent([[
-				enum NewEnum {
-					VALUE
-				}
 
-				interface NewInterface {
-					baz: String
-				}
+      enum NewEnum {
+        VALUE
+      }
 
-				type NewObject implements NewInterface {
-					baz: String
-				}
+      interface NewInterface {
+        baz: String
+      }
 
-				scalar NewScalar
+      type NewObject implements NewInterface {
+        baz: String
+      }
 
-				union NewUnion = NewObject
-			]])
+      scalar NewScalar
+
+      union NewUnion = NewObject]])
 			local extendAST = parse(([[
-				%s
-				extend type SomeObject {
-					newObject: NewObject
-					newInterface: NewInterface
-					newUnion: NewUnion
-					newScalar: NewScalar
-					newEnum: NewEnum
-					newTree: [SomeObject]!
-				}
-				]]):format(newTypesSDL)
+
+      %s
+      extend type SomeObject {
+        newObject: NewObject
+        newInterface: NewInterface
+        newUnion: NewUnion
+        newScalar: NewScalar
+        newEnum: NewEnum
+        newTree: [SomeObject]!
+      }
+    ]]):format(newTypesSDL)
 			)
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			expect(validateSchema(extendedSchema)).toEqual({})
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(dedent(([[
-				type SomeObject {
-					oldField: String
-					newObject: NewObject
-					newInterface: NewInterface
-					newUnion: NewUnion
-					newScalar: NewScalar
-					newEnum: NewEnum
-					newTree: [SomeObject]!
-				}
 
-				%s
-				]]):format(newTypesSDL))
+      type SomeObject {
+        oldField: String
+        newObject: NewObject
+        newInterface: NewInterface
+        newUnion: NewUnion
+        newScalar: NewScalar
+        newEnum: NewEnum
+        newTree: [SomeObject]!
+      }
+
+      %s
+    ]]):format(newTypesSDL))
 			)
 		end)
 
 		itSKIP("extends objects by adding implemented new interfaces", function()
 			local schema = buildSchema([[
-				type Query {
-					someObject: SomeObject
-				}
 
-				type SomeObject implements OldInterface {
-					oldField: String
-				}
+      type Query {
+        someObject: SomeObject
+      }
 
-				interface OldInterface {
-					oldField: String
-				}
-				]])
+      type SomeObject implements OldInterface {
+        oldField: String
+      }
+
+      interface OldInterface {
+        oldField: String
+      }
+    ]])
 			local extendAST = parse([[
-				extend type SomeObject implements NewInterface {
-					newField: String
-				}
 
-				interface NewInterface {
-					newField: String
-				}
-			]])
+      extend type SomeObject implements NewInterface {
+        newField: String
+      }
+
+      interface NewInterface {
+        newField: String
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			expect(validateSchema(extendedSchema)).toEqual({})
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(dedent([[
-				type SomeObject implements OldInterface & NewInterface {
-					oldField: String
-					newField: String
-				}
 
-				interface NewInterface {
-					newField: String
-				}
-			]]))
+      type SomeObject implements OldInterface & NewInterface {
+        oldField: String
+        newField: String
+      }
+
+      interface NewInterface {
+        newField: String
+      }
+    ]]))
 		end)
 
 		itSKIP("extends different types multiple times", function()
 			local schema = buildSchema([[
-				type Query {
-					someScalar: SomeScalar
-					someObject(someInput: SomeInput): SomeObject
-					someInterface: SomeInterface
-					someEnum: SomeEnum
-					someUnion: SomeUnion
-				}
 
-				scalar SomeScalar
+      type Query {
+        someScalar: SomeScalar
+        someObject(someInput: SomeInput): SomeObject
+        someInterface: SomeInterface
+        someEnum: SomeEnum
+        someUnion: SomeUnion
+      }
 
-				type SomeObject implements SomeInterface {
-					oldField: String
-				}
+      scalar SomeScalar
 
-				interface SomeInterface {
-					oldField: String
-				}
+      type SomeObject implements SomeInterface {
+        oldField: String
+      }
 
-				enum SomeEnum {
-					OLD_VALUE
-				}
+      interface SomeInterface {
+        oldField: String
+      }
 
-				union SomeUnion = SomeObject
+      enum SomeEnum {
+        OLD_VALUE
+      }
 
-				input SomeInput {
-					oldField: String
-				}
-			]])
+      union SomeUnion = SomeObject
+
+      input SomeInput {
+        oldField: String
+      }
+    ]])
 			local newTypesSDL = dedent([[
-				scalar NewScalar
 
-				scalar AnotherNewScalar
+      scalar NewScalar
 
-				type NewObject {
-					foo: String
-				}
+      scalar AnotherNewScalar
 
-				type AnotherNewObject {
-					foo: String
-				}
+      type NewObject {
+        foo: String
+      }
 
-				interface NewInterface {
-					newField: String
-				}
+      type AnotherNewObject {
+        foo: String
+      }
 
-				interface AnotherNewInterface {
-					anotherNewField: String
-			}]])
+      interface NewInterface {
+        newField: String
+      }
+
+      interface AnotherNewInterface {
+        anotherNewField: String
+      }]])
 			local schemaWithNewTypes = extendSchema(schema, parse(newTypesSDL))
 			expect(printSchemaChanges(schema, schemaWithNewTypes)).to.equal(
 				newTypesSDL .. "\n"
 			)
 
 			local extendAST = parse([[
-				extend scalar SomeScalar @specifiedBy(url: "http://example.com/foo_spec")
 
-				extend type SomeObject implements NewInterface {
-					newField: String
-				}
+      extend scalar SomeScalar @specifiedBy(url: "http://example.com/foo_spec")
 
-				extend type SomeObject implements AnotherNewInterface {
-					anotherNewField: String
-				}
+      extend type SomeObject implements NewInterface {
+        newField: String
+      }
 
-				extend enum SomeEnum {
-					NEW_VALUE
-				}
+      extend type SomeObject implements AnotherNewInterface {
+        anotherNewField: String
+      }
 
-				extend enum SomeEnum {
-					ANOTHER_NEW_VALUE
-				}
+      extend enum SomeEnum {
+        NEW_VALUE
+      }
 
-				extend union SomeUnion = NewObject
+      extend enum SomeEnum {
+        ANOTHER_NEW_VALUE
+      }
 
-				extend union SomeUnion = AnotherNewObject
+      extend union SomeUnion = NewObject
 
-				extend input SomeInput {
-					newField: String
-				}
+      extend union SomeUnion = AnotherNewObject
 
-				extend input SomeInput {
-					anotherNewField: String
-				}
-			]])
+      extend input SomeInput {
+        newField: String
+      }
+
+      extend input SomeInput {
+        anotherNewField: String
+      }
+    ]])
 			local extendedSchema = extendSchema(schemaWithNewTypes, extendAST)
 
 			expect(validateSchema(extendedSchema)).toEqual({})
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(dedent(([[
-					scalar SomeScalar @specifiedBy(url: "http://example.com/foo_spec")
 
-					type SomeObject implements SomeInterface & NewInterface & AnotherNewInterface {
-						oldField: String
-						newField: String
-						anotherNewField: String
-					}
+      scalar SomeScalar @specifiedBy(url: "http://example.com/foo_spec")
 
-					enum SomeEnum {
-						OLD_VALUE
-						NEW_VALUE
-						ANOTHER_NEW_VALUE
-					}
+      type SomeObject implements SomeInterface & NewInterface & AnotherNewInterface {
+        oldField: String
+        newField: String
+        anotherNewField: String
+      }
 
-					union SomeUnion = SomeObject | NewObject | AnotherNewObject
+      enum SomeEnum {
+        OLD_VALUE
+        NEW_VALUE
+        ANOTHER_NEW_VALUE
+      }
 
-					input SomeInput {
-						oldField: String
-						newField: String
-						anotherNewField: String
-					}
+      union SomeUnion = SomeObject | NewObject | AnotherNewObject
 
-					%s
-				]]):format(newTypesSDL))
+      input SomeInput {
+        oldField: String
+        newField: String
+        anotherNewField: String
+      }
+
+      %s
+    ]]):format(newTypesSDL))
 			)
 		end)
 
 		itSKIP("extends interfaces by adding new fields", function()
 			local schema = buildSchema([[
-				interface SomeInterface {
-					oldField: String
-				}
 
-				interface AnotherInterface implements SomeInterface {
-					oldField: String
-				}
+      interface SomeInterface {
+        oldField: String
+      }
 
-				type SomeObject implements SomeInterface & AnotherInterface {
-					oldField: String
-				}
+      interface AnotherInterface implements SomeInterface {
+        oldField: String
+      }
 
-				type Query {
-					someInterface: SomeInterface
-				}
-				]])
+      type SomeObject implements SomeInterface & AnotherInterface {
+        oldField: String
+      }
+
+      type Query {
+        someInterface: SomeInterface
+      }
+    ]])
 					local extendAST = parse([[
-				extend interface SomeInterface {
-					newField: String
-				}
 
-				extend interface AnotherInterface {
-					newField: String
-				}
+      extend interface SomeInterface {
+        newField: String
+      }
 
-				extend type SomeObject {
-					newField: String
-				}
-			]])
+      extend interface AnotherInterface {
+        newField: String
+      }
+
+      extend type SomeObject {
+        newField: String
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			expect(validateSchema(extendedSchema)).toEqual({})
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(dedent([[
-				interface SomeInterface {
-					oldField: String
-					newField: String
-				}
 
-				interface AnotherInterface implements SomeInterface {
-					oldField: String
-					newField: String
-				}
+      interface SomeInterface {
+        oldField: String
+        newField: String
+      }
 
-				type SomeObject implements SomeInterface & AnotherInterface {
-					oldField: String
-					newField: String
-				}
-			]]))
+      interface AnotherInterface implements SomeInterface {
+        oldField: String
+        newField: String
+      }
+
+      type SomeObject implements SomeInterface & AnotherInterface {
+        oldField: String
+        newField: String
+      }
+    ]]))
 		end)
 
 		itSKIP("extends interfaces by adding new implemented interfaces", function()
 			local schema = buildSchema([[
-				interface SomeInterface {
-					oldField: String
-				}
 
-				interface AnotherInterface implements SomeInterface {
-					oldField: String
-				}
+      interface SomeInterface {
+        oldField: String
+      }
 
-				type SomeObject implements SomeInterface & AnotherInterface {
-					oldField: String
-				}
+      interface AnotherInterface implements SomeInterface {
+        oldField: String
+      }
 
-				type Query {
-					someInterface: SomeInterface
-				}
-			]])
+      type SomeObject implements SomeInterface & AnotherInterface {
+        oldField: String
+      }
+
+      type Query {
+        someInterface: SomeInterface
+      }
+    ]])
 			local extendAST = parse([[
-				interface NewInterface {
-					newField: String
-				}
 
-				extend interface AnotherInterface implements NewInterface {
-					newField: String
-				}
+      interface NewInterface {
+        newField: String
+      }
 
-				extend type SomeObject implements NewInterface {
-					newField: String
-				}
-			]])
+      extend interface AnotherInterface implements NewInterface {
+        newField: String
+      }
+
+      extend type SomeObject implements NewInterface {
+        newField: String
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			expect(validateSchema(extendedSchema)).toEqual({})
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(dedent([[
-				interface AnotherInterface implements SomeInterface & NewInterface {
-					oldField: String
-					newField: String
-				}
 
-				type SomeObject implements SomeInterface & AnotherInterface & NewInterface {
-					oldField: String
-					newField: String
-				}
+      interface AnotherInterface implements SomeInterface & NewInterface {
+        oldField: String
+        newField: String
+      }
 
-				interface NewInterface {
-					newField: String
-				}
-			]]))
+      type SomeObject implements SomeInterface & AnotherInterface & NewInterface {
+        oldField: String
+        newField: String
+      }
+
+      interface NewInterface {
+        newField: String
+      }
+    ]]))
 		end)
 
 		itSKIP("allows extension of interface with missing Object fields", function()
 			local schema = buildSchema([[
-				type Query {
-					someInterface: SomeInterface
-				}
 
-				type SomeObject implements SomeInterface {
-					oldField: SomeInterface
-				}
+      type Query {
+        someInterface: SomeInterface
+      }
 
-				interface SomeInterface {
-					oldField: SomeInterface
-				}
-			]])
+      type SomeObject implements SomeInterface {
+        oldField: SomeInterface
+      }
+
+      interface SomeInterface {
+        oldField: SomeInterface
+      }
+    ]])
 			local extendAST = parse([[
-				extend interface SomeInterface {
-					newField: String
-				}
-			]])
+
+      extend interface SomeInterface {
+        newField: String
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
-			expect(validateSchema(extendedSchema)).to.have.lengthOf.above(0)
+			expect(#validateSchema(extendedSchema) > 0).to.equal(true)
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(dedent([[
-				interface SomeInterface {
-					oldField: SomeInterface
-					newField: String
-				}
-			]]))
+
+      interface SomeInterface {
+        oldField: SomeInterface
+        newField: String
+      }
+    ]]))
 		end)
 
+		-- ROBLOX FIXME: order is not preserved
 		itSKIP("extends interfaces multiple times", function()
 			local schema = buildSchema([[
-				type Query {
-					someInterface: SomeInterface
-				}
 
-				interface SomeInterface {
-					some: SomeInterface
-				}
-			]])
+      type Query {
+        someInterface: SomeInterface
+      }
+
+      interface SomeInterface {
+        some: SomeInterface
+      }
+    ]])
 			local extendAST = parse([[
-				extend interface SomeInterface {
-					newFieldA: Int
-				}
 
-				extend interface SomeInterface {
-					newFieldB(test: Boolean): String
-				}
-			]])
+      extend interface SomeInterface {
+        newFieldA: Int
+      }
+
+      extend interface SomeInterface {
+        newFieldB(test: Boolean): String
+      }
+    ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			expect(validateSchema(extendedSchema)).toEqual({})
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(dedent([[
-				interface SomeInterface {
-					some: SomeInterface
-					newFieldA: Int
-					newFieldB(test: Boolean): String
-				}
-			]]))
+
+      interface SomeInterface {
+        some: SomeInterface
+        newFieldA: Int
+        newFieldB(test: Boolean): String
+      }
+    ]]))
 		end)
 
+		-- ROBLOX FIXME: order is not preserved
 		itSKIP("may extend mutations and subscriptions", function()
 			local mutationSchema = buildSchema([[
-				type Query {
-					queryField: String
-				}
 
-				type Mutation {
-					mutationField: String
-				}
+      type Query {
+        queryField: String
+      }
 
-				type Subscription {
-					subscriptionField: String
-				}
-			]])
+      type Mutation {
+        mutationField: String
+      }
+
+      type Subscription {
+        subscriptionField: String
+      }
+    ]])
 			local ast = parse([[
-				extend type Query {
-					newQueryField: Int
-				}
 
-				extend type Mutation {
-					newMutationField: Int
-				}
+      extend type Query {
+        newQueryField: Int
+      }
 
-				extend type Subscription {
-					newSubscriptionField: Int
-				}
-			]])
+      extend type Mutation {
+        newMutationField: Int
+      }
+
+      extend type Subscription {
+        newSubscriptionField: Int
+      }
+    ]])
 			local originalPrint = printSchema(mutationSchema)
 			local extendedSchema = extendSchema(mutationSchema, ast)
 			expect(extendedSchema).to.never.equal(mutationSchema)
 			expect(printSchema(mutationSchema)).to.equal(originalPrint)
 			expect(printSchema(extendedSchema)).to.equal(dedent([[
-				type Query {
-					queryField: String
-					newQueryField: Int
-				}
 
-				type Mutation {
-					mutationField: String
-					newMutationField: Int
-				}
+      type Query {
+        queryField: String
+        newQueryField: Int
+      }
 
-				type Subscription {
-					subscriptionField: String
-					newSubscriptionField: Int
-				}
-			]]))
+      type Mutation {
+        mutationField: String
+        newMutationField: Int
+      }
+
+      type Subscription {
+        subscriptionField: String
+        newSubscriptionField: Int
+      }
+    ]]))
 		end)
 
-		itSKIP("may extend directives with new directive", function()
+		it("may extend directives with new directive", function()
 			local schema = buildSchema([[
-				type Query {
-					foo: String
-				}
-			]])
+
+      type Query {
+        foo: String
+      }
+    ]])
 			local extensionSDL = dedent([[
-				"""New directive."""
-				directive @new(enable: Boolean!, tag: String) repeatable on QUERY | FIELD
-			]])
+
+      """New directive."""
+      directive @new(enable: Boolean!, tag: String) repeatable on QUERY | FIELD
+    ]])
 			local extendedSchema = extendSchema(schema, parse(extensionSDL))
 
 			expect(validateSchema(extendedSchema)).toEqual({})

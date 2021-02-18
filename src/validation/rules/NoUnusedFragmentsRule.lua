@@ -17,7 +17,7 @@ exports.NoUnusedFragmentsRule = function(context)
 
 	return{
 		OperationDefinition = function(_self, node)
-			table.insert(fragmentDefs, node)
+			table.insert(operationDefs, node)
 			return false
 		end,
 		FragmentDefinition = function(_self, node)
