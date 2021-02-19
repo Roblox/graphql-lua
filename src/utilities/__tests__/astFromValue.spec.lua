@@ -31,7 +31,7 @@ return function()
 				value = false,
 			})
 
-			expect(astFromValue(nil, GraphQLBoolean)).toEqual(nil)
+			expect(astFromValue(nil, GraphQLBoolean)).toEqual(NULL)
 
 			-- ROBLOX deviation: use NULL const to deferentiate undefined and null
 			expect(astFromValue(NULL, GraphQLBoolean)).toEqual({
@@ -145,7 +145,7 @@ return function()
 				kind = "NullValue",
 			})
 
-			expect(astFromValue(nil, GraphQLString)).toEqual(nil)
+			expect(astFromValue(nil, GraphQLString)).toEqual(NULL)
 		end)
 
 		it("converts ID values to Int/String ASTs", function()
@@ -195,7 +195,7 @@ return function()
 				kind = "NullValue",
 			})
 
-			expect(astFromValue(nil, GraphQLID)).toEqual(nil)
+			expect(astFromValue(nil, GraphQLID)).toEqual(NULL)
 		end)
 
 		it("converts using serialize from a custom scalar type", function()
@@ -221,11 +221,11 @@ return function()
 			local returnNullScalar = GraphQLScalarType.new({
 				name = "ReturnNullScalar",
 				serialize = function()
-					return nil
+					return NULL
 				end,
 			})
 
-			expect(astFromValue("value", returnNullScalar)).to.equal(nil)
+			expect(astFromValue("value", returnNullScalar)).to.equal(NULL)
 
 			local SomeClass = {}
 			SomeClass.__index = SomeClass
@@ -250,7 +250,7 @@ return function()
 
 		it("does not converts NonNull values to NullValue", function()
 			local NonNullBoolean = GraphQLNonNull.new(GraphQLBoolean)
-			expect(astFromValue(nil, NonNullBoolean)).toEqual(nil)
+			expect(astFromValue(NULL, NonNullBoolean)).toEqual(NULL)
 		end)
 
 		local complexValue = {
@@ -423,9 +423,9 @@ return function()
 			})
 		end)
 
-		-- ROBLOX deviation: table values can't be nil
-		itSKIP("converts input objects with explicit nulls", function()
-			expect(astFromValue({ foo = nil }, inputObj)).toEqual({
+		it("converts input objects with explicit nulls", function()
+			local value = astFromValue({ foo = NULL }, inputObj)
+			expect(value).toEqual({
 				kind = "ObjectValue",
 				fields = {
 					{
@@ -443,7 +443,7 @@ return function()
 		end)
 
 		it("does not converts non-object values as input objects", function()
-			expect(astFromValue(5, inputObj)).to.equal(nil)
+			expect(astFromValue(5, inputObj)).to.equal(NULL)
 		end)
 	end)
 end

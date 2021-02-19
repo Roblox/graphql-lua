@@ -783,8 +783,12 @@ function defineFieldMap(config)
 end
 
 function isPlainObj(obj: any)
-	-- ROBLOX deviation: empty object is treated as an Array but in this case we want to allow it
-	return isObjectLike(obj) and (not Array.isArray(obj) or next(obj) == nil)
+	--[[
+		ROBLOX deviation:
+		* we need to exclude NULL specifically as it's represented as a regular table
+		* empty object is treated as an Array but in this case we want to allow it
+	]]
+	return obj ~= NULL and isObjectLike(obj) and (not Array.isArray(obj) or next(obj) == nil)
 end
 
 function fieldsToFieldsConfig(fields)

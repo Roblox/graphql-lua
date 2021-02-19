@@ -6,10 +6,17 @@
 	This should only be used in tests.
 ]]
 -- FIXME: Replace this with jest-roblox builtins
+
+local Number = require(script.Parent.Parent.Parent.Packages.LuauPolyfill).Number
+
 local function deepEqual(a: any, b: any)
 	if typeof(a) ~= typeof(b) then
 		local message = ("{1}: value of type '%s'\n{2}: value of type '%s'"):format(typeof(a), typeof(b))
 		return false, message
+	end
+
+	if Number.isNaN(a) and Number.isNaN(b) then
+		return true
 	end
 
 	if a == b then

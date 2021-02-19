@@ -9,6 +9,7 @@ return function()
 	local Number = require(root.Packages.LuauPolyfill).Number
 
 	local NaN = 0 / 0
+	local NULL = require(srcWorkspace.luaUtils.null)
 
 	describe("valueFromASTUntyped", function()
 
@@ -19,7 +20,7 @@ return function()
 		end
 
 		it("parses simple values", function()
-			expectValueFrom(expect, "null").to.equal(nil)
+			expectValueFrom(expect, "null").to.equal(NULL)
 			expectValueFrom(expect, "true").to.equal(true)
 			expectValueFrom(expect, "false").to.equal(false)
 			expectValueFrom(expect, "123").to.equal(123)
@@ -30,7 +31,7 @@ return function()
 		it("parses lists of values", function()
 			expectValueFrom(expect, "[true, false]").toEqual({ true, false })
 			expectValueFrom(expect, "[true, 123.45]").toEqual({ true, 123.45 })
-			expectValueFrom(expect, "[true, null]").toEqual({ true, nil })
+			expectValueFrom(expect, "[true, null]").toEqual({ true, NULL })
 			expectValueFrom(expect, "[true, [\"foo\", 1.2]]").toEqual({ true, { "foo", 1.2 } })
 		end)
 
@@ -57,11 +58,11 @@ return function()
 			expectValueFrom(expect, "{a:[$testVariable]}", {
 				testVariable = "foo",
 			}).toEqual({ a = { "foo" } })
-			expectValueFrom(expect, "$testVariable", { testVariable = nil }).toEqual(nil)
+			expectValueFrom(expect, "$testVariable", { testVariable = NULL }).toEqual(NULL)
 			-- ROBLOX deviation: no matcher for .to.satisfy
 			expect(Number.isNaN(expectValueFrom(expect, "$testVariable", { testVariable = NaN }))).to.be.ok()
 			expectValueFrom(expect, "$testVariable", {}).toEqual(nil)
-			expectValueFrom(expect, "$testVariable", nil).toEqual(nil)
+			expectValueFrom(expect, "$testVariable", NULL).toEqual(nil)
 		end)
 	end)
 end

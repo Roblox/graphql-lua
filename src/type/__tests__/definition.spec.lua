@@ -1,10 +1,15 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/type/__tests__/definition-test.js
 
 return function()
-	local inspect = require(script.Parent.Parent.Parent.jsutils.inspect).inspect
-	local identityFunc = require(script.Parent.Parent.Parent.jsutils.identityFunc).identityFunc
+	local srcWorkspace = script.Parent.Parent.Parent
 
-	local parseValue = require(script.Parent.Parent.Parent.language.parser).parseValue
+	-- ROBLOX deviation: utils
+	local NULL = require(srcWorkspace.luaUtils.null)
+
+	local inspect = require(srcWorkspace.jsutils.inspect).inspect
+	local identityFunc = require(srcWorkspace.jsutils.identityFunc).identityFunc
+
+	local parseValue = require(srcWorkspace.language.parser).parseValue
 
 	local definitionImport = require(script.Parent.Parent.definition)
 	local GraphQLList = definitionImport.GraphQLList
@@ -87,7 +92,7 @@ return function()
 				end,
 			})
 
-			expect(scalar:parseLiteral(parseValue("null"))).to.equal("parseValue: nil")
+			expect(scalar:parseLiteral(parseValue("null"))).to.equal("parseValue: null")
 			expect(scalar:parseLiteral(parseValue("{ foo: \"bar\" }"))).to.equal("parseValue: { foo: \"bar\" }")
 			expect(scalar:parseLiteral(parseValue("{ foo: { bar: $var } }"), {
 				var = "baz",
@@ -635,32 +640,37 @@ return function()
 			})
 
 			-- ROBLOX FIXME? the order of the values are flipped vs upstream. does it matter?
-			expect(EnumTypeWithDeprecatedValue:getValues()[2]).toObjectContain({
-				name = "foo",
-				deprecationReason = "Just because",
-			})
-			expect(EnumTypeWithDeprecatedValue:getValues()[1]).toObjectContain({
-				name = "bar",
-				deprecationReason = "",
-			})
+			expect(EnumTypeWithDeprecatedValue:getValues()).toHaveSameMembers(
+				{
+					{
+						name = "foo",
+						deprecationReason = "Just because",
+					},
+					{
+						name = "bar",
+						deprecationReason = "",
+					},
+				},
+				true
+			)
 		end)
 
-		-- ROBLOX FIXME: this test (or behavior) needs to be Lua-specific for multiple reasons
-		itSKIP("defines an enum type with a value of `null` and `undefined`", function()
+		it("defines an enum type with a value of `null` and `undefined`", function()
 			local EnumTypeWithNullishValue = GraphQLEnumType.new({
 				name = "EnumWithNullishValue",
 				values = {
-					NULL = { value = nil },
+					NULL = { value = NULL },
 					NAN = { value = 0 / 0 }, -- ROBLOX deviation: no NaN keyword in Lua
 					NO_CUSTOM_VALUE = { value = nil },
 				},
 			})
 
-			expect(EnumTypeWithNullishValue:getValues()).toEqual({
+			-- ROBLOX FIXME: order is not the same
+			expect(EnumTypeWithNullishValue:getValues()).toHaveSameMembers({
 				{
 					name = "NULL",
 					description = nil,
-					value = nil,
+					value = NULL,
 					deprecationReason = nil,
 					extensions = nil,
 					astNode = nil,
@@ -733,9 +743,9 @@ return function()
 			expect(function()
 				return GraphQLEnumType.new({
 					name = "SomeEnum",
-					values = { FOO = "nil" },
+					values = { FOO = NULL },
 				})
-			end).to.throw("SomeEnum.FOO must refer to an object with a \"value\" key representing an internal value but got: \"nil\".")
+			end).to.throw("SomeEnum.FOO must refer to an object with a \"value\" key representing an internal value but got: null.")
 		end)
 
 		it("rejects an Enum type with incorrectly typed value definition", function()
@@ -887,7 +897,7 @@ return function()
 			-- ROBLOX deviation: {} is treated as an Array in Lua so when printed it becomes [] rather than {}
 			expectList(expect, {}).to.throw("Expected [] to be a GraphQL type.")
 			-- ROBLOX deviation: no String constructor in Lua
-			-- ROBLOX deviation: no separate null and undefined in Lua
+			expectList(expect, NULL).toThrow("Expected null to be a GraphQL type.")
 			expectList(expect, nil).to.throw("Expected nil to be a GraphQL type.")
 		end)
 	end)
@@ -915,7 +925,7 @@ return function()
 			-- ROBLOX deviation: {} is treated as an Array in Lua so when printed it becomes [] rather than {}
 			expectNonNull(expect, {}).to.throw("Expected [] to be a GraphQL nullable type.")
 			-- ROBLOX deviation: no String constructor in Lua
-			-- ROBLOX deviation: no separate null and undefined in Lua
+			expectNonNull(expect, NULL).to.throw("Expected null to be a GraphQL nullable type.")
 			expectNonNull(expect, nil).to.throw("Expected nil to be a GraphQL nullable type.")
 		end)
 	end)
@@ -956,8 +966,10 @@ return function()
 			expect(JSON.stringify(GraphQLList.new(ListOfScalarsType))).to.equal("\"[[Scalar]]\"")
 		end)
 
-		--[[ ROBLOX deviation Object.tostringigy relies on porting native Object.prototype.toString
-		--          also serailiztion to string already handle by global tostring() method ]]
+		--[[
+			ROBLOX deviation Object.tostringigy relies on porting native Object.prototype.toString
+			also serailiztion to string already handle by global tostring() method
+		]]
 		itSKIP("Object.toStringifies types", function()
 			local function toString(obj)
 				return tostring(obj)
