@@ -61,7 +61,7 @@ local function astFromValue(value, type_)
 		local astValue = astFromValue(value, type_.ofType)
 
 		if (astValue and astValue.kind) == Kind.NULL then
-			return nil
+			return NULL
 		end
 
 		return astValue
@@ -77,7 +77,7 @@ local function astFromValue(value, type_)
 
 	-- undefined
 	if value == nil then
-		return nil
+		return NULL
 	end
 
 	-- Convert JavaScript array to GraphQL list. If the GraphQLType is a list, but
@@ -92,7 +92,7 @@ local function astFromValue(value, type_)
 			for _, item in pairs(value) do
 				local itemNode = astFromValue(item, itemType)
 
-				if itemNode ~= nil then
+				if itemNode ~= nil and itemNode ~= NULL then
 					table.insert(valuesNodes, itemNode)
 				end
 			end
@@ -109,7 +109,7 @@ local function astFromValue(value, type_)
 	-- in the JavaScript object according to the fields in the input type.
 	if isInputObjectType(type_) then
 		if not isObjectLike(value) then
-			return nil
+			return NULL
 		end
 
 		local fieldNodes = {}
@@ -117,7 +117,7 @@ local function astFromValue(value, type_)
 		for _, field in ipairs(objectValues(type_:getFields())) do
 			local fieldValue = astFromValue(value[field.name], field.type)
 
-			if fieldValue then
+			if fieldValue ~= nil and fieldValue ~= NULL then
 				table.insert(fieldNodes, {
 					kind = Kind.OBJECT_FIELD,
 					name = {
@@ -140,8 +140,8 @@ local function astFromValue(value, type_)
 		-- Since value is an internally represented value, it must be serialized
 		-- to an externally represented value before converting into an AST.
 		local serialized = type_:serialize(value)
-		if serialized == nil then
-			return nil
+		if serialized == nil or serialized == NULL then
+			return NULL
 		end
 
 		-- Others serialize based on their corresponding JavaScript scalar types.

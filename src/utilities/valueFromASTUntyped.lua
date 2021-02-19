@@ -14,6 +14,7 @@ local Kind = require(languageWorkspace.kinds).Kind
 
 -- ROBLOX deviation: bring in polyfills
 local Array = require(srcWorkspace.Parent.Packages.LuauPolyfill).Array
+local NULL = require(srcWorkspace.luaUtils.null)
 
 --[[**
  * Produces a JavaScript value given a GraphQL Value AST.
@@ -34,7 +35,7 @@ local Array = require(srcWorkspace.Parent.Packages.LuauPolyfill).Array
 
 local function valueFromASTUntyped(valueNode, variables: ObjMap<any>): any
 	if valueNode.kind == Kind.NULL then
-		return nil
+		return NULL
 	elseif valueNode.kind == Kind.INT then
 		return tonumber(valueNode.value, 10)
 	elseif valueNode.kind == Kind.FLOAT then

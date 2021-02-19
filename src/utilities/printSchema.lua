@@ -296,7 +296,7 @@ function printInputValue(arg): string
 	local defaultAST = astFromValue(arg.defaultValue, arg.type)
 	local argDecl = arg.name .. ": " .. tostring(arg.type)
 
-	if defaultAST then
+	if defaultAST ~= nil and defaultAST ~= NULL then
 		argDecl ..= (" = %s"):format(print_(defaultAST))
 	end
 
