@@ -8,11 +8,13 @@ local typeWorkspace = srcWorkspace.type
 local utilitiesWorkspace = srcWorkspace.utilities
 local luaUtilsWorkspace = srcWorkspace.luaUtils
 
+
 type Array<T> = { [number]: T }
 local ObjMapImport = require(jsUtilsWorkspace.ObjMap)
 type ObjMap<T> = ObjMapImport.ObjMap<T>
 local PromiseOrValueImport = require(jsUtilsWorkspace.PromiseOrValue)
 type PromiseOrValue<T> = PromiseOrValueImport.PromiseOrValue<T>
+
 
 -- ROBLOX deviation: utils
 local Array = require(luaUtilsWorkspace.Array)
@@ -21,6 +23,7 @@ local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
 local Promise = require(srcWorkspace.Parent.Packages.Promise)
 local instanceOf = require(jsUtilsWorkspace.instanceOf)
 local NULL = require(luaUtilsWorkspace.null)
+local isNillish = require(luaUtilsWorkspace.isNillish).isNillish
 
 local inspect = require(jsUtilsWorkspace.inspect).inspect
 local memoize3 = require(jsUtilsWorkspace.memoize3).memoize3
@@ -729,7 +732,7 @@ function completeValue(exeContext, returnType, fieldNodes, info, path, result)
 	if isNonNullType(returnType) then
 		local completed = completeValue(exeContext, returnType.ofType, fieldNodes, info, path, result)
 
-		if completed == nil or completed == NULL then
+		if isNillish(completed) then
 			error(Error.new(("Cannot return null for non-nullable field %s.%s."):format(info.parentType.name, info.fieldName)))
 		end
 
@@ -737,7 +740,7 @@ function completeValue(exeContext, returnType, fieldNodes, info, path, result)
 	end
 
 	-- If result value is null or undefined then return null.
-	if result == nil or result == NULL then
+	if isNillish(result) then
 		return NULL
 	end
 

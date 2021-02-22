@@ -5,6 +5,7 @@ local function NumberisFinite(value)
 end
 
 local srcWorkspace = script.Parent.Parent
+local luaUtilsWorkspace = srcWorkspace.luaUtils
 
 local objectValues = require(srcWorkspace.polyfills.objectValues).objectValues
 
@@ -26,8 +27,11 @@ local isNonNullType = definitionImport.isNonNullType
 
 local _Number = require(srcWorkspace.Parent.Packages.LuauPolyfill).Number
 local RegExp = require(srcWorkspace.Parent.Packages.LuauPolyfill).RegExp
-local Error = require(srcWorkspace.luaUtils.Error)
-local NULL = require(srcWorkspace.luaUtils.null)
+local Error = require(luaUtilsWorkspace.Error)
+local NULL = require(luaUtilsWorkspace.null)
+local isNillishModule = require(luaUtilsWorkspace.isNillish)
+local isNillish = isNillishModule.isNillish
+local isNotNillish = isNillishModule.isNotNillish
 
 -- ROBLOX deviation: predeclare local variables
 local integerStringRegExp
@@ -92,7 +96,7 @@ local function astFromValue(value, type_)
 			for _, item in pairs(value) do
 				local itemNode = astFromValue(item, itemType)
 
-				if itemNode ~= nil and itemNode ~= NULL then
+				if isNotNillish(itemNode) then
 					table.insert(valuesNodes, itemNode)
 				end
 			end
@@ -117,7 +121,7 @@ local function astFromValue(value, type_)
 		for _, field in ipairs(objectValues(type_:getFields())) do
 			local fieldValue = astFromValue(value[field.name], field.type)
 
-			if fieldValue ~= nil and fieldValue ~= NULL then
+			if isNotNillish(fieldValue) then
 				table.insert(fieldNodes, {
 					kind = Kind.OBJECT_FIELD,
 					name = {
@@ -140,7 +144,7 @@ local function astFromValue(value, type_)
 		-- Since value is an internally represented value, it must be serialized
 		-- to an externally represented value before converting into an AST.
 		local serialized = type_:serialize(value)
-		if serialized == nil or serialized == NULL then
+		if isNillish(serialized) then
 			return NULL
 		end
 

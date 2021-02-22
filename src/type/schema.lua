@@ -1,6 +1,9 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/aa650618426a301e3f0f61ead3adcd755055a627/src/type/schema.js
-local root = script.Parent.Parent
-local Packages = root.Parent.Packages
+
+local srcWorkspace = script.Parent.Parent
+local luaUtilsWorkspace = srcWorkspace.luaUtils
+
+local Packages = srcWorkspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Set = LuauPolyfill.Set
@@ -10,47 +13,50 @@ type Map<T, V> = Map.Map<T, V>
 -- ROBLOX TODO: add implemenation of types from LuauPolyfill
 type Set<T> = any -- LuauPolyfill.Set<T>
 type Array<T> = { [number]: T } -- LuauPolyfill.Array<T>
-local Error = require(root.luaUtils.Error)
+local Error = require(luaUtilsWorkspace.Error)
+local isNillishModule = require(luaUtilsWorkspace.isNillish)
+local isNillish = isNillishModule.isNillish
+local isNotNillish = isNillishModule.isNotNillish
 
-local objectValues = require(root.polyfills.objectValues).objectValues
-local jsutils = root.jsutils
-local inspect = require(jsutils.inspect).inspect
-local toObjMap = require(jsutils.toObjMap).toObjMap
-local devAssert = require(jsutils.devAssert).devAssert
-local instanceOf = require(jsutils.instanceOf)
-local isObjectLike = require(jsutils.isObjectLike).isObjectLike
+local objectValues = require(srcWorkspace.polyfills.objectValues).objectValues
+local jsutilsWorkspace = srcWorkspace.jsutils
+local inspect = require(jsutilsWorkspace.inspect).inspect
+local toObjMap = require(jsutilsWorkspace.toObjMap).toObjMap
+local devAssert = require(jsutilsWorkspace.devAssert).devAssert
+local instanceOf = require(jsutilsWorkspace.instanceOf)
+local isObjectLike = require(jsutilsWorkspace.isObjectLike).isObjectLike
 
-local introspection = require(script.Parent.introspection)
-local __Schema = introspection.__Schema
+local introspectionModule = require(script.Parent.introspection)
+local __Schema = introspectionModule.__Schema
 
-local _ast = require(root.language.ast)
-type SchemaDefinitionNode = _ast.SchemaDefinitionNode
-type SchemaExtensionNode = _ast.SchemaExtensionNode
+local astModule = require(srcWorkspace.language.ast)
+type SchemaDefinitionNode = astModule.SchemaDefinitionNode
+type SchemaExtensionNode = astModule.SchemaExtensionNode
 
-local _GraphQLError = require(root.error.GraphQLError)
-type GraphQLError = _GraphQLError.GraphQLError
+local GraphQLErrorModule = require(srcWorkspace.error.GraphQLError)
+type GraphQLError = GraphQLErrorModule.GraphQLError
 
-local directives = require(script.Parent.directives)
-type GraphQLDirective = any -- directives.GraphQLDirective
-local isDirective = directives.isDirective
-local specifiedDirectives = directives.specifiedDirectives
+local directivesModule = require(script.Parent.directives)
+type GraphQLDirective = any -- directivesModule.GraphQLDirective
+local isDirective = directivesModule.isDirective
+local specifiedDirectives = directivesModule.specifiedDirectives
 
-local _ObjMapModule = require(jsutils.ObjMap)
-type ObjMap<T> = _ObjMapModule.ObjMap<T>
-type ObjMapLike<T> = _ObjMapModule.ObjMapLike<T>
+local ObjMapModule = require(jsutilsWorkspace.ObjMap)
+type ObjMap<T> = ObjMapModule.ObjMap<T>
+type ObjMapLike<T> = ObjMapModule.ObjMapLike<T>
 
-local definition = require(script.Parent.definition)
-type GraphQLType = any -- definition.GraphQLType
-type GraphQLNamedType = any -- definition.GraphQLNamedType
-type GraphQLAbstractType = any -- definition.GraphQLAbstractType
-type GraphQLObjectType = any -- definition.GraphQLObjectType
-type GraphQLInterfaceType = any -- definition.GraphQLInterfaceType
+local definitionModule = require(script.Parent.definition)
+type GraphQLType = any -- definitionModule.GraphQLType
+type GraphQLNamedType = any -- definitionModule.GraphQLNamedType
+type GraphQLAbstractType = any -- definitionModule.GraphQLAbstractType
+type GraphQLObjectType = any -- definitionModule.GraphQLObjectType
+type GraphQLInterfaceType = any -- definitionModule.GraphQLInterfaceType
 
-local isObjectType = definition.isObjectType
-local isInterfaceType = definition.isInterfaceType
-local isUnionType = definition.isUnionType
-local isInputObjectType = definition.isInputObjectType
-local getNamedType = definition.getNamedType
+local isObjectType = definitionModule.isObjectType
+local isInterfaceType = definitionModule.isInterfaceType
+local isUnionType = definitionModule.isUnionType
+local isInputObjectType = definitionModule.isInputObjectType
+local getNamedType = definitionModule.getNamedType
 
 -- ROBLOX deviation: pre-declare variables
 local GraphQLSchema
@@ -207,13 +213,13 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 		end
 	end
 
-	if self._queryType ~= nil then
+	if isNotNillish(self._queryType) then
 		collectReferencedTypes(self._queryType, allReferencedTypes)
 	end
-	if self._mutationType ~= nil then
+	if isNotNillish(self._mutationType) then
 		collectReferencedTypes(self._mutationType, allReferencedTypes)
 	end
-	if self._subscriptionType ~= nil then
+	if isNotNillish(self._subscriptionType) then
 		collectReferencedTypes(self._subscriptionType, allReferencedTypes)
 	end
 
@@ -234,10 +240,9 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 	self._implementationsMap = Map.new()
 
 	for _, namedType in allReferencedTypes:ipairs() do
-		-- ROBLOX FIXME: there is no `nil` element in a Lua list
-		-- if namedType == nil then
-		-- 	continue
-		-- end
+		if isNillish(namedType) then
+			continue
+		end
 
 		-- ROBLOX deviation: can't attempt to access the name property on a function
 		local typeName

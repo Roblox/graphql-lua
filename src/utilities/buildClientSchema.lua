@@ -1,6 +1,7 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/buildClientSchema.js
 
 local srcWorkspace = script.Parent.Parent
+local luaUtilsWorkspace = srcWorkspace.luaUtils
 
 local objectValues = require(srcWorkspace.polyfills.objectValues).objectValues
 
@@ -35,8 +36,13 @@ local assertInterfaceType = definition.assertInterfaceType
 
 local valueFromAST = require(script.Parent.valueFromAST).valueFromAST
 
-local Error = require(srcWorkspace.luaUtils.Error)
-local Array = require(srcWorkspace.luaUtils.Array)
+-- ROBLOX deviation: utils
+local Error = require(luaUtilsWorkspace.Error)
+local Array = require(luaUtilsWorkspace.Array)
+local NULL = require(luaUtilsWorkspace.null)
+local isNillishModule = require(luaUtilsWorkspace.isNillish)
+local isNillish = isNillishModule.isNillish
+local isNotNillish = isNillishModule.isNotNillish
 
 --[[*
 --  * Build a GraphQLSchema for use by client tools.
@@ -101,12 +107,12 @@ local function buildClientSchema(introspection, options)
 
 	function getNamedType(typeRef)
 		local typeName = typeRef.name
-		if not typeName then
+		if isNillish(typeName) then
 			error(Error.new(("Unknown type reference: %s."):format(inspect(typeRef))))
 		end
 
 		local type_ = typeMap[typeName]
-		if not type_ then
+		if isNillish(type_) then
 			error(Error.new(("Invalid or incomplete schema, unknown type: %s. Ensure that a full introspection query is used in order to build a client schema."):format(typeName)))
 		end
 
@@ -124,7 +130,7 @@ local function buildClientSchema(introspection, options)
 	-- Given a type's introspection result, construct the correct
 	-- GraphQLType instance.
 	function buildType(type_)
-		if type_ ~= nil and type_.name ~= nil and type_.kind ~= nil then
+		if isNotNillish(type_) and isNotNillish(type_.name) and isNotNillish(type_.kind) then
 			if type_.kind == TypeKind.SCALAR then
 				return buildScalarDef(type_)
 			elseif type_.kind == TypeKind.OBJECT then
@@ -293,7 +299,7 @@ local function buildClientSchema(introspection, options)
 		end
 
 		local defaultValue = (function()
-			if inputValueIntrospection.defaultValue ~= nil then
+			if isNotNillish(inputValueIntrospection.defaultValue) then
 				return valueFromAST(parseValue(inputValueIntrospection.defaultValue), type_)
 			end
 			return nil
@@ -349,30 +355,30 @@ local function buildClientSchema(introspection, options)
 
 	-- Get the root Query, Mutation, and Subscription types.
 	local queryType = (function()
-		if schemaIntrospection.queryType then
+		if isNotNillish(schemaIntrospection.queryType) then
 			return getObjectType(schemaIntrospection.queryType)
 		end
-		return nil
+		return NULL
 	end)()
 
 	local mutationType = (function()
-		if schemaIntrospection.mutationType then
+		if isNotNillish(schemaIntrospection.mutationType) then
 			return getObjectType(schemaIntrospection.mutationType)
 		end
-		return nil
+		return NULL
 	end)()
 
 	local subscriptionType = (function()
-		if schemaIntrospection.subscriptionType then
+		if isNotNillish(schemaIntrospection.subscriptionType) then
 			return getObjectType(schemaIntrospection.subscriptionType)
 		end
-		return nil
+		return NULL
 	end)()
 
 	-- Get the directives supported by Introspection, assuming empty-set if
 	-- directives were not queried for.
 	local directives = (function()
-		if schemaIntrospection.directives then
+		if isNotNillish(schemaIntrospection.directives) then
 			return Array.map(schemaIntrospection.directives, buildDirective)
 		end
 		return {}

@@ -1,4 +1,4 @@
--- ROBLOX upstream:
+-- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/type/validate.js
 -- ROBLOX deviation: selene suppression
 --# selene: allow(if_same_then_else)
 
@@ -10,6 +10,7 @@ local LuauPolyfill = require(root.Packages.LuauPolyfill)
 local Array = require(srcWorkspace.luaUtils.Array)
 local Error = LuauPolyfill.Error
 local Boolean = LuauPolyfill.Boolean
+local isNotNillish = require(srcWorkspace.luaUtils.isNillish).isNotNillish
 
 local objectValues = require(script.Parent.Parent.polyfills.objectValues).objectValues
 local inspect = require(script.Parent.Parent.jsutils.inspect).inspect
@@ -144,12 +145,12 @@ function SchemaValidationContext:getErrors(): Array<GraphQLError>
 	return self._errors
 end
 
--- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/type/validate.js
+
 function validateRootTypes(context: SchemaValidationContext): ()
 	local schema = context.schema
 	local queryType = schema:getQueryType()
 
-	if not queryType then
+	if not isNotNillish(queryType) then
 		context:reportError("Query root type must be provided.", schema.astNode)
 	elseif not isObjectType(queryType) then
 		context:reportError(
@@ -168,7 +169,7 @@ function validateRootTypes(context: SchemaValidationContext): ()
 
 	local mutationType = schema:getMutationType()
 
-	if mutationType and not isObjectType(mutationType) then
+	if isNotNillish(mutationType) and not isObjectType(mutationType) then
 		context:reportError(
 			"Mutation root type must be Object type if provided, it cannot be " .. ("%s."):format(inspect(mutationType)),
 			(function()
@@ -185,7 +186,7 @@ function validateRootTypes(context: SchemaValidationContext): ()
 
 	local subscriptionType = schema:getSubscriptionType()
 
-	if subscriptionType and not isObjectType(subscriptionType) then
+	if isNotNillish(subscriptionType) and not isObjectType(subscriptionType) then
 		context:reportError(
 			"Subscription root type must be Object type if provided, it cannot be " .. ("%s."):format(inspect(subscriptionType)),
 			(function()
