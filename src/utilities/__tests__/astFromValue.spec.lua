@@ -18,6 +18,8 @@ return function()
 
 	-- ROBLOX deviation: bring in NULL type
 	local NULL = require(script.Parent.Parent.astFromValue).NULL
+	-- ROBLOX deviation: JS primitives
+	local NaN = 0 / 0
 
 	describe("astFromValue", function()
 		it("converts boolean values to ASTs", function()
@@ -83,7 +85,7 @@ return function()
 			end).toThrow("Int cannot represent non 32-bit signed integer value: 1e+40")
 
 			expect(function()
-				return astFromValue(0 / 0, GraphQLInt)
+				return astFromValue(NaN, GraphQLInt)
 			end).toThrow("Int cannot represent non-integer value: NaN")
 		end)
 
@@ -212,7 +214,7 @@ return function()
 			})
 
 			expect(function()
-				return astFromValue(0 / 0, passthroughScalar)
+				return astFromValue(NaN, passthroughScalar)
 			end).toThrow("Cannot convert value to AST: NaN.")
 			expect(function()
 				return astFromValue(math.huge, passthroughScalar)

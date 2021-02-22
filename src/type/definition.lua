@@ -2,6 +2,11 @@
 
 type Array<T> = { [number]: T }
 local srcWorkspace = script.Parent.Parent
+local luaUtilsWorkspace = srcWorkspace.luaUtils
+
+-- ROBLOX deviation: use map type
+local Map = require(srcWorkspace.luaUtils.Map)
+type Map<T,V> = Map.Map<T,V>
 
 local objectEntries = require(srcWorkspace.polyfills.objectEntries).objectEntries
 
@@ -26,9 +31,11 @@ local print_ = require(languageWorkspace.printer).print
 
 local valueFromASTUntyped = require(srcWorkspace.utilities.valueFromASTUntyped).valueFromASTUntyped
 
-local Error = require(srcWorkspace.luaUtils.Error)
+local Error = require(luaUtilsWorkspace.Error)
+-- ROBLOX deviation: use ordered Map
+local keyValMapOrdered = require(luaUtilsWorkspace.keyValMapOrdered).keyValMapOrdered
 -- ROBLOX deviation: no distinction between undefined and null in Lua so we need to go around this with custom NULL like constant
-local NULL = require(srcWorkspace.luaUtils.null)
+local NULL = require(luaUtilsWorkspace.null)
 local LuauPolyfillImport = require(srcWorkspace.Parent.Packages.LuauPolyfill)
 local Array = LuauPolyfillImport.Array
 local Object = LuauPolyfillImport.Object
@@ -1131,7 +1138,8 @@ function GraphQLEnumType:parseLiteral(valueNode, _variables)
 end
 
 function GraphQLEnumType:toConfig()
-	local values = keyValMap(self:getValues(), function(value)
+	-- ROBLOX deviation: use ordered Map
+	local values = keyValMapOrdered(self:getValues(), function(value)
 		return value.name
 	end, function(value)
 		return {
@@ -1188,13 +1196,18 @@ function didYouMeanEnumValue(enumType, unknownValueStr: string): string
 	return didYouMean("the enum value", suggestedValues)
 end
 
+-- ROBLOX deviation: valueMap is either Map object or vanilla table
 function defineEnumValues(typeName, valueMap)
 	devAssert(
-		isPlainObj(valueMap),
+		isPlainObj(valueMap) or instanceOf(valueMap, Map),
 		("%s values must be an object with value names as keys."):format(tostring(typeName))
 	)
+	-- ROBLOX deviation: use Map if available
+	local mapEntries = instanceOf(valueMap, Map)
+		and valueMap:entries()     -- ROBLOX: order is preservered
+		or objectEntries(valueMap) -- ROBLOX: order is not preserved
 
-	return Array.map(objectEntries(valueMap), function(entries)
+	return Array.map(mapEntries, function(entries)
 		local valueName, valueConfig = entries[1], entries[2]
 
 		devAssert(

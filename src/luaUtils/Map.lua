@@ -35,10 +35,12 @@ function Map.new(iterable)
 		for _, entry in ipairs(arrayFromIterable) do
 			local key = entry[1]
 			local val = entry[2]
-			if not map[key] then
-				map[key] = val
+			-- only add to array if new
+			if map[key] == nil then
 				table.insert(array, key)
 			end
+			-- always assign
+			map[key] = val
 		end
 	end
 
@@ -51,7 +53,7 @@ end
 
 function Map:set(key, value)
 	-- preserve initial insertion order
-	if not self._map[key] then
+	if self._map[key] == nil then
 		self.size += 1
 		table.insert(self._array, key)
 	end
@@ -72,7 +74,7 @@ function Map:clear()
 end
 
 function Map:delete(key): boolean
-	if not self._map[key] then
+	if self._map[key] == nil then
 		return false
 	end
 	self.size -= 1
