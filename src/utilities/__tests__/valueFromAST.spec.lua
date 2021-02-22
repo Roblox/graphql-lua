@@ -16,6 +16,9 @@ return function()
 	local GraphQLInputObjectType = definitionImport.GraphQLInputObjectType
 	-- ROBLOX deviation: no distinction between undefined and null in Lua so we need to go around this with custom NULL like constant
 	local NULL = require(srcWorkspace.luaUtils.null)
+	-- ROBLOX deviation: JS primitives
+	local NaN = 0 / 0
+
 	local valueFromAST = require(utilitiesWorkspace.valueFromAST).valueFromAST
 
 	local scalars = require(srcWorkspace.type.scalars)
@@ -102,7 +105,7 @@ return function()
 					GREEN = { value = 2 },
 					BLUE = { value = 3 },
 					NULL = { value = NULL },
-					NAN = { value = 0 / 0 },
+					NAN = { value = NaN },
 					NO_CUSTOM_VALUE = { value = nil },
 				},
 			})

@@ -246,56 +246,7 @@ return function()
       }
     ]])
 
-	  		--[[
-				ROBLOX FIXME: ordering of enums is not preserved
-				original code: expect(cycleSDL(sdl)).to.equal(sdl)
-			--]]
-			expect(cycleSDL(sdl)).to.equal(dedent([[
-
-      """Do you agree that this is the most creative schema ever?"""
-      schema {
-        query: Query
-      }
-
-      """This is a directive"""
-      directive @foo(
-        """It has an argument"""
-        arg: Int
-      ) on FIELD
-
-      """Who knows what inside this scalar?"""
-      scalar MysteryScalar
-
-      """This is a input object type"""
-      input FooInput {
-        """It has a field"""
-        field: Int
-      }
-
-      """This is a interface type"""
-      interface Energy {
-        """It also has a field"""
-        str: String
-      }
-
-      """There is nothing inside!"""
-      union BlackHole
-
-      """With an enum"""
-      enum Color {
-        RED
-        BLUE
-
-        """Not a creative color"""
-        GREEN
-      }
-
-      """What a great type"""
-      type Query {
-        """And a field to boot"""
-        str: String
-      }
-    ]]))
+			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
 		it("Maintains @include, @skip & @specifiedBy", function()
@@ -535,21 +486,7 @@ return function()
       }
     ]])
 
-			--[[
-				ROBLOX FIXME: ordering is not preserved
-				original code: expect(cycleSDL(sdl)).to.equal(sdl)
-			--]]
-			expect(cycleSDL(sdl)).to.equal(dedent([[
-
-      enum Hello {
-        RLD
-        WO
-      }
-
-      type Query {
-        hello: Hello
-      }
-    ]]))
+      expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
 		it("Empty union", function()
@@ -805,9 +742,9 @@ return function()
 			expect(cycleSDL(sdl)).to.equal(dedent([[
 
       enum MyEnum {
-        OTHER_VALUE @deprecated(reason: "Terrible reasons")
-        OLD_VALUE @deprecated
         VALUE
+        OLD_VALUE @deprecated
+        OTHER_VALUE @deprecated(reason: "Terrible reasons")
       }
 
       input MyInput {

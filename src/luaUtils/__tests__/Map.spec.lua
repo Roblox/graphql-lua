@@ -23,6 +23,34 @@ return function()
 				expect(foo:has(ANOTHER_ITEM)).to.equal(true)
 			end)
 
+			it("creates a Map from an array with duplicate keys", function()
+				local foo = Map.new({
+					{ AN_ITEM, "foo1" },
+					{ AN_ITEM, "foo2" },
+				})
+				expect(foo.size).to.equal(1)
+				expect(foo:get(AN_ITEM)).to.equal("foo2")
+
+				expect(foo:keys()).toEqual({ AN_ITEM })
+				expect(foo:values()).toEqual({ "foo2" })
+				expect(foo:entries()).toEqual({ { AN_ITEM, "foo2" } })
+			end)
+
+			it("preserves the order of keys first assignment", function()
+				local foo = Map.new({
+					{ AN_ITEM, "foo1" },
+					{ ANOTHER_ITEM, "bar" },
+					{ AN_ITEM, "foo2" },
+				})
+				expect(foo.size).to.equal(2)
+				expect(foo:get(AN_ITEM)).to.equal("foo2")
+				expect(foo:get(ANOTHER_ITEM)).to.equal("bar")
+
+				expect(foo:keys()).toEqual({ AN_ITEM, ANOTHER_ITEM })
+				expect(foo:values()).toEqual({ "foo2", "bar" })
+				expect(foo:entries()).toEqual({ { AN_ITEM, "foo2" }, { ANOTHER_ITEM, "bar" } })
+			end)
+
 			it("throws when trying to create a set from a non-iterable", function()
 				expect(function()
 					return Map.new(true)
@@ -65,6 +93,20 @@ return function()
 				expect(foo.size).to.equal(1)
 			end)
 
+			it("sets values correctly to true/false", function()
+				local foo = Map.new({{ AN_ITEM, false }})
+				foo:set(AN_ITEM, false)
+				expect(foo.size).to.equal(1)
+				expect(foo:get(AN_ITEM)).to.equal(false)
+
+				foo:set(AN_ITEM, true)
+				expect(foo.size).to.equal(1)
+				expect(foo:get(AN_ITEM)).to.equal(true)
+
+				foo:set(AN_ITEM, false)
+				expect(foo.size).to.equal(1)
+				expect(foo:get(AN_ITEM)).to.equal(false)
+			end)
 		end)
 
 		describe("get", function()
@@ -129,6 +171,15 @@ return function()
 				foo:delete(ANOTHER_ITEM)
 				expect(foo.size).to.equal(1)
 			end)
+
+			it("deletes value set to false", function()
+				local foo = Map.new({ { AN_ITEM, false } })
+
+				foo:delete(AN_ITEM)
+
+				expect(foo.size).to.equal(0)
+				expect(foo:get(AN_ITEM)).to.equal(nil)
+			end)
 		end)
 
 		describe("has", function()
@@ -141,6 +192,12 @@ return function()
 			it("returns false if the item is not in the Map", function()
 				local foo = Map.new()
 				expect(foo:has(AN_ITEM)).to.equal(false)
+			end)
+
+			it("returns correctly with value set to false", function()
+				local foo = Map.new({ { AN_ITEM, false } })
+
+				expect(foo:has(AN_ITEM)).to.equal(true)
 			end)
 		end)
 

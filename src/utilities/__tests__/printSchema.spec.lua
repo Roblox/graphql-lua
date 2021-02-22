@@ -3,6 +3,9 @@
 local utilitiesWorkspace = script.Parent.Parent
 local srcWorkspace = script.Parent.Parent.Parent
 
+-- ROBLOX deviation: use map type
+local Map = require(srcWorkspace.luaUtils.Map)
+
 local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
 
 local DirectiveLocation = require(srcWorkspace.language.directiveLocation).DirectiveLocation
@@ -588,11 +591,12 @@ return function()
 		itSKIP("Enum", function()
 			local RGBType = GraphQLEnumType.new({
 				name = "RGB",
-				values = {
-					RED = {},
-					GREEN = {},
-					BLUE = {},
-				},
+				-- ROBLOX deviation: use Map to guarantee order
+				values = Map.new({
+					{ "RED", {} },
+					{ "GREEN", {} },
+					{ "BLUE", {} },
+				}),
 			})
 			local schema = GraphQLSchema.new({
 				types = { RGBType },

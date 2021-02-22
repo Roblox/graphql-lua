@@ -5,6 +5,8 @@ return function()
 
 	-- ROBLOX deviation: utils
 	local NULL = require(srcWorkspace.luaUtils.null)
+	local NaN = 0 / 0
+	local Map = require(srcWorkspace.luaUtils.Map)
 
 	local inspect = require(srcWorkspace.jsutils.inspect).inspect
 	local identityFunc = require(srcWorkspace.jsutils.identityFunc).identityFunc
@@ -629,44 +631,36 @@ return function()
 		it("defines an enum type with deprecated value", function()
 			local EnumTypeWithDeprecatedValue = GraphQLEnumType.new({
 				name = "EnumWithDeprecatedValue",
-				values = {
-					foo = {
-						deprecationReason = "Just because",
-					},
-					bar = {
-						deprecationReason = "",
-					},
-				},
+				-- ROBLOX deviation: use Map to guarantee order
+				values = Map.new({
+					{ "foo", { deprecationReason = "Just because" } },
+					{ "bar", { deprecationReason = "" } },
+				}),
 			})
 
-			-- ROBLOX FIXME? the order of the values are flipped vs upstream. does it matter?
-			expect(EnumTypeWithDeprecatedValue:getValues()).toHaveSameMembers(
-				{
-					{
-						name = "foo",
-						deprecationReason = "Just because",
-					},
-					{
-						name = "bar",
-						deprecationReason = "",
-					},
-				},
-				true
-			)
+			local values = EnumTypeWithDeprecatedValue:getValues()
+			expect(values[1]).toObjectContain({
+				name = "foo",
+				deprecationReason = "Just because",
+			})
+			expect(values[2]).toObjectContain({
+				name = "bar",
+				deprecationReason = "",
+			})
 		end)
 
 		it("defines an enum type with a value of `null` and `undefined`", function()
 			local EnumTypeWithNullishValue = GraphQLEnumType.new({
 				name = "EnumWithNullishValue",
-				values = {
-					NULL = { value = NULL },
-					NAN = { value = 0 / 0 }, -- ROBLOX deviation: no NaN keyword in Lua
-					NO_CUSTOM_VALUE = { value = nil },
-				},
+				-- ROBLOX deviation: use Map to guarantee order
+				values = Map.new({
+					{ "NULL", { value = NULL }},
+					{ "NAN", { value = NaN }},
+					{ "NO_CUSTOM_VALUE", { value = nil }},
+				}),
 			})
 
-			-- ROBLOX FIXME: order is not the same
-			expect(EnumTypeWithNullishValue:getValues()).toHaveSameMembers({
+			expect(EnumTypeWithNullishValue:getValues()).toEqual({
 				{
 					name = "NULL",
 					description = nil,
@@ -678,7 +672,7 @@ return function()
 				{
 					name = "NAN",
 					description = nil,
-					value = 0 / 0, -- ROBLOX deviation: no NaN keyword in Lua
+					value = NaN,
 					deprecationReason = nil,
 					extensions = nil,
 					astNode = nil,

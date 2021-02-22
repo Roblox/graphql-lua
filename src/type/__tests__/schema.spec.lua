@@ -315,7 +315,7 @@ return function()
 				query = queryType,
 			})
 
-			-- ROBLOX deviation: we check if the map contains all the keys
+			-- ROBLOX FIXME: we check if the map contains all the keys
 			-- instead of putting them in an array
 			local typeMap = schema:getTypeMap()
 			for _, key in ipairs({

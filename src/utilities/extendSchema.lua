@@ -343,11 +343,8 @@ function extendSchemaImpl(
 				{},
 				config,
 				{
-					values = Object.assign(
-						{},
-						config.values,
-						buildEnumValueMap(extensions)
-					),
+					-- ROBLOX deviation: concat Maps instead of regular tables
+					values = Map.new(Array.concat(config.values:entries(), buildEnumValueMap(extensions):entries())),
 					extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
 				}
 			)
@@ -627,17 +624,18 @@ function extendSchemaImpl(
 	function buildEnumValueMap(
 		nodes: Array<EnumTypeDefinitionNode | EnumTypeExtensionNode>
 	): GraphQLEnumValueConfigMap
-		local enumValueMap = {}
+		-- ROBLOX deviation: use Map to guarantee order
+		local enumValueMap = Map.new()
 		for _, node in ipairs(nodes) do
 			-- // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
 			local valuesNodes = node.values or {}
 
 			for _, value in ipairs(valuesNodes) do
-				enumValueMap[value.name.value] = {
+				enumValueMap:set(value.name.value, {
 					description = value.description and value.description.value,
 					deprecationReason = getDeprecationReason(value),
 					astNode = value,
-				}
+				})
 			end
 		end
 		return enumValueMap
