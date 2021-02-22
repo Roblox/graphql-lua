@@ -14,14 +14,14 @@ return function()
 
 		itSKIP("executes an introspection query", function()
 			local schema = buildSchema([[
-				type SomeObject {
-					someField: String
-				}
+      type SomeObject {
+        someField: String
+      }
 
-				schema {
-					query: SomeObject
-				}
-			]])
+      schema {
+        query: SomeObject
+      }
+    ]])
 
 			local source = getIntrospectionQuery({
 				descriptions = false,
@@ -961,7 +961,7 @@ return function()
 								},
 								args = {
 									{
-										defaultValue = '"No longer supported"',
+										defaultValue = "\"No longer supported\"",
 										name = "reason",
 										type = {
 											kind = "SCALAR",
@@ -1055,7 +1055,7 @@ return function()
 									name = "String",
 									ofType = nil,
 								},
-								defaultValue = '"tes\\t de\\fault"',
+								defaultValue = "\"tes\\t de\\fault\"",
 							},
 							{
 								name = "b",
@@ -1177,9 +1177,9 @@ return function()
 			expect(graphqlSync({ schema = schema, source = source })).toEqual({
 				data = {
 					__type = {
-						trueFields = {{ name = "nonDeprecated" }, { name = "deprecated" }},
-						falseFields = {{ name = "nonDeprecated" }},
-						omittedFields = {{ name = "nonDeprecated" }},
+						trueFields = { { name = "nonDeprecated" }, { name = "deprecated" } },
+						falseFields = { { name = "nonDeprecated" } },
+						omittedFields = { { name = "nonDeprecated" } },
 					},
 				},
 			})
@@ -1270,9 +1270,9 @@ return function()
 					__type = {
 						fields = {
 							{
-								trueArgs = {{ name = "nonDeprecated" }, { name = "deprecated" }},
-								falseArgs = {{ name = "nonDeprecated" }},
-								omittedArgs = {{ name = "nonDeprecated" }},
+								trueArgs = { { name = "nonDeprecated" }, { name = "deprecated" } },
+								falseArgs = { { name = "nonDeprecated" } },
+								omittedArgs = { { name = "nonDeprecated" } },
 							},
 						},
 					},
@@ -1459,9 +1459,9 @@ return function()
 			expect(graphqlSync({ schema = schema, source = source })).toEqual({
 				data = {
 					__type = {
-						trueFields = {{ name = "nonDeprecated" }, { name = "deprecated" }},
-						falseFields = {{ name = "nonDeprecated" }},
-						omittedFields = {{ name = "nonDeprecated" }},
+						trueFields = { { name = "nonDeprecated" }, { name = "deprecated" } },
+						falseFields = { { name = "nonDeprecated" } },
+						omittedFields = { { name = "nonDeprecated" } },
 					},
 				},
 			})
@@ -1484,8 +1484,8 @@ return function()
 			expect(graphqlSync({ schema = schema, source = source })).toEqual({
 				errors = {
 					{
-						message = 'Field "__type" argument "name" of type "String!" is required, but it was not provided.',
-						locations = {{ line = 3, column = 9 }},
+						message = "Field \"__type\" argument \"name\" of type \"String!\" is required, but it was not provided.",
+						locations = { { line = 3, column = 9 } },
 					},
 				},
 			})

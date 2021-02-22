@@ -33,6 +33,9 @@ local isInputObjectType = DefinitionModule.isInputObjectType
 
 local astFromValue = require(script.Parent.astFromValue).astFromValue
 local NULL = require(script.Parent.astFromValue).NULL
+local isNillishModule = require(script.Parent.Parent.luaUtils.isNillish)
+local isNillish = isNillishModule.isNillish
+local isNotNillish = isNillishModule.isNotNillish
 
 -- ROBLOX deviation: predeclare types
 local printScalar, printDescription, printFilteredSchema, isDefinedType, printSchemaDefinition, printDirective, printType, isSchemaOfCommonNames, printObject, printFields, printArgs, printInputValue, printDeprecated, printBlock, printInterface, printUnion, printEnum, printInputObject, printSpecifiedByUrl
@@ -84,26 +87,26 @@ function printFilteredSchema(
 end
 
 function printSchemaDefinition(schema)
-	if schema.description == nil and isSchemaOfCommonNames(schema) then
+	if isNillish(schema.description) and isSchemaOfCommonNames(schema) then
 		return
 	end
 
 	local operationTypes = {}
 	local queryType = schema:getQueryType()
 
-	if queryType then
+	if isNotNillish(queryType) then
 		table.insert(operationTypes, ("  query: %s"):format(queryType.name))
 	end
 
 	local mutationType = schema:getMutationType()
 
-	if mutationType then
+	if isNotNillish(mutationType) then
 		table.insert(operationTypes, ("  mutation: %s"):format(mutationType.name))
 	end
 
 	local subscriptionType = schema:getSubscriptionType()
 
-	if subscriptionType then
+	if isNotNillish(subscriptionType) then
 		table.insert(operationTypes, ("  subscription: %s"):format(subscriptionType.name))
 	end
 
@@ -125,19 +128,19 @@ end
 function isSchemaOfCommonNames(schema): boolean
 	local queryType = schema:getQueryType()
 
-	if queryType and queryType.name ~= "Query" then
+	if isNotNillish(queryType) and queryType.name ~= "Query" then
 		return false
 	end
 
 	local mutationType = schema:getMutationType()
 
-	if mutationType and mutationType.name ~= "Mutation" then
+	if isNotNillish(mutationType) and mutationType.name ~= "Mutation" then
 		return false
 	end
 
 	local subscriptionType = schema:getSubscriptionType()
 
-	if subscriptionType and subscriptionType.name ~= "Subscription" then
+	if isNotNillish(subscriptionType) and subscriptionType.name ~= "Subscription" then
 		return false
 	end
 
@@ -296,7 +299,7 @@ function printInputValue(arg): string
 	local defaultAST = astFromValue(arg.defaultValue, arg.type)
 	local argDecl = arg.name .. ": " .. tostring(arg.type)
 
-	if defaultAST ~= nil and defaultAST ~= NULL then
+	if isNotNillish(defaultAST) then
 		argDecl ..= (" = %s"):format(print_(defaultAST))
 	end
 
@@ -320,7 +323,7 @@ function printDirective(directive)
 end
 
 function printDeprecated(reason: string?): string
-	if reason == nil then
+	if isNillish(reason) then
 		return ""
 	end
 
@@ -334,7 +337,7 @@ function printDeprecated(reason: string?): string
 end
 
 function printSpecifiedByUrl(scalar): string
-	if scalar.specifiedByUrl == nil then
+	if isNillish(scalar.specifiedByUrl) then
 		return ""
 	end
 
@@ -368,7 +371,7 @@ function printDescription(
 
 	local description = def.description
 
-	if description == nil then
+	if isNillish(description) then
 		return ""
 	end
 

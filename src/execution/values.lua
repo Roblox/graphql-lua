@@ -6,6 +6,7 @@ local root = srcWorkspace.Parent
 local LuauPolyfill = require(root.Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local NULL = require(srcWorkspace.luaUtils.null)
+local isNillish = require(srcWorkspace.luaUtils.isNillish).isNillish
 
 local keyMap = require(srcWorkspace.jsutils.keyMap).keyMap
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
@@ -198,7 +199,7 @@ getArgumentValues = function(def, node, variableValues)
 				end
 				continue
 			end
-			isNull = variableValues[variableName] == nil or variableValues[variableName] == NULL
+			isNull = isNillish(variableValues[variableName])
 		end
 
 		if isNull and isNonNullType(argType) then

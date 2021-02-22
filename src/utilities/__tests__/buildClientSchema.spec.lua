@@ -30,7 +30,9 @@ return function()
 	local introspectionFromSchema = function()
 	end -- require(utilitiesWorkspace.introspectionFromSchema).introspectionFromSchema
 
+	-- ROBLOX deviation: utils
 	local Array = require(srcWorkspace.luaUtils.Array)
+	local NULL = require(srcWorkspace.luaUtils.null)
 
 	--[[*
 	--  * This function does a full cycle of going from a string with the contents of
@@ -88,7 +90,7 @@ return function()
 			introspection.__schema.queryType = nil
 
 			local clientSchema = buildClientSchema(introspection)
-			expect(clientSchema:getQueryType()).to.equal(nil)
+			expect(clientSchema:getQueryType()).to.equal(NULL)
 			expect(printSchema(clientSchema)).to.equal(sdl)
 		end)
 

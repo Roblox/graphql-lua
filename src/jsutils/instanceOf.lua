@@ -1,8 +1,8 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/instanceOf.js
-local NULL = require(script.Parent.Parent.luaUtils.null)
+local isNillish = require(script.Parent.Parent.luaUtils.isNillish).isNillish
 
 local function instanceOf(subject, super)
-	if subject == nil or subject == NULL then
+	if isNillish(subject) then
 		return false
 	end
 
@@ -16,7 +16,7 @@ local function instanceOf(subject, super)
 
 	local mt = getmetatable(subject)
 	while true do
-		if mt == nil then
+		if typeof(mt) ~= "table" then
 			return false
 		end
 		if mt.__index == super then

@@ -3,6 +3,7 @@
 local srcWorkspace = script.Parent.Parent
 local rootWorkspace = srcWorkspace.Parent
 local jsutilsWorkspace = srcWorkspace.jsutils
+local luaUtilsWorkspace = srcWorkspace.luaUtils
 
 local LuauPolyfill = require(rootWorkspace.Packages.LuauPolyfill)
 
@@ -16,7 +17,10 @@ local suggestionList = require(jsutilsWorkspace.suggestionList).suggestionList
 local printPathArray = require(jsutilsWorkspace.printPathArray).printPathArray
 local addPath = require(jsutilsWorkspace.Path).addPath
 local instanceOf = require(jsutilsWorkspace.instanceOf)
-local NULL = require(srcWorkspace.luaUtils.null)
+local NULL = require(luaUtilsWorkspace.null)
+local isNillishModule = require(luaUtilsWorkspace.isNillish)
+local isNillish = isNillishModule.isNillish
+local isNotNillish = isNillishModule.isNotNillish
 
 local pathToArray = require(jsutilsWorkspace.Path).pathToArray
 local isIteratableObject = require(jsutilsWorkspace.isIteratableObject).isIteratableObject
@@ -51,7 +55,7 @@ end
 
 function coerceInputValueImpl(inputValue, type_, onError, path)
 	if isNonNullType(type_) then
-		if inputValue ~= nil and inputValue ~= NULL then
+		if isNotNillish(inputValue) then
 			return coerceInputValueImpl(inputValue, type_.ofType, onError, path)
 		end
 		onError(
@@ -62,7 +66,7 @@ function coerceInputValueImpl(inputValue, type_, onError, path)
 		return
 	end
 
-	if inputValue == nil or inputValue == NULL then
+	if isNillish(inputValue) then
 		-- Explicitly return the value null.
 		return NULL
 	end

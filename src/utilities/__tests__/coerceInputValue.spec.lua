@@ -7,6 +7,7 @@ return function()
 	local NaN = 0 / 0
 	local Error = require(srcWorkspace.luaUtils.Error)
 	local NULL = require(srcWorkspace.luaUtils.null)
+	local isNotNillish = require(srcWorkspace.luaUtils.isNillish).isNotNillish
 
 	local invariant = require(srcWorkspace.jsutils.invariant).invariant
 
@@ -85,7 +86,7 @@ return function()
 				name = "TestScalar",
 				parseValue = function(input)
 					invariant(typeof(input) == "table" and input ~= NULL)
-					if input.error ~= nil and input.error ~= NULL then
+					if isNotNillish(input.error) then
 						error(Error.new(input.error))
 					end
 					return input.value

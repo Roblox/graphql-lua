@@ -36,6 +36,7 @@ local Error = require(luaUtilsWorkspace.Error)
 local keyValMapOrdered = require(luaUtilsWorkspace.keyValMapOrdered).keyValMapOrdered
 -- ROBLOX deviation: no distinction between undefined and null in Lua so we need to go around this with custom NULL like constant
 local NULL = require(luaUtilsWorkspace.null)
+local isNillish = require(luaUtilsWorkspace.isNillish).isNillish
 local LuauPolyfillImport = require(srcWorkspace.Parent.Packages.LuauPolyfill)
 local Array = LuauPolyfillImport.Array
 local Object = LuauPolyfillImport.Object
@@ -542,7 +543,7 @@ function GraphQLScalarType.new(config)
 	devAssert(typeof(config.name) == "string", "Must provide name.")
 
 	devAssert(
-		config.specifiedByUrl == nil or typeof(config.specifiedByUrl) == "string",
+		isNillish(config.specifiedByUrl) or typeof(config.specifiedByUrl) == "string",
 		("%s must provide \"specifiedByUrl\" as a string, "):format(self.name) .. ("but got: %s."):format(inspect(config.specifiedByUrl))
 	)
 
