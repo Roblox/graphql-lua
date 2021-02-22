@@ -261,7 +261,7 @@ local function visit(root, visitor, visitorKeys)
 					key = keys[index]
 				end
 			else
-				parent = nil
+				key = nil
 			end
 			if parent then
 				node = parent[key]
