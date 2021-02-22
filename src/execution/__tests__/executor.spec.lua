@@ -87,14 +87,13 @@ return function()
 			end).toThrow("Must provide document.")
 		end)
 
-		-- ROBLOX FIXME: waiting for assertValidSchema
-		itSKIP("throws if no schema is provided", function()
+		it("throws if no schema is provided", function()
 			local document = parse("{ field }")
 
 			-- $FlowExpectedError[prop-missing]
 			expect(function()
 				return executeSync({ document = document })
-			end).toThrow("Expected undefined to be a GraphQL schema.")
+			end).toThrow("Expected nil to be a GraphQL schema.")
 		end)
 
 		it("throws on invalid variables", function()
@@ -1099,7 +1098,7 @@ return function()
 			})
 		end)
 
-		itSKIP("provides error if no operation is provided", function()
+		it("provides error if no operation is provided", function()
 			local schema = GraphQLSchema.new({
 				query = GraphQLObjectType.new({
 					name = "Type",
@@ -1118,12 +1117,13 @@ return function()
 				rootValue = rootValue,
 			})
 
-			expect(result).toEqual({
-				errors = {
-					{
-						message = "Must provide an operation.",
-					},
-				},
+			--[[
+			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+			--]]
+			expect(Object.keys(result)).toEqual({ "errors" })
+			expect(#result.errors).to.equal(1)
+			expect(result.errors[1]).toObjectContain({
+				message = "Must provide an operation.",
 			})
 		end)
 
@@ -1148,6 +1148,7 @@ return function()
 			--[[
 			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 			--]]
+			expect(Object.keys(result)).toEqual({ "errors" })
 			expect(#result.errors).to.equal(1)
 			expect(result.errors[1]).toObjectContain({
 				message = "Must provide operation name if query contains multiple operations.",
@@ -1177,6 +1178,7 @@ return function()
 			--[[
 			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 			--]]
+			expect(Object.keys(result)).toEqual({ "errors" })
 			expect(#result.errors).to.equal(1)
 			expect(result.errors[1]).toObjectContain({
 				message = "Unknown operation named \"UnknownExample\".",
@@ -1203,6 +1205,7 @@ return function()
 			--[[
 			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 			--]]
+			expect(Object.keys(result)).toEqual({ "errors" })
 			expect(#result.errors).to.equal(1)
 			expect(result.errors[1]).toObjectContain({
 				message = "Unknown operation named \"\".",
@@ -1615,10 +1618,11 @@ return function()
 			end)
 		)
 
-		itSKIP("fails when serialize of custom scalar does not return a value", function()
+		it("fails when serialize of custom scalar does not return a value", function()
 			local customScalar = GraphQLScalarType.new({
 				name = "CustomScalar",
 				serialize = function()
+					--[[ returns nothing ]]
 				end,
 			})
 			local schema = GraphQLSchema.new({
@@ -1639,23 +1643,28 @@ return function()
 				document = parse("{ customScalar }"),
 			})
 
-			expect(result).toEqual({
-				data = { customScalar = nil },
-				errors = {
-					{
-						message = "Expected a value of type \"CustomScalar\" but received: \"CUSTOM_VALUE\"",
-						locations = {
-							{
-								line = 1,
-								column = 3,
-							},
-						},
-						path = {
-							"customScalar",
+			--[[
+			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+			--]]
+			expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
+			expect(result.data).toEqual({ customScalar = NULL })
+			-- ROBLOX deviation: we need to specifically test if customScalar is exactly equal to NULL
+			expect(result.data.customScalar).to.equal(NULL)
+			expect(#result.errors).toEqual(1)
+			expect(result.errors[1]).toObjectContain(
+				{
+					message = "Expected a value of type \"CustomScalar\" but received: \"CUSTOM_VALUE\"",
+					locations = {
+						{
+							line = 1,
+							column = 3,
 						},
 					},
-				},
-			})
+					path = {
+						"customScalar",
+					},
+				}
+			)
 		end)
 
 		it("executes ignoring invalid non-executable definitions", function()

@@ -66,9 +66,7 @@ type GraphQLFieldResolver<T, V> = any -- definitionImport.GraphQLFieldResolver
 type GraphQLResolveInfo = any -- definitionImport.GraphQLResolveInfo
 type GraphQLTypeResolver<T, V> = any -- definitionImport.GraphQLTypeResolver
 type GraphQLList = any -- definitionImport.GraphQLList
--- ROBLOX FIXME: use proper dependency when available
-local assertValidSchema = function(...)
-end -- require(typeWorkspace.validate).assertValidSchema
+local assertValidSchema = require(typeWorkspace.validate).assertValidSchema
 local introspectionImport = require(typeWorkspace.introspection)
 local SchemaMetaFieldDef = introspectionImport.SchemaMetaFieldDef
 local TypeMetaFieldDef = introspectionImport.TypeMetaFieldDef
