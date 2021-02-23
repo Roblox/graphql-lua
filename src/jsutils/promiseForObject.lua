@@ -23,7 +23,9 @@ local function promiseForObject(object: ObjMap<any>)
 	end)
 
 	return Promise.all(valuesAndPromises):andThen(function(values)
-		return Array.reduce(values, function(resolvedObject, value, i)
+		return Array.reduce(values, function(resolvedObject, value, i_)
+			-- ROBLOX FIXME: i_ is currently 0-based so we add 1 to account for that
+			local i = i_ + 1
 			resolvedObject[keys[i]] = value
 			return resolvedObject
 		end, {})
