@@ -5,7 +5,9 @@ return function()
 	local srcWorkspace = executionWorkspace.Parent
 
 	-- ROBLOX deviation: utils
-	local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
+	local LuauPolyfillModule = require(srcWorkspace.Parent.Packages.LuauPolyfill)
+	local Object = LuauPolyfillModule.Object
+	local Array = LuauPolyfillModule.Array
 	local Promise = require(srcWorkspace.Parent.Packages.Promise)
 
 	local parse = require(srcWorkspace.language.parser).parse
@@ -21,41 +23,6 @@ return function()
 	local executeImport = require(executionWorkspace.execute)
 	local execute = executeImport.execute
 	local executeSync = executeImport.executeSync
-
-	local function _await(value, thenFunc, direct)
-		if direct then
-			return (function()
-				if thenFunc then
-					return thenFunc(value)
-				end
-
-				return value
-			end)()
-		end
-		if not value or not value.andThen then
-			value = Promise.resolve(value)
-		end
-
-		return (function()
-			if thenFunc then
-				return value:andThen(thenFunc)
-			end
-
-			return value
-		end)()
-	end
-	local function _async(f: any)
-		return function(...)
-			local args = { ... }
-			local ok, errorOrResult = pcall(function()
-				return Promise.resolve(f(table.unpack(args)))
-			end)
-			if not ok then
-				return Promise.reject(errorOrResult)
-			end
-			return errorOrResult
-		end
-	end
 
 	describe("Execute: synchronously when possible", function()
 		local schema = GraphQLSchema.new({
@@ -141,28 +108,24 @@ return function()
 			})
 		end)
 
-		itSKIP(
-			"returns a Promise if any field is asynchronous",
-			_async(function()
-				local doc = "query Example { syncField, asyncField }"
-				local result = execute({
-					schema = schema,
-					document = parse(doc),
-					rootValue = "rootValue",
-				})
+		it("returns a Promise if any field is asynchronous", function()
+			local doc = "query Example { syncField, asyncField }"
+			local result = execute({
+				schema = schema,
+				document = parse(doc),
+				rootValue = "rootValue",
+			})
 
-				expect(result).to.be.instanceOf(Promise)
+			-- ROBLOX deviation: use Promise.is instead of instanceOf
+			expect(Promise.is(result)).to.equal(true)
 
-				return _await(result, function(_result)
-					expect(_result).toEqual({
-						data = {
-							syncField = "rootValue",
-							asyncField = "rootValue",
-						},
-					})
-				end)
-			end)
-		)
+			expect(result:expect()).toEqual({
+				data = {
+					syncField = "rootValue",
+					asyncField = "rootValue",
+				},
+			})
+		end)
 
 		describe("executeSync", function()
 			it("does not return a Promise for sync execution", function()
@@ -242,7 +205,7 @@ return function()
 				)
 			end)
 
-			itSKIP("does not return a Promise for validation errors", function()
+			it("does not return a Promise for validation errors", function()
 				local doc = "fragment Example on Query { unknownField }"
 				local validationErrors = validate(schema, parse(doc))
 				local result = graphqlSync({
@@ -250,14 +213,21 @@ return function()
 					source = doc,
 				})
 
+				-- ROBLOX deviation: helper function
+				local function removeStack(err_)
+					local err = Object.assign({}, error)
+					err.stack = nil
+					return err
+				end
 				--[[
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toEqual({ "errors" })
-				expect(result.errors).toHaveSameMembers(validationErrors, true)
+				-- ROBLOX FIXME?: stack trace is actually different for result.errors and validationErrors so we're removing it for comparison purposes
+				expect(Array.map(result.errors, removeStack)).toEqual(Array.map(validationErrors, removeStack), true)
 			end)
 
-			itSKIP("does not return a Promise for sync execution", function()
+			it("does not return a Promise for sync execution", function()
 				local doc = "query Example { syncField }"
 				local result = graphqlSync({
 					schema = schema,
@@ -272,10 +242,9 @@ return function()
 				})
 			end)
 
-			itSKIP("throws if encountering async execution", function()
+			it("throws if encountering async execution", function()
 				local doc = "query Example { syncField, asyncField }"
 
-				-- ROBLOX FIXME: integrate validation
 				expect(function()
 					graphqlSync({
 						schema = schema,
