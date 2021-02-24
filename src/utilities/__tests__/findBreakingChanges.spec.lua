@@ -88,7 +88,7 @@ return function()
 			})
 		end)
 
-		itSKIP("should detect if a field on a type was deleted or changed type", function()
+		it("should detect if a field on a type was deleted or changed type", function()
 			local oldSchema = buildSchema([=[
       type TypeA
       type TypeB
@@ -198,7 +198,7 @@ return function()
 			})
 		end)
 
-		itSKIP("should detect if fields on input types changed kind or were removed", function()
+		it("should detect if fields on input types changed kind or were removed", function()
 			local oldSchema = buildSchema([=[
       input InputType1 {
         field1: String
@@ -372,7 +372,7 @@ return function()
 			})
 		end)
 
-		itSKIP("should detect if a field argument was removed", function()
+		it("should detect if a field argument was removed", function()
 			local oldSchema = buildSchema([[
       interface Interface1 {
         field1(arg1: Boolean, objectArg: String): String
@@ -411,7 +411,7 @@ return function()
 			})
 		end)
 
-		itSKIP("should detect if a field argument has changed type", function()
+		it("should detect if a field argument has changed type", function()
 			local oldSchema = buildSchema([=[
       type Type1 {
         field1(
@@ -875,7 +875,7 @@ return function()
 	end)
 
 	describe("findDangerousChanges", function()
-		itSKIP("should detect if a defaultValue changed on an argument", function()
+		it("should detect if a defaultValue changed on an argument", function()
 			local oldSDL = [=[
       input Input1 {
         innerInputArray: [Input2]
