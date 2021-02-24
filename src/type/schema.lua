@@ -7,8 +7,9 @@ local Packages = srcWorkspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Set = LuauPolyfill.Set
-local Map = require(script.Parent.Parent.luaUtils.Map)
-type Map<T, V> = Map.Map<T, V>
+local MapModule = require(script.Parent.Parent.luaUtils.Map)
+local Map = MapModule.Map
+type Map<T, V> = MapModule.Map<T, V>
 
 -- ROBLOX TODO: add implemenation of types from LuauPolyfill
 type Set<T> = any -- LuauPolyfill.Set<T>

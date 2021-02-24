@@ -6,7 +6,7 @@ return function()
 	-- ROBLOX deviation: utils
 	local NULL = require(srcWorkspace.luaUtils.null)
 	local NaN = 0 / 0
-	local Map = require(srcWorkspace.luaUtils.Map)
+	local Map = require(srcWorkspace.luaUtils.Map).Map
 
 	local inspect = require(srcWorkspace.jsutils.inspect).inspect
 	local identityFunc = require(srcWorkspace.jsutils.identityFunc).identityFunc

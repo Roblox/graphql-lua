@@ -1,7 +1,8 @@
 type Array<T> = { [number]: T }
 
-local Map = require(script.Parent.Parent.luaUtils.Map)
-type Map<T, V> = Map.Map<T, V>
+local MapModule = require(script.Parent.Parent.luaUtils.Map)
+local Map = MapModule.Map
+type Map<T, V> = MapModule.Map<T, V>
 
 --[[
  * Creates an ordered keyed map from an array, given a function to produce the keys

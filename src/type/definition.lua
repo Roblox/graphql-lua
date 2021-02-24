@@ -5,8 +5,10 @@ local srcWorkspace = script.Parent.Parent
 local luaUtilsWorkspace = srcWorkspace.luaUtils
 
 -- ROBLOX deviation: use map type
-local Map = require(srcWorkspace.luaUtils.Map)
-type Map<T,V> = Map.Map<T,V>
+local MapModule = require(srcWorkspace.luaUtils.Map)
+local Map = MapModule.Map
+local coerceToMap = MapModule.coerceToMap
+type Map<T,V> = MapModule.Map<T,V>
 
 local objectEntries = require(srcWorkspace.polyfills.objectEntries).objectEntries
 
@@ -1204,9 +1206,7 @@ function defineEnumValues(typeName, valueMap)
 		("%s values must be an object with value names as keys."):format(tostring(typeName))
 	)
 	-- ROBLOX deviation: use Map if available
-	local mapEntries = instanceOf(valueMap, Map)
-		and valueMap:entries()     -- ROBLOX: order is preservered
-		or objectEntries(valueMap) -- ROBLOX: order is not preserved
+	local mapEntries = coerceToMap(valueMap):entries()
 
 	return Array.map(mapEntries, function(entries)
 		local valueName, valueConfig = entries[1], entries[2]

@@ -1,7 +1,12 @@
-local LuauPolyfill = script.Parent
-local Array = require(LuauPolyfill.Array)
+local luaUtilsWorkspace = script.Parent
+local srcWorkspace = luaUtilsWorkspace.Parent
+
+local Array = require(luaUtilsWorkspace.Array)
+local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
+local instanceOf = require(srcWorkspace.jsutils.instanceOf)
 
 type Array<T> = { [number]: T }
+type Table<T, V> = { [T]: V }
 type Tuple<T, V> = Array<T | V>
 
 local Map = {}
@@ -17,7 +22,7 @@ export type Map<T, V> = {
 	keys: (Map) -> Array<T>,
 	values: (Map) -> Array<V>,
 	entries: (Map) -> Array<Tuple<T, V>>,
-	ipairs: (Map) -> any,
+	ipairs: (Map) -> any
 }
 
 function Map.new(iterable)
@@ -123,4 +128,26 @@ function Map.__newindex(table_, key, value)
 	table_:set(key, value)
 end
 
-return Map
+local function coerceToMap(mapLike: Map<any, any> | Table<any, any>): Map<any, any>
+	return instanceOf(mapLike, Map)
+		and mapLike -- ROBLOX: order is preservered
+		or Map.new(Object.entries(mapLike)) -- ROBLOX: order is not preserved
+end
+
+local function coerceToTable(mapLike: Map<any, any> | Table<any, any>): Table<any, any>
+	if not instanceOf(mapLike, Map) then
+		return mapLike
+	end
+
+	-- create table from map
+	return Array.reduce(mapLike:entries(), function(tbl, entry)
+		tbl[entry[1]] = entry[2]
+		return tbl
+	end, {})
+end
+
+return {
+	Map = Map,
+	coerceToMap = coerceToMap,
+	coerceToTable = coerceToTable
+}

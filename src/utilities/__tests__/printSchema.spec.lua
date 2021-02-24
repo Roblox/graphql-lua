@@ -4,7 +4,7 @@ local utilitiesWorkspace = script.Parent.Parent
 local srcWorkspace = script.Parent.Parent.Parent
 
 -- ROBLOX deviation: use map type
-local Map = require(srcWorkspace.luaUtils.Map)
+local Map = require(srcWorkspace.luaUtils.Map).Map
 
 local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
 

@@ -1,5 +1,8 @@
 return function()
-	local Map = require(script.Parent.Parent.Map)
+	local MapModule = require(script.Parent.Parent.Map)
+	local Map = MapModule.Map
+	local coerceToMap = MapModule.coerceToMap
+	local coerceToTable = MapModule.coerceToTable
 	local instanceOf = require(script.Parent.Parent.Parent.jsutils.instanceOf)
 
 	local AN_ITEM = "bar"
@@ -94,7 +97,7 @@ return function()
 			end)
 
 			it("sets values correctly to true/false", function()
-				local foo = Map.new({{ AN_ITEM, false }})
+				local foo = Map.new({ { AN_ITEM, false } })
 				foo:set(AN_ITEM, false)
 				expect(foo.size).to.equal(1)
 				expect(foo:get(AN_ITEM)).to.equal(false)
@@ -299,7 +302,6 @@ return function()
 			end)
 		end)
 
-
 		describe("Integration Tests", function()
 			-- the following tests are adapted from the examples shown on the MDN documentation:
 			-- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map#examples
@@ -351,6 +353,67 @@ return function()
 				expect(myMap:get(emptyKey)).to.equal("doge")
 
 			end)
+
+		end)
+	end)
+
+	describe("coerceToMap", function()
+		it("returns the same object if instance of Map", function()
+			local map = Map.new()
+			expect(coerceToMap(map)).to.equal(map)
+
+			map = Map.new({})
+			expect(coerceToMap(map)).to.equal(map)
+
+			map = Map.new({ { AN_ITEM, "foo" } })
+			expect(coerceToMap(map)).to.equal(map)
+		end)
+
+		it("converts a table to a Map", function()
+			local map = coerceToMap({})
+			expect(instanceOf(map, Map)).to.equal(true)
+			expect(map.size).to.equal(0)
+			expect(map:keys()).toEqual({})
+			expect(map:values()).toEqual({})
+			expect(map:entries()).toEqual({})
+
+			map = coerceToMap({
+				[AN_ITEM] = "foo",
+				[ANOTHER_ITEM] = "val",
+			})
+			expect(instanceOf(map, Map)).to.equal(true)
+			expect(map.size).to.equal(2)
+			expect(map:keys()).toHaveSameMembers({ AN_ITEM, ANOTHER_ITEM })
+			expect(map:values()).toHaveSameMembers({ "foo", "val" })
+			expect(map:entries()).toHaveSameMembers({
+				{ AN_ITEM, "foo" },
+				{ ANOTHER_ITEM, "val" },
+			})
+		end)
+	end)
+
+
+	describe("coerceToTable", function()
+		it("converts a Map to a table", function()
+			local map = Map.new()
+			expect(coerceToTable(map)).toEqual({})
+
+			map = Map.new({})
+			expect(coerceToTable(map)).toEqual({})
+
+			map = Map.new({ { AN_ITEM, "foo" } })
+			expect(coerceToTable(map)).toEqual({ [AN_ITEM] = "foo" })
+		end)
+
+		it("returns the same object if instance of table", function()
+			local tbl = {}
+			expect(coerceToTable(tbl)).to.equal(tbl)
+
+			tbl = {
+				[AN_ITEM] = "foo",
+				[ANOTHER_ITEM] = "val",
+			}
+			expect(coerceToTable(tbl)).to.equal(tbl)
 
 		end)
 	end)
