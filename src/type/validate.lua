@@ -12,7 +12,6 @@ local Error = LuauPolyfill.Error
 local Boolean = LuauPolyfill.Boolean
 local isNotNillish = require(srcWorkspace.luaUtils.isNillish).isNotNillish
 
-local objectValues = require(script.Parent.Parent.polyfills.objectValues).objectValues
 local inspect = require(script.Parent.Parent.jsutils.inspect).inspect
 local GraphQLErrorModule = require(script.Parent.Parent.error.GraphQLError)
 local GraphQLError = GraphQLErrorModule.GraphQLError
@@ -343,7 +342,8 @@ function validateFields(
 	context: SchemaValidationContext,
 	type_ --: GraphQLObjectType | GraphQLInterfaceType
 ): ()
-	local fields = objectValues(type_:getFields())
+	-- ROBLOX deviation: use Map
+	local fields = type_:getFields():values()
 
 	-- Objects and Interfaces both must define one or more fields.
 	if #fields == 0 then
@@ -463,9 +463,11 @@ function validateTypeImplementsInterface(
 	local typeFieldMap = type_:getFields()
 
 	-- Assert each interface field is implemented.
-	for _, ifaceField in ipairs(objectValues(iface:getFields())) do
+	-- ROBLOX deviation: use Map
+	for _, ifaceField in ipairs(iface:getFields():values()) do
 		local fieldName = ifaceField.name
-		local typeField = typeFieldMap[fieldName]
+		-- ROBLOX deviation: use Map
+		local typeField = typeFieldMap:get(fieldName)
 
 		-- Assert interface field exists on type.
 		if not typeField then
@@ -664,7 +666,8 @@ function validateInputFields(
 	context: SchemaValidationContext,
 	inputObj --: GraphQLInputObjectType
 ): ()
-	local fields = objectValues(inputObj:getFields())
+	-- ROBLOX deviation: use Map
+	local fields = inputObj:getFields():values()
 
 	if #fields == 0 then
 		context:reportError(
@@ -736,7 +739,8 @@ function createInputObjectCircularRefsValidator(
 		-- ROBLOX deviation: upstream can receive a GraphQLList with no name member, but Lua can't store a nil key
 		fieldPathIndexByTypeName[tostring(inputObj.name)] = #fieldPath
 
-		local fields = objectValues(inputObj:getFields())
+		-- ROBLOX deviation: use Map
+		local fields = inputObj:getFields():values()
 
 		for _, field in ipairs(fields) do
 			if isNonNullType(field.type) and isInputObjectType(field.type.ofType) then

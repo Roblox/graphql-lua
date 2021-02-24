@@ -10,20 +10,19 @@ local Map = MapModule.Map
 local coerceToMap = MapModule.coerceToMap
 type Map<T,V> = MapModule.Map<T,V>
 
-local objectEntries = require(srcWorkspace.polyfills.objectEntries).objectEntries
-
 local jsutilsWorkspace = srcWorkspace.jsutils
 local inspect = require(jsutilsWorkspace.inspect).inspect
 local keyMap = require(jsutilsWorkspace.keyMap).keyMap
-local mapValue = require(jsutilsWorkspace.mapValue).mapValue
 local toObjMap = require(jsutilsWorkspace.toObjMap).toObjMap
 local devAssert = require(jsutilsWorkspace.devAssert).devAssert
-local keyValMap = require(jsutilsWorkspace.keyValMap).keyValMap
 local instanceOf = require(jsutilsWorkspace.instanceOf)
 local didYouMean = require(jsutilsWorkspace.didYouMean).didYouMean
 local isObjectLike = require(jsutilsWorkspace.isObjectLike).isObjectLike
 local identityFunc = require(jsutilsWorkspace.identityFunc).identityFunc
 local suggestionList = require(jsutilsWorkspace.suggestionList).suggestionList
+
+-- ROBLOX deviation: use map value ordered
+local mapValueOrdered = require(srcWorkspace.luaUtils.mapValueOrdered).mapValueOrdered
 
 local GraphQLError = require(srcWorkspace.error.GraphQLError).GraphQLError
 
@@ -733,21 +732,26 @@ function defineInterfaces(config)
 end
 
 function defineFieldMap(config)
-	local fieldMap = resolveThunk(config.fields)
+	local fieldMap_ = resolveThunk(config.fields)
 
+	-- ROBLOX deviation: valueMap is either Map object or vanilla table
 	devAssert(
-		isPlainObj(fieldMap),
+		isPlainObj(fieldMap_) or instanceOf(fieldMap_, Map),
 		("%s fields must be an object with field names as keys or a function which returns such an object."):format(config.name)
 	)
 
-	return mapValue(fieldMap, function(fieldConfig, fieldName)
+	-- Roblox deviation: coerce to map
+	local fieldMap = coerceToMap(fieldMap_)
+
+	return mapValueOrdered(fieldMap, function(fieldConfig, fieldName)
 		devAssert(
 			isPlainObj(fieldConfig),
 			("%s.%s field config must be an object."):format(config.name, fieldName)
 		)
 		devAssert(
 			fieldConfig.resolve == nil or typeof(fieldConfig.resolve) == "function",
-			("%s.%s field resolver must be a function if "):format(config.name, fieldName) .. ("provided, but got: %s."):format(inspect(fieldConfig.resolve))
+			("%s.%s field resolver must be a function if "):format(config.name, fieldName) ..
+			("provided, but got: %s."):format(inspect(fieldConfig.resolve))
 		)
 
 		local argsConfig = (function()
@@ -760,11 +764,11 @@ function defineFieldMap(config)
 		end)()
 
 		devAssert(
-			isPlainObj(argsConfig),
+			isPlainObj(argsConfig) or instanceOf(argsConfig, Map),
 			("%s.%s args must be an object with argument names as keys."):format(config.name, fieldName)
 		)
 
-		local args = Array.map(objectEntries(argsConfig), function(entries)
+		local args = Array.map(coerceToMap(argsConfig):entries(), function(entries)
 			local argName, argConfig = entries[1], entries[2]
 
 			return {
@@ -802,7 +806,8 @@ function isPlainObj(obj: any)
 end
 
 function fieldsToFieldsConfig(fields)
-	return mapValue(fields, function(field)
+	-- ROBLOX deviation: use Map
+	return mapValueOrdered(fields, function(field)
 		return {
 			description = field.description,
 			type = field.type,
@@ -819,8 +824,8 @@ end
 --[[*
 --  * @internal
 --  *]]
-function argsToArgsConfig(args)
-	return keyValMap(args, function(arg)
+function argsToArgsConfig(args): Map<any, any>
+	return keyValMapOrdered(args, function(arg)
 		return arg.name
 	end, function(arg)
 		return {
@@ -1284,7 +1289,8 @@ function GraphQLInputObjectType:getFields()
 end
 
 function GraphQLInputObjectType:toConfig()
-	local fields = mapValue(self:getFields(), function(field)
+	-- ROBLOX deviation: use Map
+	local fields = mapValueOrdered(self:getFields(), function(field)
 		return {
 			description = field.description,
 			type = field.type,
@@ -1324,14 +1330,18 @@ end
 -- }
 
 function defineInputFieldMap(config)
-	local fieldMap = resolveThunk(config.fields)
+	local fieldMap_ = resolveThunk(config.fields)
 
+	-- ROBLOX deviation: valueMap is either Map object or vanilla table
 	devAssert(
-		isPlainObj(fieldMap),
+		isPlainObj(fieldMap_) or instanceOf(fieldMap_, Map),
 		("%s fields must be an object with field names as keys or a function which returns such an object."):format(config.name)
 	)
 
-	return mapValue(fieldMap, function(fieldConfig, fieldName)
+	-- Roblox deviation: coerce to map
+	local fieldMap = coerceToMap(fieldMap_)
+
+	return mapValueOrdered(fieldMap, function(fieldConfig, fieldName)
 		devAssert(
 			fieldConfig.resolve == nil,
 			("%s.%s field has a resolve property, but Input Types cannot define resolvers."):format(config.name, fieldName)

@@ -1,5 +1,7 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/type/__tests__/directive-test.js
 
+local Map = require(script.Parent.Parent.Parent.luaUtils.Map).Map
+
 local directives = require(script.Parent.Parent.directives)
 local GraphQLDirective = directives.GraphQLDirective
 local scalars = require(script.Parent.Parent.scalars)
@@ -29,32 +31,31 @@ return function()
 		it("defines a directive with multiple args", function()
 			local directive = GraphQLDirective.new({
 				name = "Foo",
-				args = {
-					foo = { type = GraphQLString },
-					bar = { type = GraphQLInt },
-				},
+				args = Map.new({
+					{ "foo", { type = GraphQLString }},
+					{ "bar", { type = GraphQLInt }},
+				}),
 				locations = {
 					"QUERY",
 				},
 			})
 
-			-- ROBLOX FIXME? array ordering in Lua doesn't match JS. does it matter?
 			expect(directive).toObjectContain({
 				name = "Foo",
 				args = {
 					{
-						name = "bar",
+						name = "foo",
 						description = nil,
-						type = GraphQLInt,
+						type = GraphQLString,
 						defaultValue = nil,
 						deprecationReason = nil,
 						extensions = nil,
 						astNode = nil,
 					},
 					{
-						name = "foo",
+						name = "bar",
 						description = nil,
-						type = GraphQLString,
+						type = GraphQLInt,
 						defaultValue = nil,
 						deprecationReason = nil,
 						extensions = nil,

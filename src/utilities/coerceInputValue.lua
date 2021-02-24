@@ -26,7 +26,6 @@ local pathToArray = require(jsutilsWorkspace.Path).pathToArray
 local isIteratableObject = require(jsutilsWorkspace.isIteratableObject).isIteratableObject
 local GraphQLError = require(srcWorkspace.error.GraphQLError).GraphQLError
 local definition = require(srcWorkspace.type.definition)
-local objectValues = require(srcWorkspace.polyfills.objectValues).objectValues
 
 local isLeafType = definition.isLeafType
 local isInputObjectType = definition.isInputObjectType
@@ -95,9 +94,10 @@ function coerceInputValueImpl(inputValue, type_, onError, path)
 		end
 
 		local coercedValue = {}
+		-- ROBLOX deviation: use Map
 		local fieldDefs = type_:getFields()
 
-		for _, field in ipairs(objectValues(fieldDefs)) do
+		for _, field in ipairs(fieldDefs:values()) do
 			local fieldValue = inputValue[field.name]
 			if fieldValue == nil then
 				if field.defaultValue ~= nil then
@@ -124,8 +124,9 @@ function coerceInputValueImpl(inputValue, type_, onError, path)
 
 		-- Ensure every provided field is defined
 		for _, fieldName in ipairs(Object.keys(inputValue)) do
-			if not fieldDefs[fieldName] then
-				local suggestions = suggestionList(fieldName, Object.keys(type_:getFields()))
+			if not fieldDefs:get(fieldName) then
+				-- ROBLOX deviation: use Map
+				local suggestions = suggestionList(fieldName, type_:getFields():keys())
 				onError(
 					pathToArray(path),
 					inputValue,

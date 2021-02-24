@@ -2,7 +2,6 @@
 
 local srcWorkspace = script.Parent.Parent
 
-local objectValues = require(srcWorkspace.polyfills.objectValues).objectValues
 local keyMap = require(srcWorkspace.jsutils.keyMap).keyMap
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
 local invariant = require(srcWorkspace.jsutils.invariant).invariant
@@ -93,7 +92,8 @@ local function valueFromAST(valueNode, type_, variables)
 		local fieldNodes = keyMap(valueNode.fields, function(field)
 			return field.name.value
 		end)
-		for _, field in ipairs(objectValues(type_:getFields())) do
+		-- ROBLOX deviation: use Map
+		for _, field in ipairs(type_:getFields():values()) do
 			local fieldNode = fieldNodes[field.name]
 			if not fieldNode or isMissingVariable(fieldNode.value, variables) then
 				if field.defaultValue ~= nil then

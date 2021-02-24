@@ -75,6 +75,7 @@ return function()
 	end
 
 	describe("Schema Builder", function()
+
 		it("can use built schema for limited execution", function()
 			local schema = buildASTSchema(parse([[
 
@@ -300,20 +301,7 @@ return function()
       }
     ]])
 
-			--[[
-				ROBLOX FIXME: ordering is not preserved
-				original code: expect(cycleSDL(sdl)).to.equal(sdl)
-			--]]
-			expect(cycleSDL(sdl)).to.equal(dedent([[
-
-      type Query {
-        listOfStrings: [String]
-        nonNullStr: String!
-        nonNullListOfNonNullStrings: [String!]!
-        listOfNonNullStrings: [String!]
-        nonNullListOfStrings: [String]!
-      }
-    ]]))
+			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
 		it("Recursive type", function()
@@ -357,20 +345,8 @@ return function()
       }
     ]])
 
-			--[[
-				ROBLOX FIXME: ordering is not preserved
-				original code: expect(cycleSDL(sdl)).to.equal(sdl)
-			--]]
-			expect(cycleSDL(sdl)).to.equal(dedent([[
 
-      type Query {
-        str(int: Int): String
-        idToStr(id: ID): String
-        floatToStr(float: Float): String
-        booleanToStr(bool: Boolean): String
-        strToStr(bool: String): String
-      }
-    ]]))
+			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
 		it("Simple type with multiple arguments", function()
@@ -735,33 +711,7 @@ return function()
       }
     ]])
 
-			--[[
-				ROBLOX FIXME: ordering is not preserved
-				original code: expect(cycleSDL(sdl)).to.equal(sdl)
-			--]]
-			expect(cycleSDL(sdl)).to.equal(dedent([[
-
-      enum MyEnum {
-        VALUE
-        OLD_VALUE @deprecated
-        OTHER_VALUE @deprecated(reason: "Terrible reasons")
-      }
-
-      input MyInput {
-        otherInput: String @deprecated(reason: "Use newInput")
-        oldInput: String @deprecated
-        newInput: String
-      }
-
-      type Query {
-        field1: String @deprecated
-        field2: Int @deprecated(reason: "Because I said so")
-        enum: MyEnum
-        field3(arg: String, oldArg: String @deprecated): String
-        field5(arg: MyInput): String
-        field4(arg: String, oldArg: String @deprecated(reason: "Why not?")): String
-      }
-    ]]))
+			expect(cycleSDL(sdl)).to.equal(sdl)
 
 			local schema = buildSchema(sdl)
 			local myEnum = assertEnumType(schema:getType("MyEnum"))
@@ -781,6 +731,7 @@ return function()
 				deprecationReason = "Terrible reasons",
 			})
 
+			-- ROBLOX deviation: use Map
 			local rootFields = assertObjectType(schema:getType("Query")):getFields()
 
 			expect(rootFields.field1).toObjectContain({
@@ -790,6 +741,7 @@ return function()
 				deprecationReason = "Because I said so",
 			})
 
+			-- ROBLOX deviation: use Map
 			local inputFields = assertInputObjectType(schema:getType("MyInput")):getFields()
 			local newInput = inputFields.newInput
 
@@ -807,21 +759,13 @@ return function()
 				deprecationReason = "Use newInput",
 			})
 
-			--[[
-			--  ROBLOX deviation: oldField is second rather than first
-			--  I believe this is working in JS version because Object.entries iterates over properties in order they where added (at least in most browsers and node?)
-			--  This is probably a small bug/issue in upstream as according to MDN developer should not depend on the order of entries execution
-			-- 	ROBLOX FIXME: #142 https://github.com/Roblox/graphql-lua/issues/142
-			--]]
-			local field3OldArg = rootFields.field3.args[2]
+			local field3OldArg = rootFields.field3.args[1]
 
 			expect(field3OldArg).toObjectContain({
 				deprecationReason = "No longer supported",
 			})
 
-			-- ROBLOX deviation: oldField is second rather than first
-			-- ROBLOX FIXME: #142 https://github.com/Roblox/graphql-lua/issues/142
-			local field4OldArg = rootFields.field4.args[2]
+			local field4OldArg = rootFields.field4.args[1]
 
 			expect(field4OldArg).toObjectContain({
 				deprecationReason = "Why not?",

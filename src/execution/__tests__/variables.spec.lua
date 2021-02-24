@@ -7,6 +7,7 @@ return function()
 	-- ROBLOX deviation: utils
 	local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
 	local NULL = require(srcWorkspace.luaUtils.null)
+	local Map = require(srcWorkspace.luaUtils.Map).Map
 
 	local inspect = require(srcWorkspace.jsutils.inspect).inspect
 	local invariant = require(srcWorkspace.jsutils.invariant).invariant
@@ -42,40 +43,34 @@ return function()
 	})
 	local TestInputObject = GraphQLInputObjectType.new({
 		name = "TestInputObject",
-		fields = {
-			a = { type = GraphQLString },
-			b = {
-				type = GraphQLList.new(GraphQLString),
-			},
-			c = {
-				type = GraphQLNonNull.new(GraphQLString),
-			},
-			d = { type = TestComplexScalar },
-		},
+		fields = Map.new({
+			{"a", { type = GraphQLString }},
+			{"b", { type = GraphQLList.new(GraphQLString)}},
+			{"c", { type = GraphQLNonNull.new(GraphQLString)}},
+			{"d", { type = TestComplexScalar }},
+		}),
 	})
 	local TestNestedInputObject = GraphQLInputObjectType.new({
 		name = "TestNestedInputObject",
-		fields = {
-			na = {
+		fields = Map.new({
+			{ "na", {
 				type = GraphQLNonNull.new(TestInputObject),
-			},
-			nb = {
+			}},
+			{ "nb", {
 				type = GraphQLNonNull.new(GraphQLString),
-			},
-		},
+			}},
+		}),
 	})
 	local TestEnum = GraphQLEnumType.new({
 		name = "TestEnum",
-		values = {
-			NULL = { value = NULL },
-			UNDEFINED = { value = nil },
-			NAN = { value = 0/0 },
-			FALSE = { value = false },
-			CUSTOM = {
-				value = "custom value",
-			},
-			DEFAULT_VALUE = {},
-		},
+		values = Map.new({
+			{"NULL", { value = NULL }},
+			{"UNDEFINED", { value = nil }},
+			{"NAN", { value = 0/0 }},
+			{"FALSE", { value = false }},
+			{"CUSTOM", { value = "custom value"}},
+			{"DEFAULT_VALUE", {}},
+		}),
 	})
 
 	local function fieldWithInputArg(inputArg)
@@ -83,7 +78,6 @@ return function()
 			type = GraphQLString,
 			args = { input = inputArg },
 			resolve = function(_, args)
-				local _tmp = inputArg
 				if typeof(args) == "table" and args.input ~= nil then
 					return inspect(args.input)
 				end
@@ -94,41 +88,41 @@ return function()
 
 	local TestType = GraphQLObjectType.new({
 		name = "TestType",
-		fields = {
-			fieldWithEnumInput = fieldWithInputArg({ type = TestEnum }),
-			fieldWithNonNullableEnumInput = fieldWithInputArg({
+		fields = Map.new({
+			{ "fieldWithEnumInput", fieldWithInputArg({ type = TestEnum })},
+			{ "fieldWithNonNullableEnumInput", fieldWithInputArg({
 				type = GraphQLNonNull.new(TestEnum),
-			}),
-			fieldWithObjectInput = fieldWithInputArg({ type = TestInputObject }),
-			fieldWithNullableStringInput = fieldWithInputArg({ type = GraphQLString }),
-			fieldWithNonNullableStringInput = fieldWithInputArg({
+			})},
+			{ "fieldWithObjectInput", fieldWithInputArg({ type = TestInputObject })},
+			{ "fieldWithNullableStringInput", fieldWithInputArg({ type = GraphQLString })},
+			{ "fieldWithNonNullableStringInput", fieldWithInputArg({
 				type = GraphQLNonNull.new(GraphQLString),
-			}),
-			fieldWithDefaultArgumentValue = fieldWithInputArg({
+			})},
+			{ "fieldWithDefaultArgumentValue", fieldWithInputArg({
 				type = GraphQLString,
 				defaultValue = "Hello World",
-			}),
-			fieldWithNonNullableStringInputAndDefaultArgumentValue = fieldWithInputArg({
+			})},
+			{ "fieldWithNonNullableStringInputAndDefaultArgumentValue", fieldWithInputArg({
 				type = GraphQLNonNull.new(GraphQLString),
 				defaultValue = "Hello World",
-			}),
-			fieldWithNestedInputObject = fieldWithInputArg({
+			})},
+			{ "fieldWithNestedInputObject", fieldWithInputArg({
 				type = TestNestedInputObject,
 				defaultValue = "Hello World",
-			}),
-			list = fieldWithInputArg({
+			})},
+			{ "list", fieldWithInputArg({
 				type = GraphQLList.new(GraphQLString),
-			}),
-			nnList = fieldWithInputArg({
+			})},
+			{ "nnList", fieldWithInputArg({
 				type = GraphQLNonNull.new(GraphQLList.new(GraphQLString)),
-			}),
-			listNN = fieldWithInputArg({
+			})},
+			{ "listNN", fieldWithInputArg({
 				type = GraphQLList.new(GraphQLNonNull.new(GraphQLString)),
-			}),
-			nnListNN = fieldWithInputArg({
+			})},
+			{ "nnListNN", fieldWithInputArg({
 				type = GraphQLNonNull.new(GraphQLList.new(GraphQLNonNull.new(GraphQLString))),
-			}),
-		},
+			})},
+		}),
 	})
 	local schema = GraphQLSchema.new({ query = TestType })
 

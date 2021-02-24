@@ -1,7 +1,6 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/056fac955b7172e55b33e0a1b35b4ddb8951a99c/src/type/introspection.js
 
 local srcWorkspace = script.Parent.Parent
-local polyfillsWorkspace = srcWorkspace.polyfills
 local jsutilsWorkspace = srcWorkspace.jsutils
 local languageWorkspace = srcWorkspace.language
 local Packages = srcWorkspace.Parent.Packages
@@ -11,8 +10,6 @@ local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
 local isNotNillish = require(srcWorkspace.luaUtils.isNillish).isNotNillish
-
-local objectValues = require(polyfillsWorkspace.objectValues).objectValues
 
 local inspect = require(jsutilsWorkspace.inspect).inspect
 local invariant = require(jsutilsWorkspace.invariant).invariant
@@ -299,7 +296,8 @@ exports.__Type = GraphQLObjectType.new({
 				resolve = function(type_, args)
 					local includeDeprecated = args.includeDeprecated
 					if isObjectType(type_) or isInterfaceType(type_) then
-						local fields = objectValues(type_:getFields())
+						-- ROBLOX deviation: use Map
+						local fields = type_:getFields():values()
 						return includeDeprecated
 							and fields
 							or Array.filter(fields, function(field)
@@ -364,7 +362,8 @@ exports.__Type = GraphQLObjectType.new({
 					local includeDeprecated = args.includeDeprecated
 
 					if isInputObjectType(type_) then
-						local values = objectValues(type_:getFields())
+						-- ROBLOX deviation: use Map
+						local values = type_:getFields():values()
 
 						return includeDeprecated
 							and values

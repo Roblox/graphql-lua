@@ -92,7 +92,7 @@ return function()
 			})
 		end)
 
-		itSKIP("extends objects by adding new fields", function()
+		it("extends objects by adding new fields", function()
 			local schema = buildSchema([[
 
       type Query {
@@ -155,8 +155,7 @@ return function()
     ]])
 			local extendedSchema = extendSchema(schema, extendAST)
 
-			-- ROBLOX FIXME: uncomment when dependency available
-			-- expect(validateSchema(extendedSchema)).toEqual({})
+			expect(validateSchema(extendedSchema)).toEqual({})
 			expect(extendedSchema:getType("Int")).to.equal(nil)
 			expect(extendedSchema:getType("Float")).to.equal(nil)
 			expect(extendedSchema:getType("String")).to.equal(GraphQLString)
@@ -260,8 +259,7 @@ return function()
     ]]))
 		end)
 
-		-- ROBLOX FIXME: ordering is not preserved
-		itSKIP("extends inputs by adding new fields", function()
+		it("extends inputs by adding new fields", function()
 			local schema = buildSchema([[
 
       type Query {
@@ -601,8 +599,7 @@ return function()
 			})
 		end)
 
-		-- ROBLOX FIXME: order is not preserved
-		itSKIP("adds new unused types", function()
+		it("adds new unused types", function()
 			local schema = buildSchema([[
 
       type Query {
@@ -639,8 +636,7 @@ return function()
 			expect(printSchemaChanges(schema, extendedSchema)).to.equal(extensionSDL)
 		end)
 
-		-- ROBLOX FIXME: order is not preserved
-		itSKIP("extends objects by adding new fields with arguments", function()
+		it("extends objects by adding new fields with arguments", function()
 			local schema = buildSchema([[
 
       type SomeObject
@@ -705,7 +701,7 @@ return function()
     ]]))
 		end)
 
-		itSKIP("extends objects by adding implemented interfaces", function()
+		it("extends objects by adding implemented interfaces", function()
 			local schema = buildSchema([[
 
       type Query {
@@ -735,8 +731,7 @@ return function()
     ]]))
 		end)
 
-		-- ROBLOX FIXME: probably order is not preserved
-		itSKIP("extends objects by including new types", function()
+		it("extends objects by including new types", function()
 			local schema = buildSchema([[
 
       type Query {
@@ -797,7 +792,7 @@ return function()
 			)
 		end)
 
-		itSKIP("extends objects by adding implemented new interfaces", function()
+		it("extends objects by adding implemented new interfaces", function()
 			local schema = buildSchema([[
 
       type Query {
@@ -838,7 +833,7 @@ return function()
     ]]))
 		end)
 
-		itSKIP("extends different types multiple times", function()
+		it("extends different types multiple times", function()
 			local schema = buildSchema([[
 
       type Query {
@@ -959,7 +954,7 @@ return function()
 			)
 		end)
 
-		itSKIP("extends interfaces by adding new fields", function()
+		it("extends interfaces by adding new fields", function()
 			local schema = buildSchema([[
 
       interface SomeInterface {
@@ -1014,7 +1009,7 @@ return function()
     ]]))
 		end)
 
-		itSKIP("extends interfaces by adding new implemented interfaces", function()
+		it("extends interfaces by adding new implemented interfaces", function()
 			local schema = buildSchema([[
 
       interface SomeInterface {
@@ -1068,7 +1063,7 @@ return function()
     ]]))
 		end)
 
-		itSKIP("allows extension of interface with missing Object fields", function()
+		it("allows extension of interface with missing Object fields", function()
 			local schema = buildSchema([[
 
       type Query {
@@ -1101,8 +1096,7 @@ return function()
     ]]))
 		end)
 
-		-- ROBLOX FIXME: order is not preserved
-		itSKIP("extends interfaces multiple times", function()
+		it("extends interfaces multiple times", function()
 			local schema = buildSchema([[
 
       type Query {
@@ -1136,8 +1130,7 @@ return function()
     ]]))
 		end)
 
-		-- ROBLOX FIXME: order is not preserved
-		itSKIP("may extend mutations and subscriptions", function()
+		it("may extend mutations and subscriptions", function()
 			local mutationSchema = buildSchema([[
 
       type Query {

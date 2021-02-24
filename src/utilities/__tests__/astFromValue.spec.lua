@@ -1,23 +1,27 @@
 --upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/__tests__/astFromValue-test.js
 
 return function()
-	local scalarsImport = require(script.Parent.Parent.Parent.type.scalars)
+	local utilitiesWorkspace = script.Parent.Parent
+	local srcWorkspace = utilitiesWorkspace.Parent
+
+	local scalarsImport = require(srcWorkspace.type.scalars)
 	local GraphQLID = scalarsImport.GraphQLID
 	local GraphQLInt = scalarsImport.GraphQLInt
 	local GraphQLFloat = scalarsImport.GraphQLFloat
 	local GraphQLString = scalarsImport.GraphQLString
 	local GraphQLBoolean = scalarsImport.GraphQLBoolean
-	local definitionImport = require(script.Parent.Parent.Parent.type.definition)
+	local definitionImport = require(srcWorkspace.type.definition)
 	local GraphQLList = definitionImport.GraphQLList
 	local GraphQLNonNull = definitionImport.GraphQLNonNull
 	local GraphQLScalarType = definitionImport.GraphQLScalarType
 	local GraphQLEnumType = definitionImport.GraphQLEnumType
 	local GraphQLInputObjectType = definitionImport.GraphQLInputObjectType
 
-	local astFromValue = require(script.Parent.Parent.astFromValue).astFromValue
+	local astFromValue = require(utilitiesWorkspace.astFromValue).astFromValue
 
 	-- ROBLOX deviation: bring in NULL type
-	local NULL = require(script.Parent.Parent.astFromValue).NULL
+	local NULL = require(utilitiesWorkspace.astFromValue).NULL
+	local Map = require(srcWorkspace.luaUtils.Map).Map
 	-- ROBLOX deviation: JS primitives
 	local NaN = 0 / 0
 
@@ -386,17 +390,18 @@ return function()
 
 		local inputObj = GraphQLInputObjectType.new({
 			name = "MyInputObj",
-			fields = {
-				foo = { type = GraphQLFloat },
-				bar = { type = myEnum },
-			},
+			fields = Map.new({
+				{ "foo" , { type = GraphQLFloat }},
+				{ "bar" , { type = myEnum }},
+			}),
 		})
 
 		it("converts input objects", function()
-			expect(astFromValue({
+			local result = astFromValue({
 				foo = 3,
 				bar = "HELLO",
-			}, inputObj)).toEqual({
+			}, inputObj)
+			expect(result).toEqual({
 				kind = "ObjectValue",
 				fields = {
 					{

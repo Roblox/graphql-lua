@@ -6,7 +6,9 @@ return function()
 	-- ROBLOX deviation: utils
 	local NULL = require(srcWorkspace.luaUtils.null)
 	local NaN = 0 / 0
-	local Map = require(srcWorkspace.luaUtils.Map).Map
+	local MapModule = require(srcWorkspace.luaUtils.Map)
+	local Map = MapModule.Map
+	local coerceToTable = MapModule.coerceToTable
 
 	local inspect = require(srcWorkspace.jsutils.inspect).inspect
 	local identityFunc = require(srcWorkspace.jsutils.identityFunc).identityFunc
@@ -235,7 +237,7 @@ return function()
 				end,
 			})
 
-			expect(objType:getFields()).toEqual({
+			expect(coerceToTable(objType:getFields())).toEqual({
 				f = {
 					name = "f",
 					description = nil,
@@ -263,7 +265,7 @@ return function()
 				},
 			})
 
-			expect(objType:getFields()).toEqual({
+			expect(coerceToTable(objType:getFields())).toEqual({
 				f = {
 					name = "f",
 					description = nil,
@@ -762,7 +764,7 @@ return function()
 					},
 				})
 
-				expect(inputObjType:getFields()).toEqual({
+				expect(coerceToTable(inputObjType:getFields())).toEqual({
 					f = {
 						name = "f",
 						description = nil,
@@ -785,7 +787,7 @@ return function()
 					end,
 				})
 
-				expect(inputObjType:getFields()).toEqual({
+				expect(coerceToTable(inputObjType:getFields())).toEqual({
 					f = {
 						name = "f",
 						description = nil,

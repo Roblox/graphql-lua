@@ -9,8 +9,6 @@ local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
 local Boolean = LuauPolyfill.Boolean
 local Array = require(srcWorkspace.luaUtils.Array)
 
-local objectValues = require(script.Parent.Parent.polyfills.objectValues).objectValues
-
 local inspect = require(script.Parent.Parent.jsutils.inspect).inspect
 local invariant = require(script.Parent.Parent.jsutils.invariant).invariant
 
@@ -222,9 +220,9 @@ end
 
 function printEnum(type_): string
 	local values = Array.map(type_:getValues(), function(value, i)
-		return printDescription(value, "  ", i == 1) 
-			.. "  " 
-			.. value.name 
+		return printDescription(value, "  ", i == 1)
+			.. "  "
+			.. value.name
 			.. printDeprecated(value.deprecationReason)
 	end)
 
@@ -232,7 +230,8 @@ function printEnum(type_): string
 end
 
 function printInputObject(type_)
-	local fields = Array.map(objectValues(type_:getFields()), function(f, i)
+	-- ROBLOX deviation: use Map
+	local fields = Array.map(type_:getFields():values(), function(f, i)
 		return printDescription(f, "  ", i == 1) .. "  " .. printInputValue(f)
 	end)
 
@@ -240,7 +239,8 @@ function printInputObject(type_)
 end
 
 function printFields(type_): string
-	local fields = Array.map(objectValues(type_:getFields()), function(f, i)
+	-- ROBLOX deviation: use Map
+	local fields = Array.map(type_:getFields():values(), function(f, i)
 		return printDescription(f, "  ", i == 1)
 			.. "  "
 			.. f.name
