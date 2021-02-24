@@ -1,20 +1,11 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/index.js
 
-local buildASTSchemaImport = require(script.buildASTSchema)
-local printSchemaImport = require(script.printSchema)
-local TypeInfoImport = require(script.TypeInfo)
-local typeComparatorsImport = require(script.typeComparators)
-local assertValidNameImport = require(script.assertValidName)
-
--- ROBLOX TODO - add implementation
-local findBreakingChangesImport = {
-	BreakingChangeType = {},
-	DangerousChangeType = {},
-	findBreakingChanges = function()--[[...]]
-	end,
-	findDangerousChanges = function()--[[...]]
-	end,
-}
+local buildASTSchemaModule = require(script.buildASTSchema)
+local printSchemaModule = require(script.printSchema)
+local TypeInfoModule = require(script.TypeInfo)
+local typeComparatorsModule = require(script.typeComparators)
+local assertValidNameModule = require(script.assertValidName)
+local findBreakingChangesModule = require(script.findBreakingChanges)
 
 return {
 	-- Produce the GraphQL query recommended for a full schema introspection.
@@ -28,16 +19,14 @@ return {
 	getOperationRootType = require(script.getOperationRootType).getOperationRootType,
 
 	-- Convert a GraphQLSchema to an IntrospectionQuery.
-	-- ROBLOX TODO - add implementation
-	introspectionFromSchema = function()--[[...]]
-	end,
+	introspectionFromSchema =  require(script.introspectionFromSchema).introspectionFromSchema,
 
 	-- Build a GraphQLSchema from an introspection result.
 	buildClientSchema = require(script.buildClientSchema).buildClientSchema,
 
 	-- Build a GraphQLSchema from GraphQL Schema language.
-	buildASTSchema = buildASTSchemaImport.buildASTSchema,
-	buildSchema = buildASTSchemaImport.buildSchema,
+	buildASTSchema = buildASTSchemaModule.buildASTSchema,
+	buildSchema = buildASTSchemaModule.buildSchema,
 
 	-- Extends an existing GraphQLSchema from a parsed GraphQL Schema language AST.
 	extendSchema = require(script.extendSchema).extendSchema,
@@ -48,9 +37,9 @@ return {
 	end,
 
 	-- Print a GraphQLSchema to GraphQL Schema language.
-	printSchema = printSchemaImport.printSchema,
-	printType = printSchemaImport.printType,
-	printIntrospectionSchema = printSchemaImport.printIntrospectionSchema,
+	printSchema = printSchemaModule.printSchema,
+	printType = printSchemaModule.printType,
+	printIntrospectionSchema = printSchemaModule.printIntrospectionSchema,
 
 	-- Create a GraphQLType from a GraphQL language AST.
 	typeFromAST = require(script.typeFromAST).typeFromAST,
@@ -66,8 +55,8 @@ return {
 
 	-- A helper to use within recursive-descent visitors which need to be aware of
 	-- the GraphQL type system.
-	TypeInfo = TypeInfoImport.TypeInfo,
-	visitWithTypeInfo = TypeInfoImport.visitWithTypeInfo,
+	TypeInfo = TypeInfoModule.TypeInfo,
+	visitWithTypeInfo = TypeInfoModule.visitWithTypeInfo,
 
 	-- Coerces a JavaScript value to a GraphQL type, or produces errors.
 	coerceInputValue = require(script.coerceInputValue).coerceInputValue,
@@ -83,18 +72,18 @@ return {
 	stripIgnoredCharacters = require(script.stripIgnoredCharacters).stripIgnoredCharacters,
 
 	-- Comparators for types
-	isEqualType = typeComparatorsImport.isEqualType,
-	isTypeSubTypeOf = typeComparatorsImport.isTypeSubTypeOf,
-	doTypesOverlap = typeComparatorsImport.doTypesOverlap,
+	isEqualType = typeComparatorsModule.isEqualType,
+	isTypeSubTypeOf = typeComparatorsModule.isTypeSubTypeOf,
+	doTypesOverlap = typeComparatorsModule.doTypesOverlap,
 
 	-- Asserts that a string is a valid GraphQL name
-	assertValidName = assertValidNameImport.assertValidName,
-	isValidNameError = assertValidNameImport.isValidNameError,
+	assertValidName = assertValidNameModule.assertValidName,
+	isValidNameError = assertValidNameModule.isValidNameError,
 
 	-- Compares two GraphQLSchemas and detects breaking changes.
-	BreakingChangeType = findBreakingChangesImport.BreakingChangeType,
-	DangerousChangeType = findBreakingChangesImport.DangerousChangeType,
-	findBreakingChanges = findBreakingChangesImport.findBreakingChanges,
-	findDangerousChanges = findBreakingChangesImport.findDangerousChanges,
+	BreakingChangeType = findBreakingChangesModule.BreakingChangeType,
+	DangerousChangeType = findBreakingChangesModule.DangerousChangeType,
+	findBreakingChanges = findBreakingChangesModule.findBreakingChanges,
+	findDangerousChanges = findBreakingChangesModule.findDangerousChanges,
 
 }

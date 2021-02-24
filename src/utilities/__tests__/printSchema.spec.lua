@@ -587,8 +587,7 @@ return function()
     ]]))
 		end)
 
-		--ROBLOX fixme: need to preserve insertion order off enum values
-		itSKIP("Enum", function()
+		it("Enum", function()
 			local RGBType = GraphQLEnumType.new({
 				name = "RGB",
 				-- ROBLOX deviation: use Map to guarantee order
@@ -713,6 +712,7 @@ return function()
     ]]))
 		end)
 
+		-- ROBLOX FIXME - output doesn't match
 		itSKIP("Print Introspection Schema", function()
 			local schema = GraphQLSchema.new({})
 			local output = printIntrospectionSchema(schema)
