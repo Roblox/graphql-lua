@@ -35,41 +35,6 @@ return function()
 	local instanceOf = require(srcWorkspace.jsutils.instanceOf)
 	local NULL = require(luaUtilsWorkspace.null)
 
-	local function _await(value, thenFunc, direct)
-		if direct then
-			return (function()
-				if thenFunc then
-					return thenFunc(value)
-				end
-
-				return value
-			end)()
-		end
-		if not value or not value.andThen then
-			value = Promise.resolve(value)
-		end
-
-		return (function()
-			if thenFunc then
-				return value:andThen(thenFunc)
-			end
-
-			return value
-		end)()
-	end
-	local function _async(f: any)
-		return function(...)
-			local args = { ... }
-			local ok, errorOrResult = pcall(function()
-				return Promise.resolve(f(table.unpack(args)))
-			end)
-			if not ok then
-				return Promise.reject(errorOrResult)
-			end
-			return errorOrResult
-		end
-	end
-
 	describe("Execute: Handles basic execution tasks", function()
 		it("throws if no document is provided", function()
 			local schema = GraphQLSchema.new({
@@ -111,6 +76,7 @@ return function()
 				}),
 			})
 			local document = parse([[
+
       query ($a: Int) {
         fieldA(argA: $a)
       }
@@ -127,106 +93,105 @@ return function()
 			end).toThrow("Variables must be provided as an Object where each property is a variable value. Perhaps look to see if an unparsed JSON string was provided.")
 		end)
 
-		itSKIP(
-			"executes arbitrary code",
-			_async(function()
-				-- ROBLOX deviation: predeclare local variables
-				local data
-				local deepData
-				local DataType
-				local DeepDataType
+		it("executes arbitrary code", function()
+			-- ROBLOX deviation: predeclare local variables
+			local data
+			local deepData
+			local DataType
+			local DeepDataType
 
-				-- ROBLOX deviation: hoist function to top
-				local function promiseData()
-					return Promise.resolve(data)
-				end
+			-- ROBLOX deviation: hoist function to top
+			local function promiseData()
+				return Promise.resolve(data)
+			end
 
-				data = {
-					a = function()
-						return "Apple"
-					end,
-					b = function()
-						return "Banana"
-					end,
-					c = function()
-						return "Cookie"
-					end,
-					d = function()
-						return "Donut"
-					end,
-					e = function()
-						return "Egg"
-					end,
-					f = "Fish",
-					-- Called only by DataType::pic static resolver
-					pic = function(size: number)
-						return "Pic of size: " .. tostring(size)
-					end,
-					deep = function()
-						return deepData
-					end,
-					promise = promiseData,
-				}
+			data = {
+				a = function()
+					return "Apple"
+				end,
+				b = function()
+					return "Banana"
+				end,
+				c = function()
+					return "Cookie"
+				end,
+				d = function()
+					return "Donut"
+				end,
+				e = function()
+					return "Egg"
+				end,
+				f = "Fish",
+				-- Called only by DataType::pic static resolver
+				pic = function(size: number)
+					return "Pic of size: " .. tostring(size)
+				end,
+				deep = function()
+					return deepData
+				end,
+				promise = promiseData,
+			}
 
-				deepData = {
-					a = function()
-						return "Already Been Done"
-					end,
-					b = function()
-						return "Boring"
-					end,
-					c = function()
-						return {
-							"Contrived",
-							NULL,
-							"Confusing",
-						}
-					end,
-					deeper = function()
-						return { data, NULL, data }
-					end,
-				}
+			deepData = {
+				a = function()
+					return "Already Been Done"
+				end,
+				b = function()
+					return "Boring"
+				end,
+				c = function()
+					return {
+						"Contrived",
+						NULL,
+						"Confusing",
+					}
+				end,
+				deeper = function()
+					return { data, NULL, data }
+				end,
+			}
 
-				DataType = GraphQLObjectType.new({
-					name = "DataType",
-					fields = function()
-						return {
-							a = { type = GraphQLString },
-							b = { type = GraphQLString },
-							c = { type = GraphQLString },
-							d = { type = GraphQLString },
-							e = { type = GraphQLString },
-							f = { type = GraphQLString },
-							pic = {
-								args = {
-									size = { type = GraphQLInt },
-								},
-								type = GraphQLString,
-								resolve = function(obj, _ref)
-									local size = _ref.size
-
-									return obj.pic(size)
-								end,
-							},
-							deep = { type = DeepDataType },
-							promise = { type = DataType },
-						}
-					end,
-				})
-				DeepDataType = GraphQLObjectType.new({
-					name = "DeepDataType",
-					fields = {
+			DataType = GraphQLObjectType.new({
+				name = "DataType",
+				fields = function()
+					return {
 						a = { type = GraphQLString },
 						b = { type = GraphQLString },
-						c = {
-							type = GraphQLList.new(GraphQLString),
+						c = { type = GraphQLString },
+						d = { type = GraphQLString },
+						e = { type = GraphQLString },
+						f = { type = GraphQLString },
+						pic = {
+							args = {
+								size = { type = GraphQLInt },
+							},
+							type = GraphQLString,
+							resolve = function(obj, _ref)
+								local size = _ref.size
+
+								return obj.pic(size)
+							end,
 						},
-						deeper = {
-							type = GraphQLList.new(DataType),
-						},
+						deep = { type = DeepDataType },
+						promise = { type = DataType },
+					}
+				end,
+			})
+			DeepDataType = GraphQLObjectType.new({
+				name = "DeepDataType",
+				fields = {
+					a = { type = GraphQLString },
+					b = { type = GraphQLString },
+					c = {
+						type = GraphQLList.new(GraphQLString),
 					},
-				})
-				local document = parse([[
+					deeper = {
+						type = GraphQLList.new(DataType),
+					},
+				},
+			})
+			local document = parse([[
+
       query ($size: Int) {
         a,
         b,
@@ -256,52 +221,49 @@ return function()
       }
     ]])
 
-				return _await(
-					execute({
-						schema = GraphQLSchema.new({ query = DataType }),
-						document = document,
-						rootValue = data,
-						variableValues = { size = 100 },
-					}),
-					function(result)
-						expect(result).toEqual({
-							data = {
+			local result = execute({
+				schema = GraphQLSchema.new({ query = DataType }),
+				document = document,
+				rootValue = data,
+				variableValues = { size = 100 },
+			}):expect()
+
+			expect(result).toEqual({
+				data = {
+					a = "Apple",
+					b = "Banana",
+					x = "Cookie",
+					d = "Donut",
+					e = "Egg",
+					f = "Fish",
+					pic = "Pic of size: 100",
+					promise = {
+						a = "Apple",
+					},
+					deep = {
+						a = "Already Been Done",
+						b = "Boring",
+						c = {
+							"Contrived",
+							NULL,
+							"Confusing",
+						},
+						deeper = {
+							{
 								a = "Apple",
 								b = "Banana",
-								x = "Cookie",
-								d = "Donut",
-								e = "Egg",
-								f = "Fish",
-								pic = "Pic of size: 100",
-								promise = {
-									a = "Apple",
-								},
-								deep = {
-									a = "Already Been Done",
-									b = "Boring",
-									c = {
-										"Contrived",
-										nil,
-										"Confusing",
-									},
-									deeper = {
-										{
-											a = "Apple",
-											b = "Banana",
-										},
-										nil,
-										{
-											a = "Apple",
-											b = "Banana",
-										},
-									},
-								},
 							},
-						})
-					end
-				)
-			end)
-		)
+							NULL,
+							{
+								a = "Apple",
+								b = "Banana",
+							},
+						},
+					},
+				},
+			})
+
+		end)
 
 		it("merges parallel fragments", function()
 			-- ROBLOX deviation: predeclare variable used recursively
@@ -339,6 +301,7 @@ return function()
 			})
 			local schema = GraphQLSchema.new({ query = Type })
 			local document = parse([[
+
       { a, ...FragOne, ...FragTwo }
 
       fragment FragOne on Type {
@@ -482,6 +445,7 @@ return function()
 				test = { {} },
 			}
 			local document = parse([[
+
       query {
         l1: test {
           ... on SomeObject {
@@ -559,6 +523,7 @@ return function()
 				}),
 			})
 			local document = parse([[
+
       query Example {
         b(numArg: 123, stringArg: "foo")
       }
@@ -574,33 +539,32 @@ return function()
 			})
 		end)
 
-		itSKIP(
-			"nulls out error subtrees",
-			_async(function()
-				local schema = GraphQLSchema.new({
-					query = GraphQLObjectType.new({
-						name = "Type",
-						fields = {
-							sync = { type = GraphQLString },
-							syncError = { type = GraphQLString },
-							syncRawError = { type = GraphQLString },
-							syncReturnError = { type = GraphQLString },
-							syncReturnErrorList = {
-								type = GraphQLList.new(GraphQLString),
-							},
-							async = { type = GraphQLString },
-							asyncReject = { type = GraphQLString },
-							asyncRejectWithExtensions = { type = GraphQLString },
-							asyncRawReject = { type = GraphQLString },
-							asyncEmptyReject = { type = GraphQLString },
-							asyncError = { type = GraphQLString },
-							asyncRawError = { type = GraphQLString },
-							asyncReturnError = { type = GraphQLString },
-							asyncReturnErrorWithExtensions = { type = GraphQLString },
+		it("nulls out error subtrees", function()
+			local schema = GraphQLSchema.new({
+				query = GraphQLObjectType.new({
+					name = "Type",
+					fields = {
+						sync = { type = GraphQLString },
+						syncError = { type = GraphQLString },
+						syncRawError = { type = GraphQLString },
+						syncReturnError = { type = GraphQLString },
+						syncReturnErrorList = {
+							type = GraphQLList.new(GraphQLString),
 						},
-					}),
-				})
-				local document = parse([[
+						async = { type = GraphQLString },
+						asyncReject = { type = GraphQLString },
+						asyncRejectWithExtensions = { type = GraphQLString },
+						asyncRawReject = { type = GraphQLString },
+						asyncEmptyReject = { type = GraphQLString },
+						asyncError = { type = GraphQLString },
+						asyncRawError = { type = GraphQLString },
+						asyncReturnError = { type = GraphQLString },
+						asyncReturnErrorWithExtensions = { type = GraphQLString },
+					},
+				}),
+			})
+			local document = parse([[
+
       {
         sync
         syncError
@@ -617,278 +581,280 @@ return function()
         asyncReturnErrorWithExtensions
       }
     ]])
-				local rootValue = {
-					sync = function()
-						return "sync"
-					end,
-					syncError = function()
-						error(Error.new("Error getting syncError"))
-					end,
-					syncRawError = function()
+			local rootValue = {
+				sync = function()
+					return "sync"
+				end,
+				syncError = function()
+					error(Error.new("Error getting syncError"))
+				end,
+				syncRawError = function()
+					-- eslint-disable-next-line no-throw-literal
+					-- ROBLOX deviation: need to use level 0 to avoid prepending error message with additional position information
+					error("Error getting syncRawError", 0)
+				end,
+				syncReturnError = function()
+					return Error.new("Error getting syncReturnError")
+				end,
+				syncReturnErrorList = function()
+					return {
+						"sync0",
+						Error.new("Error getting syncReturnErrorList1"),
+						"sync2",
+						Error.new("Error getting syncReturnErrorList3"),
+					}
+				end,
+				async = function()
+					return Promise.new(function(resolve)
+						return resolve("async")
+					end)
+				end,
+				asyncReject = function()
+					return Promise.new(function(_, reject)
+						return reject(Error.new("Error getting asyncReject"))
+					end)
+				end,
+				asyncRawReject = function()
+					-- eslint-disable-next-line prefer-promise-reject-errors
+					return Promise.reject("Error getting asyncRawReject")
+				end,
+				asyncEmptyReject = function()
+					-- eslint-disable-next-line prefer-promise-reject-errors
+					return Promise.reject()
+				end,
+				asyncError = function()
+					return Promise.new(function()
+						error(Error.new("Error getting asyncError"))
+					end)
+				end,
+				asyncRawError = function()
+					return Promise.new(function()
 						-- eslint-disable-next-line no-throw-literal
-						error("Error getting syncRawError")
-					end,
-					syncReturnError = function()
-						return Error.new("Error getting syncReturnError")
-					end,
-					syncReturnErrorList = function()
-						return {
-							"sync0",
-							Error.new("Error getting syncReturnErrorList1"),
-							"sync2",
-							Error.new("Error getting syncReturnErrorList3"),
-						}
-					end,
-					["async"] = function()
-						return Promise.new(function(resolve)
-							return resolve("async")
-						end)
-					end,
-					asyncReject = function()
-						return Promise.new(function(_, reject)
-							return reject(Error.new("Error getting asyncReject"))
-						end)
-					end,
-					asyncRawReject = function()
-						-- eslint-disable-next-line prefer-promise-reject-errors
-						return Promise.reject("Error getting asyncRawReject")
-					end,
-					asyncEmptyReject = function()
-						-- eslint-disable-next-line prefer-promise-reject-errors
-						return Promise.reject()
-					end,
-					asyncError = function()
-						return Promise.new(function()
-							error(Error.new("Error getting asyncError"))
-						end)
-					end,
-					asyncRawError = function()
-						return Promise.new(function()
-							-- eslint-disable-next-line no-throw-literal
-							error("Error getting asyncRawError")
-						end)
-					end,
-					asyncReturnError = function()
-						return Promise.resolve(Error.new("Error getting asyncReturnError"))
-					end,
-					asyncReturnErrorWithExtensions = function()
-						local error_ = Error.new("Error getting asyncReturnErrorWithExtensions")
+						-- ROBLOX deviation: need to use level 0 to avoid prepending error message with additional position information
+						error("Error getting asyncRawError", 0)
+					end)
+				end,
+				asyncReturnError = function()
+					return Promise.resolve(Error.new("Error getting asyncReturnError"))
+				end,
+				asyncReturnErrorWithExtensions = function()
+					local error_ = Error.new("Error getting asyncReturnErrorWithExtensions")
 
-						error_.extensions = {
-							foo = "bar",
-						}
+					error_.extensions = {
+						foo = "bar",
+					}
 
-						return Promise.resolve(error_)
-					end,
-				}
+					return Promise.resolve(error_)
+				end,
+			}
 
-				return _await(
-					execute({
-						schema = schema,
-						document = document,
-						rootValue = rootValue,
-					}),
-					function(result)
-						expect(result).toEqual({
-							data = {
-								sync = "sync",
-								syncError = nil,
-								syncRawError = nil,
-								syncReturnError = nil,
-								syncReturnErrorList = {
-									"sync0",
-									nil,
-									"sync2",
-									nil,
-								},
-								async = "async",
-								asyncReject = nil,
-								asyncRawReject = nil,
-								asyncEmptyReject = nil,
-								asyncError = nil,
-								asyncRawError = nil,
-								asyncReturnError = nil,
-								asyncReturnErrorWithExtensions = nil,
-							},
-							errors = {
-								{
-									message = "Error getting syncError",
-									locations = {
-										{
-											line = 4,
-											column = 9,
-										},
-									},
-									path = {
-										"syncError",
-									},
-								},
-								{
-									message = "Unexpected error value: \"Error getting syncRawError\"",
-									locations = {
-										{
-											line = 5,
-											column = 9,
-										},
-									},
-									path = {
-										"syncRawError",
-									},
-								},
-								{
-									message = "Error getting syncReturnError",
-									locations = {
-										{
-											line = 6,
-											column = 9,
-										},
-									},
-									path = {
-										"syncReturnError",
-									},
-								},
-								{
-									message = "Error getting syncReturnErrorList1",
-									locations = {
-										{
-											line = 7,
-											column = 9,
-										},
-									},
-									path = {
-										"syncReturnErrorList",
-										1,
-									},
-								},
-								{
-									message = "Error getting syncReturnErrorList3",
-									locations = {
-										{
-											line = 7,
-											column = 9,
-										},
-									},
-									path = {
-										"syncReturnErrorList",
-										3,
-									},
-								},
-								{
-									message = "Error getting asyncReject",
-									locations = {
-										{
-											line = 9,
-											column = 9,
-										},
-									},
-									path = {
-										"asyncReject",
-									},
-								},
-								{
-									message = "Unexpected error value: \"Error getting asyncRawReject\"",
-									locations = {
-										{
-											line = 10,
-											column = 9,
-										},
-									},
-									path = {
-										"asyncRawReject",
-									},
-								},
-								{
-									message = "Unexpected error value: undefined",
-									locations = {
-										{
-											line = 11,
-											column = 9,
-										},
-									},
-									path = {
-										"asyncEmptyReject",
-									},
-								},
-								{
-									message = "Error getting asyncError",
-									locations = {
-										{
-											line = 12,
-											column = 9,
-										},
-									},
-									path = {
-										"asyncError",
-									},
-								},
-								{
-									message = "Unexpected error value: \"Error getting asyncRawError\"",
-									locations = {
-										{
-											line = 13,
-											column = 9,
-										},
-									},
-									path = {
-										"asyncRawError",
-									},
-								},
-								{
-									message = "Error getting asyncReturnError",
-									locations = {
-										{
-											line = 14,
-											column = 9,
-										},
-									},
-									path = {
-										"asyncReturnError",
-									},
-								},
-								{
-									message = "Error getting asyncReturnErrorWithExtensions",
-									locations = {
-										{
-											line = 15,
-											column = 9,
-										},
-									},
-									path = {
-										"asyncReturnErrorWithExtensions",
-									},
-									extensions = {
-										foo = "bar",
-									},
-								},
-							},
-						})
-					end
-				)
-			end)
-		)
+			local result = execute({
+				schema = schema,
+				document = document,
+				rootValue = rootValue,
+			}):expect()
 
-		itSKIP(
-			"nulls error subtree for promise rejection #1071",
-			_async(function()
-				local schema = GraphQLSchema.new({
-					query = GraphQLObjectType.new({
-						name = "Query",
-						fields = {
-							foods = {
-								type = GraphQLList.new(GraphQLObjectType.new({
-									name = "Food",
-									fields = {
-										name = { type = GraphQLString },
-									},
-								})),
-								resolve = function()
-									return Promise.reject(Error.new("Oops"))
-								end,
+			--[[
+			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+			--]]
+			expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
+			expect(result.data).toEqual({
+				sync = "sync",
+				syncError = NULL,
+				syncRawError = NULL,
+				syncReturnError = NULL,
+				syncReturnErrorList = {
+					"sync0",
+					NULL,
+					"sync2",
+					NULL,
+				},
+				async = "async",
+				asyncReject = NULL,
+				asyncRawReject = NULL,
+				asyncEmptyReject = NULL,
+				asyncError = NULL,
+				asyncRawError = NULL,
+				asyncReturnError = NULL,
+				asyncReturnErrorWithExtensions = NULL,
+			})
+			expect(result.errors).toHaveSameMembers(
+				{
+					{
+						message = "Error getting syncError",
+						locations = {
+							{
+								line = 4,
+								column = 9,
 							},
 						},
-					}),
-				})
-				local document = parse([[
+						path = {
+							"syncError",
+						},
+					},
+					{
+						message = "Unexpected error value: \"Error getting syncRawError\"",
+						locations = {
+							{
+								line = 5,
+								column = 9,
+							},
+						},
+						path = {
+							"syncRawError",
+						},
+					},
+					{
+						message = "Error getting syncReturnError",
+						locations = {
+							{
+								line = 6,
+								column = 9,
+							},
+						},
+						path = {
+							"syncReturnError",
+						},
+					},
+					{
+						message = "Error getting syncReturnErrorList1",
+						locations = {
+							{
+								line = 7,
+								column = 9,
+							},
+						},
+						path = {
+							"syncReturnErrorList",
+							2,
+						},
+					},
+					{
+						message = "Error getting syncReturnErrorList3",
+						locations = {
+							{
+								line = 7,
+								column = 9,
+							},
+						},
+						path = {
+							"syncReturnErrorList",
+							4,
+						},
+					},
+					{
+						message = "Error getting asyncReject",
+						locations = {
+							{
+								line = 9,
+								column = 9,
+							},
+						},
+						path = {
+							"asyncReject",
+						},
+					},
+					{
+						message = "Unexpected error value: \"Error getting asyncRawReject\"",
+						locations = {
+							{
+								line = 10,
+								column = 9,
+							},
+						},
+						path = {
+							"asyncRawReject",
+						},
+					},
+					{
+						message = "Unexpected error value: nil",
+						locations = {
+							{
+								line = 11,
+								column = 9,
+							},
+						},
+						path = {
+							"asyncEmptyReject",
+						},
+					},
+					{
+						message = "Error getting asyncError",
+						locations = {
+							{
+								line = 12,
+								column = 9,
+							},
+						},
+						path = {
+							"asyncError",
+						},
+					},
+					{
+						message = "Unexpected error value: \"Error getting asyncRawError\"",
+						locations = {
+							{
+								line = 13,
+								column = 9,
+							},
+						},
+						path = {
+							"asyncRawError",
+						},
+					},
+					{
+						message = "Error getting asyncReturnError",
+						locations = {
+							{
+								line = 14,
+								column = 9,
+							},
+						},
+						path = {
+							"asyncReturnError",
+						},
+					},
+					{
+						message = "Error getting asyncReturnErrorWithExtensions",
+						locations = {
+							{
+								line = 15,
+								column = 9,
+							},
+						},
+						path = {
+							"asyncReturnErrorWithExtensions",
+						},
+						extensions = {
+							foo = "bar",
+						},
+					},
+				},
+				true
+			)
+		end)
+
+		it("nulls error subtree for promise rejection #1071", function()
+			local schema = GraphQLSchema.new({
+				query = GraphQLObjectType.new({
+					name = "Query",
+					fields = {
+						foods = {
+							type = GraphQLList.new(GraphQLObjectType.new({
+								name = "Food",
+								fields = {
+									name = { type = GraphQLString },
+								},
+							})),
+							resolve = function()
+								return Promise.reject(Error.new("Oops"))
+							end,
+						},
+					},
+				}),
+			})
+			local document = parse([[
+
       query {
         foods {
           name
@@ -896,30 +862,30 @@ return function()
       }
     ]])
 
-				return _await(execute({
-					schema = schema,
-					document = document,
-				}), function(result)
-					expect(result).toEqual({
-						data = { foods = nil },
-						errors = {
-							{
-								locations = {
-									{
-										column = 9,
-										line = 3,
-									},
-								},
-								message = "Oops",
-								path = {
-									"foods",
-								},
-							},
-						},
-					})
-				end)
-			end)
-		)
+			local result = execute({
+				schema = schema,
+				document = document,
+			}):expect()
+
+			--[[
+			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+			--]]
+			expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
+			expect(result.data).toEqual({ foods = NULL })
+			expect(#result.errors).to.equal(1)
+			expect(result.errors[1]).toObjectContain({
+				locations = {
+					{
+						column = 9,
+						line = 3,
+					},
+				},
+				message = "Oops",
+				path = {
+					"foods",
+				},
+			})
+		end)
 
 		it("Full response path is included for non-nullable fields", function()
 			-- ROBLOX deviation: predeclare variable used recursively
@@ -1076,6 +1042,7 @@ return function()
 			})
 
 			local document = parse([[
+
       query Example { first: a }
       query OtherExample { second: a }
     ]])
@@ -1137,6 +1104,7 @@ return function()
 				}),
 			})
 			local document = parse([[
+
       query Example { a }
       query OtherExample { a }
     ]])
@@ -1165,6 +1133,7 @@ return function()
 				}),
 			})
 			local document = parse([[
+
       query Example { a }
       query OtherExample { a }
     ]])
@@ -1234,6 +1203,7 @@ return function()
 				}),
 			})
 			local document = parse([[
+
       query Q { a }
       mutation M { c }
       subscription S { a }
@@ -1274,6 +1244,7 @@ return function()
 				}),
 			})
 			local document = parse([[
+
       query Q { a }
       mutation M { c }
     ]])
@@ -1312,6 +1283,7 @@ return function()
 				}),
 			})
 			local document = parse([[
+
       query Q { a }
       subscription S { a }
     ]])
@@ -1334,64 +1306,58 @@ return function()
 			})
 		end)
 
-		itSKIP(
-			"correct field ordering despite execution order",
-			_async(function()
-				local schema = GraphQLSchema.new({
-					query = GraphQLObjectType.new({
-						name = "Type",
-						fields = {
-							a = { type = GraphQLString },
-							b = { type = GraphQLString },
-							c = { type = GraphQLString },
-							d = { type = GraphQLString },
-							e = { type = GraphQLString },
-						},
-					}),
-				})
-				local document = parse("{ a, b, c, d, e }")
-				local rootValue = {
-					a = function()
-						return "a"
-					end,
-					b = function()
-						return Promise.new(function(resolve)
-							return resolve("b")
-						end)
-					end,
-					c = function()
-						return "c"
-					end,
-					d = function()
-						return Promise.new(function(resolve)
-							return resolve("d")
-						end)
-					end,
-					e = function()
-						return "e"
-					end,
-				}
+		it("correct field ordering despite execution order", function()
+			local schema = GraphQLSchema.new({
+				query = GraphQLObjectType.new({
+					name = "Type",
+					fields = {
+						a = { type = GraphQLString },
+						b = { type = GraphQLString },
+						c = { type = GraphQLString },
+						d = { type = GraphQLString },
+						e = { type = GraphQLString },
+					},
+				}),
+			})
+			local document = parse("{ a, b, c, d, e }")
+			local rootValue = {
+				a = function()
+					return "a"
+				end,
+				b = function()
+					return Promise.new(function(resolve)
+						return resolve("b")
+					end)
+				end,
+				c = function()
+					return "c"
+				end,
+				d = function()
+					return Promise.new(function(resolve)
+						return resolve("d")
+					end)
+				end,
+				e = function()
+					return "e"
+				end,
+			}
 
-				return _await(
-					execute({
-						schema = schema,
-						document = document,
-						rootValue = rootValue,
-					}),
-					function(result)
-						expect(result).toEqual({
-							data = {
-								a = "a",
-								b = "b",
-								c = "c",
-								d = "d",
-								e = "e",
-							},
-						})
-					end
-				)
-			end)
-		)
+			local result = execute({
+				schema = schema,
+				document = document,
+				rootValue = rootValue,
+			}):expect()
+
+			expect(result).toEqual({
+				data = {
+					a = "a",
+					b = "b",
+					c = "c",
+					d = "d",
+					e = "e",
+				},
+			})
+		end)
 
 		it("Avoids recursion", function()
 			local schema = GraphQLSchema.new({
@@ -1403,6 +1369,7 @@ return function()
 				}),
 			})
 			local document = parse([[
+
       {
         a
         ...Frag
@@ -1514,109 +1481,101 @@ return function()
 			})
 		end)
 
-		itSKIP(
-			"fails when an isTypeOf check is not met",
-			_async(function()
-				local Special = {}
-				local SpecialMetatable = { __index = Special }
+		itSKIP("fails when an isTypeOf check is not met", function()
+			local Special = {}
+			local SpecialMetatable = { __index = Special }
 
-				function Special.new(value)
-					local self = setmetatable({}, SpecialMetatable)
+			function Special.new(value)
+				local self = setmetatable({}, SpecialMetatable)
 
-					self.value = value
-					return self
-				end
+				self.value = value
+				return self
+			end
 
-				local NotSpecial = {}
-				local NotSpecialMetatable = { __index = NotSpecial }
+			local NotSpecial = {}
+			local NotSpecialMetatable = { __index = NotSpecial }
 
-				function NotSpecial.new(value)
-					local self = setmetatable({}, NotSpecialMetatable)
+			function NotSpecial.new(value)
+				local self = setmetatable({}, NotSpecialMetatable)
 
-					self.value = value
-					return self
-				end
+				self.value = value
+				return self
+			end
 
-				local SpecialType = GraphQLObjectType.new({
-					name = "SpecialType",
-					isTypeOf = function(self, obj, context)
-						local result = instanceOf(obj, Special)
-						return (function()
-							if context and context.async then
-								return Promise.resolve(result)
-							end
+			local SpecialType = GraphQLObjectType.new({
+				name = "SpecialType",
+				isTypeOf = function(self, obj, context)
+					local result = instanceOf(obj, Special)
+					return (function()
+						if context and context.async then
+							return Promise.resolve(result)
+						end
 
-							return result
-						end)()
-					end,
+						return result
+					end)()
+				end,
+				fields = {
+					value = { type = GraphQLString },
+				},
+			})
+			local schema = GraphQLSchema.new({
+				query = GraphQLObjectType.new({
+					name = "Query",
 					fields = {
-						value = { type = GraphQLString },
-					},
-				})
-				local schema = GraphQLSchema.new({
-					query = GraphQLObjectType.new({
-						name = "Query",
-						fields = {
-							specials = {
-								type = GraphQLList.new(SpecialType),
-							},
-						},
-					}),
-				})
-				local document = parse("{ specials { value } }")
-				local rootValue = {
-					specials = {
-						Special.new("foo"),
-						NotSpecial.new("bar"),
-					},
-				}
-				local result = executeSync({
-					schema = schema,
-					document = document,
-					rootValue = rootValue,
-				})
-
-				expect(result).toEqual({
-					data = {
 						specials = {
-							{
-								value = "foo",
-							},
-							nil,
+							type = GraphQLList.new(SpecialType),
 						},
 					},
-					errors = {
+				}),
+			})
+			local document = parse("{ specials { value } }")
+			local rootValue = {
+				specials = {
+					Special.new("foo"),
+					NotSpecial.new("bar"),
+				},
+			}
+			local result = executeSync({
+				schema = schema,
+				document = document,
+				rootValue = rootValue,
+			})
+
+			expect(result).toEqual({
+				data = {
+					specials = {
 						{
-							message = "Expected value of type \"SpecialType\" but got: { value: \"bar\" }.",
-							locations = {
-								{
-									line = 1,
-									column = 3,
-								},
-							},
-							path = {
-								"specials",
-								1,
+							value = "foo",
+						},
+						nil,
+					},
+				},
+				errors = {
+					{
+						message = "Expected value of type \"SpecialType\" but got: { value: \"bar\" }.",
+						locations = {
+							{
+								line = 1,
+								column = 3,
 							},
 						},
+						path = {
+							"specials",
+							1,
+						},
 					},
-				})
+				},
+			})
 
-				local contextValue = { async = true }
-
-				return _await(
-					execute({
-						schema = schema,
-						document = document,
-						rootValue = rootValue,
-						contextValue = contextValue,
-					}),
-					function(asyncResult)
-						expect(asyncResult).toEqual(result)
-					end
-				)
-			end)
-		)
+			local contextValue = { async = true }
+			local asyncResult = execute({
+				schema = schema,
+				document = document,
+				rootValue = rootValue,
+				contextValue = contextValue,
+			}):expect()
+			expect(asyncResult).toEqual(result)
+		end)
 
 		it("fails when serialize of custom scalar does not return a value", function()
 			local customScalar = GraphQLScalarType.new({
@@ -1651,20 +1610,18 @@ return function()
 			-- ROBLOX deviation: we need to specifically test if customScalar is exactly equal to NULL
 			expect(result.data.customScalar).to.equal(NULL)
 			expect(#result.errors).toEqual(1)
-			expect(result.errors[1]).toObjectContain(
-				{
-					message = "Expected a value of type \"CustomScalar\" but received: \"CUSTOM_VALUE\"",
-					locations = {
-						{
-							line = 1,
-							column = 3,
-						},
+			expect(result.errors[1]).toObjectContain({
+				message = "Expected a value of type \"CustomScalar\" but received: \"CUSTOM_VALUE\"",
+				locations = {
+					{
+						line = 1,
+						column = 3,
 					},
-					path = {
-						"customScalar",
-					},
-				}
-			)
+				},
+				path = {
+					"customScalar",
+				},
+			})
 		end)
 
 		it("executes ignoring invalid non-executable definitions", function()
@@ -1677,6 +1634,7 @@ return function()
 				}),
 			})
 			local document = parse([[
+
       { foo }
 
       type Query { bar: String }

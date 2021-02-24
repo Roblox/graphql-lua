@@ -149,7 +149,7 @@ function GraphQLError.new(
 
 	local _extensions = extensions
 	if _extensions == nil and originalError ~= nil then
-		local originalExtensions = originalError.originalExtensions
+		local originalExtensions = originalError.extensions
 		if isObjectLike(originalExtensions) then
 			_extensions = originalExtensions
 		end

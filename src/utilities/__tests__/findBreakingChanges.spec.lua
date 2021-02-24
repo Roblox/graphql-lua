@@ -1,5 +1,4 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/__tests__/findBreakingChanges-test.js
---!nolint UnknownGlobal
 
 return function()
 	local srcWorkspace = script.Parent.Parent.Parent
