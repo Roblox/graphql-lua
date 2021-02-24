@@ -1,8 +1,8 @@
 return function()
 	local deepContains = require(script.Parent.Parent.deepContains)
+	local NULL = require(script.Parent.Parent.null)
 
 	describe("deepContains", function()
-
 		it("contain empty object", function()
 			expect(deepContains({}, {})).to.equal(true)
 			expect(deepContains({ foo = "bar" }, {})).to.equal(true)
@@ -65,5 +65,18 @@ return function()
 			expect(deepContains({ foo = "bar" }, "foo bar")).to.equal(false)
 			expect(deepContains({ foo = "bar" }, 123)).to.equal(false)
 		end)
+
+		it(
+			"should not contain if comparing NULL against another value with the same shape",
+			function()
+				local ok, message = deepContains(NULL, {})
+				expect(ok).to.equal(false)
+				expect(message:find("{1} %(null%) ~= {2} %(table: 0x[%da-f]+%)")).to.be.ok()
+
+				ok, message = deepContains({ foo = NULL }, { foo = {} })
+				expect(ok).to.equal(false)
+				expect(message:find("{1}%[foo%] %(null%) ~= {2}%[foo%] %(table: 0x[%da-f]+%)")).to.be.ok()
+			end
+		)
 	end)
 end

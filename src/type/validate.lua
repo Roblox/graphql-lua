@@ -397,9 +397,9 @@ function validateFields(
 					{
 						getDeprecatedDirectiveNode(arg.astNode),
 						(function()
-							if field.astNode ~= nil then
+							if arg.astNode ~= nil then
 								-- istanbul ignore next (TODO need to write coverage tests)
-								return field.astNode.type
+								return arg.astNode.type
 							end
 							return
 						end)(),
@@ -587,12 +587,10 @@ function validateTypeImplementsAncestors(
 
 					return ("Type %s must implement %s because it is implemented by %s."):format(type_.name, transitive.name, iface.name)
 				end)(),
-				{
-					Array.concat(
-						getAllImplementsInterfaceNodes(iface, transitive),
-						getAllImplementsInterfaceNodes(type_, iface)
-					),
-				}
+				Array.concat(
+					getAllImplementsInterfaceNodes(iface, transitive),
+					getAllImplementsInterfaceNodes(type_, iface)
+				)
 			)
 		end
 	end
@@ -879,7 +877,7 @@ function getUnionMemberTypeNodes(
 end
 
 function getDeprecatedDirectiveNode(definitionNode): DirectiveNode?
-	if definitionNode ~= nil and definitionNode.directive ~= nil then
+	if definitionNode ~= nil and definitionNode.directives ~= nil then
 		-- istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
 		return Array.find(definitionNode.directives, function(node)
 			return node.name.value == GraphQLDeprecatedDirective.name

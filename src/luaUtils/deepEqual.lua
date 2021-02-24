@@ -8,6 +8,7 @@
 -- FIXME: Replace this with jest-roblox builtins
 
 local Number = require(script.Parent.Parent.Parent.Packages.LuauPolyfill).Number
+local NULL = require(script.Parent.null)
 
 local function deepEqual(a: any, b: any)
 	if typeof(a) ~= typeof(b) then
@@ -23,13 +24,29 @@ local function deepEqual(a: any, b: any)
 		return true
 	end
 
-	if typeof(a) == "table" then
-		local visitedKeys = {}
+	if a == NULL or b == NULL or typeof(a) ~= "table" then
+		return false, string.format("{1} (%s) ~= {2} (%s)", tostring(a), tostring(b))
+	end
 
-		for key, value in pairs(a) do
-			visitedKeys[key] = true
+	local visitedKeys = {}
 
-			local success, innerMessage = deepEqual(value, b[key])
+	for key, value in pairs(a) do
+		visitedKeys[key] = true
+
+		local success, innerMessage = deepEqual(value, b[key])
+		if not success then
+			local message = innerMessage
+				:gsub("{1}", ("{1}[%s]"):format(tostring(key)))
+				:gsub("{2}", ("{2}[%s]"):format(tostring(key)))
+
+			return false, message
+		end
+	end
+
+	for key, value in pairs(b) do
+		if not visitedKeys[key] then
+			local success, innerMessage = deepEqual(a[key], value)
+
 			if not success then
 				local message = innerMessage
 					:gsub("{1}", ("{1}[%s]"):format(tostring(key)))
@@ -38,26 +55,9 @@ local function deepEqual(a: any, b: any)
 				return false, message
 			end
 		end
-
-		for key, value in pairs(b) do
-			if not visitedKeys[key] then
-				local success, innerMessage = deepEqual(a[key], value)
-
-				if not success then
-					local message = innerMessage
-						:gsub("{1}", ("{1}[%s]"):format(tostring(key)))
-						:gsub("{2}", ("{2}[%s]"):format(tostring(key)))
-
-					return false, message
-				end
-			end
-		end
-
-		return true
 	end
 
-	local message = string.format("{1} (%s) ~= {2} (%s)", tostring(a), tostring(b))
-	return false, message
+	return true
 end
 
 return deepEqual

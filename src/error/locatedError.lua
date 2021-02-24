@@ -25,6 +25,9 @@ local function locatedError(
 	local originalError
 	if instanceOf(rawOriginalError, Error) then
 		originalError = rawOriginalError
+	elseif typeof(rawOriginalError) == "table" and typeof(rawOriginalError.error) == "string" then
+		-- ROBLOX deviation: special case for errors thrown via 'error("error message")'
+		originalError = Error.new("Unexpected error value: " .. inspect(rawOriginalError.error))
 	else
 		originalError = Error.new("Unexpected error value: " .. inspect(rawOriginalError))
 	end
