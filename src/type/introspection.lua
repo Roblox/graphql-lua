@@ -1,37 +1,43 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/056fac955b7172e55b33e0a1b35b4ddb8951a99c/src/type/introspection.js
 
-local root = script.Parent.Parent
-local polyfills = root.polyfills
-local objectValues = require(polyfills.objectValues).objectValues
-local jsutils = root.jsutils
-local inspect = require(jsutils.inspect).inspect
-local invariant = require(jsutils.invariant).invariant
-local language = root.language
-local print_ = require(language.printer).print
-local DirectiveLocation = require(language.directiveLocation).DirectiveLocation
-local astFromValue = require(root.utilities.astFromValue).astFromValue
-local scalars = require(script.Parent.scalars)
-local GraphQLString = scalars.GraphQLString
-local GraphQLBoolean = scalars.GraphQLBoolean
-local definition = require(script.Parent.definition)
-local GraphQLList = definition.GraphQLList
-local GraphQLNonNull = definition.GraphQLNonNull
-local GraphQLObjectType = definition.GraphQLObjectType
-local GraphQLEnumType = definition.GraphQLEnumType
-local isScalarType = definition.isScalarType
-local isObjectType = definition.isObjectType
-local isInterfaceType = definition.isInterfaceType
-local isUnionType = definition.isUnionType
-local isEnumType = definition.isEnumType
-local isInputObjectType = definition.isInputObjectType
-local isListType = definition.isListType
-local isNonNullType = definition.isNonNullType
-local isAbstractType = definition.isAbstractType
+local srcWorkspace = script.Parent.Parent
+local polyfillsWorkspace = srcWorkspace.polyfills
+local jsutilsWorkspace = srcWorkspace.jsutils
+local languageWorkspace = srcWorkspace.language
+local Packages = srcWorkspace.Parent.Packages
 
-local Packages = root.Parent.Packages
+-- ROBLOX deviation: utils
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
+local isNotNillish = require(srcWorkspace.luaUtils.isNillish).isNotNillish
+
+local objectValues = require(polyfillsWorkspace.objectValues).objectValues
+
+local inspect = require(jsutilsWorkspace.inspect).inspect
+local invariant = require(jsutilsWorkspace.invariant).invariant
+
+local print_ = require(languageWorkspace.printer).print
+local DirectiveLocation = require(languageWorkspace.directiveLocation).DirectiveLocation
+local astFromValue = require(srcWorkspace.utilities.astFromValue).astFromValue
+
+local scalarsModule = require(script.Parent.scalars)
+local GraphQLString = scalarsModule.GraphQLString
+local GraphQLBoolean = scalarsModule.GraphQLBoolean
+local definitionModule = require(script.Parent.definition)
+local GraphQLList = definitionModule.GraphQLList
+local GraphQLNonNull = definitionModule.GraphQLNonNull
+local GraphQLObjectType = definitionModule.GraphQLObjectType
+local GraphQLEnumType = definitionModule.GraphQLEnumType
+local isScalarType = definitionModule.isScalarType
+local isObjectType = definitionModule.isObjectType
+local isInterfaceType = definitionModule.isInterfaceType
+local isUnionType = definitionModule.isUnionType
+local isEnumType = definitionModule.isEnumType
+local isInputObjectType = definitionModule.isInputObjectType
+local isListType = definitionModule.isListType
+local isNonNullType = definitionModule.isNonNullType
+local isAbstractType = definitionModule.isAbstractType
 
 -- ROBLOX FIXME: remove any type annotation from exports when Luau can
 -- analyze the exports table correctly
@@ -433,7 +439,7 @@ exports.__Field = GraphQLObjectType.new({
 			isDeprecated = {
 				type = GraphQLNonNull.new(GraphQLBoolean),
 				resolve = function(field)
-					return field.deprecationReason ~= nil
+					return isNotNillish(field.deprecationReason)
 				end,
 			},
 			deprecationReason = {
@@ -486,7 +492,7 @@ exports.__InputValue = GraphQLObjectType.new({
 			isDeprecated = {
 				type = GraphQLNonNull.new(GraphQLBoolean),
 				resolve = function(field)
-					return field.deprecationReason ~= nil
+					return isNotNillish(field.deprecationReason)
 				end,
 			},
 			deprecationReason = {
@@ -519,7 +525,7 @@ exports.__EnumValue = GraphQLObjectType.new({
 			isDeprecated = {
 				type = GraphQLNonNull.new(GraphQLBoolean),
 				resolve = function(enumValue)
-					return enumValue.deprecationReason ~= nil
+					return isNotNillish(enumValue.deprecationReason)
 				end,
 			},
 			deprecationReason = {

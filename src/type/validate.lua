@@ -251,7 +251,7 @@ function validateDirectives(context: SchemaValidationContext): ()
 				)
 			end
 
-			if isRequiredArgument(arg) and arg.deprecationReason ~= nil then
+			if isRequiredArgument(arg) and isNotNillish(arg.deprecationReason) then
 
 				context:reportError(
 					("Required argument @%s(%s:) cannot be deprecated."):format(directive.name, arg.name),
@@ -391,7 +391,7 @@ function validateFields(
 					end)()
 				)
 			end
-			if isRequiredArgument(arg) and arg.deprecationReason ~= nil then
+			if isRequiredArgument(arg) and isNotNillish(arg.deprecationReason) then
 				context:reportError(
 					("Required argument %s.%s(%s:) cannot be deprecated."):format(type_.name, field.name, argName),
 					{
@@ -692,7 +692,7 @@ function validateInputFields(
 				end)()
 			)
 		end
-		if isRequiredInputField(field) and field.deprecationReason ~= nil then
+		if isRequiredInputField(field) and isNotNillish(field.deprecationReason) then
 			context:reportError(
 				("Required input field %s.%s cannot be deprecated."):format(inputObj.name, field.name),
 				{
