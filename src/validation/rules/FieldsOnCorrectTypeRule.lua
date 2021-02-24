@@ -12,7 +12,6 @@ local isAbstractType = definition.isAbstractType
 local PackagesWorkspace = root.Parent.Packages
 local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
 local Array = LuauPolyfill.Array
-local Object = LuauPolyfill.Object
 
 -- ROBLOX deviation: predeclare variable
 local getSuggestedFieldNames
@@ -74,7 +73,8 @@ function getSuggestedTypeNames(schema, type_, fieldName)
 	local usageCount = {}
 
 	for _, possibleType in ipairs(schema:getPossibleTypes(type_)) do
-		if not possibleType:getFields()[fieldName] then
+		-- ROBLOX deviation: use Map
+		if not possibleType:getFields():get(fieldName) then
 			continue
 		end
 
@@ -83,7 +83,8 @@ function getSuggestedTypeNames(schema, type_, fieldName)
 		usageCount[possibleType.name] = 1
 
 		for _, possibleInterface in ipairs(possibleType:getInterfaces()) do
-			if not possibleInterface:getFields()[fieldName] then
+			-- ROBLOX deviation: use Map
+			if not possibleInterface:getFields():get(fieldName) then
 				continue
 			end
 
@@ -122,7 +123,8 @@ end
 --  */
 function getSuggestedFieldNames(type_, fieldName)
 	if isObjectType(type_) or isInterfaceType(type_) then
-		local possibleFieldNames = Object.keys(type_:getFields())
+		-- ROBLOX deviation: use Map
+		local possibleFieldNames = type_:getFields():keys()
 		return suggestionList(fieldName, possibleFieldNames)
 	end
 	-- // Otherwise, must be a Union type, which does not define fields.

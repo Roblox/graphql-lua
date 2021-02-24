@@ -304,7 +304,8 @@ function TypeInfo:enter(node: ASTNode)
 		local inputFieldType
 		local inputField
 		if isInputObjectType(objectType) then
-			inputField = objectType:getFields()[node.name.value]
+			-- ROBLOX deviation: use Map
+			inputField = objectType:getFields():get(node.name.value)
 			if inputField then
 				inputFieldType = inputField.type
 			end
@@ -385,7 +386,8 @@ function getFieldDef(
 		return TypeNameMetaFieldDef
 	end
 	if isObjectType(parentType) or isInterfaceType(parentType) then
-		return parentType:getFields()[name]
+		-- ROBLOX deviation: use Map
+		return parentType:getFields():get(name)
 	end
 	return nil
 end

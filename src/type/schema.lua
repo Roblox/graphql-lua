@@ -19,7 +19,6 @@ local isNillishModule = require(luaUtilsWorkspace.isNillish)
 local isNillish = isNillishModule.isNillish
 local isNotNillish = isNillishModule.isNotNillish
 
-local objectValues = require(srcWorkspace.polyfills.objectValues).objectValues
 local jsutilsWorkspace = srcWorkspace.jsutils
 local inspect = require(jsutilsWorkspace.inspect).inspect
 local toObjMap = require(jsutilsWorkspace.toObjMap).toObjMap
@@ -456,14 +455,16 @@ function collectReferencedTypes(
 				collectReferencedTypes(interfaceType, typeSet)
 			end
 
-			for _, field in ipairs(objectValues(namedType:getFields())) do
+			-- ROBLOX deviation: use Map
+			for _, field in ipairs(namedType:getFields():values()) do
 				collectReferencedTypes(field.type, typeSet)
 				for _, arg in ipairs(field.args) do
 					collectReferencedTypes(arg.type, typeSet)
 				end
 			end
 		elseif isInputObjectType(namedType) then
-			for _, field in ipairs(objectValues(namedType:getFields())) do
+			-- ROBLOX deviation: use Map
+			for _, field in ipairs(namedType:getFields():values()) do
 				collectReferencedTypes(field.type, typeSet)
 			end
 		end

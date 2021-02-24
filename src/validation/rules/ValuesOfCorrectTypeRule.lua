@@ -1,27 +1,25 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/validation/rules/ValuesOfCorrectTypeRule.js
 
-local root = script.Parent.Parent.Parent
-local jsutils = root.jsutils
-local instanceOf = require(jsutils.instanceOf)
-local objectValues = require(root.polyfills.objectValues).objectValues
-local keyMap = require(jsutils.keyMap).keyMap
-local inspect = require(jsutils.inspect).inspect
-local didYouMean = require(jsutils.didYouMean).didYouMean
-local suggestionList = require(jsutils.suggestionList).suggestionList
-local GraphQLError = require(root.error.GraphQLError).GraphQLError
-local language = root.language
-local print_ = require(language.printer).print
-local definition = require(root.type.definition)
-local isLeafType = definition.isLeafType
-local isInputObjectType = definition.isInputObjectType
-local isListType = definition.isListType
-local isNonNullType = definition.isNonNullType
-local isRequiredInputField = definition.isRequiredInputField
-local getNullableType = definition.getNullableType
-local getNamedType = definition.getNamedType
-local PackagesWorkspace = root.Parent.Packages
-local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
-local Object = LuauPolyfill.Object
+local srcWorkspace = script.Parent.Parent.Parent
+local languageWorkspace = srcWorkspace.language
+local jsutilsWorkspace = srcWorkspace.jsutils
+
+local instanceOf = require(jsutilsWorkspace.instanceOf)
+local keyMap = require(jsutilsWorkspace.keyMap).keyMap
+local inspect = require(jsutilsWorkspace.inspect).inspect
+local didYouMean = require(jsutilsWorkspace.didYouMean).didYouMean
+local suggestionList = require(jsutilsWorkspace.suggestionList).suggestionList
+local GraphQLError = require(srcWorkspace.error.GraphQLError).GraphQLError
+
+local print_ = require(languageWorkspace.printer).print
+local definitionModule = require(srcWorkspace.type.definition)
+local isLeafType = definitionModule.isLeafType
+local isInputObjectType = definitionModule.isInputObjectType
+local isListType = definitionModule.isListType
+local isNonNullType = definitionModule.isNonNullType
+local isRequiredInputField = definitionModule.isRequiredInputField
+local getNullableType = definitionModule.getNullableType
+local getNamedType = definitionModule.getNamedType
 
 local exports = {}
 
@@ -56,7 +54,8 @@ exports.ValuesOfCorrectTypeRule = function(context)
 			local fieldNodeMap = keyMap(node.fields, function(field)
 				return field.name.value
 			end)
-			for _, fieldDef in ipairs(objectValues(type_:getFields()))do
+			-- ROBLOX deviation: use Map
+			for _, fieldDef in ipairs(type_:getFields():values())do
 				local fieldNode = fieldNodeMap[fieldDef.name]
 				if not fieldNode and isRequiredInputField(fieldDef) then
 					local typeStr = inspect(fieldDef.type)
@@ -80,7 +79,8 @@ exports.ValuesOfCorrectTypeRule = function(context)
 			if not fieldType and isInputObjectType(parentType) then
 				local suggestions = suggestionList(
 					node.name.value,
-					Object.keys(parentType:getFields())
+					-- ROBLOX deviation: use Map
+					parentType:getFields():keys()
 				)
 				context:reportError(
 					GraphQLError.new(

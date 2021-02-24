@@ -7,8 +7,6 @@ end
 local srcWorkspace = script.Parent.Parent
 local luaUtilsWorkspace = srcWorkspace.luaUtils
 
-local objectValues = require(srcWorkspace.polyfills.objectValues).objectValues
-
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
 local invariant = require(srcWorkspace.jsutils.invariant).invariant
 local isObjectLike = require(srcWorkspace.jsutils.isObjectLike).isObjectLike
@@ -118,7 +116,8 @@ local function astFromValue(value, type_)
 
 		local fieldNodes = {}
 
-		for _, field in ipairs(objectValues(type_:getFields())) do
+		-- ROBLOX deviation: use Map
+		for _, field in ipairs(type_:getFields():values()) do
 			local fieldValue = astFromValue(value[field.name], field.type)
 
 			if isNotNillish(fieldValue) then

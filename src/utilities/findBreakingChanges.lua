@@ -3,8 +3,6 @@
 local srcWorkspace = script.Parent.Parent
 local rootWorkspace = srcWorkspace.Parent
 
-local objectValues = require(srcWorkspace.polyfills.objectValues).objectValues
-
 local LuauPolyfill = require(rootWorkspace.Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
 local Array = LuauPolyfill.Array
@@ -218,7 +216,8 @@ end
 
 function findInputObjectTypeChanges(oldType, newType)
 	local schemaChanges = {}
-	local fieldsDiff = diff(objectValues(oldType:getFields()), objectValues(newType:getFields()))
+	-- ROBLOX deviation: use Map
+	local fieldsDiff = diff(oldType:getFields():values(), newType:getFields():values())
 
 	for _, newField in ipairs(fieldsDiff.added) do
 		if isRequiredInputField(newField) then
@@ -317,7 +316,8 @@ end
 
 function findFieldChanges(oldType, newType)
 	local schemaChanges = {}
-	local fieldsDiff = diff(objectValues(oldType:getFields()), objectValues(newType:getFields()))
+	-- ROBLOX deviation: use Map
+	local fieldsDiff = diff(oldType:getFields():values(), newType:getFields():values())
 
 	for _, oldField in ipairs(fieldsDiff.removed) do
 		table.insert(schemaChanges, {

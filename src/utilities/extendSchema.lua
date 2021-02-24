@@ -4,12 +4,15 @@ local srcWorkspace = script.Parent.Parent
 local root = srcWorkspace.Parent
 
 -- ROBLOX deviation: use Map type
-local Map = require(srcWorkspace.luaUtils.Map).Map
+local MapModule = require(srcWorkspace.luaUtils.Map)
+local Map = MapModule.Map
+type Map<T, V> = MapModule.Map<T, V>
+local coerceToMap = MapModule.coerceToMap
+local mapValueOrdered = require(srcWorkspace.luaUtils.mapValueOrdered).mapValueOrdered
 
 local jsutils = srcWorkspace.jsutils
 local keyMap = require(jsutils.keyMap).keyMap
 local inspect = require(jsutils.inspect).inspect
-local mapValue = require(jsutils.mapValue).mapValue
 local invariant = require(jsutils.invariant).invariant
 local devAssert = require(jsutils.devAssert).devAssert
 
@@ -67,11 +70,11 @@ local definitionImport = require(typeWorkspace.definition)
 type GraphQLType = any -- definitionImport.GraphQLType
 type GraphQLNamedType = any -- definitionImport.GraphQLNamedType
 type GraphQLFieldConfig<T, U> = any -- definitionImport.GraphQLFieldConfig
-type GraphQLFieldConfigMap<T, U> = any -- definitionImport.GraphQLFieldConfigMap
+type GraphQLFieldConfigMap<T, V> = Map<T, V> -- definitionImport.GraphQLFieldConfigMap
 type GraphQLArgumentConfig = any -- definitionImport.GraphQLArgumentConfig
-type GraphQLFieldConfigArgumentMap = any -- definitionImport.GraphQLFieldConfigArgumentMap
+type GraphQLFieldConfigArgumentMap = Map<any, any> -- definitionImport.GraphQLFieldConfigArgumentMap
 type GraphQLEnumValueConfigMap = any -- definitionImport.GraphQLEnumValueConfigMap
-type GraphQLInputFieldConfigMap = any -- definitionImport.GraphQLInputFieldConfigMap
+type GraphQLInputFieldConfigMap = Map<any, any> -- definitionImport.GraphQLInputFieldConfigMap
 local isScalarType = definitionImport.isScalarType
 local isObjectType = definitionImport.isObjectType
 local isInterfaceType = definitionImport.isInterfaceType
@@ -269,7 +272,7 @@ function extendSchemaImpl(
 		return GraphQLDirective.new(Object.assign(
 			{},
 			config,
-			{ args = mapValue(config.args, extendArg) }
+			{ args = mapValueOrdered(coerceToMap(config.args), extendArg) }
 		))
 	end
 
@@ -316,16 +319,17 @@ function extendSchemaImpl(
 			config,
 			{
 				fields = function()
-					return Object.assign(
-						{},
-						mapValue(config.fields, function(field)
-							return Object.assign(
-								{},
-								field,
-								{ type = replaceType(field.type) }
-							)
-						end),
-						buildInputFieldMap(extensions)
+					return Map.new(
+						Array.concat(
+							mapValueOrdered(coerceToMap(config.fields), function(field)
+								return Object.assign(
+									{},
+									field,
+									{ type = replaceType(field.type) }
+								)
+							end):entries(),
+							buildInputFieldMap(extensions):entries()
+						)
 					)
 				end,
 				extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
@@ -389,10 +393,11 @@ function extendSchemaImpl(
 				   )
 				end,
 				fields = function()
-					return Object.assign(
-						{},
-						mapValue(config.fields, extendField),
-						buildFieldMap(extensions)
+					return Map.new(
+						Array.concat(
+							mapValueOrdered(coerceToMap(config.fields), extendField):entries(),
+							buildFieldMap(extensions):entries()
+						)
 					)
 				end,
 				extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
@@ -418,10 +423,11 @@ function extendSchemaImpl(
 					)
 				end,
 				fields = function()
-					return Object.assign(
-						{},
-						mapValue(config.fields, extendField),
-						buildFieldMap(extensions)
+					return Map.new(
+						Array.concat(
+							mapValueOrdered(coerceToMap(config.fields), extendField):entries(),
+							buildFieldMap(extensions):entries()
+						)
 					)
 				end,
 				extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
@@ -460,7 +466,7 @@ function extendSchemaImpl(
 			{
 				type = replaceType(field.type),
 				-- // $FlowFixMe[incompatible-call]
-				args = mapValue(field.args, extendArg),
+				args = mapValueOrdered(coerceToMap(field.args), extendArg),
 			}
 		)
 	end
@@ -549,13 +555,14 @@ function extendSchemaImpl(
 			| ObjectTypeExtensionNode
 		>
 	): GraphQLFieldConfigMap<any, any>
-		local fieldConfigMap = {}
+		-- ROBLOX deviation: use Map
+		local fieldConfigMap = Map.new()
 		for _, node in ipairs(nodes) do
 			-- // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
 			local nodeFields = node.fields or {}
 
 			for _, field in ipairs(nodeFields) do
-				fieldConfigMap[field.name.value] = {
+				fieldConfigMap:set(field.name.value, {
 					type = getWrappedType(field.type),
 					description = field.description and field.description.value,
 					--[[
@@ -567,7 +574,7 @@ function extendSchemaImpl(
 					args = buildArgumentMap(field.arguments),
 					deprecationReason = getDeprecationReason(field),
 					astNode = field,
-				}
+				})
 			end
 		end
 		return fieldConfigMap
@@ -579,20 +586,21 @@ function extendSchemaImpl(
 		-- // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
 		local argsNodes = args or {}
 
-		local argConfigMap = {}
+		-- ROBLOX deviation: use Map
+		local argConfigMap = Map.new()
 		for _, arg in ipairs(argsNodes) do
 			-- // Note: While this could make assertions to get the correctly typed
 			-- // value, that would throw immediately while type system validation
 			-- // with validateSchema() will produce more actionable results.
 			local type_: any = getWrappedType(arg.type)
 
-			argConfigMap[arg.name.value] = {
+			argConfigMap:set(arg.name.value, {
 				type = type_,
 				description = arg.description and arg.description.value,
 				defaultValue = valueFromAST(arg.defaultValue, type_),
 				deprecationReason = getDeprecationReason(arg),
 				astNode = arg,
-			}
+			})
 		end
 		return argConfigMap
 	end
@@ -600,7 +608,8 @@ function extendSchemaImpl(
 	function buildInputFieldMap(
 		nodes: Array<InputObjectTypeDefinitionNode | InputObjectTypeExtensionNode>
 	): GraphQLInputFieldConfigMap
-		local inputFieldMap = {}
+		-- ROBLOX deviation: use Map
+		local inputFieldMap = Map.new()
 		for _, node in ipairs(nodes) do
 			-- // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
 			local fieldsNodes = node.fields or {}
@@ -611,13 +620,13 @@ function extendSchemaImpl(
 				-- // with validateSchema() will produce more actionable results.
 				local type_: any = getWrappedType(field.type)
 
-				inputFieldMap[field.name.value] = {
+				inputFieldMap:set(field.name.value, {
 					type = type_,
 					description = field.description and field.description.value,
 					defaultValue = valueFromAST(field.defaultValue, type_),
 					deprecationReason = getDeprecationReason(field),
 					astNode = field,
-				}
+				})
 			end
 		end
 		return inputFieldMap

@@ -743,9 +743,10 @@ function _collectFieldsAndFragmentNames(
 		if selectionKind == Kind.FIELD then
 			local fieldName = selection.name.value
 			local fieldDef
+			-- ROBLOX deviation: use Map
 			local fields = parentType:getFields()
 			if isObjectType(parentType) or isInterfaceType(parentType) then
-				fieldDef = fields[fieldName]
+				fieldDef = fields:get(fieldName)
 			end
 			local responseName = selection.alias
 				and selection.alias.value

@@ -1,12 +1,17 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/type/directives.js
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
+local srcWorkspace = script.Parent.Parent
+local Packages = srcWorkspace.Parent.Packages
+
+-- ROBLOX deviation: util
+local MapModule = require(srcWorkspace.luaUtils.Map)
+local Map = MapModule.Map
+local coerceToMap = MapModule.coerceToMap
+
 local LuauPolyfill = require(Packages.LuauPolyfill)
-local Error = require(Workspace.luaUtils.Error)
+local Error = require(srcWorkspace.luaUtils.Error)
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
-local objectEntries = require(script.Parent.Parent.polyfills.objectEntries).objectEntries
 local inspect = require(script.Parent.Parent.jsutils.inspect).inspect
 local toObjMap = require(script.Parent.Parent.jsutils.toObjMap).toObjMap
 local devAssert = require(script.Parent.Parent.jsutils.devAssert).devAssert
@@ -80,11 +85,11 @@ function GraphQLDirective.new(config)
 
 	-- ROBLOX deviation: empty table doesn't necessarily mean an array
 	devAssert(
-		isObjectLike(args) and not (Array.isArray(args) and next(args) ~= nil),
+		(isObjectLike(args) and not (Array.isArray(args) and next(args) ~= nil)) or instanceOf(args, Map),
 		("@%s args must be an object with argument names as keys."):format(config.name)
 	)
 
-	self.args = Array.map(objectEntries(args), function(entries)
+	self.args = Array.map(coerceToMap(args):entries(), function(entries)
 		local argName, argConfig = entries[1], entries[2]
 
 		return {

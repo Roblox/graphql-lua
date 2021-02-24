@@ -8,6 +8,7 @@ return function()
 	local Error = require(srcWorkspace.luaUtils.Error)
 	local NULL = require(srcWorkspace.luaUtils.null)
 	local isNotNillish = require(srcWorkspace.luaUtils.isNillish).isNotNillish
+	local Map = require(srcWorkspace.luaUtils.Map).Map
 
 	local invariant = require(srcWorkspace.jsutils.invariant).invariant
 
@@ -188,10 +189,10 @@ return function()
 		describe("for GraphQLInputObject", function()
 			local TestInputObject = GraphQLInputObjectType.new({
 				name = "TestInputObject",
-				fields = {
-					foo = { type = GraphQLNonNull.new(GraphQLInt) },
-					bar = { type = GraphQLInt },
-				},
+				fields = Map.new({
+					{ "foo", { type = GraphQLNonNull.new(GraphQLInt) }},
+					{ "bar", { type = GraphQLInt }},
+				})
 			})
 
 			it("returns no error for a valid input", function()

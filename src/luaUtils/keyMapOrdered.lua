@@ -34,7 +34,7 @@ local function keyMap(
 	local map = Map.new()
 	for i = 1, #list do
 		local item = list[i]
-		map.set(keyFn(item), item)
+		map:set(keyFn(item), item)
 	end
 	return map
 end

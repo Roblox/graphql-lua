@@ -76,7 +76,8 @@ exports.NoDeprecatedCustomRule = function(context)
 		ObjectField = function(_self, node)
 			local inputObjectDef = getNamedType(context:getParentInputType())
 			if isInputObjectType(inputObjectDef) then
-				local inputFieldDef = inputObjectDef:getFields()[node.name.value]
+				-- ROBLOX deviation: use Map
+				local inputFieldDef = inputObjectDef:getFields():get(node.name.value)
 				-- // flowlint-next-line unnecessary-optional-chain:off
 				local deprecationReason = inputFieldDef and inputFieldDef.deprecationReason
 				if deprecationReason ~= nil then

@@ -1085,7 +1085,8 @@ function getFieldDef(schema: GraphQLSchema, parentType: GraphQLObjectType, field
 		return TypeNameMetaFieldDef
 	end
 
-	return parentType:getFields()[fieldName]
+	-- ROBLOX deviation: use Map
+	return parentType:getFields():get(fieldName)
 end
 
 return {

@@ -1,15 +1,16 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/validation/rules/UniqueFieldDefinitionNamesRule.js
 
-local root = script.Parent.Parent.Parent
+local srcWorkspace = script.Parent.Parent.Parent
 
 -- ROBLOX deviation: use Map type
-local Map = require(root.luaUtils.Map).Map
+local Map = require(srcWorkspace.luaUtils.Map).Map
+local isNotNillish = require(srcWorkspace.luaUtils.isNillish).isNotNillish
 
-local GraphQLError = require(root.error.GraphQLError).GraphQLError
-local definition = require(root.type.definition)
-local isObjectType = definition.isObjectType
-local isInterfaceType = definition.isInterfaceType
-local isInputObjectType = definition.isInputObjectType
+local GraphQLError = require(srcWorkspace.error.GraphQLError).GraphQLError
+local definitionModule = require(srcWorkspace.type.definition)
+local isObjectType = definitionModule.isObjectType
+local isInterfaceType = definitionModule.isInterfaceType
+local isInputObjectType = definitionModule.isInputObjectType
 
 local exports = {}
 
@@ -81,7 +82,8 @@ end
 
 function hasField(type_, fieldName: string): boolean
 	if isObjectType(type_) or isInterfaceType(type_) or isInputObjectType(type_) then
-		return type_:getFields()[fieldName] ~= nil
+		-- ROBLOX deviation: use Map
+		return isNotNillish(type_:getFields():get(fieldName))
 	end
 	return false
 end
