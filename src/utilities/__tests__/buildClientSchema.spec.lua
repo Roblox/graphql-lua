@@ -6,9 +6,7 @@ return function()
 
 	local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
 
-	-- ROBLOX FIXME: require correct module when available
-	local graphqlSync = function()
-	end -- require(srcWorkspace.graphql).graphqlSync
+	local graphqlSync = require(srcWorkspace.graphql).graphqlSync
 
 	local GraphQLSchema = require(srcWorkspace.type.schema).GraphQLSchema
 
@@ -26,9 +24,7 @@ return function()
 	local printSchema = require(utilitiesWorkspace.printSchema).printSchema
 	local buildSchema = require(utilitiesWorkspace.buildASTSchema).buildSchema
 	local buildClientSchema = require(utilitiesWorkspace.buildClientSchema).buildClientSchema
-	-- ROBLOX FIXME: require correct module when available
-	local introspectionFromSchema = function()
-	end -- require(utilitiesWorkspace.introspectionFromSchema).introspectionFromSchema
+	local introspectionFromSchema = require(utilitiesWorkspace.introspectionFromSchema).introspectionFromSchema
 
 	-- ROBLOX deviation: utils
 	local Array = require(srcWorkspace.luaUtils.Array)
@@ -57,7 +53,7 @@ return function()
 
 	describe("Type System: build schema from introspection", function()
 		itSKIP("builds a simple schema", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       """Simple schema"""
       schema {
@@ -69,23 +65,21 @@ return function()
         """This is a string field"""
         string: String
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
 		it("builds a schema without the query type", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       type Query {
         foo: String
       }
-    ]]):format())
+    ]])
 
-	  		-- ROBLOX FIXME: use the real functions when introspectionFromSchema is available
-			-- local schema = buildSchema(sdl)
-			-- local introspection = introspectionFromSchema(schema)
-			local introspection = require(script.Parent["buildClientSchema.roblox.introspection"]) -- introspectionFromSchema(schema)
+			local schema = buildSchema(sdl)
+			local introspection = introspectionFromSchema(schema)
 
 			introspection.__schema.queryType = nil
 
@@ -95,7 +89,7 @@ return function()
 		end)
 
 		itSKIP("builds a simple schema with all operation types", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       schema {
         query: QueryType
@@ -120,13 +114,13 @@ return function()
         """This is a string field"""
         string: String
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
 		it("uses built-in scalars when possible", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       scalar CustomScalar
 
@@ -138,15 +132,13 @@ return function()
         id: ID
         custom: CustomScalar
       }
-    ]]):format())
+    ]])
 
-	  		-- ROBLOX FIXME: uncomment when introspectionFromSchema is available
+			-- ROBLOX FIXME: uncomment when ordering is stable is available
 			-- expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 
 			local schema = buildSchema(sdl)
-	  		-- ROBLOX FIXME: use the real functions when introspectionFromSchema is available
-			-- local introspection = introspectionFromSchema(schema)
-			local introspection = require(script.Parent["buildClientSchema.roblox.introspection2"])
+			local introspection = introspectionFromSchema(schema)
 			local clientSchema = buildClientSchema(introspection)
 
 			-- Built-ins are used
@@ -162,16 +154,13 @@ return function()
 		end)
 
 		it("includes standard types only if they are used", function()
-	  		-- ROBLOX FIXME: uncomment when introspectionFromSchema is available
-	-- 		local schema = buildSchema(([[
+			local schema = buildSchema([[
 
-    --   type Query {
-    --     foo: String
-    --   }
-    -- ]]):format())
-	  		-- ROBLOX FIXME: use the real functions when introspectionFromSchema is available
-			-- local introspection = introspectionFromSchema(schema)
-			local introspection = require(script.Parent["buildClientSchema.roblox.introspection3"])
+      type Query {
+        foo: String
+      }
+    ]])
+			local introspection = introspectionFromSchema(schema)
 			local clientSchema = buildClientSchema(introspection)
 
 			expect(clientSchema:getType("Int")).to.equal(nil)
@@ -180,7 +169,7 @@ return function()
 		end)
 
 		itSKIP("builds a schema with a recursive type reference", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       schema {
         query: Recur
@@ -189,13 +178,13 @@ return function()
       type Recur {
         recur: Recur
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
 		itSKIP("builds a schema with a circular type reference", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       type Dog {
         bestFriend: Human
@@ -209,13 +198,13 @@ return function()
         dog: Dog
         human: Human
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
 		itSKIP("builds a schema with an interface", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       type Dog implements Friendly {
         bestFriend: Friendly
@@ -233,13 +222,13 @@ return function()
       type Query {
         friendly: Friendly
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
 		itSKIP("builds a schema with an interface hierarchy", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       type Dog implements Friendly & Named {
         bestFriend: Friendly
@@ -264,13 +253,13 @@ return function()
       type Query {
         friendly: Friendly
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
 		itSKIP("builds a schema with an implicit interface", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       type Dog implements Friendly {
         bestFriend: Friendly
@@ -284,13 +273,13 @@ return function()
       type Query {
         dog: Dog
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
 		itSKIP("builds a schema with a union", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       type Dog {
         bestFriend: Friendly
@@ -305,13 +294,13 @@ return function()
       type Query {
         friendly: Friendly
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
 		itSKIP("builds a schema with complex field values", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       type Query {
         string: String
@@ -320,13 +309,13 @@ return function()
         nonNullListOfString: [String]!
         nonNullListOfNonNullString: [String!]!
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
 		itSKIP("builds a schema with field arguments", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       type Query {
         """A field with a single arg"""
@@ -344,20 +333,20 @@ return function()
           requiredArg: Boolean!
         ): String
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
 		itSKIP("builds a schema with default value on custom scalar field", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       scalar CustomScalar
 
       type Query {
         testField(testArg: CustomScalar = "default"): String
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
@@ -436,7 +425,7 @@ return function()
 		end)
 
 		itSKIP("builds a schema with an input object", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       """An input address"""
       input Address {
@@ -457,13 +446,13 @@ return function()
           address: Address
         ): String
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
 		itSKIP("builds a schema with field arguments with default values", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       input Geo {
         lat: Float
@@ -477,13 +466,13 @@ return function()
         defaultNull(intArg: Int = null): String
         noDefault(intArg: Int): String
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
 		itSKIP("builds a schema with custom directives", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       """This is a custom directive"""
       directive @customDirective repeatable on FIELD
@@ -491,18 +480,18 @@ return function()
       type Query {
         string: String
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
 		itSKIP("builds a schema without directives", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       type Query {
         string: String
       }
-    ]]):format())
+    ]])
 
 			local schema = buildSchema(sdl)
 			local introspection = introspectionFromSchema(schema)
@@ -511,13 +500,13 @@ return function()
 
 			local clientSchema = buildClientSchema(introspection)
 
-			expect(schema:getDirectives()).to.have.lengthOf.above(0)
+			expect(schema:getDirectives() > 0).to.equal(true)
 			expect(clientSchema:getDirectives()).toEqual({})
 			expect(printSchema(clientSchema)).to.equal(sdl)
 		end)
 
 		itSKIP("builds a schema aware of deprecation", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       directive @someDirective(
         """This is a shiny new argument"""
@@ -568,13 +557,13 @@ return function()
           oldArg: String @deprecated(reason: "Use shinyArg")
         ): String
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
 		itSKIP("builds a schema with empty deprecation reasons", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       directive @someDirective(someArg: SomeInputObject @deprecated(reason: "")) on QUERY
 
@@ -589,33 +578,33 @@ return function()
       enum SomeEnum {
         SOME_VALUE @deprecated(reason: "")
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
 		itSKIP("builds a schema with specifiedBy url", function()
-			local sdl = dedent(([[
+			local sdl = dedent([[
 
       scalar Foo @specifiedBy(url: "https://example.com/foo_spec")
 
       type Query {
         foo: Foo
       }
-    ]]):format())
+    ]])
 
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("can use client schema for limited execution", function()
-			local schema = buildSchema(([[
+		it("can use client schema for limited execution", function()
+			local schema = buildSchema([[
 
       scalar CustomScalar
 
       type Query {
         foo(custom1: CustomScalar, custom2: CustomScalar): String
       }
-    ]]):format())
+    ]])
 
 			local introspection = introspectionFromSchema(schema)
 			local clientSchema = buildClientSchema(introspection)
@@ -647,7 +636,7 @@ return function()
 		end)
 
 		describe("throws when given invalid introspection", function()
-			local dummySchema = buildSchema(([[
+			local dummySchema = buildSchema([[
 
       type Query {
         foo(bar: String): String
@@ -666,21 +655,22 @@ return function()
       }
 
       directive @SomeDirective on QUERY
-    ]]):format())
+    ]])
 
-			itSKIP("throws when introspection is missing __schema property", function()
+			it("throws when introspection is missing __schema property", function()
 				-- $FlowExpectedError[incompatible-call]
 				expect(function()
-					return buildClientSchema(nil)
-				end).to.throw("Invalid or incomplete introspection result. Ensure that you are passing \"data\" property of introspection response and no \"errors\" was returned alongside: null.")
+					return buildClientSchema(NULL)
+				end).toThrow("Invalid or incomplete introspection result. Ensure that you are passing \"data\" property of introspection response and no \"errors\" was returned alongside: null.")
 
+				-- ROBLOX deviation: {} is treated as an Array in Lua so when printed it becomes [] rather than {}
 				-- $FlowExpectedError[prop-missing]
 				expect(function()
 					return buildClientSchema({})
-				end).to.throw("Invalid or incomplete introspection result. Ensure that you are passing \"data\" property of introspection response and no \"errors\" was returned alongside: {}.")
+				end).toThrow("Invalid or incomplete introspection result. Ensure that you are passing \"data\" property of introspection response and no \"errors\" was returned alongside: [].")
 			end)
 
-			itSKIP("throws when referenced unknown type", function()
+			it("throws when referenced unknown type", function()
 				local introspection = introspectionFromSchema(dummySchema)
 
 				introspection.__schema.types = Array.filter(introspection.__schema.types, function(_ref)
@@ -690,16 +680,16 @@ return function()
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw("Invalid or incomplete schema, unknown type: Query. Ensure that a full introspection query is used in order to build a client schema.")
+				end).toThrow("Invalid or incomplete schema, unknown type: Query. Ensure that a full introspection query is used in order to build a client schema.")
 			end)
 
-			itSKIP("throws when missing definition for one of the standard scalars", function()
-				local schema = buildSchema(([[
+			it("throws when missing definition for one of the standard scalars", function()
+				local schema = buildSchema([[
 
         type Query {
           foo: Float
         }
-      ]]):format())
+      ]])
 				local introspection = introspectionFromSchema(schema)
 
 				introspection.__schema.types = Array.filter(introspection.__schema.types, function(_ref)
@@ -709,56 +699,74 @@ return function()
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw("Invalid or incomplete schema, unknown type: Float. Ensure that a full introspection query is used in order to build a client schema.")
+				end).toThrow("Invalid or incomplete schema, unknown type: Float. Ensure that a full introspection query is used in order to build a client schema.")
 			end)
 
-			itSKIP("throws when type reference is missing name", function()
+			it("throws when type reference is missing name", function()
 				local introspection = introspectionFromSchema(dummySchema)
 
-				expect(introspection).to.have.nested.property("__schema.queryType.name")
+				expect(introspection.__schema.queryType.name).to.be.ok()
 
 				introspection.__schema.queryType.name = nil
 
+				-- ROBLOX deviation: {} is treated as an Array in Lua so when printed it becomes [] rather than {}
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw("Unknown type reference: {}.")
+				end).toThrow("Unknown type reference: [].")
 			end)
 
-			itSKIP("throws when missing kind", function()
+			it("throws when missing kind", function()
 				local introspection = introspectionFromSchema(dummySchema)
 				local queryTypeIntrospection = Array.find(introspection.__schema.types, function(_ref)
 					local name = _ref.name
 					return name == "Query"
 				end)
 
-				expect(queryTypeIntrospection).to.have.property("kind")
+				expect(queryTypeIntrospection.kind).to.be.ok()
 
 				queryTypeIntrospection.kind = nil
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw(
-				-- ROBLOX FIXME: no regex in Lua - try using .toThrow matcher
-				-- /Invalid or incomplete introspection result. Ensure that a full introspection query is used in order to build a client schema: { name: "Query", .* }\./,
+				end).toThrow(
+					--[[
+						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'name' property will be printed first
+						with correct ordering should be:
+						"Invalid or incomplete introspection result. Ensure that a full introspection query is used in order to build a client schema: { name: \"Query\", .* }%."
+					]]
+					"Invalid or incomplete introspection result. Ensure that a full introspection query is used in order to build a client schema: { .* ?name: \"Query\",?.* }%.",
+					true
 				)
 			end)
 
-			itSKIP("throws when missing interfaces", function()
+			it("throws when missing interfaces", function()
 				local introspection = introspectionFromSchema(dummySchema)
 				local queryTypeIntrospection = Array.find(introspection.__schema.types, function(_ref)
 					local name = _ref.name
 					return name == "Query"
 				end)
 
-				expect(queryTypeIntrospection).to.have.property("interfaces")
+				expect(queryTypeIntrospection.interfaces).to.be.ok()
 
 				queryTypeIntrospection.interfaces = nil
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw(
-				-- ROBLOX FIXME: no regex in Lua - try using .toThrow matcher
-				-- /Introspection result missing interfaces: { kind: "OBJECT", name: "Query", .* }\./,
+				end).toThrow(
+					--[[
+						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'kind' and 'name' properties will be printed first
+						with correct ordering should be:
+						"Introspection result missing interfaces: { kind: \"OBJECT\", name: \"Query\", .* }%."
+					]]
+					"Introspection result missing interfaces: { .* ?kind: \"OBJECT\",?.* }%.",
+					true
+				)
+				-- ROBLOX FIXME: adding second matcher to test for both 'kind' and 'name' properties.
+				expect(function()
+					return buildClientSchema(introspection)
+				end).toThrow(
+					"Introspection result missing interfaces: { .* ?name: \"Query\",?.* }%.",
+					true
 				)
 			end)
 
@@ -769,138 +777,191 @@ return function()
 					return name == "SomeInterface"
 				end)
 
-				expect(someInterfaceIntrospection).to.have.property("interfaces")
+				expect(someInterfaceIntrospection.interfaces).to.be.ok()
 				someInterfaceIntrospection.interfaces = nil
 
 				local clientSchema = buildClientSchema(introspection)
 				expect(printSchema(clientSchema)).to.equal(printSchema(dummySchema))
 			end)
 
-			itSKIP("throws when missing fields", function()
+			it("throws when missing fields", function()
 				local introspection = introspectionFromSchema(dummySchema)
 				local queryTypeIntrospection = Array.find(introspection.__schema.types, function(_ref)
 					local name = _ref.name
 					return name == "Query"
 				end)
 
-				expect(queryTypeIntrospection).to.have.property("fields")
+				expect(queryTypeIntrospection.fields).to.be.ok()
 				queryTypeIntrospection.fields = nil
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw(
-				-- ROBLOX FIXME: no regex in Lua - try using .toThrow matcher
-				-- /Introspection result missing fields: { kind: "OBJECT", name: "Query", .* }\./,
+				end).toThrow(
+					--[[
+						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'kind' and 'name' properties will be printed first
+						with correct ordering should be:
+						"Introspection result missing fields: { kind: \"OBJECT\", name: \"Query\", .* }%."
+					]]
+					"Introspection result missing fields: { .* ?kind: \"OBJECT\",?.* }%.",
+					true
+				)
+				-- ROBLOX FIXME: adding second matcher to test for both 'kind' and 'name' properties.
+				expect(function()
+					return buildClientSchema(introspection)
+				end).toThrow(
+					"Introspection result missing fields: { .* ?name: \"Query\",?.* }%.",
+					true
 				)
 			end)
 
-			itSKIP("throws when missing field args", function()
+			it("throws when missing field args", function()
 				local introspection = introspectionFromSchema(dummySchema)
 				local queryTypeIntrospection = Array.find(introspection.__schema.types, function(_ref)
 					local name = _ref.name
 					return name == "Query"
 				end)
 
-				expect(queryTypeIntrospection).to.have.nested.property("fields[1].args")
+				expect(queryTypeIntrospection.fields[1].args).to.be.ok()
 				queryTypeIntrospection.fields[1].args = nil
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw(
-				-- ROBLOX FIXME: no regex in Lua - try using .toThrow matcher
-				-- /Introspection result missing field args: { name: "foo", .* }\./,
+				end).toThrow(
+					--[[
+						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'name' property will be printed first
+						with correct ordering should be:
+						"Introspection result missing field args: { name: \"foo\", .* }%."
+					]]
+					"Introspection result missing field args: { .* ?name: \"foo\",?.* }%.",
+					true
 				)
 			end)
 
-			itSKIP("throws when output type is used as an arg type", function()
+			it("throws when output type is used as an arg type", function()
 				local introspection = introspectionFromSchema(dummySchema)
 				local queryTypeIntrospection = Array.find(introspection.__schema.types, function(_ref)
 					local name = _ref.name
 					return name == "Query"
 				end)
 
-				expect(queryTypeIntrospection).to.have.nested.property("fields[1].args[1].type.name", "String")
+				expect(queryTypeIntrospection.fields[1].args[1].type.name).to.equal("String")
 				queryTypeIntrospection.fields[1].args[1].type.name = "SomeUnion"
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw("Introspection must provide input type for arguments, but received: SomeUnion.")
+				end).toThrow("Introspection must provide input type for arguments, but received: SomeUnion.")
 			end)
 
-			itSKIP("throws when input type is used as a field type", function()
+			it("throws when input type is used as a field type", function()
 				local introspection = introspectionFromSchema(dummySchema)
 				local queryTypeIntrospection = Array.find(introspection.__schema.types, function(_ref)
 					local name = _ref.name
 					return name == "Query"
 				end)
 
-				expect(queryTypeIntrospection).to.have.nested.property("fields[1].type.name", "String")
+				expect(queryTypeIntrospection.fields[1].type.name).to.equal("String")
 				queryTypeIntrospection.fields[1].type.name = "SomeInputObject"
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw("Introspection must provide output type for fields, but received: SomeInputObject.")
+				end).toThrow("Introspection must provide output type for fields, but received: SomeInputObject.")
 			end)
 
-			itSKIP("throws when missing possibleTypes", function()
+			it("throws when missing possibleTypes", function()
 				local introspection = introspectionFromSchema(dummySchema)
 				local someUnionIntrospection = Array.find(introspection.__schema.types, function(_ref)
 					local name = _ref.name
 					return name == "SomeUnion"
 				end)
 
-				expect(someUnionIntrospection).to.have.property("possibleTypes")
+				expect(someUnionIntrospection.possibleTypes).to.be.ok()
 				someUnionIntrospection.possibleTypes = nil
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw(
-				-- ROBLOX FIXME: no regex in Lua - try using .toThrow matcher
-				-- /Introspection result missing possibleTypes: { kind: "UNION", name: "SomeUnion",.* }\./,
+				end).toThrow(
+					--[[
+						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'kind' and 'name' properties will be printed first
+						with correct ordering should be:
+						"Introspection result missing possibleTypes: { kind: \"UNION\", name: \"SomeUnion\",.* }%."
+					]]
+					"Introspection result missing possibleTypes: { .* ?kind: \"UNION\",?.* }%.",
+					true
+				)
+				-- ROBLOX FIXME: adding second matcher to test for both 'kind' and 'name' properties.
+				expect(function()
+					return buildClientSchema(introspection)
+				end).toThrow(
+					"Introspection result missing possibleTypes: { .* ?name: \"SomeUnion\",?.* }%.",
+					true
 				)
 			end)
 
-			itSKIP("throws when missing enumValues", function()
+			it("throws when missing enumValues", function()
 				local introspection = introspectionFromSchema(dummySchema)
 				local someEnumIntrospection = Array.find(introspection.__schema.types, function(_ref)
 					local name = _ref.name
 					return name == "SomeEnum"
 				end)
 
-				expect(someEnumIntrospection).to.have.property("enumValues")
+				expect(someEnumIntrospection.enumValues).to.be.ok()
 				someEnumIntrospection.enumValues = nil
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw(
-				-- ROBLOX FIXME: no regex in Lua - try using .toThrow matcher
-				-- /Introspection result missing enumValues: { kind: "ENUM", name: "SomeEnum", .* }\./,
+				end).toThrow(
+					--[[
+						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'kind' and 'name' properties will be printed first
+						with correct ordering should be:
+						"Introspection result missing enumValues: { kind: \"ENUM\", name: \"SomeEnum\", .* }%."
+					]]
+					"Introspection result missing enumValues: { .* ?kind: \"ENUM\",?.* }%.",
+					true
+				)
+				-- ROBLOX FIXME: adding second matcher to test for both 'kind' and 'name' properties.
+				expect(function()
+					return buildClientSchema(introspection)
+				end).toThrow(
+					"Introspection result missing enumValues: { .* ?name: \"SomeEnum\",?.* }%.",
+					true
 				)
 			end)
 
-			itSKIP("throws when missing inputFields", function()
+			it("throws when missing inputFields", function()
 				local introspection = introspectionFromSchema(dummySchema)
 				local someInputObjectIntrospection = Array.find(introspection.__schema.types, function(_ref)
 					local name = _ref.name
 					return name == "SomeInputObject"
 				end)
 
-				expect(someInputObjectIntrospection).to.have.property("inputFields")
+				expect(someInputObjectIntrospection.inputFields).to.be.ok()
 				someInputObjectIntrospection.inputFields = nil
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw(
-				-- ROBLOX FIXME: no regex in Lua - try using .toThrow matcher
-				-- /Introspection result missing inputFields: { kind: "INPUT_OBJECT", name: "SomeInputObject", .* }\./,
+				end).toThrow(
+					--[[
+						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'kind' and 'name' properties will be printed first
+						with correct ordering should be:
+						"Introspection result missing inputFields: { kind: \"INPUT_OBJECT\", name: \"SomeInputObject\", .* }%."
+					]]
+					"Introspection result missing inputFields: { .* ?kind: \"INPUT_OBJECT\",?.* }%.",
+					true
+				)
+				-- ROBLOX FIXME: adding second matcher to test for both 'kind' and 'name' properties.
+				expect(function()
+					return buildClientSchema(introspection)
+				end).toThrow(
+					"Introspection result missing inputFields: { .* ?name: \"SomeInputObject\",?.* }%.",
+					true
 				)
 			end)
 
-			itSKIP("throws when missing directive locations", function()
+			it("throws when missing directive locations", function()
 				local introspection = introspectionFromSchema(dummySchema)
 
 				local someDirectiveIntrospection = introspection.__schema.directives[1]
-				expect(someDirectiveIntrospection).to.deep.include({
+				expect(someDirectiveIntrospection).toObjectContain({
 					name = "SomeDirective",
 					locations = {
 						"QUERY",
@@ -910,17 +971,22 @@ return function()
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw(
-				-- ROBLOX FIXME: no regex in Lua - try using .toThrow matcher
-				-- /Introspection result missing directive locations: { name: "SomeDirective", .* }\./,
+				end).toThrow(
+					--[[
+						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'name' property will be printed first
+						with correct ordering should be:
+						"Introspection result missing directive locations: { name: \"SomeDirective\", .* }%."
+					]]
+					"Introspection result missing directive locations: { .* ?name: \"SomeDirective\",?.* }%.",
+					true
 				)
 			end)
 
-			itSKIP("throws when missing directive args", function()
+			it("throws when missing directive args", function()
 				local introspection = introspectionFromSchema(dummySchema)
 
 				local someDirectiveIntrospection = introspection.__schema.directives[1]
-				expect(someDirectiveIntrospection).to.deep.include({
+				expect(someDirectiveIntrospection).toObjectContain({
 					name = "SomeDirective",
 					args = {},
 				})
@@ -928,57 +994,62 @@ return function()
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw(
-				-- ROBLOX FIXME: no regex in Lua - try using .toThrow matcher
-				-- /Introspection result missing directive args: { name: "SomeDirective", .* }\./,
+				end).toThrow(
+					--[[
+						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'name' property will be printed first
+						with correct ordering should be:
+						"Introspection result missing directive args: { name: \"SomeDirective\", .* }%."
+					]]
+					"Introspection result missing directive args: { .* ?name: \"SomeDirective\",?.* }%.",
+					true
 				)
 			end)
 		end)
 
 		describe("very deep decorators are not supported", function()
-			itSKIP("fails on very deep (> 7 levels) lists", function()
-				local schema = buildSchema(([=[
+			it("fails on very deep (> 7 levels) lists", function()
+				local schema = buildSchema([=[
 
         type Query {
           foo: [[[[[[[[String]]]]]]]]
         }
-      ]=]):format())
+      ]=])
 
 				local introspection = introspectionFromSchema(schema)
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw("Decorated type deeper than introspection query.")
+				end).toThrow("Decorated type deeper than introspection query.")
 			end)
 
-			itSKIP("fails on a very deep (> 7 levels) non-null", function()
-				local schema = buildSchema(([[
+			it("fails on a very deep (> 7 levels) non-null", function()
+				local schema = buildSchema([[
 
         type Query {
           foo: [[[[String!]!]!]!]
         }
-      ]]):format())
+      ]])
 
 				local introspection = introspectionFromSchema(schema)
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw("Decorated type deeper than introspection query.")
+				end).toThrow("Decorated type deeper than introspection query.")
 			end)
 
 			itSKIP("succeeds on deep (<= 7 levels) types", function()
 				-- e.g., fully non-null 3D matrix
-				local sdl = dedent(([[
+				local sdl = dedent([[
 
         type Query {
           foo: [[[String!]!]!]!
         }
-      ]]):format())
+      ]])
 
 				expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 			end)
 		end)
 
 		describe("prevents infinite recursion on invalid introspection", function()
-			itSKIP("recursive interfaces", function()
+			it("recursive interfaces", function()
 				local sdl = ([[
 
         type Query {
@@ -995,7 +1066,7 @@ return function()
 				local fooIntrospection = Array.find(introspection.__schema.types, function(type_)
 					return type_.name == "Foo"
 				end)
-				expect(fooIntrospection).to.deep.include({
+				expect(fooIntrospection).toObjectContain({
 					name = "Foo",
 					interfaces = {
 						{
@@ -1008,10 +1079,10 @@ return function()
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw("Expected Foo to be a GraphQL Interface type.")
+				end).toThrow("Expected Foo to be a GraphQL Interface type.")
 			end)
 
-			itSKIP("recursive union", function()
+			it("recursive union", function()
 				local sdl = ([[
 
         type Query {
@@ -1026,7 +1097,7 @@ return function()
 				local fooIntrospection = Array.find(introspection.__schema.types, function(type_)
 					return type_.name == "Foo"
 				end)
-				expect(fooIntrospection).to.deep.include({
+				expect(fooIntrospection).toObjectContain({
 					name = "Foo",
 					possibleTypes = {
 						{
@@ -1039,7 +1110,7 @@ return function()
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).to.throw("Expected Foo to be a GraphQL Object type.")
+				end).toThrow("Expected Foo to be a GraphQL Object type.")
 			end)
 		end)
 	end)

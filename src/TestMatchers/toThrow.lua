@@ -1,5 +1,5 @@
 -- FIXME: Replace this with jest-roblox builtins
-local function toThrow(fn: () -> any, errorString: string?)
+local function toThrow(fn: () -> any, errorString: string?, isPattern: boolean?)
 	local ok, result = pcall(fn)
 
 	if not ok then
@@ -26,7 +26,7 @@ local function toThrow(fn: () -> any, errorString: string?)
 					),
 				}
 			end
-			if resultErrorString:find(errorString, 1, true) ~= nil then
+			if resultErrorString:find(errorString, 1, not isPattern) ~= nil then
 				return {
 					pass = true,
 					message = string.format(
