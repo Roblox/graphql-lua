@@ -3,7 +3,7 @@
 local root = script.Parent.Parent.Parent
 
 -- ROBLOX deviation: use Map type
-local Map = require(root.luaUtils.Map)
+local Map = require(root.luaUtils.Map).Map
 
 local GraphQLError = require(root.error.GraphQLError).GraphQLError
 local definition = require(root.type.definition)

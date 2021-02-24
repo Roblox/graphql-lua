@@ -4,7 +4,7 @@ local root = script.Parent.Parent.Parent
 local jsutils = root.jsutils
 
 -- ROBLOX deviation: use Map type
-local Map = require(root.luaUtils.Map)
+local Map = require(root.luaUtils.Map).Map
 
 local didYouMean = require(jsutils.didYouMean).didYouMean
 local suggestionList = require(jsutils.suggestionList).suggestionList

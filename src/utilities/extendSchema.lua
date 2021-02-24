@@ -4,7 +4,7 @@ local srcWorkspace = script.Parent.Parent
 local root = srcWorkspace.Parent
 
 -- ROBLOX deviation: use Map type
-local Map = require(srcWorkspace.luaUtils.Map)
+local Map = require(srcWorkspace.luaUtils.Map).Map
 
 local jsutils = srcWorkspace.jsutils
 local keyMap = require(jsutils.keyMap).keyMap
