@@ -9,15 +9,15 @@ local Map = {}
 export type Map<T, V> = {
 	size: number,
 	-- method definitions
-	set: (T, V) -> Map,
-	get: (T) -> V,
-	clear: () -> (),
-	delete: (T) -> boolean,
-	has: (T) -> boolean,
-	keys: () -> Array<T>,
-	values: () -> Array<V>,
-	entries: () -> Array<Tuple<T, V>>,
-	ipairs: () -> any,
+	set: (Map, T, V) -> Map,
+	get: (Map, T) -> V,
+	clear: (Map) -> (),
+	delete: (Map, T) -> boolean,
+	has: (Map, T) -> boolean,
+	keys: (Map) -> Array<T>,
+	values: (Map) -> Array<V>,
+	entries: (Map) -> Array<Tuple<T, V>>,
+	ipairs: (Map) -> any,
 }
 
 function Map.new(iterable)

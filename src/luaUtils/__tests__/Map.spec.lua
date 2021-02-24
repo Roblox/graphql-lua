@@ -250,6 +250,7 @@ return function()
 		end)
 
 		describe("ipairs", function()
+
 			local function makeArray(...)
 				local array = {}
 				for _, item in ... do
@@ -297,6 +298,7 @@ return function()
 				})
 			end)
 		end)
+
 
 		describe("Integration Tests", function()
 			-- the following tests are adapted from the examples shown on the MDN documentation:

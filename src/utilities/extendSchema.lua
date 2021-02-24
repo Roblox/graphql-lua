@@ -382,10 +382,12 @@ function extendSchemaImpl(
 			{},
 			config,
 			{
-				interfaces = Array.concat(
+				interfaces = function()
+					return Array.concat(
 					Array.map(type_:getInterfaces(), replaceNamedType),
 					buildInterfaces(extensions)
-				),
+				   )
+				end,
 				fields = function()
 					return Object.assign(
 						{},
