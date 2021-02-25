@@ -27,7 +27,7 @@ type Map<T, V> = MapModule.Map<T, V>
  *     const jennyEntry = entriesByName['Jenny']
  *
  ]]
-local function keyMap(
+local function keyMapOrdered(
 	list: Array<any>,
 	keyFn: (any) -> string
 ): Map<string, any>
@@ -40,5 +40,5 @@ local function keyMap(
 end
 
 return {
-	keyMap = keyMap,
+	keyMapOrdered = keyMapOrdered,
 }

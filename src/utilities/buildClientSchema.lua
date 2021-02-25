@@ -3,11 +3,8 @@
 local srcWorkspace = script.Parent.Parent
 local luaUtilsWorkspace = srcWorkspace.luaUtils
 
-local objectValues = require(srcWorkspace.polyfills.objectValues).objectValues
-
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
 local devAssert = require(srcWorkspace.jsutils.devAssert).devAssert
-local keyValMap = require(srcWorkspace.jsutils.keyValMap).keyValMap
 local isObjectLike = require(srcWorkspace.jsutils.isObjectLike).isObjectLike
 
 local parseValue = require(srcWorkspace.language.parser).parseValue
@@ -43,7 +40,7 @@ local NULL = require(luaUtilsWorkspace.null)
 local isNillishModule = require(luaUtilsWorkspace.isNillish)
 local isNillish = isNillishModule.isNillish
 local isNotNillish = isNillishModule.isNotNillish
-
+local keyValMapOrdered = require(luaUtilsWorkspace.keyValMapOrdered).keyValMapOrdered
 --[[*
 --  * Build a GraphQLSchema for use by client tools.
 --  *
@@ -111,7 +108,8 @@ local function buildClientSchema(introspection, options)
 			error(Error.new(("Unknown type reference: %s."):format(inspect(typeRef))))
 		end
 
-		local type_ = typeMap[typeName]
+		-- ROBLOX deviation: use Map
+		local type_ = typeMap:get(typeName)
 		if isNillish(type_) then
 			error(Error.new(("Invalid or incomplete schema, unknown type: %s. Ensure that a full introspection query is used in order to build a client schema."):format(typeName)))
 		end
@@ -221,7 +219,7 @@ local function buildClientSchema(introspection, options)
 		return GraphQLEnumType.new({
 			name = enumIntrospection.name,
 			description = enumIntrospection.description,
-			values = keyValMap(enumIntrospection.enumValues, function(valueIntrospection)
+			values = keyValMapOrdered(enumIntrospection.enumValues, function(valueIntrospection)
 				return valueIntrospection.name
 			end, function(valueIntrospection)
 				return {
@@ -251,7 +249,7 @@ local function buildClientSchema(introspection, options)
 			error(Error.new(("Introspection result missing fields: %s."):format(inspect(typeIntrospection))))
 		end
 
-		return keyValMap(
+		return keyValMapOrdered(
 			typeIntrospection.fields,
 			function(fieldIntrospection)
 				return fieldIntrospection.name
@@ -282,7 +280,7 @@ local function buildClientSchema(introspection, options)
 	end
 
 	function buildInputValueDefMap(inputValueIntrospections)
-		return keyValMap(
+		return keyValMapOrdered(
 			inputValueIntrospections,
 			function(inputValue)
 				return inputValue.name
@@ -340,7 +338,8 @@ local function buildClientSchema(introspection, options)
 	schemaIntrospection = introspection.__schema
 
 	-- Iterate through all types, getting the type definition for each.
-	typeMap = keyValMap(schemaIntrospection.types, function(typeIntrospection)
+	-- ROBLOX deviation: use Map
+	typeMap = keyValMapOrdered(schemaIntrospection.types, function(typeIntrospection)
 		return typeIntrospection.name
 	end, function(typeIntrospection)
 		return buildType(typeIntrospection)
@@ -348,8 +347,9 @@ local function buildClientSchema(introspection, options)
 
 	-- Include standard types only if they are used.
 	for _, stdType in ipairs(Array.concat(specifiedScalarTypes, introspectionTypes)) do
-		if typeMap[stdType.name] then
-			typeMap[stdType.name] = stdType
+		-- ROBLOX deviation: use Map
+		if typeMap:get(stdType.name) then
+			typeMap:set(stdType.name, stdType)
 		end
 	end
 
@@ -390,7 +390,8 @@ local function buildClientSchema(introspection, options)
 		query = queryType,
 		mutation = mutationType,
 		subscription = subscriptionType,
-		types = objectValues(typeMap),
+		-- ROBLOX deviation: use Map
+		types = typeMap:values(),
 		directives = directives,
 		assumeValid = options and options.assumeValid,
 	})
