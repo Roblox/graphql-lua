@@ -1481,7 +1481,7 @@ return function()
 			})
 		end)
 
-		itSKIP("fails when an isTypeOf check is not met", function()
+		it("fails when an isTypeOf check is not met", function()
 			local Special = {}
 			local SpecialMetatable = { __index = Special }
 
@@ -1541,29 +1541,30 @@ return function()
 				rootValue = rootValue,
 			})
 
-			expect(result).toEqual({
-				data = {
-					specials = {
-						{
-							value = "foo",
-						},
-						nil,
+			--[[
+			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+			--]]
+			expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
+			expect(result.data).toEqual({
+				specials = {
+					{
+						value = "foo",
+					},
+					NULL,
+				},
+			})
+			expect(#result.errors).toEqual(1)
+			expect(result.errors[1]).toObjectContain({
+				message = "Expected value of type \"SpecialType\" but got: { value: \"bar\" }.",
+				locations = {
+					{
+						line = 1,
+						column = 3,
 					},
 				},
-				errors = {
-					{
-						message = "Expected value of type \"SpecialType\" but got: { value: \"bar\" }.",
-						locations = {
-							{
-								line = 1,
-								column = 3,
-							},
-						},
-						path = {
-							"specials",
-							1,
-						},
-					},
+				path = {
+					"specials",
+					2,
 				},
 			})
 
@@ -1574,6 +1575,18 @@ return function()
 				rootValue = rootValue,
 				contextValue = contextValue,
 			}):expect()
+
+			-- ROBLOX deviation: helper function
+			local function removeStack(err_)
+				local err = Object.assign({}, error)
+				err.stack = nil
+				return err
+			end
+			-- ROBLOX deviation: stack trace is actually different for result.errors and validationErrors so we're removing it for comparison purposes
+			expect(Array.map(asyncResult.errors, removeStack)).toEqual(Array.map(result.errors, removeStack), true)
+			-- ROBLOX deviation: errors have been already verified
+			asyncResult.errors = nil
+			result.errors = nil
 			expect(asyncResult).toEqual(result)
 		end)
 
@@ -1607,8 +1620,6 @@ return function()
 			--]]
 			expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
 			expect(result.data).toEqual({ customScalar = NULL })
-			-- ROBLOX deviation: we need to specifically test if customScalar is exactly equal to NULL
-			expect(result.data.customScalar).to.equal(NULL)
 			expect(#result.errors).toEqual(1)
 			expect(result.errors[1]).toObjectContain({
 				message = "Expected a value of type \"CustomScalar\" but received: \"CUSTOM_VALUE\"",

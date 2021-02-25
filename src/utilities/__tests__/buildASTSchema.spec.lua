@@ -168,8 +168,8 @@ return function()
         bool: Boolean
       }
     ]])
-			-- ROBLOX FIXME: ordering is not preserved
-			-- expect(cycleSDL(sdl)).to.equal(sdl)
+
+			expect(cycleSDL(sdl)).to.equal(sdl)
 
 			local schema = buildSchema(sdl)
 			-- Built-ins are used

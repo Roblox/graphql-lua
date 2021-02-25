@@ -278,7 +278,8 @@ function printArgs(args, indentation_: string?)
 
 	-- If every arg does not have a description, print them on one line.
 	if Array.every(args, function(arg)
-		return not arg.description
+		-- ROBLOX deviation: execution can return NULL - so we must check for null or nil
+		return isNillish(arg.description)
 	end) then
 		return "(" .. Array.join(Array.map(args, printInputValue), ", ") .. ")"
 	end

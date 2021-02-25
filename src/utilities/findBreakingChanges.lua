@@ -7,9 +7,9 @@ local LuauPolyfill = require(rootWorkspace.Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
 local Array = LuauPolyfill.Array
 local UtilArray = require(srcWorkspace.luaUtils.Array)
+local keyMapOrdered = require(srcWorkspace.luaUtils.keyMapOrdered).keyMapOrdered
 
 local jsutils = srcWorkspace.jsutils
-local keyMap = require(jsutils.keyMap).keyMap
 local inspect = require(jsutils.inspect).inspect
 local invariant = require(jsutils.invariant).invariant
 local naturalCompare = require(jsutils.naturalCompare).naturalCompare
@@ -187,16 +187,14 @@ function findTypeChanges(oldSchema, newSchema)
 			for _, item in ipairs(findInputObjectTypeChanges(oldType, newType)) do
 				table.insert(schemaChanges, item)
 			end
-		elseif isObjectType(oldType) and isObjectType(newType)
-		then
+		elseif isObjectType(oldType) and isObjectType(newType) then
 			for _, item in ipairs(UtilArray.concat(
 				findFieldChanges(oldType, newType),
 				findImplementedInterfacesChanges(oldType, newType)
 			)) do
 				table.insert(schemaChanges, item)
 			end
-		elseif isInterfaceType(oldType) and isInterfaceType(newType)
-		then
+		elseif isInterfaceType(oldType) and isInterfaceType(newType) then
 			-- selene: allow(if_same_then_else)
 			for _, item in ipairs(UtilArray.concat(
 				findFieldChanges(oldType, newType),
@@ -473,15 +471,14 @@ function stringifyValue(value, type_): string
 
 	local sortedAST = visit(ast, {
 		ObjectValue = function(self, objectNode)
-			local fields = Array.concat({}, objectNode.fields)
-
 			-- Make a copy since sort mutates array
+			local fields = Array.concat({}, objectNode.fields)
 
 			Array.sort(fields, function(fieldA, fieldB)
 				return naturalCompare(fieldA.name.value, fieldB.name.value)
 			end)
 
-			return Object.assign({}, objectNode, fields)
+			return Object.assign({}, objectNode, { fields = fields })
 		end,
 	})
 
@@ -492,15 +489,15 @@ function diff(oldArray, newArray)
 	local added = {}
 	local removed = {}
 	local persisted = {}
-	local oldMap = keyMap(oldArray, function(arg)
+	local oldMap = keyMapOrdered(oldArray, function(arg)
 		return arg.name
 	end)
-	local newMap = keyMap(newArray, function(arg)
+	local newMap = keyMapOrdered(newArray, function(arg)
 		return arg.name
 	end)
 
 	for _, oldItem in ipairs(oldArray) do
-		local newItem = newMap[oldItem.name]
+		local newItem = newMap:get(oldItem.name)
 
 		if newItem == nil then
 			table.insert(removed, oldItem)
@@ -509,7 +506,7 @@ function diff(oldArray, newArray)
 		end
 	end
 	for _, newItem in ipairs(newArray) do
-		if oldMap[newItem.name] == nil then
+		if oldMap:get(newItem.name) == nil then
 			table.insert(added, newItem)
 		end
 	end

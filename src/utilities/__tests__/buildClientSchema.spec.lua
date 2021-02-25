@@ -29,6 +29,7 @@ return function()
 	-- ROBLOX deviation: utils
 	local Array = require(srcWorkspace.luaUtils.Array)
 	local NULL = require(srcWorkspace.luaUtils.null)
+	local Map = require(srcWorkspace.luaUtils.Map).Map
 
 	--[[*
 	--  * This function does a full cycle of going from a string with the contents of
@@ -52,7 +53,7 @@ return function()
 	end
 
 	describe("Type System: build schema from introspection", function()
-		itSKIP("builds a simple schema", function()
+		it("builds a simple schema", function()
 			local sdl = dedent([[
 
       """Simple schema"""
@@ -88,7 +89,7 @@ return function()
 			expect(printSchema(clientSchema)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a simple schema with all operation types", function()
+		it("builds a simple schema with all operation types", function()
 			local sdl = dedent([[
 
       schema {
@@ -134,8 +135,7 @@ return function()
       }
     ]])
 
-			-- ROBLOX FIXME: uncomment when ordering is stable is available
-			-- expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
+			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 
 			local schema = buildSchema(sdl)
 			local introspection = introspectionFromSchema(schema)
@@ -168,7 +168,7 @@ return function()
 			expect(clientSchema:getType("ID")).to.equal(nil)
 		end)
 
-		itSKIP("builds a schema with a recursive type reference", function()
+		it("builds a schema with a recursive type reference", function()
 			local sdl = dedent([[
 
       schema {
@@ -183,7 +183,7 @@ return function()
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a schema with a circular type reference", function()
+		it("builds a schema with a circular type reference", function()
 			local sdl = dedent([[
 
       type Dog {
@@ -203,7 +203,7 @@ return function()
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a schema with an interface", function()
+		it("builds a schema with an interface", function()
 			local sdl = dedent([[
 
       type Dog implements Friendly {
@@ -227,7 +227,7 @@ return function()
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a schema with an interface hierarchy", function()
+		it("builds a schema with an interface hierarchy", function()
 			local sdl = dedent([[
 
       type Dog implements Friendly & Named {
@@ -258,7 +258,7 @@ return function()
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a schema with an implicit interface", function()
+		it("builds a schema with an implicit interface", function()
 			local sdl = dedent([[
 
       type Dog implements Friendly {
@@ -278,7 +278,7 @@ return function()
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a schema with a union", function()
+		it("builds a schema with a union", function()
 			local sdl = dedent([[
 
       type Dog {
@@ -299,7 +299,7 @@ return function()
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a schema with complex field values", function()
+		it("builds a schema with complex field values", function()
 			local sdl = dedent([[
 
       type Query {
@@ -314,7 +314,7 @@ return function()
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a schema with field arguments", function()
+		it("builds a schema with field arguments", function()
 			local sdl = dedent([[
 
       type Query {
@@ -338,7 +338,7 @@ return function()
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a schema with default value on custom scalar field", function()
+		it("builds a schema with default value on custom scalar field", function()
 			local sdl = dedent([[
 
       scalar CustomScalar
@@ -351,24 +351,30 @@ return function()
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a schema with an enum", function()
-			local foodEnum = GraphQLEnumType({
+		it("builds a schema with an enum", function()
+			local foodEnum = GraphQLEnumType.new({
 				name = "Food",
 				description = "Varieties of food stuffs",
-				values = {
-					VEGETABLES = {
-						description = "Foods that are vegetables.",
-						value = 1,
+				values = Map.new({
+					{
+						"VEGETABLES",
+						{
+							description = "Foods that are vegetables.",
+							value = 1,
+						},
 					},
-					FRUITS = { value = 2 },
-					OILS = {
-						value = 3,
-						deprecationReason = "Too fatty",
+					{ "FRUITS", { value = 2 } },
+					{
+						"OILS",
+						{
+							value = 3,
+							deprecationReason = "Too fatty",
+						},
 					},
-				},
+				}),
 			})
-			local schema = GraphQLSchema({
-				query = GraphQLObjectType({
+			local schema = GraphQLSchema.new({
+				query = GraphQLObjectType.new({
 					name = "EnumFields",
 					fields = {
 						food = {
@@ -401,21 +407,21 @@ return function()
 					name = "VEGETABLES",
 					description = "Foods that are vegetables.",
 					value = "VEGETABLES",
-					deprecationReason = nil,
+					deprecationReason = NULL,
 					extensions = nil,
 					astNode = nil,
 				},
 				{
 					name = "FRUITS",
-					description = nil,
+					description = NULL,
 					value = "FRUITS",
-					deprecationReason = nil,
+					deprecationReason = NULL,
 					extensions = nil,
 					astNode = nil,
 				},
 				{
 					name = "OILS",
-					description = nil,
+					description = NULL,
 					value = "OILS",
 					deprecationReason = "Too fatty",
 					extensions = nil,
@@ -424,7 +430,7 @@ return function()
 			})
 		end)
 
-		itSKIP("builds a schema with an input object", function()
+		it("builds a schema with an input object", function()
 			local sdl = dedent([[
 
       """An input address"""
@@ -451,7 +457,7 @@ return function()
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a schema with field arguments with default values", function()
+		it("builds a schema with field arguments with default values", function()
 			local sdl = dedent([[
 
       input Geo {
@@ -471,7 +477,7 @@ return function()
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a schema with custom directives", function()
+		it("builds a schema with custom directives", function()
 			local sdl = dedent([[
 
       """This is a custom directive"""
@@ -485,7 +491,7 @@ return function()
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a schema without directives", function()
+		it("builds a schema without directives", function()
 			local sdl = dedent([[
 
       type Query {
@@ -500,12 +506,12 @@ return function()
 
 			local clientSchema = buildClientSchema(introspection)
 
-			expect(schema:getDirectives() > 0).to.equal(true)
+			expect(#schema:getDirectives() > 0).to.equal(true)
 			expect(clientSchema:getDirectives()).toEqual({})
 			expect(printSchema(clientSchema)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a schema aware of deprecation", function()
+		it("builds a schema aware of deprecation", function()
 			local sdl = dedent([[
 
       directive @someDirective(
@@ -562,7 +568,7 @@ return function()
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a schema with empty deprecation reasons", function()
+		it("builds a schema with empty deprecation reasons", function()
 			local sdl = dedent([[
 
       directive @someDirective(someArg: SomeInputObject @deprecated(reason: "")) on QUERY
@@ -583,7 +589,7 @@ return function()
 			expect(cycleIntrospection(expect, sdl)).to.equal(sdl)
 		end)
 
-		itSKIP("builds a schema with specifiedBy url", function()
+		it("builds a schema with specifiedBy url", function()
 			local sdl = dedent([[
 
       scalar Foo @specifiedBy(url: "https://example.com/foo_spec")
@@ -627,12 +633,12 @@ return function()
 		end)
 
 		describe("can build invalid schema", function()
-			-- ROBLOX FIXME: uncomment when available
-			-- local schema = buildSchema('type Query', {assumeValid = true})
-			-- local introspection = introspectionFromSchema(schema)
-			-- local clientSchema = buildClientSchema(introspection, {assumeValid = true})
+			local schema = buildSchema("type Query", { assumeValid = true })
 
-			-- expect(clientSchema:toConfig().assumeValid).to.equal(true)
+			local introspection = introspectionFromSchema(schema)
+			local clientSchema = buildClientSchema(introspection, { assumeValid = true })
+
+			expect(clientSchema:toConfig().assumeValid).to.equal(true)
 		end)
 
 		describe("throws when given invalid introspection", function()
@@ -730,8 +736,9 @@ return function()
 					return buildClientSchema(introspection)
 				end).toThrow(
 					--[[
-						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'name' property will be printed first
-						with correct ordering should be:
+						ROBLOX deviation: ordering in printed object keys is not guaranteed.
+						We can't assume that 'name' property will be printed first
+						With original ordering would be:
 						"Invalid or incomplete introspection result. Ensure that a full introspection query is used in order to build a client schema: { name: \"Query\", .* }%."
 					]]
 					"Invalid or incomplete introspection result. Ensure that a full introspection query is used in order to build a client schema: { .* ?name: \"Query\",?.* }%.",
@@ -754,14 +761,15 @@ return function()
 					return buildClientSchema(introspection)
 				end).toThrow(
 					--[[
-						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'kind' and 'name' properties will be printed first
-						with correct ordering should be:
+						ROBLOX deviation: ordering in printed object keys is not guaranteed.
+						We can't assume that 'kind' and 'name' properties will be printed first
+						With original ordering would be:
 						"Introspection result missing interfaces: { kind: \"OBJECT\", name: \"Query\", .* }%."
 					]]
 					"Introspection result missing interfaces: { .* ?kind: \"OBJECT\",?.* }%.",
 					true
 				)
-				-- ROBLOX FIXME: adding second matcher to test for both 'kind' and 'name' properties.
+				-- ROBLOX deviation: adding second matcher to test for both 'kind' and 'name' properties.
 				expect(function()
 					return buildClientSchema(introspection)
 				end).toThrow(
@@ -770,7 +778,7 @@ return function()
 				)
 			end)
 
-			itSKIP("Legacy support for interfaces with null as interfaces field", function()
+			it("Legacy support for interfaces with null as interfaces field", function()
 				local introspection = introspectionFromSchema(dummySchema)
 				local someInterfaceIntrospection = Array.find(introspection.__schema.types, function(_ref)
 					local name = _ref.name
@@ -798,14 +806,15 @@ return function()
 					return buildClientSchema(introspection)
 				end).toThrow(
 					--[[
-						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'kind' and 'name' properties will be printed first
-						with correct ordering should be:
+						ROBLOX deviation: ordering in printed object keys is not guaranteed.
+						We can't assume that 'kind' and 'name' properties will be printed first
+						With original ordering would be:
 						"Introspection result missing fields: { kind: \"OBJECT\", name: \"Query\", .* }%."
 					]]
 					"Introspection result missing fields: { .* ?kind: \"OBJECT\",?.* }%.",
 					true
 				)
-				-- ROBLOX FIXME: adding second matcher to test for both 'kind' and 'name' properties.
+				-- ROBLOX deviation: adding second matcher to test for both 'kind' and 'name' properties.
 				expect(function()
 					return buildClientSchema(introspection)
 				end).toThrow(
@@ -828,8 +837,9 @@ return function()
 					return buildClientSchema(introspection)
 				end).toThrow(
 					--[[
-						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'name' property will be printed first
-						with correct ordering should be:
+						ROBLOX deviation: ordering in printed object keys is not guaranteed.
+						We can't assume that 'name' property will be printed first
+						With original ordering would be:
 						"Introspection result missing field args: { name: \"foo\", .* }%."
 					]]
 					"Introspection result missing field args: { .* ?name: \"foo\",?.* }%.",
@@ -881,14 +891,15 @@ return function()
 					return buildClientSchema(introspection)
 				end).toThrow(
 					--[[
-						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'kind' and 'name' properties will be printed first
-						with correct ordering should be:
+						ROBLOX deviation: ordering in printed object keys is not guaranteed.
+						We can't assume that 'kind' and 'name' properties will be printed first
+						With original ordering would be:
 						"Introspection result missing possibleTypes: { kind: \"UNION\", name: \"SomeUnion\",.* }%."
 					]]
 					"Introspection result missing possibleTypes: { .* ?kind: \"UNION\",?.* }%.",
 					true
 				)
-				-- ROBLOX FIXME: adding second matcher to test for both 'kind' and 'name' properties.
+				-- ROBLOX deviation: adding second matcher to test for both 'kind' and 'name' properties.
 				expect(function()
 					return buildClientSchema(introspection)
 				end).toThrow(
@@ -911,14 +922,15 @@ return function()
 					return buildClientSchema(introspection)
 				end).toThrow(
 					--[[
-						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'kind' and 'name' properties will be printed first
-						with correct ordering should be:
+						ROBLOX deviation: ordering in printed object keys is not guaranteed.
+						We can't assume that 'kind' and 'name' properties will be printed first
+						With original ordering would be:
 						"Introspection result missing enumValues: { kind: \"ENUM\", name: \"SomeEnum\", .* }%."
 					]]
 					"Introspection result missing enumValues: { .* ?kind: \"ENUM\",?.* }%.",
 					true
 				)
-				-- ROBLOX FIXME: adding second matcher to test for both 'kind' and 'name' properties.
+				-- ROBLOX deviation: adding second matcher to test for both 'kind' and 'name' properties.
 				expect(function()
 					return buildClientSchema(introspection)
 				end).toThrow(
@@ -941,14 +953,15 @@ return function()
 					return buildClientSchema(introspection)
 				end).toThrow(
 					--[[
-						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'kind' and 'name' properties will be printed first
-						with correct ordering should be:
+						ROBLOX deviation: ordering in printed object keys is not guaranteed.
+						We can't assume that 'kind' and 'name' properties will be printed first
+						With original ordering would be:
 						"Introspection result missing inputFields: { kind: \"INPUT_OBJECT\", name: \"SomeInputObject\", .* }%."
 					]]
 					"Introspection result missing inputFields: { .* ?kind: \"INPUT_OBJECT\",?.* }%.",
 					true
 				)
-				-- ROBLOX FIXME: adding second matcher to test for both 'kind' and 'name' properties.
+				-- ROBLOX deviation: adding second matcher to test for both 'kind' and 'name' properties.
 				expect(function()
 					return buildClientSchema(introspection)
 				end).toThrow(
@@ -973,8 +986,9 @@ return function()
 					return buildClientSchema(introspection)
 				end).toThrow(
 					--[[
-						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'name' property will be printed first
-						with correct ordering should be:
+						ROBLOX deviation: ordering in printed object keys is not guaranteed.
+						We can't assume that 'name' property will be printed first
+						With original ordering would be:
 						"Introspection result missing directive locations: { name: \"SomeDirective\", .* }%."
 					]]
 					"Introspection result missing directive locations: { .* ?name: \"SomeDirective\",?.* }%.",
@@ -996,8 +1010,9 @@ return function()
 					return buildClientSchema(introspection)
 				end).toThrow(
 					--[[
-						ROBLOX FIXME?: ordering in printed object is not guaranteed. It's not guranteed that 'name' property will be printed first
-						with correct ordering should be:
+						ROBLOX deviation: ordering in printed object keys is not guaranteed.
+						We can't assume that 'name' property will be printed first
+						With original ordering would be:
 						"Introspection result missing directive args: { name: \"SomeDirective\", .* }%."
 					]]
 					"Introspection result missing directive args: { .* ?name: \"SomeDirective\",?.* }%.",
@@ -1035,7 +1050,7 @@ return function()
 				end).toThrow("Decorated type deeper than introspection query.")
 			end)
 
-			itSKIP("succeeds on deep (<= 7 levels) types", function()
+			it("succeeds on deep (<= 7 levels) types", function()
 				-- e.g., fully non-null 3D matrix
 				local sdl = dedent([[
 

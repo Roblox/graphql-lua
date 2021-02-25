@@ -565,12 +565,6 @@ function extendSchemaImpl(
 				fieldConfigMap:set(field.name.value, {
 					type = getWrappedType(field.type),
 					description = field.description and field.description.value,
-					--[[
-					--	ROBLOX FIXME: we're losing the order of arguments in here.
-					--  It works in JS because (for most Js engine implementations) Object.keys and Object.entries returns values in order of them being added
-					--  but in Lua this is not the case
-					-- 	ROBLOX FIXME: #142 https://github.com/Roblox/graphql-lua/issues/142
-					--]]
 					args = buildArgumentMap(field.arguments),
 					deprecationReason = getDeprecationReason(field),
 					astNode = field,
@@ -821,20 +815,27 @@ function extendSchemaImpl(
 		assumeValid = options.assumeValid
 	end
 	-- // Then produce and return a Schema config with these types.
-	local schemaExtension = Object.assign({}, { description = description }, operationTypes, {
-		-- ROBLOX deviation: use Map type
-		types = typeMap:values(),
-		directives = Array.concat(
-			Array.map(schemaConfig.directives, replaceDirective),
-			Array.map(directiveDefs, buildDirective)
-		),
-		-- ROBLOX deviation: we can't remove a property by mapping it to `nil` in Lua
-		-- so we have to manually remove it on the next statement.
-		-- extensions = nil,
-		astNode = schemaDef or schemaConfig.astNode,
-		extensionASTNodes = Array.concat(schemaConfig.extensionASTNodes, schemaExtensions),
-		assumeValid = assumeValid,
-	})
+	local schemaExtension = Object.assign(
+		{},
+		{
+			description = description
+		},
+		operationTypes,
+		{
+			-- ROBLOX deviation: use Map type
+			types = typeMap:values(),
+			directives = Array.concat(
+				Array.map(schemaConfig.directives, replaceDirective),
+				Array.map(directiveDefs, buildDirective)
+			),
+			-- ROBLOX deviation: we can't remove a property by mapping it to `nil` in Lua
+			-- so we have to manually remove it on the next statement.
+			-- extensions = nil,
+			astNode = schemaDef or schemaConfig.astNode,
+			extensionASTNodes = Array.concat(schemaConfig.extensionASTNodes, schemaExtensions),
+			assumeValid = assumeValid,
+		}
+	)
 	schemaExtension.extensions = nil
 	return schemaExtension
 end

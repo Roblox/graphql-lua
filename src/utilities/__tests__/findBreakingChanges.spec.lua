@@ -140,8 +140,6 @@ return function()
     ]=])
 			local changes = findBreakingChanges(oldSchema, newSchema)
 
-			-- ROBLOX FIXME: findBreakingChanges does not return the same order as upstream
-
 			expect(changes).toEqual({
 				{
 					type = BreakingChangeType.FIELD_REMOVED,
@@ -237,66 +235,52 @@ return function()
       }
     ]=])
 
-			-- ROBLOX FIXME: findBreakingChanges does not return the same order as upstream
-
 			expect(findBreakingChanges(oldSchema, newSchema)).toEqual({
 				{
 					type = BreakingChangeType.FIELD_REMOVED,
 					description = "InputType1.field2 was removed.",
 				},
-
 				{
 					type = BreakingChangeType.FIELD_CHANGED_KIND,
 					description = "InputType1.field1 changed type from String to Int.",
 				},
-
 				{
 					type = BreakingChangeType.FIELD_CHANGED_KIND,
 					description = "InputType1.field3 changed type from [String] to String.",
 				},
-
 				{
 					type = BreakingChangeType.FIELD_CHANGED_KIND,
 					description = "InputType1.field5 changed type from String to String!.",
 				},
-
 				{
 					type = BreakingChangeType.FIELD_CHANGED_KIND,
 					description = "InputType1.field6 changed type from [Int] to [Int]!.",
 				},
-
 				{
 					type = BreakingChangeType.FIELD_CHANGED_KIND,
 					description = "InputType1.field8 changed type from Int to [Int]!.",
 				},
-
 				{
 					type = BreakingChangeType.FIELD_CHANGED_KIND,
 					description = "InputType1.field9 changed type from [Int] to [Int!].",
 				},
-
 				{
 					type = BreakingChangeType.FIELD_CHANGED_KIND,
 					description = "InputType1.field11 changed type from [Int] to [[Int]].",
 				},
-
 				{
 					type = BreakingChangeType.FIELD_CHANGED_KIND,
 					description = "InputType1.field12 changed type from [[Int]] to [Int].",
 				},
-
 				{
 					type = BreakingChangeType.FIELD_CHANGED_KIND,
 					description = "InputType1.field13 changed type from Int! to [Int]!.",
 				},
-
 				{
 					type = BreakingChangeType.FIELD_CHANGED_KIND,
 					description = "InputType1.field15 changed type from [[Int]!] to [[Int!]!].",
 				},
-
 			})
-
 		end)
 
 		it("should detect if a required field is added to an input type", function()
@@ -393,8 +377,6 @@ return function()
       }
     ]])
 
-			-- ROBLOX FIXME: findBreakingChanges does not return the same order as upstream
-
 			expect(findBreakingChanges(oldSchema, newSchema)).toEqual({
 				{
 					type = BreakingChangeType.ARG_REMOVED,
@@ -454,8 +436,6 @@ return function()
          ): String
       }
     ]=])
-
-			-- ROBLOX FIXME: findBreakingChanges does not return the same order as upstream
 
 			expect(findBreakingChanges(oldSchema, newSchema)).toEqual({
 				{
@@ -925,8 +905,6 @@ return function()
       }
     ]=])
 
-			-- ROBLOX FIXME: findBreakingChanges does not return the same order as upstream
-
 			expect(findDangerousChanges(oldSchema, newSchema)).toEqual({
 				{
 					type = DangerousChangeType.ARG_DEFAULT_VALUE_CHANGE,
@@ -983,8 +961,7 @@ return function()
 			expect(findDangerousChanges(oldSchema, newSchema)).toEqual({})
 		end)
 
-		-- ROBLOX FIXME: Argument Default Definition Order is not preserved
-		itSKIP("should ignore changes in field definitions order", function()
+		it("should ignore changes in field definitions order", function()
 			local oldSchema = buildSchema([[
       input Input1 {
         a: String
@@ -1012,7 +989,7 @@ return function()
         ): String
       }
     ]])
-	  		local result = findDangerousChanges(oldSchema, newSchema)
+			local result = findDangerousChanges(oldSchema, newSchema)
 			expect(result).toEqual({})
 		end)
 

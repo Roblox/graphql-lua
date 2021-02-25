@@ -223,7 +223,7 @@ return function()
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toEqual({ "errors" })
-				-- ROBLOX FIXME?: stack trace is actually different for result.errors and validationErrors so we're removing it for comparison purposes
+				-- ROBLOX deviation: stack trace is actually different for result.errors and validationErrors so we're removing it for comparison purposes
 				expect(Array.map(result.errors, removeStack)).toEqual(Array.map(validationErrors, removeStack), true)
 			end)
 

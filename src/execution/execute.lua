@@ -19,11 +19,13 @@ type PromiseOrValue<T> = PromiseOrValueImport.PromiseOrValue<T>
 -- ROBLOX deviation: utils
 local Array = require(luaUtilsWorkspace.Array)
 local Error = require(luaUtilsWorkspace.Error)
-local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
 local Promise = require(srcWorkspace.Parent.Packages.Promise)
 local instanceOf = require(jsUtilsWorkspace.instanceOf)
 local NULL = require(luaUtilsWorkspace.null)
 local isNillish = require(luaUtilsWorkspace.isNillish).isNillish
+local MapModule = require(luaUtilsWorkspace.Map)
+local Map = MapModule.Map
+type Map<T,V> = MapModule.Map<T,V>
 
 local inspect = require(jsUtilsWorkspace.inspect).inspect
 local memoize3 = require(jsUtilsWorkspace.memoize3).memoize3
@@ -380,7 +382,8 @@ function executeOperation(exeContext, operation, rootValue)
 		exeContext,
 		type_,
 		operation.selectionSet,
-		{},
+		-- ROBLOX deviation: use Map
+		Map.new(),
 		{}
 	)
 
@@ -418,9 +421,10 @@ end
 --  *]]
 function executeFieldsSerially(exeContext, parentType, sourceValue, path, fields)
 	return promiseReduce(
-		Object.keys(fields),
+		-- ROBLOX deviation: use Map
+		fields:keys(),
 		function(results, responseName)
-			local fieldNodes = fields[responseName]
+			local fieldNodes = fields:get(responseName)
 			local fieldPath = addPath(path, responseName, parentType.name)
 			local result = resolveField(exeContext, parentType, sourceValue, fieldNodes, fieldPath)
 
@@ -452,13 +456,14 @@ function executeFields(
 	parentType: GraphQLObjectType,
 	sourceValue: any,
 	path: Path?,
-	fields: ObjMap<Array<FieldNode>>
+	fields: Map<string, Array<FieldNode>>
   ): PromiseOrValue<ObjMap<any>>
 	local results = {}
 	local containsPromise = false
 
-	for _, responseName in ipairs(Object.keys(fields)) do
-		local fieldNodes = fields[responseName]
+	-- ROBLOX deviation: use Map
+	for _, responseName in ipairs(fields:keys()) do
+		local fieldNodes = fields:get(responseName)
 		local fieldPath = addPath(path, responseName, parentType.name)
 		local result = resolveField(exeContext, parentType, sourceValue, fieldNodes, fieldPath)
 
@@ -492,7 +497,13 @@ end
 --  *
 --  * @internal
 --  *]]
-function collectFields(exeContext: ExecutionContext, runtimeType: GraphQLObjectType, selectionSet: SelectionSetNode, fields: ObjMap<Array<FieldNode>>, visitedFragmentNames: ObjMap<boolean>): ObjMap<Array<FieldNode>>
+function collectFields(
+	exeContext: ExecutionContext,
+	runtimeType: GraphQLObjectType,
+	selectionSet: SelectionSetNode,
+	fields: Map<string, Array<FieldNode>>,
+	visitedFragmentNames: ObjMap<boolean>
+): Map<string, Array<FieldNode>>
 
 	for _, selection in ipairs(selectionSet.selections) do
 		if selection.kind == Kind.FIELD then
@@ -500,10 +511,11 @@ function collectFields(exeContext: ExecutionContext, runtimeType: GraphQLObjectT
 				continue
 			end
 			local name = getFieldEntryKey(selection)
-			if not fields[name] then
-				fields[name] = {}
+			-- ROBLOX deviation: use Map
+			if not fields:get(name) then
+				fields:set(name, {})
 			end
-			table.insert(fields[name], selection)
+			table.insert(fields:get(name), selection)
 		elseif selection.kind == Kind.INLINE_FRAGMENT then
 			if
 				not shouldIncludeNode(exeContext, selection)
@@ -981,12 +993,19 @@ end
 --  need to declare _collectSubfields before collectSubfields assignment
 --]]
 function _collectSubfields(exeContext, returnType, fieldNodes)
-	local subFieldNodes = {}
+	-- ROBLOX deviation: use Map
+	local subFieldNodes = Map.new()
 	local visitedFragmentNames = {}
 
 	for _, node in ipairs(fieldNodes) do
 		if node.selectionSet then
-			subFieldNodes = collectFields(exeContext, returnType, node.selectionSet, subFieldNodes, visitedFragmentNames)
+			subFieldNodes = collectFields(
+				exeContext,
+				returnType,
+				node.selectionSet,
+				subFieldNodes,
+				visitedFragmentNames
+			)
 		end
 	end
 

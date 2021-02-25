@@ -46,6 +46,7 @@ local function introspectionFromSchema(
 	local document = parse(getIntrospectionQuery(optionsWithDefaults))
 	local result = executeSync({ schema = schema, document = document })
 	invariant(not result.errors and result.data)
+
 	return result.data
 end
 
