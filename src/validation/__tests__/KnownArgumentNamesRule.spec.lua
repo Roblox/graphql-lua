@@ -48,7 +48,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("multiple args are known", function()
+		it("multiple args are known", function()
 			expectValid(expect, [[
 				fragment multipleArgs on ComplicatedArgs {
 					multipleReqs(req1: 1, req2: 2)
@@ -64,7 +64,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("multiple args in reverse order are known", function()
+		it("multiple args in reverse order are known", function()
 			expectValid(expect, [[
 				fragment multipleArgsReverseOrder on ComplicatedArgs {
 					multipleReqs(req2: 2, req1: 1)
@@ -80,7 +80,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("args are known deeply", function()
+		it("args are known deeply", function()
 			expectValid(expect, [[
 				{
 					dog {
@@ -97,7 +97,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("directive args are known", function()
+		it("directive args are known", function()
 			expectValid(expect, [[
 				{
 					dog @skip(if: true)
@@ -178,7 +178,7 @@ return function()
 			})
 		end)
 
-		itSKIP("unknown args amongst known args", function()
+		it("unknown args amongst known args", function()
 			expectErrors(expect, [[
       fragment oneGoodArgOneInvalidArg on Dog {
         doesKnowCommand(whoKnows: 1, dogCommand: SIT, unknown: true)

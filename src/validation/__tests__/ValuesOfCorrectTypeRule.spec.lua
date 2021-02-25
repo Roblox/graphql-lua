@@ -187,7 +187,7 @@ return function()
 		end)
 
 		describe("Invalid String values", function()
-			itSKIP("Int into String", function()
+			it("Int into String", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -202,7 +202,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Float into String", function()
+			it("Float into String", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -217,7 +217,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Boolean into String", function()
+			it("Boolean into String", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -232,7 +232,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Unquoted String into String", function()
+			it("Unquoted String into String", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -250,7 +250,7 @@ return function()
 
 		describe("Invalid Int values", function()
 
-			itSKIP("String into Int", function()
+			it("String into Int", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -265,7 +265,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Big Int into Int", function()
+			it("Big Int into Int", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -280,7 +280,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Unquoted String into Int", function()
+			it("Unquoted String into Int", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -295,7 +295,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Simple Float into Int", function()
+			it("Simple Float into Int", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -310,7 +310,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Float into Int", function()
+			it("Float into Int", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -327,7 +327,7 @@ return function()
 		end)
 
 		describe("Invalid Float values", function()
-			itSKIP("String into Float", function()
+			it("String into Float", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -342,7 +342,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Boolean into Float", function()
+			it("Boolean into Float", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -357,7 +357,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Unquoted into Float", function()
+			it("Unquoted into Float", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -374,7 +374,7 @@ return function()
 		end)
 
 		describe("Invalid Boolean value", function()
-			itSKIP("Int into Boolean", function()
+			it("Int into Boolean", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -389,7 +389,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Float into Boolean", function()
+			it("Float into Boolean", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -404,7 +404,7 @@ return function()
 				})
 			end)
 
-			itSKIP("String into Boolean", function()
+			it("String into Boolean", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -419,7 +419,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Unquoted into Boolean", function()
+			it("Unquoted into Boolean", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -436,7 +436,7 @@ return function()
 		end)
 
 		describe("Invalid ID value", function()
-			itSKIP("Float into ID", function()
+			it("Float into ID", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -451,7 +451,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Boolean into ID", function()
+			it("Boolean into ID", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -466,7 +466,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Unquoted into ID", function()
+			it("Unquoted into ID", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -483,7 +483,7 @@ return function()
 		end)
 
 		describe("Invalid Enum value", function()
-			itSKIP("Int into Enum", function()
+			it("Int into Enum", function()
 				expectErrors(expect, [[
         {
           dog {
@@ -498,7 +498,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Float into Enum", function()
+			it("Float into Enum", function()
 				expectErrors(expect, [[
         {
           dog {
@@ -513,7 +513,7 @@ return function()
 				})
 			end)
 
-			itSKIP("String into Enum", function()
+			it("String into Enum", function()
 				expectErrors(expect, [[
         {
           dog {
@@ -528,7 +528,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Boolean into Enum", function()
+			it("Boolean into Enum", function()
 				expectErrors(expect, [[
         {
           dog {
@@ -543,7 +543,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Unknown Enum Value into Enum", function()
+			it("Unknown Enum Value into Enum", function()
 				expectErrors(expect, [[
         {
           dog {
@@ -558,7 +558,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Different case Enum Value into Enum", function()
+			it("Different case Enum Value into Enum", function()
 				expectErrors(expect, [[
         {
           dog {
@@ -617,7 +617,7 @@ return function()
 		end)
 
 		describe("Invalid List value", function()
-			itSKIP("Incorrect item type", function()
+			it("Incorrect item type", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -632,7 +632,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Single value of incorrect type", function()
+			it("Single value of incorrect type", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -751,7 +751,7 @@ return function()
 		end)
 
 		describe("Invalid non-nullable value", function()
-			itSKIP("Incorrect value type", function()
+			it("Incorrect value type", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -770,7 +770,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Incorrect value and missing argument (ProvidedRequiredArgumentsRule)", function()
+			it("Incorrect value and missing argument (ProvidedRequiredArgumentsRule)", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -785,7 +785,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Null value", function()
+			it("Null value", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -876,7 +876,7 @@ return function()
 		end)
 
 		describe("Invalid input object value", function()
-			itSKIP("Partial object, missing required", function()
+			it("Partial object, missing required", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -891,7 +891,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Partial object, invalid field type", function()
+			it("Partial object, invalid field type", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -909,7 +909,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Partial object, null to non-null field", function()
+			it("Partial object, null to non-null field", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -927,7 +927,7 @@ return function()
 				})
 			end)
 
-			itSKIP("Partial object, unknown field arg", function()
+			it("Partial object, unknown field arg", function()
 				expectErrors(expect, [[
         {
           complicatedArgs {
@@ -1053,7 +1053,7 @@ return function()
 				]])
 			end)
 
-			itSKIP("with directive with incorrect types", function()
+			it("with directive with incorrect types", function()
 				expectErrors(expect, [[
         {
           dog @include(if: "yes") {
@@ -1099,7 +1099,7 @@ return function()
 				]])
 			end)
 
-			itSKIP("variables with invalid default null values", function()
+			it("variables with invalid default null values", function()
 				expectErrors(expect, [[
         query WithDefaultValues(
           $a: Int! = null,
@@ -1124,7 +1124,7 @@ return function()
 				})
 			end)
 
-			itSKIP("variables with invalid default values", function()
+			it("variables with invalid default values", function()
 				expectErrors(expect, [[
         query InvalidDefaultValues(
           $a: Int = "one",
@@ -1149,7 +1149,7 @@ return function()
 				})
 			end)
 
-			itSKIP("variables with complex invalid default values", function()
+			it("variables with complex invalid default values", function()
 				expectErrors(expect, [[
         query WithDefaultValues(
           $a: ComplexInput = { requiredField: 123, intField: "abc" }

@@ -156,7 +156,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("Int => Int!", function()
+		it("Int => Int!", function()
 			expectErrors(expect, [[
       query Query($intArg: Int) {
         complicatedArgs {
@@ -174,7 +174,7 @@ return function()
 			})
 		end)
 
-		itSKIP("Int => Int! within fragment", function()
+		it("Int => Int! within fragment", function()
 			expectErrors(expect, [[
       fragment nonNullIntArgFieldFrag on ComplicatedArgs {
         nonNullIntArgField(nonNullIntArg: $intArg)
@@ -196,7 +196,7 @@ return function()
 			})
 		end)
 
-		itSKIP("Int => Int! within nested fragment", function()
+		it("Int => Int! within nested fragment", function()
 			expectErrors(expect, [[
       fragment outerFrag on ComplicatedArgs {
         ...nonNullIntArgFieldFrag
@@ -222,7 +222,7 @@ return function()
 			})
 		end)
 
-		itSKIP("String over Boolean", function()
+		it("String over Boolean", function()
 			expectErrors(expect, [[
       query Query($stringVar: String) {
         complicatedArgs {
@@ -240,7 +240,7 @@ return function()
 			})
 		end)
 
-		itSKIP("String => [String]", function()
+		it("String => [String]", function()
 			expectErrors(expect, [[
       query Query($stringVar: String) {
         complicatedArgs {
@@ -258,7 +258,7 @@ return function()
 			})
 		end)
 
-		itSKIP("Boolean => Boolean! in directive", function()
+		it("Boolean => Boolean! in directive", function()
 			expectErrors(expect, [[
       query Query($boolVar: Boolean) {
         dog @include(if: $boolVar)
@@ -274,7 +274,7 @@ return function()
 			})
 		end)
 
-		itSKIP("String => Boolean! in directive", function()
+		it("String => Boolean! in directive", function()
 			expectErrors(expect, [[
       query Query($stringVar: String) {
         dog @include(if: $stringVar)
@@ -290,7 +290,7 @@ return function()
 			})
 		end)
 
-		itSKIP("[String] => [String!]", function()
+		it("[String] => [String!]", function()
 			expectErrors(expect, [[
       query Query($stringListVar: [String])
       {
@@ -310,7 +310,7 @@ return function()
 		end)
 
 		describe("Allows optional (nullable) variables with default values", function()
-			itSKIP("Int => Int! fails when variable provides null default value", function()
+			it("Int => Int! fails when variable provides null default value", function()
 				expectErrors(expect, [[
         query Query($intVar: Int = null) {
           complicatedArgs {
