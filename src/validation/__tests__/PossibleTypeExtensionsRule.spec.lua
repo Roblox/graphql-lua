@@ -33,7 +33,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("one extension per type", function()
+		it("one extension per type", function()
 			expectValidSDL(expect, [[
 				scalar FooScalar
 				type FooObject
@@ -51,7 +51,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("many extensions per type", function()
+		it("many extensions per type", function()
 			expectValidSDL(expect, [[
 				scalar FooScalar
 				type FooObject
@@ -76,7 +76,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("extending unknown type", function()
+		it("extending unknown type", function()
 			local message = 'Cannot extend type "Unknown" because it is not defined. Did you mean "Known"?'
 
 			expectSDLErrors(expect, [[
@@ -116,7 +116,7 @@ return function()
 			})
 		end)
 
-		itSKIP("does not consider non-type definitions", function()
+		it("does not consider non-type definitions", function()
 
 			local message = 'Cannot extend type "Foo" because it is not defined.'
 
@@ -159,7 +159,7 @@ return function()
 			})
 		end)
 
-		itSKIP("extending with different kinds", function()
+		it("extending with different kinds", function()
 			expectSDLErrors(expect, [[
       scalar FooScalar
       type FooObject
@@ -220,7 +220,7 @@ return function()
 			})
 		end)
 
-		itSKIP("extending types within existing schema", function()
+		it("extending types within existing schema", function()
 			local schema = buildSchema([[
 				scalar FooScalar
 				type FooObject
@@ -241,7 +241,7 @@ return function()
 			expectValidSDL(expect, sdl, schema)
 		end)
 
-		itSKIP("extending unknown types within existing schema", function()
+		it("extending unknown types within existing schema", function()
 			local schema = buildSchema("type Known")
 			local sdl = [[
       extend scalar Unknown @dummy
@@ -282,7 +282,7 @@ return function()
 			})
 		end)
 
-		itSKIP("extending types with different kinds within existing schema", function()
+		it("extending types with different kinds within existing schema", function()
 			local schema = buildSchema([[
 				scalar FooScalar
 				type FooObject

@@ -123,7 +123,7 @@ return function()
 			})
 		end)
 
-		itSKIP("with well placed directives", function()
+		it("with well placed directives", function()
 			expectValid(expect, [[
 				query ($var: Boolean) @onQuery {
 					name @include(if: $var)
@@ -150,7 +150,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("with well placed variable definition directive", function()
+		it("with well placed variable definition directive", function()
 			expectValid(expect, [[
 				query Foo($var: Boolean @onVariableDefinition) {
 					name
@@ -158,7 +158,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("with misplaced directives", function()
+		it("with misplaced directives", function()
 			expectErrors(expect, [[
       query Foo($var: Boolean) @include(if: true) {
         name @onQuery @include(if: $var)
@@ -202,7 +202,7 @@ return function()
 		end)
 
 		describe("within SDL", function()
-			itSKIP("with directive defined inside SDL", function()
+			it("with directive defined inside SDL", function()
 				expectValidSDL(expect, [[
 					type Query {
 						foo: String @test
@@ -212,7 +212,7 @@ return function()
 				]])
 			end)
 
-			itSKIP("with standard directive", function()
+			it("with standard directive", function()
 				expectValidSDL(expect, [[
 					type Query {
 						foo: String @deprecated
@@ -220,7 +220,7 @@ return function()
 				]])
 			end)
 
-			itSKIP("with overridden standard directive", function()
+			it("with overridden standard directive", function()
 				expectValidSDL(expect, [[
 					schema @deprecated {
 						query: Query
@@ -229,7 +229,7 @@ return function()
 				]])
 			end)
 
-			itSKIP("with directive defined in schema extension", function()
+			it("with directive defined in schema extension", function()
 				local schema = buildSchema([[
 					type Query {
 						foo: String
@@ -243,7 +243,7 @@ return function()
 				]], schema)
 			end)
 
-			itSKIP("with directive used in schema extension", function()
+			it("with directive used in schema extension", function()
 				local schema = buildSchema([[
 					directive @test on OBJECT
 
@@ -257,7 +257,7 @@ return function()
 				]], schema)
 			end)
 
-			itSKIP("with unknown directive in schema extension", function()
+			it("with unknown directive in schema extension", function()
 				local schema = buildSchema([[
 					type Query {
 						foo: String
@@ -274,7 +274,7 @@ return function()
 				})
 			end)
 
-			itSKIP("with well placed directives", function()
+			it("with well placed directives", function()
 				expectValidSDL(expect, [[
 					type MyObj implements MyInterface @onObject {
 						myField(myArg: Int @onArgumentDefinition): String @onFieldDefinition
@@ -316,7 +316,7 @@ return function()
 				]], schemaWithSDLDirectives)
 			end)
 
-			itSKIP("with misplaced directives", function()
+			it("with misplaced directives", function()
 				expectSDLErrors(expect, [[
           type MyObj implements MyInterface @onInterface {
             myField(myArg: Int @onInputFieldDefinition): String @onInputFieldDefinition

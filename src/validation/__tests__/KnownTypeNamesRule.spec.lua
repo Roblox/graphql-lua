@@ -117,7 +117,7 @@ return function()
 		end)
 
 		describe("within SDL", function()
-			itSKIP("use standard types", function()
+			it("use standard types", function()
 				expectValidSDL(expect, [[
 				type Query {
 					string: String
@@ -130,7 +130,7 @@ return function()
 				]])
 			end)
 
-			itSKIP("reference types defined inside the same document", function()
+			it("reference types defined inside the same document", function()
 				expectValidSDL(expect, [[
 					union SomeUnion = SomeObject | AnotherObject
 
@@ -165,7 +165,7 @@ return function()
 				]])
 			end)
 
-			itSKIP("unknown type references", function()
+			it("unknown type references", function()
 				expectSDLErrors(expect, [[
         type A
         type B
@@ -260,7 +260,7 @@ return function()
 				})
 			end)
 
-			itSKIP("reference standard types inside extension document", function()
+			it("reference standard types inside extension document", function()
 				local schema = buildSchema("type Foo")
 				local sdl = [[
 					type SomeType {
@@ -276,7 +276,7 @@ return function()
 				expectValidSDL(expect, sdl, schema)
 			end)
 
-			itSKIP("reference types inside extension document", function()
+			it("reference types inside extension document", function()
 				local schema = buildSchema("type Foo")
 				local sdl = [[
 					type QueryRoot {
@@ -294,7 +294,7 @@ return function()
 				expectValidSDL(expect, sdl, schema)
 			end)
 
-			itSKIP("unknown type references inside extension document", function()
+			it("unknown type references inside extension document", function()
 				local schema = buildSchema("type A")
 				local sdl = [[
         type B

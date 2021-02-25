@@ -23,7 +23,7 @@ return function()
 			end).to.throw("Must provide document.")
 		end)
 
-		itSKIP("validates queries", function()
+		it("validates queries", function()
 			local expect: any = expect
 			local doc = parse([[
 				query {
@@ -60,7 +60,7 @@ return function()
 		end)
 
 		-- // NOTE: experimental
-		itSKIP("validates using a custom TypeInfo", function()
+		it("validates using a custom TypeInfo", function()
 			local expect: any = expect
 			-- // This TypeInfo will never return a valid field.
 			local typeInfo = TypeInfo.new(testSchema, function()
@@ -178,7 +178,7 @@ return function()
 			})
 		end)
 
-		itSKIP("passthrough exceptions from rules", function()
+		it("passthrough exceptions from rules", function()
 			local function customRule()
 				return {
 					Field = function()

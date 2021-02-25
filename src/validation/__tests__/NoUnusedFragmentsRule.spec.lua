@@ -19,7 +19,7 @@ return function()
 	end
 
 	describe("Validate: No unused fragments", function()
-		itSKIP("all fragment names are used", function()
+		it("all fragment names are used", function()
 			expectValid(expect, [[
 				{
 					human(id: 4) {
@@ -42,7 +42,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("all fragment names are used by multiple operations", function()
+		it("all fragment names are used by multiple operations", function()
 			expectValid(expect, [[
 				query Foo {
 					human(id: 4) {
@@ -67,7 +67,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("contains unknown fragments", function()
+		it("contains unknown fragments", function()
 			expectErrors(expect, [[
       query Foo {
         human(id: 4) {
@@ -107,7 +107,7 @@ return function()
 			})
 		end)
 
-		itSKIP("contains unknown fragments with ref cycle", function()
+		it("contains unknown fragments with ref cycle", function()
 			expectErrors(expect, [[
       query Foo {
         human(id: 4) {
@@ -149,7 +149,7 @@ return function()
 			})
 		end)
 
-		itSKIP("contains unknown and undef fragments", function()
+		it("contains unknown and undef fragments", function()
 			expectErrors(expect, [[
       query Foo {
         human(id: 4) {

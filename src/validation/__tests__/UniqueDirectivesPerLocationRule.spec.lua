@@ -52,7 +52,7 @@ return function()
 		end)
 
 		-- ROBLOX FIXME: this test is passing sometimes
-		itSKIP("unique directives in different locations", function()
+		it("unique directives in different locations", function()
 			expectValid(expect, [[
 				fragment Test on Type @directiveA {
 					field @directiveB
@@ -60,7 +60,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("unique directives in same locations", function()
+		it("unique directives in same locations", function()
 			expectValid(expect, [[
 				fragment Test on Type @directiveA @directiveB {
 					field @directiveA @directiveB
@@ -68,7 +68,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("same directives in different locations", function()
+		it("same directives in different locations", function()
 			expectValid(expect, [[
 				fragment Test on Type @directiveA {
 					field @directiveA
@@ -76,7 +76,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("same directives in similar locations", function()
+		it("same directives in similar locations", function()
 			expectValid(expect, [[
 				fragment Test on Type {
 					field @directive
@@ -85,7 +85,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("repeatable directives in same location", function()
+		it("repeatable directives in same location", function()
 			expectValid(expect, [[
 				fragment Test on Type @repeatable @repeatable {
 					field @repeatable @repeatable
@@ -93,7 +93,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("unknown directives must be ignored", function()
+		it("unknown directives must be ignored", function()
 			expectValid(expect, [[
 				type Test @unknown @unknown {
 					field: String! @unknown @unknown
@@ -190,7 +190,7 @@ return function()
 			})
 		end)
 
-		itSKIP("duplicate directives on SDL definitions", function()
+		it("duplicate directives on SDL definitions", function()
 			expectSDLErrors(expect, [[
       directive @nonRepeatable on
         SCHEMA | SCALAR | OBJECT | INTERFACE | UNION | INPUT_OBJECT
@@ -248,7 +248,7 @@ return function()
 			})
 		end)
 
-		itSKIP("duplicate directives on SDL extensions", function()
+		it("duplicate directives on SDL extensions", function()
 			expectSDLErrors(expect, [[
       directive @nonRepeatable on
         SCHEMA | SCALAR | OBJECT | INTERFACE | UNION | INPUT_OBJECT
@@ -306,7 +306,7 @@ return function()
 			})
 		end)
 
-		itSKIP("duplicate directives between SDL definitions and extensions", function()
+		it("duplicate directives between SDL definitions and extensions", function()
 			expectSDLErrors(expect, [[
       directive @nonRepeatable on SCHEMA
 
