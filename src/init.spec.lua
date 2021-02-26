@@ -3,6 +3,7 @@ return function()
 	local toEqual = require(TestMatchers.toEqual)
 	local toArrayContains = require(TestMatchers.toArrayContains)
 	local toHaveSameMembers = require(TestMatchers.toHaveSameMembers)
+	local toArrayEqual = require(TestMatchers.toArrayEqual)
 	local toObjectContain = require(TestMatchers.toObjectContain)
 	local toBeOneOf = require(TestMatchers.toBeOneOf)
 	local toThrow = require(TestMatchers.toThrow)
@@ -16,6 +17,7 @@ return function()
 			toEqual = toEqual,
 			toArrayContains = toArrayContains,
 			toHaveSameMembers = toHaveSameMembers,
+			toArrayEqual = toArrayEqual,
 			toObjectContain = toObjectContain,
 			toBeOneOf = toBeOneOf,
 			toThrow = toThrow,

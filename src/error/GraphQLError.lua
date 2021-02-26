@@ -5,6 +5,9 @@ type Array<T> = { [number]: T }
 local srcWorkspace = script.Parent.Parent
 local languageWorkspace = srcWorkspace.language
 
+-- ROBLOX deviation: utils
+local HttpService = game:GetService("HttpService")
+
 local _sourceModule = require(languageWorkspace.source)
 type Source = _sourceModule.Source
 
@@ -183,6 +186,21 @@ end
 
 function GraphQLError:toString(): string
 	return printError(self)
+end
+
+-- ROBLOX deviation: in JS JSON.stringify prints only enumerable props and Lua doesn't support that. This is fallback
+function GraphQLError:toJSON(): string
+	local enumerableProps = {
+		"message",
+		self.locations ~= nil and "locations" or nil,
+		self.path ~= nil and "path" or nil,
+		self.extensions ~= nil and "extensions" or nil,
+	}
+
+	return HttpService:JSONEncode(Array.reduce(enumerableProps, function(obj, prop)
+		obj[prop] = self[prop]
+		return obj
+	end, {}))
 end
 
 function printError(error_)

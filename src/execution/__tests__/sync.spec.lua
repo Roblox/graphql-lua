@@ -9,6 +9,8 @@ return function()
 	local Object = LuauPolyfillModule.Object
 	local Array = LuauPolyfillModule.Array
 	local Promise = require(srcWorkspace.Parent.Packages.Promise)
+	local HttpService = game:GetService("HttpService")
+	local inspect = require(srcWorkspace.jsutils.inspect).inspect
 
 	local parse = require(srcWorkspace.language.parser).parse
 
@@ -213,18 +215,16 @@ return function()
 					source = doc,
 				})
 
-				-- ROBLOX deviation: helper function
-				local function removeStack(err_)
-					local err = Object.assign({}, error)
-					err.stack = nil
-					return err
-				end
 				--[[
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toEqual({ "errors" })
-				-- ROBLOX deviation: stack trace is actually different for result.errors and validationErrors so we're removing it for comparison purposes
-				expect(Array.map(result.errors, removeStack)).toEqual(Array.map(validationErrors, removeStack), true)
+				-- ROBLOX deviation: helper function
+				local function enumerableOnly(err_)
+					return HttpService:JSONDecode(inspect(err_))
+				end
+				-- ROBLOX deviation: upstream only compares enumerable properties
+				expect(Array.map(result.errors, enumerableOnly)).toEqual(Array.map(validationErrors, enumerableOnly), true)
 			end)
 
 			it("does not return a Promise for sync execution", function()
