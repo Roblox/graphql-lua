@@ -34,6 +34,7 @@ return function()
 	local Promise = require(srcWorkspace.Parent.Packages.Promise)
 	local instanceOf = require(srcWorkspace.jsutils.instanceOf)
 	local NULL = require(luaUtilsWorkspace.null)
+	local HttpService = game:GetService("HttpService")
 
 	describe("Execute: Handles basic execution tasks", function()
 		it("throws if no document is provided", function()
@@ -1577,13 +1578,11 @@ return function()
 			}):expect()
 
 			-- ROBLOX deviation: helper function
-			local function removeStack(err_)
-				local err = Object.assign({}, error)
-				err.stack = nil
-				return err
+			local function enumerableOnly(err_)
+				return HttpService:JSONDecode(inspect(err_))
 			end
-			-- ROBLOX deviation: stack trace is actually different for result.errors and validationErrors so we're removing it for comparison purposes
-			expect(Array.map(asyncResult.errors, removeStack)).toEqual(Array.map(result.errors, removeStack), true)
+			-- ROBLOX deviation: upstream only compares enumerable properties
+			expect(Array.map(asyncResult.errors, enumerableOnly)).toEqual(Array.map(result.errors, enumerableOnly), true)
 			-- ROBLOX deviation: errors have been already verified
 			asyncResult.errors = nil
 			result.errors = nil

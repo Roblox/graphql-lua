@@ -402,7 +402,7 @@ function executeOperation(exeContext, operation, rootValue)
 		if isPromise(result) then
 			return result:andThen(nil, function(error_)
 				table.insert(exeContext.errors, error_)
-				return Promise.resolve(nil)
+				return Promise.resolve(NULL)
 			end)
 		end
 		return result
@@ -410,7 +410,7 @@ function executeOperation(exeContext, operation, rootValue)
 
 	if not ok then
 		table.insert(exeContext.errors, resultOrError)
-		return nil
+		return NULL
 	end
 	return resultOrError
 end
