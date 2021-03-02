@@ -42,7 +42,6 @@ return function()
 			end,
 		}
 
-
 	end
 
 	describe("getIntrospectionQuery", function()

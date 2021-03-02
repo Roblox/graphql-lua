@@ -6,7 +6,6 @@ type ObjMap<T> = ObjMapModule.ObjMap<T>
 type Array<T> = { [number]: T }
 type Set<T> = { [T]: boolean }
 
-
 local srcWorkspace = script.Parent.Parent
 local PackagesWorkspace = srcWorkspace.Parent.Packages
 
@@ -44,9 +43,9 @@ local function separateOperations(documentAST)
 	--[[
 		ROBLOX FIXME?:
 		original code:
-		
+
 		const separatedDocumentASTs = Object.create(null);
-		
+
 		which suggests it should retain order. Also later comments suggest the same
 	]]
 	local separatedDocumentASTs = {}

@@ -8,15 +8,14 @@ local typeWorkspace = srcWorkspace.type
 local utilitiesWorkspace = srcWorkspace.utilities
 local luaUtilsWorkspace = srcWorkspace.luaUtils
 
-
 type Array<T> = { [number]: T }
 local ObjMapImport = require(jsUtilsWorkspace.ObjMap)
 type ObjMap<T> = ObjMapImport.ObjMap<T>
 local PromiseOrValueImport = require(jsUtilsWorkspace.PromiseOrValue)
 type PromiseOrValue<T> = PromiseOrValueImport.PromiseOrValue<T>
 
-
 -- ROBLOX deviation: utils
+local Set = require(srcWorkspace.Parent.Packages.LuauPolyfill).Set
 local Array = require(luaUtilsWorkspace.Array)
 local Error = require(luaUtilsWorkspace.Error)
 local Promise = require(srcWorkspace.Parent.Packages.Promise)
@@ -791,6 +790,15 @@ end
 --  * inner type
 --  *]]
 function completeListValue(exeContext, returnType, fieldNodes, info, path, result)
+	-- Roblox deviation: Set isn't iterable, so resolve before continuing
+	if instanceOf(result, Set) then
+		local iterableResult = {}
+		for _, item in result:ipairs() do
+			table.insert(iterableResult, item)
+		end
+		result = iterableResult
+	end
+
 	if not isIteratableObject(result) then
 		error(GraphQLError.new(("Expected Iterable, but did not find one for field \"%s.%s\"."):format(info.parentType.name, info.fieldName)))
 	end

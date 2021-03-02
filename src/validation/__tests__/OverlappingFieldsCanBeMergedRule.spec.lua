@@ -573,7 +573,6 @@ return function()
 				}
 			]])
 
-
 			itSKIP("conflicting return types which potentially overlap", function()
 				expectErrorsWithSchema(expect, schema, [[
           {

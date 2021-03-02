@@ -438,7 +438,6 @@ export type ObjectFieldNode = {
   value: ValueNode,
 }
 
-
 -- ...
 
 -- // Directives
