@@ -1,6 +1,5 @@
 local deepEqual = require(script.Parent.Parent.luaUtils.deepEqual)
 
-
 local function toEqual(a: any, b: any)
 	local success, innerMessageTemplate = deepEqual(a, b)
 

@@ -392,7 +392,6 @@ return function()
 		end)
 	end)
 
-
 	describe("coerceToTable", function()
 		it("converts a Map to a table", function()
 			local map = Map.new()

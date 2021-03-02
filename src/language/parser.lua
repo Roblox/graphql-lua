@@ -1423,8 +1423,6 @@ function Parser:delimitedMany(delimiterKind, parseFn: (any) -> any): Array<any>
  return nodes
 end
 
-
-
 --[[*
 --  * A helper function to describe a token as a string for debugging
 --  *]]

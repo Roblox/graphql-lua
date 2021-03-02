@@ -197,8 +197,6 @@ local inspect = {
     return processed
   end
 
-
-
   -------------------------------------------------------------------
 
   local Inspector = {}

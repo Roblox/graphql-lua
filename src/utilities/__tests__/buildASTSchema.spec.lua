@@ -345,7 +345,6 @@ return function()
       }
     ]])
 
-
 			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 

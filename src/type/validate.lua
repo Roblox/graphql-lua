@@ -149,7 +149,6 @@ function SchemaValidationContext:getErrors(): Array<GraphQLError>
 	return self._errors
 end
 
-
 function validateRootTypes(context: SchemaValidationContext): ()
 	local schema = context.schema
 	local queryType = schema:getQueryType()
