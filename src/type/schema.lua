@@ -71,7 +71,9 @@ end
 
 local function assertSchema(schema: any): GraphQLSchema
 	if not isSchema(schema) then
-		error(Error.new(("Expected %s to be a GraphQL schema."):format(inspect(schema))))
+		error(Error.new(
+			("Expected %s to be a GraphQL schema."):format(inspect(schema))
+		))
 	end
 	return schema
 end
@@ -270,7 +272,9 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 			"One of the provided types for building the Schema is missing a name."
 		)
 		if self._typeMap:has(typeName) then
-			error(Error.new(("Schema must contain uniquely named types but contains multiple types named \"%s\"."):format(typeName)))
+			error(Error.new(
+				("Schema must contain uniquely named types but contains multiple types named \"%s\"."):format(typeName)
+			))
 		end
 		self._typeMap:set(typeName, namedType)
 

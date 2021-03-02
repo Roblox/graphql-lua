@@ -275,7 +275,9 @@ return function()
 							type = GraphQLInputObjectType.new({ name = "Foo", fields = {} }),
 						},
 						argList = {
-							type = GraphQLList.new(GraphQLInputObjectType.new({ name = "Bar", fields = {} })),
+							type = GraphQLList.new(
+								GraphQLInputObjectType.new({ name = "Bar", fields = {} })
+							),
 						},
 					},
 				})
