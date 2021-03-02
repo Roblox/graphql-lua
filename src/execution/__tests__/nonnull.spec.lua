@@ -128,6 +128,7 @@ return function()
   }
 ]])
 
+
 	function executeQuery(query: string, rootValue: any)
 		return execute({
 			schema = schema,
@@ -135,6 +136,7 @@ return function()
 			rootValue = rootValue,
 		})
 	end
+
 
 	function patch(str)
 		-- ROBLOX deviation: no regexp in Lua
@@ -183,12 +185,14 @@ return function()
 			document = parse(patchedQuery),
 			rootValue = rootValue,
 		}):andThen(function(asyncResult)
+
 			local data = patchData(syncResult)
 			if asyncResult.errors then
 				expect_(asyncResult.errors).toArrayEqual(data.errors, true)
 			else
 				expect(asyncResult.errors).to.equal(data.errors)
 			end
+
 			-- ROBLOX deviation: errors have been already verified
 			asyncResult.errors = nil
 			data.errors = nil
@@ -943,7 +947,7 @@ return function()
 
 			it("field error when non-null arg provided null", function()
 				-- Note: validation should identify this issue first (values of correct
-      			-- type rule) however execution should still protect against this.
+      	--       type rule) however execution should still protect against this.
 				local result = executeSync({
 					schema = schemaWithNonNullArg,
 					document = parse([[
@@ -980,7 +984,7 @@ return function()
 
 			it("field error when non-null arg not provided variable value", function()
 				-- Note: validation should identify this issue first (variables in allowed
-      			-- position rule) however execution should still protect against this.
+      	--       position rule) however execution should still protect against this.
 				local result = executeSync({
 					schema = schemaWithNonNullArg,
 					document = parse([[

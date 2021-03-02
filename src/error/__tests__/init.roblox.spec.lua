@@ -1,3 +1,5 @@
+-- ROBLOX deviation: no upstream tests
+
 return function()
 	describe("Error - init", function()
 		it("should contain GraphQLError table", function()
