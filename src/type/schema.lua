@@ -159,8 +159,21 @@ export type GraphQLSchema = {
 	-- // Used as a cache for validateSchema().
 	__validationErrors: Array<GraphQLError>?,
 
-	-- functions
+	-- method definitions
 	getQueryType: (GraphQLSchema) -> GraphQLObjectType?,
+	toConfig: (GraphQLSchema) -> GraphQLSchemaNormalizedConfig,
+	getMutationType: (GraphQLSchema) -> GraphQLObjectType?,
+	getSubscriptionType: (GraphQLSchema) -> GraphQLObjectType?,
+	getTypeMap: (GraphQLSchema) -> TypeMap,
+	getType: (GraphQLSchema, any) -> GraphQLNamedType?,
+	getPossibleTypes: (GraphQLSchema, GraphQLAbstractType) -> Array<GraphQLObjectType>,
+	getImplementations: (GraphQLSchema, GraphQLInterfaceType) -> {
+		objects: Array<GraphQLObjectType>,
+		interfaces: Array<GraphQLInterfaceType>,
+	},
+	isSubType: (GraphQLSchema, GraphQLAbstractType, GraphQLObjectType | GraphQLInterfaceType) -> boolean,
+	getDirectives: (GraphQLSchema) -> Array<GraphQLDirective>,
+	getDirective: (GraphQLSchema, any) -> GraphQLDirective?,
 }
 
 GraphQLSchema = {}

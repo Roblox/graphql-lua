@@ -14,15 +14,15 @@ local Map = {}
 export type Map<T, V> = {
 	size: number,
 	-- method definitions
-	set: (Map, T, V) -> Map,
-	get: (Map, T) -> V,
-	clear: (Map) -> (),
-	delete: (Map, T) -> boolean,
-	has: (Map, T) -> boolean,
-	keys: (Map) -> Array<T>,
-	values: (Map) -> Array<V>,
-	entries: (Map) -> Array<Tuple<T, V>>,
-	ipairs: (Map) -> any
+	set: (Map<T, V>, T, V) -> Map<T, V>,
+	get: (Map<T, V>, T) -> V,
+	clear: (Map<T, V>) -> (),
+	delete: (Map<T, V>, T) -> boolean,
+	has: (Map<T, V>, T) -> boolean,
+	keys: (Map<T, V>) -> Array<T>,
+	values: (Map<T, V>) -> Array<V>,
+	entries: (Map<T, V>) -> Array<Tuple<T, V>>,
+	ipairs: (Map<T, V>) -> any
 }
 
 function Map.new(iterable)
