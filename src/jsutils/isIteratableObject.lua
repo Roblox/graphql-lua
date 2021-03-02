@@ -1,3 +1,5 @@
+-- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/jsutils/isIteratableObject.js
+
 -- ROBLOX deviation: actual implementation totally deviated from upstream
 --[[*
  * Returns true if the provided object is an Object (i.e. not a string literal)
