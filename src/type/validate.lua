@@ -109,17 +109,22 @@ end
 type SchemaValidationContext = {
 	_errors: Array<GraphQLError>,
 	schema: GraphQLSchema,
+
+	-- method definitions
+	reportError: (SchemaValidationContext, string, Array<ASTNode?> | ASTNode?) -> (),
+	addError: (SchemaValidationContext, GraphQLError) -> (),
+	getErrors: (SchemaValidationContext) -> Array<GraphQLError>
 }
 SchemaValidationContext = {}
 SchemaValidationContext.__index = SchemaValidationContext
 
 function SchemaValidationContext.new(schema: GraphQLSchema): SchemaValidationContext
-	local self = {}
+	local self = setmetatable({}, SchemaValidationContext)
 
 	self._errors = {}
 	self.schema = schema
 
-	return setmetatable(self, SchemaValidationContext)
+	return self
 end
 
 function SchemaValidationContext:reportError(
