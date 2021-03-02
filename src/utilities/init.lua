@@ -32,9 +32,7 @@ return {
 	extendSchema = require(script.extendSchema).extendSchema,
 
 	-- Sort a GraphQLSchema.
-	-- ROBLOX TODO - add implementation
-	lexicographicSortSchema = function()--[[...]]
-	end,
+	lexicographicSortSchema = require(script.lexicographicSortSchema).lexicographicSortSchema,
 
 	-- Print a GraphQLSchema to GraphQL Schema language.
 	printSchema = printSchemaModule.printSchema,
