@@ -1116,4 +1116,6 @@ return {
 	collectFields = collectFields,
 	buildResolveInfo = buildResolveInfo,
 	getFieldDef = getFieldDef,
+	defaultFieldResolver = defaultFieldResolver,
+	defaultTypeResolver = defaultTypeResolver,
 }

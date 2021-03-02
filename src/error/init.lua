@@ -1,3 +1,5 @@
+-- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/error/index.js
+
 local graphQLErrorImport = require(script.GraphQLError)
 
 return {
