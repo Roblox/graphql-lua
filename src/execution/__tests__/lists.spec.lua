@@ -148,7 +148,7 @@ return function()
 			-- Promise<Array<T>> === Array<T>
 			expect(removeStack(executeQuery(promisify(listField)):expect())).toEqual(result)
 
-			if Array.isArray(listField) then
+			if listField ~= NULL and Array.isArray(listField) then
 				local listOfPromises = Array.map(listField, promisify)
 
 				-- Array<Promise<T>> === Array<T>
@@ -248,8 +248,7 @@ return function()
 
 		end)
 
-		-- ROBLOX FIXME: passing null variable doesn't retain null
-		itSKIP("Returns null", function()
+		it("Returns null", function()
 
 			local listField = NULL
 			local errors = {
@@ -270,41 +269,36 @@ return function()
 			expect(complete({
 				listField = listField,
 				as = "[Int]",
-			}):expect()).toEqual({
+			}):expect()).toObjectContain({
 				data = { listField = NULL },
 			})
 
-			-- ROBLOX deviation: check for nil data explicitly
-			local result = complete({
+			expect(complete({
 				listField = listField,
 				as = "[Int]!",
-			}):expect()
-			expect(result.data).never.to.be.ok()
-			expect().toEqual({
+			}):expect()).toObjectContain({
+				data = NULL,
 				errors = errors,
 			})
 
 			expect(complete({
 				listField = listField,
 				as = "[Int!]",
-			}):expect()).toEqual({
+			}):expect()).toObjectContain({
 				data = { listField = NULL },
 			})
 
-			-- ROBLOX deviation: check for nil data explicitly
-			result = complete({
+			expect(complete({
 				listField = listField,
 				as = "[Int!]!",
-			}):expect()
-			expect(result.data).never.to.be.ok()
-			expect().toEqual({
+			}):expect()).toObjectContain({
+				data = NULL,
 				errors = errors,
 			})
 
 		end)
 
-		-- ROBLOX FIXME: handle NULL
-		itSKIP("Contains error", function()
+		it("Contains error", function()
 			local listField = {
 				1,
 				Error.new("bad"),
@@ -329,7 +323,7 @@ return function()
 			expect(complete({
 				listField = listField,
 				as = "[Int]",
-			}):expect()).toEqual({
+			}):expect()).toObjectContain({
 				data = {
 					listField = { 1, NULL, 2 },
 				},
@@ -339,7 +333,7 @@ return function()
 			expect(complete({
 				listField = listField,
 				as = "[Int]!",
-			}):expect()).toEqual({
+			}):expect()).toObjectContain({
 				data = {
 					listField = { 1, NULL, 2 },
 				},
@@ -349,25 +343,22 @@ return function()
 			expect(complete({
 				listField = listField,
 				as = "[Int!]",
-			}):expect()).toEqual({
+			}):expect()).toObjectContain({
 				data = { listField = NULL },
 				errors = errors,
 			})
 
-			-- ROBLOX deviation: check for nil data explicitly
-			local result = complete({
+			expect(complete({
 				listField = listField,
 				as = "[Int!]!",
-			}):expect()
-			expect(result.data).never.to.be.ok()
-			expect(result).toEqual({
+			}):expect()).toObjectContain({
+				data = NULL,
 				errors = errors,
 			})
 
 		end)
 
-		-- ROBLOX FIXME: handle NULL
-		itSKIP("Results in error", function()
+		it("Results in error", function()
 			local listField = Error.new("bad")
 			local errors = {
 				{
@@ -387,36 +378,32 @@ return function()
 			expect(complete({
 				listField = listField,
 				as = "[Int]",
-			}):expect()).toEqual({
+			}):expect()).toObjectContain({
 				data = { listField = nil },
 				errors = errors,
 			})
 
-			-- ROBLOX deviation: check for nil data explicitly
-			local result = complete({
+			expect(complete({
 				listField = listField,
 				as = "[Int]!",
-			}):expect()
-			expect(result.data).never.to.be.ok()
-			expect(result).toEqual({
+			}):expect()).toObjectContain({
+				data = NULL,
 				errors = errors,
 			})
 
 			expect(complete({
 				listField = listField,
 				as = "[Int!]",
-			}):expect()).toEqual({
+			}):expect()).toObjectContain({
 				data = { listField = NULL },
 				errors = errors,
 			})
 
-			-- ROBLOX deviation: check for nil data explicitly
-			result = complete({
+			expect(complete({
 				listField = listField,
 				as = "[Int!]!",
-			}):expect()
-			expect(result.data).never.to.be.ok()
-			expect(result).toEqual({
+			}):expect()).toObjectContain({
+				data = NULL,
 				errors = errors,
 			})
 

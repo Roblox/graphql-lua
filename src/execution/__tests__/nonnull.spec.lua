@@ -362,16 +362,14 @@ return function()
 				expect(result).toEqual({ data = data })
 			end)
 
-			-- ROBLOX FIXME: order of error message is different
-			itSKIP("that throws", function()
+			it("that throws", function()
 				local result = executeQuery(query, throwingData):expect()
 
-				--[[
-					--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
-					--]]
+				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
 				expect(result.data).toEqual(data)
-				expect(result.errors).toArrayEqual(
+				-- ROBLOX deviation: order of error messages not preserved because data is in table
+				expect(result.errors).toHaveSameMembers(
 					{
 						{
 							message = syncError.message,
