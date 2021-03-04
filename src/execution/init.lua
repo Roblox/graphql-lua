@@ -8,6 +8,8 @@ export type ExecutionResult = executeModule.ExecutionResult
 export type FormattedExecutionResult = executeModule.FormattedExecutionResult
 
 return {
+	responsePathAsArray = require(script.Parent.jsutils.Path).pathToArray,
+
 	execute = executeModule.execute,
 	executeSync = executeModule.executeSync,
 	defaultFieldResolver = executeModule.defaultFieldResolver,

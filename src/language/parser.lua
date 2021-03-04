@@ -18,6 +18,37 @@ local Kind = require(language.kinds).Kind
 
 local syntaxError = require(script.Parent.Parent.error.syntaxError).syntaxError
 
+--[[
+ * Configuration options to control parser behavior
+ *]]
+export type ParseOptions = {
+  --[[/**
+   * By default, the parser creates AST nodes that know the location
+   * in the source that they correspond to. This configuration flag
+   * disables that behavior for performance or testing.
+   */
+  ]]
+  noLocation: boolean?,
+  --[[
+   * EXPERIMENTAL:
+   *
+   * If enabled, the parser will understand and parse variable definitions
+   * contained in a fragment definition. They'll be represented in the
+   * `variableDefinitions` field of the FragmentDefinitionNode.
+   *
+   * The syntax is identical to normal, query-defined variables. For example:
+   *
+   *   fragment A($var: Boolean = false) on T  {
+   *     ...
+   *   }
+   *
+   * Note: this feature is experimental and may change or be removed in the
+   * future.
+   *]]
+  experimentalFragmentVariables: boolean?
+}
+
+
 -- deviation: pre-declare functions
 local getTokenDesc
 local getTokenKindDesc
