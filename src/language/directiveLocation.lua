@@ -24,6 +24,15 @@ local DirectiveLocation = Object.freeze({
     INPUT_FIELD_DEFINITION = 'INPUT_FIELD_DEFINITION',
 })
 
+--[[
+	ROBLOX FIXME: add types
+	Upstream: export type DirectiveLocationEnum = $Values<typeof DirectiveLocation>;
+]]
+--[[
+ * The enum type representing the directive location values.
+ *]]
+export type DirectiveLocationEnum = any
+
 return {
     DirectiveLocation = DirectiveLocation
 }

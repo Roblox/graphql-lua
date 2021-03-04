@@ -69,4 +69,13 @@ exports.Kind = {
 	INPUT_OBJECT_TYPE_EXTENSION = "InputObjectTypeExtension",
 }
 
+--[[
+	ROBLOX FIXME: add types
+	Upstream: export type KindEnum = $Values<typeof Kind>;
+]]
+--[[
+ * The enum type representing the possible kind values of AST nodes.
+ *]]
+export type KindEnum = any
+
 return exports

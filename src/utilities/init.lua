@@ -1,5 +1,6 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/index.js
 
+local getIntrospectionQueryModule = require(script.getIntrospectionQuery)
 local buildASTSchemaModule = require(script.buildASTSchema)
 local printSchemaModule = require(script.printSchema)
 local TypeInfoModule = require(script.TypeInfo)
@@ -7,10 +8,39 @@ local typeComparatorsModule = require(script.typeComparators)
 local assertValidNameModule = require(script.assertValidName)
 local findBreakingChangesModule = require(script.findBreakingChanges)
 
+-- ROBLOX deviation: add types
+export type IntrospectionOptions = any -- getIntrospectionQueryModule.IntrospectionOptions
+export type IntrospectionQuery = any -- getIntrospectionQueryModule.IntrospectionQuery
+export type IntrospectionSchema = any -- getIntrospectionQueryModule.IntrospectionSchema
+export type IntrospectionType = any -- getIntrospectionQueryModule.IntrospectionType
+export type IntrospectionInputType = any -- getIntrospectionQueryModule.IntrospectionInputType
+export type IntrospectionOutputType = any -- getIntrospectionQueryModule.IntrospectionOutputType
+export type IntrospectionScalarType = any -- getIntrospectionQueryModule.IntrospectionScalarType
+export type IntrospectionObjectType = any -- getIntrospectionQueryModule.IntrospectionObjectType
+export type IntrospectionInterfaceType = any -- getIntrospectionQueryModule.IntrospectionInterfaceType
+export type IntrospectionUnionType = any -- getIntrospectionQueryModule.IntrospectionUnionType
+export type IntrospectionEnumType = any -- getIntrospectionQueryModule.IntrospectionEnumType
+export type IntrospectionInputObjectType = any -- getIntrospectionQueryModule.IntrospectionInputObjectType
+export type IntrospectionTypeRef = any -- getIntrospectionQueryModule.IntrospectionTypeRef
+export type IntrospectionInputTypeRef = any -- getIntrospectionQueryModule.IntrospectionInputTypeRef
+export type IntrospectionOutputTypeRef = any -- getIntrospectionQueryModule.IntrospectionOutputTypeRef
+export type IntrospectionNamedTypeRef = any -- getIntrospectionQueryModule.IntrospectionNamedTypeRef
+export type IntrospectionListTypeRef = any -- getIntrospectionQueryModule.IntrospectionListTypeRef
+export type IntrospectionNonNullTypeRef = any -- getIntrospectionQueryModule.IntrospectionNonNullTypeRef
+export type IntrospectionField = any -- getIntrospectionQueryModule.IntrospectionField
+export type IntrospectionInputValue = any -- getIntrospectionQueryModule.IntrospectionInputValue
+export type IntrospectionEnumValue = any -- getIntrospectionQueryModule.IntrospectionEnumValue
+export type IntrospectionDirective = any -- getIntrospectionQueryModule.IntrospectionDirective
+
+export type BuildSchemaOptions = any -- buildASTSchemaModule.BuildSchemaOptions
+
+export type BreakingChange = any -- findBreakingChangesModule.BreakingChange
+export type DangerousChange = any -- findBreakingChangesModule.DangerousChange
+
 return {
 	-- Produce the GraphQL query recommended for a full schema introspection.
 	-- Accepts optional IntrospectionOptions.
-	getIntrospectionQuery = require(script.getIntrospectionQuery).getIntrospectionQuery,
+	getIntrospectionQuery = getIntrospectionQueryModule.getIntrospectionQuery,
 
 	-- Gets the target Operation from a Document.
 	getOperationAST = require(script.getOperationAST).getOperationAST,

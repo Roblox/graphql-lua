@@ -30,4 +30,7 @@ exports.formatError = function(error_)
 	}
 end
 
+-- ROBLOX deviation: add type
+export type GraphQLFormattedError = any
+
 return exports
