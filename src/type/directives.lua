@@ -1,5 +1,7 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/type/directives.js
 
+type Array<T> = { [number]: T }
+
 local srcWorkspace = script.Parent.Parent
 local Packages = srcWorkspace.Parent.Packages
 
@@ -12,16 +14,34 @@ local LuauPolyfill = require(Packages.LuauPolyfill)
 local Error = require(srcWorkspace.luaUtils.Error)
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
+local _ObjMapModule = require(srcWorkspace.jsutils.ObjMap)
+type ObjMap<T> = _ObjMapModule.ObjMap<T>
+
+local ObjMap = require(script.Parent.Parent.jsutils.ObjMap)
+type ReadOnlyObjMap<T> = ObjMap.ReadOnlyObjMap<T>
+type ReadOnlyObjMapLike<T> = ObjMap.ReadOnlyObjMapLike<T>
+
 local inspect = require(script.Parent.Parent.jsutils.inspect).inspect
 local toObjMap = require(script.Parent.Parent.jsutils.toObjMap).toObjMap
 local devAssert = require(script.Parent.Parent.jsutils.devAssert).devAssert
 local instanceOf = require(script.Parent.Parent.jsutils.instanceOf)
 local isObjectLike = require(script.Parent.Parent.jsutils.isObjectLike).isObjectLike
-local DirectiveLocation = require(script.Parent.Parent.language.directiveLocation).DirectiveLocation
+
+local AstModule = require(script.Parent.Parent.language.ast)
+type DirectiveDefinitionNode = AstModule.DirectiveDefinitionNode
+local DirectiveLocationModule = require(script.Parent.Parent.language.directiveLocation)
+type DirectiveLocationEnum = DirectiveLocationModule.DirectiveLocationEnum
+local DirectiveLocation = DirectiveLocationModule.DirectiveLocation
+
+local definition = require(script.Parent.definition)
+-- ROBLOX deviation: these types exist, but aren't exported due to Luau manual hoisting issues
+-- type GraphQLArgument = definition.GraphQLArgument
+-- type GraphQLFieldConfigArgumentMap = definition.GraphQLFieldConfigArgumentMap
+type GraphQLArgument = any
+type GraphQLFieldConfigArgumentMap = ObjMap<any>
 local scalars = require(script.Parent.scalars)
 local GraphQLString = scalars.GraphQLString
 local GraphQLBoolean = scalars.GraphQLBoolean
-local definition = require(script.Parent.definition)
 local argsToArgsConfig = definition.argsToArgsConfig
 local GraphQLNonNull = definition.GraphQLNonNull
 
@@ -30,11 +50,11 @@ local GraphQLDirective
 --[[**
  * Test if the given value is a GraphQL directive.
  *]]
-function isDirective(directive)
+function isDirective(directive: any): boolean
 	return instanceOf(directive, GraphQLDirective)
 end
 
-function assertDirective(directive)
+function assertDirective(directive: any): GraphQLDirective
 	if not isDirective(directive) then
 		error(Error.new(("Expected %s to be a GraphQL directive."):format(inspect(directive))))
 	end
@@ -42,14 +62,24 @@ function assertDirective(directive)
 	return directive
 end
 
+--[[*
+ * Directives are used by the GraphQL runtime as a way of modifying execution
+ * behavior. Type system creators will usually not create these directly.
+ ]]
+ export type GraphQLDirective = {
+	name: string,
+	description: string?,
+	locations: Array<DirectiveLocationEnum>,
+	args: Array<GraphQLArgument>,
+	isRepeatable: boolean,
+	extensions: ObjMap<any>?,
+	astNode: DirectiveDefinitionNode?
+}
+
 GraphQLDirective = {}
 GraphQLDirective.__index = GraphQLDirective
 
---[[**
- * Directives are used by the GraphQL runtime as a way of modifying execution
- * behavior. Type system creators will usually not create these directly.
- */]]
-function GraphQLDirective.new(config)
+function GraphQLDirective.new(config: GraphQLDirectiveConfig)
 	local self = {}
 
 	self.name = config.name
@@ -118,20 +148,47 @@ function GraphQLDirective:toConfig()
 	}
 end
 
-function GraphQLDirective.__tostring(self)
+function GraphQLDirective.__tostring(self): string
 	return self:toString()
 end
 
-function GraphQLDirective:toString()
+function GraphQLDirective:toString(): string
 	return "@" .. self.name
 end
-function GraphQLDirective:toJSON()
+
+function GraphQLDirective:toJSON(): string
 	return self:toString()
 end
 
 --[[**
  * Used to conditionally include fields or fragments.
  *]]
+export type GraphQLDirectiveConfig = {
+  name: string,
+  description: string?,
+  locations: Array<DirectiveLocationEnum>,
+  args: GraphQLFieldConfigArgumentMap?,
+  isRepeatable: boolean?,
+  extensions: ReadOnlyObjMapLike<any>?,
+  astNode: DirectiveDefinitionNode?,
+}
+
+type GraphQLDirectiveNormalizedConfig = {
+-- ROBLOX deviation: can't spread previous type decl, so we duplicate
+	--   ...GraphQLDirectiveConfig,
+  name: string,
+  description: string?,
+  locations: Array<DirectiveLocationEnum>,
+  astNode: DirectiveDefinitionNode?,
+
+  args: GraphQLFieldConfigArgumentMap,
+  isRepeatable: boolean,
+  extensions: ReadOnlyObjMap<any>?,
+};
+
+--[[*
+ * Used to conditionally include fields or fragments.
+ ]]
 local GraphQLIncludeDirective = GraphQLDirective.new({
 	name = "include",
 	description = "Directs the executor to include this field or fragment only when the `if` argument is true.",
@@ -220,7 +277,9 @@ local specifiedDirectives = Object.freeze({
 	GraphQLSpecifiedByDirective,
 })
 
-local function isSpecifiedDirective(directive)
+local function isSpecifiedDirective(
+	directive: GraphQLDirective
+): boolean
 	return Array.some(specifiedDirectives, function(specifiedDirective)
 		local name = specifiedDirective.name
 

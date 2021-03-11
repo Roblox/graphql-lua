@@ -19,10 +19,16 @@ local isObjectLike = require(script.Parent.Parent.jsutils.isObjectLike).isObject
 local Kind = require(script.Parent.Parent.language.kinds).Kind
 local print_ = require(script.Parent.Parent.language.printer).print
 local GraphQLError = require(script.Parent.Parent.error.GraphQLError).GraphQLError
-local GraphQLScalarType = require(script.Parent.definition).GraphQLScalarType
+
+local DefinitionModule = require(script.Parent.definition)
+-- ROBLOX TODO: fundamental Luau issue in definition's type decls, so we workaround here
+-- type GraphQLNamedType = DefinitionModule.GraphQLNamedType
+type GraphQLNamedType = any
+local GraphQLScalarType = DefinitionModule.GraphQLScalarType
 
 -- As per the GraphQL Spec, Integers are only treated as valid when a valid
 -- 32-bit signed integer, providing the broadest support across platforms.
+--
 -- n.b. JavaScript's integers are safe between -(2^53 - 1) and 2^53 - 1 because
 -- they are internally represented as IEEE 754 doubles.
 local MAX_INT = 2147483647
@@ -299,7 +305,7 @@ local specifiedScalarTypes = Object.freeze({
 	GraphQLID,
 })
 
-function isSpecifiedScalarType(type_): boolean
+function isSpecifiedScalarType(type_: GraphQLNamedType): boolean
 	return Array.some(specifiedScalarTypes, function(scalarType)
 		local name = scalarType.name
 		return type_.name == name

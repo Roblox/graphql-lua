@@ -31,7 +31,7 @@ local DirectiveLocation = Object.freeze({
 --[[
  * The enum type representing the directive location values.
  *]]
-export type DirectiveLocationEnum = any
+export type DirectiveLocationEnum = string
 
 return {
     DirectiveLocation = DirectiveLocation
