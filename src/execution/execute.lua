@@ -265,7 +265,8 @@ end
 --  *]]
 function buildResponse(
 	exeContext: ExecutionContext,
-	data: PromiseOrValue<ObjMap<any>?>
+	-- ROBLOX deviation: workaround Luau, which doesn't have predicates. should be PromiseOrValue<ObjMap<any>?>
+	data: PromiseOrValue<ObjMap<any>>
 ): PromiseOrValue<ExecutionResult>
 	if isPromise(data) then
 		return data:andThen(function(resolved)

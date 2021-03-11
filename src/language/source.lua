@@ -12,12 +12,6 @@ type Location = {
 	column: number,
 }
 
-export type Source = {
-	body: string,
-	name: string,
-	locationOffset: Location
-}
-
 --[[*
 --  * A representation of source input to GraphQL. The `name` and `locationOffset` parameters are
 --  * optional, but they are useful for clients who store GraphQL documents in source files.
@@ -25,16 +19,22 @@ export type Source = {
 --  * be useful for `name` to be `"Foo.graphql"` and location to be `{ line: 40, column: 1 }`.
 --  * The `line` and `column` properties in `locationOffset` are 1-indexed.
 --  *]]
+export type Source = {
+	body: string,
+	name: string,
+	locationOffset: Location
+}
+
 local Source = {}
 Source.__index = Source
 
 function Source.new(
 	body: string,
 	_name: string,
-	_locationOffset
+	_locationOffset: Location
 )
-	local name = _name or "GraphQL request"
-	local locationOffset = _locationOffset or { line = 1, column = 1 }
+	local name: string = _name or "GraphQL request"
+	local locationOffset: Location = _locationOffset or { line = 1, column = 1 }
 
 	devAssert(
 		typeof(body) == "string",
@@ -67,7 +67,7 @@ end
 --  *
 --  * @internal
 --  *]]
-function isSource(source)
+function isSource(source: any): boolean
 	return instanceOf(source, Source)
 end
 

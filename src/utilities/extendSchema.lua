@@ -690,6 +690,8 @@ function extendSchemaImpl(
 	end
 
 	local function buildType(astNode: TypeDefinitionNode): GraphQLNamedType
+		-- ROBLOX deviation: workaround Luau bug:  (E001) Type 'StringValueNode?' does not have key 'value'
+		local _astNode: any = astNode
 		local name = astNode.name.value
 		-- ROBLOX deviation: use Map type
 		local extensionNodes = typeExtensionsMap:get(name) or {}
@@ -701,7 +703,7 @@ function extendSchemaImpl(
 
 			return GraphQLObjectType.new({
 				name = name,
-				description = astNode.description and astNode.description.value,
+				description = _astNode.description and _astNode.description.value,
 				interfaces = function()
 					return buildInterfaces(allNodes)
 				end,
@@ -717,7 +719,7 @@ function extendSchemaImpl(
 
 			return GraphQLInterfaceType.new({
 				name = name,
-				description = astNode.description and astNode.description.value,
+				description = _astNode.description and _astNode.description.value,
 				interfaces = function()
 					return buildInterfaces(allNodes)
 				end,
@@ -733,7 +735,7 @@ function extendSchemaImpl(
 
 			return GraphQLEnumType.new({
 				name = name,
-				description = astNode.description and astNode.description.value,
+				description = _astNode.description and _astNode.description.value,
 				values = buildEnumValueMap(allNodes),
 				astNode = astNode,
 				extensionASTNodes = extensionASTNodes,
@@ -744,7 +746,7 @@ function extendSchemaImpl(
 
 			return GraphQLUnionType.new({
 				name = name,
-				description = astNode.description and astNode.description.value,
+				description = _astNode.description and _astNode.description.value,
 				types = function()
 					return buildUnionTypes(allNodes)
 				end,
@@ -756,7 +758,7 @@ function extendSchemaImpl(
 
 			return GraphQLScalarType.new({
 				name = name,
-				description = astNode.description and astNode.description.value,
+				description = _astNode.description and _astNode.description.value,
 				specifiedByUrl = getSpecifiedByUrl(astNode),
 				astNode = astNode,
 				extensionASTNodes = extensionASTNodes,
@@ -767,7 +769,7 @@ function extendSchemaImpl(
 
 			return GraphQLInputObjectType.new({
 				name = name,
-				description = astNode.description and astNode.description.value,
+				description = _astNode.description and _astNode.description.value,
 				fields = function()
 					return buildInputFieldMap(allNodes)
 				end,
