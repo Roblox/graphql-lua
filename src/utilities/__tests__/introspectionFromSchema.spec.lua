@@ -11,9 +11,8 @@ return function()
 	local GraphQLString = require(typeWorkspace.scalars).GraphQLString
 	local GraphQLObjectType = require(typeWorkspace.definition).GraphQLObjectType
 
-	-- ROBLOX FIXME: add types once available from getIntrospectionQuery
-	-- local getIntrospectionQueryModule = require(utilitiesWorkspace.getIntrospectionQuery)
-	type IntrospectionQuery = any -- getIntrospectionQueryModule.IntrospectionQuery
+	local getIntrospectionQueryModule = require(utilitiesWorkspace.getIntrospectionQuery)
+	type IntrospectionQuery = getIntrospectionQueryModule.IntrospectionQuery
 	local introspectionFromSchema = require(srcWorkspace.utilities.introspectionFromSchema).introspectionFromSchema
 	local printSchema = require(utilitiesWorkspace.printSchema).printSchema
 	local buildClientSchema = require(utilitiesWorkspace.buildClientSchema).buildClientSchema

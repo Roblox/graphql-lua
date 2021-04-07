@@ -1,9 +1,12 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/05b8d0716ea513a7efc88cd173a2a15a8aba5bbc/src/validation/rules/OverlappingFieldsCanBeMergedRule.js
 
 local root = script.Parent.Parent.Parent
+local NULL = require(root.luaUtils.null)
+local MapModule = require(root.luaUtils.Map)
+local Map = MapModule.Map
+type Map<T,V> = MapModule.Map<T,V>
 local jsutils = root.jsutils
 local language = root.language
-local objectEntries = require(root.polyfills.objectEntries).objectEntries
 local GraphQLError = require(root.error.GraphQLError).GraphQLError
 local inspect = require(jsutils.inspect).inspect
 local Kind = require(language.kinds).Kind
@@ -290,7 +293,7 @@ function collectConflictsBetweenFragments(
 
 	-- // Memoize so two fragments are not compared for conflicts more than once.
 	if
-		comparedFragmentPairs.has(
+		comparedFragmentPairs:has(
 			fragmentName1,
 			fragmentName2,
 			areMutuallyExclusive
@@ -299,7 +302,7 @@ function collectConflictsBetweenFragments(
 		return
 	end
 
-	comparedFragmentPairs.add(fragmentName1, fragmentName2, areMutuallyExclusive)
+	comparedFragmentPairs:add(fragmentName1, fragmentName2, areMutuallyExclusive)
 
 	local fragment1 = context:getFragment(fragmentName1)
 	local fragment2 = context:getFragment(fragmentName2)
@@ -467,7 +470,8 @@ function collectConflictsWithin(
 	-- // name and the value at that key is a list of all fields which provide that
 	-- // response name. For every response name, if there are multiple fields, they
 	-- // must be compared to find a potential conflict.
-	for _, entry in ipairs(objectEntries(fieldMap)) do
+	-- ROBLOX deviation: use Ordered Map object
+	for _, entry in fieldMap:ipairs() do
 		-- // This compares every field in the list to every other field in this list
 		-- // (except to itself). If the list only has one item, nothing needs to
 		-- // be compared.
@@ -476,7 +480,7 @@ function collectConflictsWithin(
 
 		if #fields > 1 then
 			for i = 1, #fields do
-				for j = 1, #fields do
+				for j = i + 1, #fields do
 					local conflict = findConflict(
 						context,
 						cachedFieldsAndFragmentNames,
@@ -514,7 +518,8 @@ function collectConflictsBetween(
 	-- // response name. For any response name which appears in both provided field
 	-- // maps, each field from the first field map must be compared to every field
 	-- // in the second field map to find potential conflicts.
-	for _, responseName in ipairs(Object.keys(fieldMap1))do
+	-- ROBLOX TODO: use Ordered Map object
+	for _, responseName in ipairs(fieldMap1:keys()) do
 		local fields2 = fieldMap2[responseName]
 		if fields2 then
 			local fields1 = fieldMap1[responseName]
@@ -639,7 +644,7 @@ function sameArguments(arguments1, arguments2)
 	if #arguments1 ~= #arguments2 then
 		return false
 	end
-	return Array.every(arguments2, function(argument1)
+	return Array.every(arguments1, function(argument1)
 		local argument2 = Array.find(arguments2, function(argument)
 			return argument.name.value == argument1.name.value
 		end)
@@ -693,7 +698,8 @@ function getFieldsAndFragmentNames(
 )
 	local cached = cachedFieldsAndFragmentNames[selectionSet]
 	if not cached then
-		local nodeAndDefs = {}
+		-- ROBLOX deviation: use Ordered Map object
+		local nodeAndDefs = Map.new()
 		local fragmentNames = {}
 		_collectFieldsAndFragmentNames(
 			context,
@@ -743,23 +749,24 @@ function _collectFieldsAndFragmentNames(
 		if selectionKind == Kind.FIELD then
 			local fieldName = selection.name.value
 			local fieldDef
-			-- ROBLOX deviation: use Map
-			local fields = parentType:getFields()
 			if isObjectType(parentType) or isInterfaceType(parentType) then
+				-- ROBLOX deviation: use Map
+				local fields = parentType:getFields()
 				fieldDef = fields:get(fieldName)
 			end
-			local responseName = selection.alias
-				and selection.alias.value
-				or fieldName
+			local responseName = (function()
+				if selection.alias then
+					return selection.alias.value
+				end
+				return fieldName
+			end)()
 			if not nodeAndDefs[responseName] then
 				nodeAndDefs[responseName] = {}
 			end
 
-			table.insert(nodeAndDefs[responseName], {parentType, selection, fieldDef})
-			return
+			table.insert(nodeAndDefs[responseName], {parentType or NULL, selection or NULL, fieldDef or NULL})
 		elseif selectionKind == Kind.FRAGMENT_SPREAD then
 			fragmentNames[selection.name.value] = true
-			return
 		elseif selectionKind == Kind.INLINE_FRAGMENT then
 			local typeCondition = selection.typeCondition
 			local inlineFragmentType = parentType
@@ -773,7 +780,6 @@ function _collectFieldsAndFragmentNames(
 				nodeAndDefs,
 				fragmentNames
 			)
-			return
 		end
 	end
 end
@@ -800,7 +806,7 @@ function subfieldConflicts(
 			end, {node1}),
 			Array.reduce(conflicts, function(allFields, fields)
 				local fields2 = fields[3]
-				return allFields.concat(fields2)
+				return Array.concat(allFields, fields2)
 			end, {node2}),
 		}
 	end

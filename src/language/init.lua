@@ -18,11 +18,12 @@ export type TokenKindEnum = tokenKindModule.TokenKindEnum
 
 export type ParseOptions = parserModule.ParseOptions
 
--- ROBLOX FIXME: add types
-export type ASTVisitor = any -- visitorModule.ASTVisitor
-export type Visitor = any -- visitorModule.Visitor
-export type VisitFn = any -- visitorModule.VisitFn
-export type VisitorKeyMap = any -- visitorModule.VisitorKeyMap
+export type ASTVisitor = visitorModule.ASTVisitor
+-- ROBLOX TODO: Luau doesn't current support default type arguments
+export type Visitor<KindToNode, Nodes> = visitorModule.Visitor<KindToNode, Nodes>
+-- ROBLOX TODO: Luau doesn't current support default type arguments
+export type VisitFn = visitorModule.VisitFn
+export type VisitorKeyMap<KindToNode> = visitorModule.VisitorKeyMap<KindToNode>
 
 
 export type ASTNode = astModule.ASTNode

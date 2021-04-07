@@ -3,16 +3,26 @@ type Array<T> = { [number]: T }
 
 local language = script.Parent
 
-local Location = require(language.ast).Location
+local AstModule = require(language.ast)
+local Location = AstModule.Location
+type DocumentNode = AstModule.DocumentNode
+type DefinitionNode = AstModule.DefinitionNode
+type NameNode = AstModule.NameNode
+type ValueNode = AstModule.ValueNode
+type Token = AstModule.Token
+type TypeNode = AstModule.TypeNode
 
 local sourceModule = require(language.source)
 local Source = sourceModule.Source
+type Source = sourceModule.Source
 
 local lexer = require(language.lexer)
 local Lexer = lexer.Lexer
 local isPunctuatorTokenKind = lexer.isPunctuatorTokenKind
 
-local TokenKind = require(language.tokenKind).TokenKind
+local TokenKindModule = require(language.tokenKind)
+local TokenKind = TokenKindModule.TokenKind
+type TokenKindEnum = TokenKindModule.TokenKindEnum
 local DirectiveLocation = require(language.directiveLocation).DirectiveLocation
 local Kind = require(language.kinds).Kind
 
@@ -60,7 +70,10 @@ Parser.__index = Parser
 --  * Given a GraphQL source, parses it into a Document.
 --  * Throws GraphQLError if a syntax error is encountered.
 --  *]]
-local function parse(source, options)
+local function parse(
+	source: string | Source,
+	options: ParseOptions?
+): DocumentNode
 	local parser = Parser.new(source, options)
 	return parser:parseDocument()
 end
@@ -75,7 +88,10 @@ end
 --  *
 --  * Consider providing the results to the utility function: valueFromAST().
 ]]
-local function parseValue(source, options)
+local function parseValue(
+	source: string | Source,
+	options: ParseOptions?
+): ValueNode
 	local parser = Parser.new(source, options)
 	parser:expectToken(TokenKind.SOF)
 	local value = parser:parseValueLiteral(false)
@@ -93,7 +109,10 @@ end
 --  *
 --  * Consider providing the results to the utility function: typeFromAST().
 --  *]]
-local function parseType(source, options)
+local function parseType(
+	source: string | Source,
+	options: ParseOptions?
+): TypeNode
 	local parser = Parser.new(source, options)
 	parser:expectToken(TokenKind.SOF)
 	local type_ = parser:parseTypeReference()
@@ -101,7 +120,10 @@ local function parseType(source, options)
 	return type_
 end
 
-function Parser.new(source, options)
+function Parser.new(
+	source: string | Source,
+	options: ParseOptions?
+)
 	local sourceObj
 	if typeof(source) == "string" then
 		sourceObj = Source.new(source)
@@ -119,7 +141,7 @@ end
 --[[*
 --  * Converts a name lex token into a name parse node.
 --  *]]
-function Parser:parseName()
+function Parser:parseName(): NameNode
 	local token = self:expectToken(TokenKind.NAME)
 	return {
 		kind = Kind.NAME,
@@ -133,7 +155,7 @@ end
 --[[*
 --  * Document : Definition+
 --  *]]
-function Parser:parseDocument()
+function Parser:parseDocument(): DocumentNode
 	local start = self._lexer.token
 	return {
 		kind = Kind.DOCUMENT,
@@ -152,7 +174,7 @@ end
 --  *   - OperationDefinition
 --  *   - FragmentDefinition
 --  *]]
-function Parser:parseDefinition()
+function Parser:parseDefinition(): DefinitionNode
 	if self:peek(TokenKind.NAME) then
 		local tokenValue = self._lexer.token.value
 		if tokenValue == "query" or tokenValue == "mutation" or tokenValue == "subscription" then
@@ -1339,7 +1361,7 @@ end
 --  * If the next token is of the given kind, return that token after advancing
 --  * the lexer. Otherwise, do not change the parser state and return undefined.
 --  *]]
-function Parser:expectOptionalToken(kind)
+function Parser:expectOptionalToken(kind: TokenKindEnum): Token?
 	local token = self._lexer.token
 	if token.kind == kind then
 		self._lexer:advance()
@@ -1352,7 +1374,7 @@ end
 --  * If the next token is a given keyword, advance the lexer.
 --  * Otherwise, do not change the parser state and throw an error.
 --  *]]
-function Parser:expectKeyword(value)
+function Parser:expectKeyword(value: string): ()
 	local token = self._lexer.token
 	if token.kind == TokenKind.NAME and token.value == value then
 		self._lexer:advance()
@@ -1382,7 +1404,7 @@ end
 --  * Helper function for creating an error when an unexpected lexed token
 --  * is encountered.
 --  *]]
-function Parser:unexpected(atToken)
+function Parser:unexpected(atToken: Token?)
 	local token = atToken ~= nil and atToken or self._lexer.token
 	return syntaxError(
 		self._lexer.source,
@@ -1397,7 +1419,12 @@ end
 --  * and ends with a lex token of closeKind. Advances the parser
 --  * to the next lex token after the closing token.
 --  *]]
-function Parser:any(openKind, parseFn, closeKind)
+function Parser:any(
+	openKind: TokenKindEnum,
+	-- ROBLOX deviation: we pass 1 arg here to account for self
+	parseFn: (any) -> any,
+	closeKind: TokenKindEnum
+)
 	self:expectToken(openKind)
 	local nodes = {}
 	while not self:expectOptionalToken(closeKind) do
@@ -1413,7 +1440,12 @@ end
 --  * with a lex token of closeKind. Advances the parser to the next lex token
 --  * after the closing token.
 --  *]]
-function Parser:optionalMany(openKind, parseFn, closeKind)
+function Parser:optionalMany(
+	openKind: TokenKindEnum,
+	-- ROBLOX deviation: we pass 1 arg here to account for self
+	parseFn: (any) -> any,
+	closeKind: TokenKindEnum
+)
 	if self:expectOptionalToken(openKind) then
 		local nodes = {}
 		repeat
@@ -1430,7 +1462,12 @@ end
 --  * and ends with a lex token of closeKind. Advances the parser
 --  * to the next lex token after the closing token.
 --  *]]
-function Parser:many(openKind, parseFn, closeKind)
+function Parser:many(
+	openKind: TokenKindEnum,
+	-- ROBLOX deviation: we pass 1 arg here to account for self
+	parseFn: (any) -> any,
+	closeKind: TokenKindEnum
+)
 	self:expectToken(openKind)
 	local nodes = {}
 	repeat

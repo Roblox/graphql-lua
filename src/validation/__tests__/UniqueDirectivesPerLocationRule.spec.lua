@@ -105,7 +105,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("duplicate directives in one location", function()
+		it("duplicate directives in one location", function()
 			expectErrors(expect, [[
       fragment Test on Type {
         field @directive @directive
@@ -121,7 +121,7 @@ return function()
 			})
 		end)
 
-		itSKIP("many duplicate directives in one location", function()
+		it("many duplicate directives in one location", function()
 			expectErrors(expect, [[
       fragment Test on Type {
         field @directive @directive @directive
@@ -144,7 +144,7 @@ return function()
 			})
 		end)
 
-		itSKIP("different duplicate directives in one location", function()
+		it("different duplicate directives in one location", function()
 			expectErrors(expect, [[
       fragment Test on Type {
         field @directiveA @directiveB @directiveA @directiveB
@@ -167,7 +167,7 @@ return function()
 			})
 		end)
 
-		itSKIP("duplicate directives in many locations", function()
+		it("duplicate directives in many locations", function()
 			expectErrors(expect, [[
       fragment Test on Type @directive @directive {
         field @directive @directive

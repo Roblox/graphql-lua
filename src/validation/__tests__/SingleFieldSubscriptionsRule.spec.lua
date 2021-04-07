@@ -11,11 +11,15 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectValidationErrors(expect_, SingleFieldSubscriptionsRule, "\n" .. queryStr)
+		return expectValidationErrors(
+			expect_,
+			SingleFieldSubscriptionsRule,
+			"\n" .. queryStr
+		)
 	end
 
 	local function expectValid(expect_, queryStr: string)
-		expectErrors(expect_, queryStr).toEqual({})
+		expectErrors(expect_, "\n" .. queryStr).toEqual({})
 	end
 
 	describe("Validate: Subscriptions with single field", function()
@@ -27,7 +31,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("fails with more than one root field", function()
+		it("fails with more than one root field", function()
 			-- ROBLOX FIXME: location is not quite exact
 			expectErrors(expect, [[
       subscription ImportantEmails {
@@ -42,7 +46,7 @@ return function()
 			})
 		end)
 
-		itSKIP("fails with more than one root field including introspection", function()
+		it("fails with more than one root field including introspection", function()
 			-- ROBLOX FIXME: location is not quite exact
 			expectErrors(expect, [[
       subscription ImportantEmails {
@@ -57,7 +61,7 @@ return function()
 			})
 		end)
 
-		itSKIP("fails with many more than one root field", function()
+		it("fails with many more than one root field", function()
 			-- ROBLOX FIXME: location is not quite exact
 			expectErrors(expect, [[
       subscription ImportantEmails {
@@ -76,7 +80,7 @@ return function()
 			})
 		end)
 
-		itSKIP("fails with more than one root field in anonymous subscriptions", function()
+		it("fails with more than one root field in anonymous subscriptions", function()
 			-- ROBLOX FIXME: location is not quite exact
 			expectErrors(expect, [[
       subscription {

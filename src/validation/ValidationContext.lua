@@ -5,7 +5,7 @@ local language = root.language
 local Kind = require(language.kinds).Kind
 local visitor = require(language.visitor)
 local visit = visitor.visit
-type ASTVisitor = any -- visitor.ASTVisitor
+type ASTVisitor = visitor.ASTVisitor
 
 local _ast = require(language.ast)
 type DocumentNode = _ast.DocumentNode
@@ -25,16 +25,18 @@ type TypeInfo = TypeInfoExports.TypeInfo
 
 local _schemaExports = require(root.type.schema)
 type GraphQLSchema = _schemaExports.GraphQLSchema
--- local _directivesExports = require(root.type.directives)
-type GraphQLDirective = any -- _directivesExports.GraphQLDirective
+local directivesExports = require(root.type.directives)
+type GraphQLDirective = directivesExports.GraphQLDirective
 
--- local _definition = require(root.type.definition)
-type GraphQLInputType = any -- _definition.GraphQLInputType
-type GraphQLOutputType = any -- _definition.GraphQLOutputType
-type GraphQLCompositeType = any -- _definition.GraphQLCompositeType
-type GraphQLField<T, U> = any -- _definition.GraphQLField<T, U>
-type GraphQLArgument = any -- _definition.GraphQLArgument
-type GraphQLEnumValue = any -- _definition.GraphQLEnumValue
+local definitionModule = require(root.type.definition)
+type GraphQLInputType = definitionModule.GraphQLInputType
+type GraphQLOutputType = definitionModule.GraphQLOutputType
+type GraphQLCompositeType = definitionModule.GraphQLCompositeType
+-- ROBLOX TODO: Luau doesn't currently support default type arguments, so we inline here
+type GraphQLFieldDefaultTArgs = { [string]: any }
+type GraphQLField<T, U> = definitionModule.GraphQLField<T, U, GraphQLFieldDefaultTArgs>
+type GraphQLArgument = definitionModule.GraphQLArgument
+type GraphQLEnumValue = definitionModule.GraphQLEnumValue
 
 local Array = require(root.luaUtils.Array)
 
@@ -51,6 +53,8 @@ type Array<T> = { [number]: T }
 --  * allowing access to commonly useful contextual information from within a
 --  * validation rule.
 --  */
+-- ROBLOX TODO: add proper type
+type ASTValidationContext = any
 local ASTValidationContext = {}
 local ASTValidationContextMetatable = {__index = ASTValidationContext}
 
@@ -135,8 +139,10 @@ function ASTValidationContext:getRecursivelyReferencedFragments(
 	return fragments
 end
 
--- export type ASTValidationRule = (ASTValidationContext) -> ASTVisitor
+export type ASTValidationRule = (ASTValidationContext) -> ASTVisitor
 
+-- ROBLOX TODO: add proper type
+type SDLValidationContext = any
 local SDLValidationContext = setmetatable({}, {__index = ASTValidationContext})
 local SDLValidationContextMetatable = {__index = SDLValidationContext}
 
@@ -157,8 +163,10 @@ function SDLValidationContext:getSchema(): GraphQLSchema?
 	return self._schema
 end
 
--- export type SDLValidationRule = (SDLValidationContext) -> ASTVisitor
+export type SDLValidationRule = (SDLValidationContext) -> ASTVisitor
 
+-- ROBLOX TODO: add proper type
+type ValidationContext = any
 local ValidationContext = setmetatable({}, {__index = ASTValidationContext})
 local ValidationContextMetatable = {__index = ValidationContext}
 
@@ -258,7 +266,7 @@ function ValidationContext:getEnumValue(): GraphQLEnumValue?
 	return self._typeInfo:getEnumValue()
 end
 
--- export type ValidationRule = (ValidationContext) -> ASTVisitor
+export type ValidationRule = (ValidationContext) -> ASTVisitor
 
 return {
 	ASTValidationContext = ASTValidationContext,

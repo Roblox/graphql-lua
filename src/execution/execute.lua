@@ -39,9 +39,8 @@ local addPath = pathImport.addPath
 local pathToArray = pathImport.pathToArray
 local isIteratableObject = require(jsUtilsWorkspace.isIteratableObject).isIteratableObject
 
--- ROBLOX FIXME: use formatErrorImport types when available
--- local formatErrorImport = require(errorWorkspace.formatError)
-type GraphQLFormattedError = any -- formatErrorImport.GraphQLFormattedError
+local formatErrorImport = require(errorWorkspace.formatError)
+type GraphQLFormattedError = formatErrorImport.GraphQLFormattedError
 local graphQLErrorImport = require(errorWorkspace.GraphQLError)
 type GraphQLError = graphQLErrorImport.GraphQLError
 local GraphQLError = graphQLErrorImport.GraphQLError
@@ -60,16 +59,17 @@ local Kind = require(srcWorkspace.language.kinds).Kind
 local schemaImport = require(typeWorkspace.schema)
 type GraphQLSchema = schemaImport.GraphQLSchema
 local definitionImport = require(typeWorkspace.definition)
--- ROBLOX FIXME: use definition types when available
-type GraphQLObjectType = any -- definitionImport.GraphQLObjectType
-type GraphQLOutputType = any -- definitionImport.GraphQLOutputType
-type GraphQLLeafType = any -- definitionImport.GraphQLLeafType
-type GraphQLAbstractType = any -- definitionImport.GraphQLAbstractType
-type GraphQLField<T, V> = any -- definitionImport.GraphQLField
-type GraphQLFieldResolver<T, V> = any -- definitionImport.GraphQLFieldResolver
-type GraphQLResolveInfo = any -- definitionImport.GraphQLResolveInfo
-type GraphQLTypeResolver<T, V> = any -- definitionImport.GraphQLTypeResolver
-type GraphQLList = any -- definitionImport.GraphQLList
+type GraphQLObjectType = definitionImport.GraphQLObjectType
+type GraphQLOutputType = definitionImport.GraphQLOutputType
+type GraphQLLeafType = definitionImport.GraphQLLeafType
+type GraphQLAbstractType = definitionImport.GraphQLAbstractType
+-- ROBLOX TODO: Luau doesn't currently support default type args, so we inline here
+type GraphQLFieldDefaultTArgs = { [string]: any }
+type GraphQLField<Source, TContext> = definitionImport.GraphQLField<Source, TContext, GraphQLFieldDefaultTArgs>
+type GraphQLFieldResolver<T, V> = definitionImport.GraphQLFieldResolver<T, V, GraphQLFieldDefaultTArgs>
+type GraphQLResolveInfo = definitionImport.GraphQLResolveInfo
+type GraphQLTypeResolver<T, V> = definitionImport.GraphQLTypeResolver<T, V>
+type GraphQLList<T> = definitionImport.GraphQLList<T>
 local assertValidSchema = require(typeWorkspace.validate).assertValidSchema
 local introspectionImport = require(typeWorkspace.introspection)
 local SchemaMetaFieldDef = introspectionImport.SchemaMetaFieldDef
@@ -124,7 +124,7 @@ export type ExecutionContext = {
 	rootValue: any,
 	contextValue: any,
 	operation: OperationDefinitionNode,
-	variableValues: any,
+	variableValues: { [string]: any },
 	fieldResolver: GraphQLFieldResolver<any, any>,
 	typeResolver: GraphQLTypeResolver<any, any>,
 	errors: Array<GraphQLError>,
@@ -154,7 +154,7 @@ export type ExecutionArgs = {
 	document: DocumentNode,
 	rootValue: any?,
 	contextValue: any?,
-	variableValues: any?,
+	variableValues: { [string]: any }?,
 	operationName: string?,
 	fieldResolver: GraphQLFieldResolver<any, any>?,
 	typeResolver: GraphQLTypeResolver<any, any>?,
@@ -1080,7 +1080,8 @@ end
 --  * and returns it as the result, or if it's a function, returns the result
 --  * of calling that function while passing along args and context value.
 --  *]]
-defaultFieldResolver = function(source: any, args, contextValue, info)
+-- ROBLOX TODO: the upstream return type annotation should be nil, since this resolve can fail
+defaultFieldResolver = function(source: any, args, contextValue, info): GraphQLFieldResolver<any, any>?
 	-- ensure source is a value for which property access is acceptable.
 	if isObjectLike(source) or typeof(source) == "function" then
 		local property = source[info.fieldName]

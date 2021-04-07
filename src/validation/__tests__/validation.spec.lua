@@ -42,25 +42,26 @@ return function()
 			expect(errors).toEqual({})
 		end)
 
-		itSKIP("detects unknown fields", function()
+		it("detects unknown fields", function()
 			local expect: any = expect
 			local doc = parse([[
+
       {
         unknown
       }
 			]])
 
 			local errors = validate(testSchema, doc)
-			expect(errors).toEqual({
-				{
-					locations = {{ line = 3, column = 9 }},
-					message = 'Cannot query field "unknown" on type "QueryRoot".',
-				},
+			-- ROBLOX deviation: TestEZ can't seem to do a partial object match within an array
+			expect(errors[1]).toObjectContain({
+				locations = {{ line = 3, column = 9 }},
+				message = 'Cannot query field "unknown" on type "QueryRoot".',
 			})
 		end)
 
+		-- ROBLOX deviation: this is deprecated upstream, we don't support it
 		-- // NOTE: experimental
-		it("validates using a custom TypeInfo", function()
+		itSKIP("validates using a custom TypeInfo", function()
 			local expect: any = expect
 			-- // This TypeInfo will never return a valid field.
 			local typeInfo = TypeInfo.new(testSchema, function()
@@ -68,6 +69,7 @@ return function()
 			end)
 
 			local doc = parse([[
+
 				query {
 					catOrDog {
 						... on Cat {
@@ -92,7 +94,7 @@ return function()
 			})
 		end)
 
-		itSKIP("validates using a custom rule", function()
+		it("validates using a custom rule", function()
 			local expect: any = expect
 			local schema = buildSchema([[
 
@@ -123,14 +125,10 @@ return function()
 			end
 
 			local errors = validate(schema, doc, {customRule})
-			--[[ ROBLOX FIXME: after fixing missing newlines in the multiline text above the element is in the array but contains more props
-			--   I believe that currently we don't have a matcher for such usecases
-			--]]
-			expect(errors).toEqual({
-				{
+			-- ROBLOX deviation: TestEZ can't seem to do a partial object match within an array
+			expect(errors[1]).toObjectContain({
 					message = "Reporting directive: @custom",
 					locations = {{ line = 3, column = 14 }},
-				},
 			})
 		end)
 	end)
@@ -146,7 +144,7 @@ return function()
 		local doc = parse(query, {noLocation = true})
 
 		local function validateDocument(options)
-			return validate(testSchema, doc, nil, nil, options)
+			return validate(testSchema, doc, nil, options)
 		end
 
 		local function invalidFieldError(fieldName: string)
@@ -156,29 +154,39 @@ return function()
 			}
 		end
 
-		itSKIP("when maxError is equal number of errors", function()
+		it("when maxError is equal number of errors", function()
 			local expect: any = expect
 			local errors = validateDocument({maxErrors = 3})
-			expect(errors).toEqual({
-				invalidFieldError("firstUnknownField"),
-				invalidFieldError("secondUnknownField"),
-				invalidFieldError("thirdUnknownField"),
-			})
+			-- ROBLOX deviation: TestEZ can't seem to do a partial object match within an array
+			expect(errors[1]).toObjectContain(
+				invalidFieldError("firstUnknownField")
+			)
+			expect(errors[2]).toObjectContain(
+				invalidFieldError("secondUnknownField")
+			)
+			expect(errors[3]).toObjectContain(
+				invalidFieldError("thirdUnknownField")
+			)
 		end)
 
-		itSKIP("when maxErrors is less than number of errors", function()
+		it("when maxErrors is less than number of errors", function()
 			local expect: any = expect
 			local errors = validateDocument({maxErrors = 2})
-			expect(errors).toEqual({
-				invalidFieldError("firstUnknownField"),
-				invalidFieldError("secondUnknownField"),
-				{
-					message = "Too many validation errors, error limit reached. Validation aborted.",
-				},
+			-- ROBLOX deviation: TestEZ can't seem to do a partial object match within an array
+			expect(errors[1]).toObjectContain(
+				invalidFieldError("firstUnknownField")
+			)
+			expect(errors[2]).toObjectContain(
+				invalidFieldError("secondUnknownField")
+			)
+			expect(errors[3]).toObjectContain({
+				message = "Too many validation errors, error limit reached. Validation aborted.",
 			})
 		end)
 
 		it("passthrough exceptions from rules", function()
+			-- ROBLOX TODO: recast in order to use custom matchers
+			local expect: any = expect
 			local function customRule()
 				return {
 					Field = function()
@@ -186,11 +194,9 @@ return function()
 					end,
 				}
 			end
-			local ok, errorResult = pcall(function()
-				return validate(testSchema, doc, {customRule}, nil, {maxErrors = 1})
-			end)
-			expect(ok).to.equal(false)
-			expect(errorResult.message).to.equal("Error from custom rule!")
+			expect(function()
+				return validate(testSchema, doc, {customRule}, {maxErrors = 1})
+			end).toThrow("Error from custom rule!")
 		end)
 	end)
 end

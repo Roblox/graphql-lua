@@ -67,14 +67,16 @@ local GraphQLDeprecatedDirective = directives.GraphQLDeprecatedDirective
 local GraphQLSpecifiedByDirective = directives.GraphQLSpecifiedByDirective
 
 local definitionImport = require(typeWorkspace.definition)
-type GraphQLType = any -- definitionImport.GraphQLType
-type GraphQLNamedType = any -- definitionImport.GraphQLNamedType
-type GraphQLFieldConfig<T, U> = any -- definitionImport.GraphQLFieldConfig
-type GraphQLFieldConfigMap<T, V> = Map<T, V> -- definitionImport.GraphQLFieldConfigMap
-type GraphQLArgumentConfig = any -- definitionImport.GraphQLArgumentConfig
-type GraphQLFieldConfigArgumentMap = Map<any, any> -- definitionImport.GraphQLFieldConfigArgumentMap
-type GraphQLEnumValueConfigMap = any -- definitionImport.GraphQLEnumValueConfigMap
-type GraphQLInputFieldConfigMap = Map<any, any> -- definitionImport.GraphQLInputFieldConfigMap
+type GraphQLType = definitionImport.GraphQLType
+type GraphQLNamedType = definitionImport.GraphQLNamedType
+-- ROBLOX TODO: Luau doesn't currently support default type args, so we inline here
+type DefaultGraphQLFieldConfigTArgs = { [string]: any }
+type GraphQLFieldConfig<T, U> = definitionImport.GraphQLFieldConfig<T, U, DefaultGraphQLFieldConfigTArgs>
+type GraphQLFieldConfigMap<T, V> = definitionImport.GraphQLFieldConfigMap<T, V>
+type GraphQLArgumentConfig = definitionImport.GraphQLArgumentConfig
+type GraphQLFieldConfigArgumentMap = definitionImport.GraphQLFieldConfigArgumentMap
+type GraphQLEnumValueConfigMap = definitionImport.GraphQLEnumValueConfigMap
+type GraphQLInputFieldConfigMap = definitionImport.GraphQLInputFieldConfigMap
 local isScalarType = definitionImport.isScalarType
 local isObjectType = definitionImport.isObjectType
 local isInterfaceType = definitionImport.isInterfaceType
@@ -94,7 +96,7 @@ type GraphQLInterfaceType = any -- definitionImport.GraphQLInterfaceType
 local GraphQLUnionType = definitionImport.GraphQLUnionType
 type GraphQLUnionType = any -- definitionImport.GraphQLUnionType
 local GraphQLEnumType = definitionImport.GraphQLEnumType
-type GraphQLEnumType = any -- definitionImport.GraphQLEnumType
+type GraphQLEnumType = definitionImport.GraphQLEnumType
 local GraphQLInputObjectType = definitionImport.GraphQLInputObjectType
 type GraphQLInputObjectType = any -- definitionImport.GraphQLInputObjectType
 
@@ -515,9 +517,7 @@ function extendSchemaImpl(
 
 	local function getWrappedType(node: TypeNode): GraphQLType
 		if node.kind == Kind.LIST_TYPE then
-			-- ROBLOX FIXME: remove cast to any
-			local nodeAny: any = node
-			return GraphQLList.new(getWrappedType(nodeAny.type))
+			return GraphQLList.new(getWrappedType(node.type))
 		end
 		if node.kind == Kind.NON_NULL_TYPE then
 			-- ROBLOX FIXME: remove cast to any

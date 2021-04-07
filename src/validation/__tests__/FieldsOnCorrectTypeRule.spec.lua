@@ -125,7 +125,7 @@ return function()
 			})
 		end)
 
-		itSKIP("Sub-field not defined", function()
+		it("Sub-field not defined", function()
 			expectErrors(expect, [[
       fragment subFieldNotDefined on Human {
         pets {
@@ -194,7 +194,7 @@ return function()
 			})
 		end)
 
-		itSKIP("Defined on implementors but not on interface", function()
+		it("Defined on implementors but not on interface", function()
 			expectErrors(expect, [[
       fragment definedOnImplementorsButNotInterface on Pet {
         nickname
@@ -228,7 +228,7 @@ return function()
 			})
 		end)
 
-		itSKIP("Defined on implementors queried on union", function()
+		it("Defined on implementors queried on union", function()
 			expectErrors(expect, [[
       fragment definedOnImplementorsQueriedOnUnion on CatOrDog {
         name
@@ -255,7 +255,7 @@ return function()
 		end)
 
 		describe("Fields on correct type error message", function()
-			local function expectErrorMessage(expect_, schema, queryStr)
+			local function expectErrorMessage(expect_, schema, queryStr: string)
 				local errors = validate(schema, parse(queryStr), {FieldsOnCorrectTypeRule})
 
 				expect_(#errors).to.equal(1)
@@ -263,8 +263,9 @@ return function()
 				return expect_(errors[1].message)
 			end
 
-			itSKIP("Works with no suggestions", function()
+			it("Works with no suggestions", function()
 				local schema = buildSchema([[
+
 					type T {
 					fieldWithVeryLongNameThatWillNeverBeSuggested: String
 					}
@@ -274,7 +275,7 @@ return function()
 				expectErrorMessage(expect, schema, "{ t { f } }").to.equal('Cannot query field "f" on type "T".')
 			end)
 
-			itSKIP("Works with no small numbers of type suggestions", function()
+			it("Works with no small numbers of type suggestions", function()
 				local schema = buildSchema([[
 					union T = A | B
 					type Query { t: T }
@@ -288,7 +289,7 @@ return function()
 				)
 			end)
 
-			itSKIP("Works with no small numbers of field suggestions", function()
+			it("Works with no small numbers of field suggestions", function()
 				local schema = buildSchema([[
 					type T {
 					y: String
@@ -302,7 +303,7 @@ return function()
 				)
 			end)
 
-			itSKIP("Only shows one set of suggestions at a time, preferring types", function()
+			it("Only shows one set of suggestions at a time, preferring types", function()
 				local schema = buildSchema([[
 					interface T {
 						y: String
@@ -327,7 +328,7 @@ return function()
 				)
 			end)
 
-			itSKIP("Sort type suggestions based on inheritance order", function()
+			it("Sort type suggestions based on inheritance order", function()
 				local schema = buildSchema([[
 					interface T { bar: String }
 					type Query { t: T }
@@ -353,7 +354,7 @@ return function()
 				)
 			end)
 
-			itSKIP("Limits lots of type suggestions", function()
+			it("Limits lots of type suggestions", function()
 				local schema = buildSchema([[
 					union T = A | B | C | D | E | F
 					type Query { t: T }
@@ -371,7 +372,7 @@ return function()
 				)
 			end)
 
-			itSKIP("Limits lots of field suggestions", function()
+			it("Limits lots of field suggestions", function()
 				local schema = buildSchema([[
 					type T {
 						u: String
