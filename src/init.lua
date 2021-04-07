@@ -228,11 +228,15 @@ export type SourceLocation = languageModule.SourceLocation
 export type TokenKindEnum = languageModule.TokenKindEnum
 export type KindEnum = languageModule.KindEnum
 export type DirectiveLocationEnum = languageModule.DirectiveLocationEnum
+
 -- Visitor utilities
 export type ASTVisitor = languageModule.ASTVisitor
-export type Visitor = languageModule.Visitor
+-- ROBLOX TODO: Luau doesn't current support default type arguments
+export type Visitor<KindToNode, Nodes> = languageModule.Visitor<KindToNode, Nodes>
+-- ROBLOX TODO: Luau doesn't current support default type arguments
 export type VisitFn = languageModule.VisitFn
-export type VisitorKeyMap = languageModule.VisitorKeyMap
+export type VisitorKeyMap<KindToNode> = languageModule.VisitorKeyMap<KindToNode>
+
 -- AST nodes
 export type ASTNode = languageModule.ASTNode
 export type ASTKindToNode = languageModule.ASTKindToNode

@@ -4,6 +4,8 @@ return function()
 	local typeWorkspace = script.Parent.Parent
 	local srcWorkspace = typeWorkspace.Parent
 	local Array = LuauPolyfill.Array
+	local luaUtilsWorkspace = srcWorkspace.luaUtils
+	local NULL = require(luaUtilsWorkspace.null)
 
 	local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
 	local inspect = require(srcWorkspace.jsutils.inspect).inspect
@@ -437,7 +439,6 @@ return function()
 			})
 		end)
 
-		-- ROBLOX FIXME: the ordering of the warnings is unstable from run to run
 		it("rejects a Schema whose types are incorrectly typed", function()
 			local schema = GraphQLSchema.new({
 				query = SomeObjectType,
@@ -901,8 +902,7 @@ return function()
 			})
 		end)
 
-		-- ROBLOX FIXME: locations (correct, but) out of order, and message doesn't quite match
-		itSKIP(
+		it(
 			"rejects Input Objects with non-breakable circular reference spread across them",
 			function()
 				local schema = buildSchema([[
@@ -926,15 +926,8 @@ return function()
 
 				-- ROBLOX TODO: TestEZ can't seem to do a partial object match within an array
 				expect(validateSchema(schema)[1]).toObjectContain({
-					-- ROBLOX FIXME: message we get is ` 'Cannot reference Input Object "YetAnotherInputObject" within itself through a series of non-null fields: "closeLoop.startLoop.nextInLoop".'`
 					message = "Cannot reference Input Object \"SomeInputObject\" within itself through a series of non-null fields: \"startLoop.nextInLoop.closeLoop\".",
-					-- ROBLOX TODO: this AST not being in insertion order officially breaks here
-					-- ROBLOX TODO: locations are out of order versus upstream
 					locations = {
-						{
-							line = 15,
-							column = 9,
-						},
 						{
 							line = 7,
 							column = 9,
@@ -943,12 +936,15 @@ return function()
 							line = 11,
 							column = 9,
 						},
+						{
+							line = 15,
+							column = 9,
+						},
 					},
 				})
 			end
 		)
 
-		-- ROBLOX FIXME: output message doesn't match upstream due to unstable collection ordering
 		itSKIP("rejects Input Objects with multiple non-breakable circular reference", function()
 			local schema = buildSchema([[
 
@@ -988,8 +984,9 @@ return function()
 			})
 
 			expect(validationResult[2]).toObjectContain({
+				-- ROBLOX FIXME: we get this instead: 'Cannot reference Input Object "AnotherInputObject" within itself through a series of non-null fields: "startSecondLoop.closeSecondLoop".
 				message = "Cannot reference Input Object \"AnotherInputObject\" within itself through a series of non-null fields: \"startSecondLoop.closeSecondLoop\".",
-				-- ROBLOX TODO: too many
+				-- ROBLOX TODO: one too many locations, seeingly left over from previous location
 				locations = {
 					{
 						line = 12,
@@ -1174,14 +1171,13 @@ return function()
 				message = "Enum type SomeEnum cannot include value: false.",
 			})
 
-			-- ROBLOX FIXME: Use NULL from luaUtils
-			-- local schema6 = schemaWithEnum({[nil] = {}})
+			local schema6 = schemaWithEnum({[NULL] = {}})
 
-			-- expect(validateSchema(schema6)[1]).toObjectContain(
-			--     {
-			--         message = 'Enum type SomeEnum cannot include value: nil.',
-			--     }
-			-- )
+			expect(validateSchema(schema6)[1]).toObjectContain(
+			    {
+			        message = 'Enum type SomeEnum cannot include value: null.',
+			    }
+			)
 		end)
 	end)
 
@@ -1216,13 +1212,12 @@ return function()
 			)
 		end
 
-		-- ROBLOX deviation: Lua can't store nil entries
-		itSKIP("rejects an empty Object field type", function()
-			local schema = schemaWithObjectField({ type = nil })
+		it("rejects an empty Object field type", function()
+			local schema = schemaWithObjectField({ type = NULL })
 
 			-- ROBLOX TODO: TestEZ can't seem to do a partial object match within an array
 			expect(validateSchema(schema)[1]).toObjectContain({
-				message = "The type of BadObject.badField must be Output Type but got: undefined.",
+				message = "The type of BadObject.badField must be Output Type but got: null.",
 			})
 		end)
 
@@ -1242,8 +1237,7 @@ return function()
 			)
 		end
 
-		-- ROBLOX TODO: this test fails intermittently due to unstable collection ordering in Lua
-		itSKIP("rejects a non-type value as an Object field type", function()
+		it("rejects a non-type value as an Object field type", function()
 			-- ROBLOX deviation: upstream JS `Number` symbol resolves to a function for the purposes of this test
 			local function Number()
 			end
@@ -1285,23 +1279,22 @@ return function()
 		)
 	end)
 	describe("Type System: Objects can only implement unique interfaces", function()
-		-- ROBLOX deviation this seems like an extreme abuse case, and Lua can't store nil in an array
-		itSKIP("rejects an Object implementing a non-type values", function()
+		-- ROBLOX deviation: can't store nil as a key, and Lua doesn't have `undefined`
+		it("rejects an Object implementing a non-type values", function()
 			local schema = GraphQLSchema.new({
 				query = GraphQLObjectType.new({
 					name = "BadObject",
-					interfaces = { nil },
+					interfaces = { NULL },
 					fields = {
 						f = { type = GraphQLString },
 					},
 				}),
 			})
 
-			-- ROBLOX TODO: TestEZ can't seem to do a partial object match within an array
 			local validateSchemaResult = validateSchema(schema)
 			print(inspect(validateSchemaResult))
 			expect(validateSchemaResult[1]).toObjectContain({
-				message = "Type BadObject must only implement Interface types, it cannot implement undefined.",
+				message = "Type BadObject must only implement Interface types, it cannot implement null.",
 			})
 		end)
 
@@ -1596,15 +1589,14 @@ return function()
 			)
 		end
 
-		-- ROBLOX deviation: Lua can't have nil fields
-		itSKIP("rejects an empty Interface field type", function()
-			local schema = schemaWithInterfaceField({ type = nil })
+		it("rejects an empty Interface field type", function()
+			local schema = schemaWithInterfaceField({ type = NULL })
 
 			expect(validateSchema(schema)[1]).toObjectContain({
-				message = "The type of BadImplementing.badField must be Output Type but got: undefined.",
+				message = "The type of BadImplementing.badField must be Output Type but got: null.",
 			})
 			expect(validateSchema(schema)[2]).toObjectContain({
-				message = "The type of BadInterface.badField must be Output Type but got: undefined.",
+				message = "The type of BadInterface.badField must be Output Type but got: null.",
 			})
 		end)
 
@@ -1626,8 +1618,7 @@ return function()
 			)
 		end
 
-		-- ROBLOX TODO: this test passes sometimes due to unstable collection ordering
-		itSKIP("rejects a non-type value as an Interface field type", function()
+		it("rejects a non-type value as an Interface field type", function()
 			-- ROBLOX deviation: upstream JS `Number` symbol resolves to a function for the purposes of this test
 			local function Number()
 			end
@@ -1745,17 +1736,15 @@ return function()
 			end)
 		end
 
-		-- ROBLOX deviation: can't store a nil table field in Lua
-		itSKIP("rejects an empty field arg type", function()
-			local schema = schemaWithArg({ type = nil })
+		-- ROBLOX deviation: can't store a nil table field in Lua, and Lua doesn't have `undefined`
+		it("rejects an empty field arg type", function()
+			local schema = schemaWithArg({ type = NULL })
 
-			expect(validateSchema(schema)).toEqual({
-				{
-					message = "The type of @BadDirective(badArg:) must be Input Type but got: undefined.",
-				},
-				{
-					message = "The type of BadObject.badField(badArg:) must be Input Type but got: undefined.",
-				},
+			expect(validateSchema(schema)[1]).toObjectContain({
+				message = "The type of @BadDirective(badArg:) must be Input Type but got: null.",
+			})
+			expect(validateSchema(schema)[2]).toObjectContain({
+				message = "The type of BadObject.badField(badArg:) must be Input Type but got: null.",
 			})
 		end)
 
@@ -1841,6 +1830,7 @@ return function()
 			})
 		end)
 
+		-- ROBLOX TODO: the reported column is 32 instead of 19, everything else correct
 		itSKIP("rejects a non-input type as a field arg with locations", function()
 			local schema = buildSchema([[
 
@@ -1857,7 +1847,6 @@ return function()
 				message = "The type of Query.test(arg:) must be Input Type but got: SomeObject.",
 				locations = {
 					{
-						-- ROBLOX FIXME: these locations are way off
 						line = 3,
 						column = 19,
 					},
@@ -1901,14 +1890,12 @@ return function()
 			)
 		end
 
-		-- ROBLOX deviation: no nil fields in Lua
-		itSKIP("rejects an empty input field type", function()
-			local schema = schemaWithInputField({ type = nil })
+		-- ROBLOX deviation: can't store nil as a key, and Lua doesn't have `undefined`
+		it("rejects an empty input field type", function()
+			local schema = schemaWithInputField({ type = NULL })
 
-			expect(validateSchema(schema)).toEqual({
-				{
-					message = "The type of BadInputObject.badField must be Input Type but got: undefined.",
-				},
+			expect(validateSchema(schema)[1]).toObjectContain({
+				message = "The type of BadInputObject.badField must be Input Type but got: null.",
 			})
 		end)
 
@@ -1927,8 +1914,7 @@ return function()
 			)
 		end
 
-		-- ROBLOX TODO: fails intermittently due to unstable array ordering
-		itSKIP("rejects a non-type value as an input field type", function()
+		it("rejects a non-type value as an input field type", function()
 			-- ROBLOX deviation: upstream JS `Number` symbol resolves to a function for the purposes of this test
 			local function Number()
 			end

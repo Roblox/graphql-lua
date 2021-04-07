@@ -24,7 +24,7 @@ exports.SingleFieldSubscriptionsRule = function(context)
 								and ('Subscription "%s" must select only one top level field.')
 									:format(node.name.value)
 								or "Anonymous Subscription must select only one top level field.",
-							Array.slice(node.selectionSet.selections, 1)
+							Array.slice(node.selectionSet.selections, 2)
 						)
 					)
 				end

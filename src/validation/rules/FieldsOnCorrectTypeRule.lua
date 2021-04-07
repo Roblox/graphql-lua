@@ -94,7 +94,12 @@ function getSuggestedTypeNames(schema, type_, fieldName)
 		end
 	end
 
-	local suggestions = Array.from(suggestedTypes)
+	-- ROBLOX TODO: our Array.from() currently doesn't operate on Sets ([T] = boolean) correctly
+	-- local suggestions = Array.from(suggestedTypes)
+	local suggestions = {}
+	for suggestedType, _ in pairs(suggestedTypes) do
+		table.insert(suggestions, suggestedType)
+	end
 	Array.sort(suggestions, function(typeA, typeB)
 		-- // Suggest both interface and object types based on how common they are.
 		local usageCountDiff = usageCount[typeB.name] - usageCount[typeA.name]
@@ -110,7 +115,14 @@ function getSuggestedTypeNames(schema, type_, fieldName)
 			return 1
 		end
 
-		return typeA.name.localeCompare(typeB.name)
+		-- ROBLOX deviation: Lua doesn't have an easy locale-aware string comparison
+		-- return typeA.name.localeCompare(typeB.name)
+		if typeA.name < typeB.name then
+			return -1
+		elseif typeA.name > typeB.name then
+			return 1
+		end
+		return 0
 	end)
 	return Array.map(suggestions, function(x)
 		return x.name

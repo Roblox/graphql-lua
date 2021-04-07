@@ -30,30 +30,30 @@ local isEqualType = typeComparators.isEqualType
 local isTypeSubTypeOf = typeComparators.isTypeSubTypeOf
 local schemaModule = require(script.Parent.schema)
 local assertSchema = schemaModule.assertSchema
-
 type GraphQLSchema = schemaModule.GraphQLSchema
-local definition = require(script.Parent.definition)
--- type GraphQLObjectType = definition.GraphQLObjectType
--- type GraphQLInterfaceType = definition.GraphQLInterfaceType
--- type GraphQLUnionType = definition.GraphQLUnionType
--- type GraphQLEnumType = definition.GraphQLEnumType
--- type GraphQLInputObjectType = definition.GraphQLInputObjectType
+
+local definitionModule = require(script.Parent.definition)
+type GraphQLObjectType = definitionModule.GraphQLObjectType
+type GraphQLInterfaceType = definitionModule.GraphQLInterfaceType
+type GraphQLUnionType = definitionModule.GraphQLUnionType
+type GraphQLEnumType = definitionModule.GraphQLEnumType
+type GraphQLInputObjectType = definitionModule.GraphQLInputObjectType
 
 local isIntrospectionType = require(script.Parent.introspection).isIntrospectionType
 local directives = require(script.Parent.directives)
 local isDirective = directives.isDirective
 local GraphQLDeprecatedDirective = directives.GraphQLDeprecatedDirective
-local isObjectType = definition.isObjectType
-local isInterfaceType = definition.isInterfaceType
-local isUnionType = definition.isUnionType
-local isEnumType = definition.isEnumType
-local isInputObjectType = definition.isInputObjectType
-local isNamedType = definition.isNamedType
-local isNonNullType = definition.isNonNullType
-local isInputType = definition.isInputType
-local isOutputType = definition.isOutputType
-local isRequiredArgument = definition.isRequiredArgument
-local isRequiredInputField = definition.isRequiredInputField
+local isObjectType = definitionModule.isObjectType
+local isInterfaceType = definitionModule.isInterfaceType
+local isUnionType = definitionModule.isUnionType
+local isEnumType = definitionModule.isEnumType
+local isInputObjectType = definitionModule.isInputObjectType
+local isNamedType = definitionModule.isNamedType
+local isNonNullType = definitionModule.isNonNullType
+local isInputType = definitionModule.isInputType
+local isOutputType = definitionModule.isOutputType
+local isRequiredArgument = definitionModule.isRequiredArgument
+local isRequiredInputField = definitionModule.isRequiredInputField
 
 local SchemaValidationContext, validateRootTypes, validateDirectives, getOperationTypeNode, getAllSubNodes, getAllNodes, getAllImplementsInterfaceNodes, getDeprecatedDirectiveNode, getUnionMemberTypeNodes, validateEnumValues, validateName, validateFields, validateTypeImplementsAncestors, validateTypes, validateTypeImplementsInterface, validateInterfaces
 --[[*
@@ -275,7 +275,7 @@ function validateDirectives(context: SchemaValidationContext): ()
 end
 function validateName(
 	context: SchemaValidationContext,
-	node
+	node -- ROBLOX TODO: support this type { +name: string, +astNode: ?ASTNode, ... }
 ): ()
 	-- Ensure names are valid, however introspection types opt out.
 	-- ROBLOX deviation: Lua doesn't allow indexing (name) into a function
@@ -344,7 +344,7 @@ end
 
 function validateFields(
 	context: SchemaValidationContext,
-	type_ --: GraphQLObjectType | GraphQLInterfaceType
+	type_: GraphQLObjectType | GraphQLInterfaceType
 ): ()
 	-- ROBLOX deviation: use Map
 	local fields = type_:getFields():values()
@@ -415,7 +415,7 @@ function validateFields(
 end
 function validateInterfaces(
 	context: SchemaValidationContext,
-	type_ --: GraphQLObjectType | GraphQLInterfaceType
+	type_: GraphQLObjectType | GraphQLInterfaceType
 ): ()
 	local ifaceTypeNames = {}
 
@@ -461,9 +461,9 @@ function validateInterfaces(
 end
 function validateTypeImplementsInterface(
 	context: SchemaValidationContext,
-	type_, --: GraphQLObjectType | GraphQLInterfaceType,
-	iface --: GraphQLInterfaceType
-)
+	type_: GraphQLObjectType | GraphQLInterfaceType,
+	iface: GraphQLInterfaceType
+): ()
 	local typeFieldMap = type_:getFields()
 
 	-- Assert each interface field is implemented.
@@ -578,8 +578,8 @@ end
 
 function validateTypeImplementsAncestors(
 	context: SchemaValidationContext,
-	type_, --: GraphQLObjectType | GraphQLInterfaceType,
-	iface --: GraphQLInterfaceType
+	type_: GraphQLObjectType | GraphQLInterfaceType,
+	iface: GraphQLInterfaceType
 ): ()
 	local ifaceInterfaces = type_:getInterfaces()
 
@@ -640,7 +640,7 @@ function validateUnionMembers(
 end
 function validateEnumValues(
 	context: SchemaValidationContext,
-	enumType --: GraphQLEnumType
+	enumType: GraphQLEnumType
 ): ()
 	local enumValues = enumType:getValues()
 
@@ -668,7 +668,7 @@ end
 
 function validateInputFields(
 	context: SchemaValidationContext,
-	inputObj --: GraphQLInputObjectType
+	inputObj: GraphQLInputObjectType
 ): ()
 	-- ROBLOX deviation: use Map
 	local fields = inputObj:getFields():values()
@@ -732,7 +732,7 @@ function createInputObjectCircularRefsValidator(
 	-- This does a straight-forward DFS to find cycles.
 	-- It does not terminate when a cycle was found but continues to explore
 	-- the graph to find all possible cycles.
-	local function detectCycleRecursive(inputObj): () --: GraphQLInputObjectType): ()
+	local function detectCycleRecursive(inputObj: GraphQLInputObjectType): ()
 		-- ROBLOX deviation: upstream can receive a GraphQLList with no name member, but Lua can't store a nil key
 		if visitedTypes[tostring(inputObj.name)] then
 			return
@@ -790,21 +790,18 @@ function createInputObjectCircularRefsValidator(
 	return detectCycleRecursive
 end
 
--- ROBLOX TODO: revisit when Luau generic types are delivered
--- type SDLDefinedObject<T, K> = {
--- 	astNode: T?,
--- 	extensionASTNodes: Array<K>?,
--- }
-type SDLDefinedObject = {
-	astNode: any?,
-	extensionASTNodes: Array<any>?,
+type SDLDefinedObject<T, K> = {
+	astNode: T?,
+	extensionASTNodes: Array<K>?,
 }
 
 -- ROBLOX TODO: revisit these types:
 -- function getAllNodes<T: ASTNode, K: ASTNode>(
 -- 	object: SDLDefinedObject<T, K>,
 --   ): $ReadOnlyArray<T | K> {
-function getAllNodes(object: SDLDefinedObject): Array<any>
+function getAllNodes(
+	object: SDLDefinedObject<ASTNode, ASTNode>
+): Array<ASTNode | ASTNode>
 	local astNode, extensionASTNodes = object.astNode, object.extensionASTNodes
 
 	return (function()
@@ -835,7 +832,10 @@ end
 -- 	object: SDLDefinedObject<T, K>,
 -- 	getter: (T | K) => ?(L | $ReadOnlyArray<L>),
 --   ): $ReadOnlyArray<L> {
-function getAllSubNodes(object, getter): Array<any>
+function getAllSubNodes(
+	object: SDLDefinedObject<ASTNode, ASTNode>,
+	getter: (ASTNode | ASTNode) -> (ASTNode? | Array<ASTNode>?)
+): Array<any>
 	local subNodes = {}
 
 	for _, node in ipairs(getAllNodes(object)) do
@@ -858,8 +858,8 @@ function getAllSubNodes(object, getter): Array<any>
 end
 
 function getAllImplementsInterfaceNodes(
-	type_, --: GraphQLObjectType | GraphQLInterfaceType,
-	iface --: GraphQLInterfaceType
+	type_: GraphQLObjectType | GraphQLInterfaceType,
+	iface: GraphQLInterfaceType
 ): Array<NamedTypeNode>
 	return Array.filter(
 		getAllSubNodes(type_, function(typeNode)
@@ -872,8 +872,8 @@ function getAllImplementsInterfaceNodes(
 end
 
 function getUnionMemberTypeNodes(
-	union, --: GraphQLUnionType,
-	typeName --: string
+	union: GraphQLUnionType,
+	typeName: string
 ): Array<NamedTypeNode>
 	return Array.filter(
 		getAllSubNodes(union, function(unionNode)

@@ -188,11 +188,11 @@ return function()
 			})
 		end)
 
-		itSKIP("with misplaced variable definition directive", function()
+		it("with misplaced variable definition directive", function()
 			expectErrors(expect, [[
-		  query Foo($var: Boolean @onField) {
-			name
-		  }
+      query Foo($var: Boolean @onField) {
+        name
+      }
 			]]).toEqual({
 				{
 					message = 'Directive "@onField" may not be used on VARIABLE_DEFINITION.',

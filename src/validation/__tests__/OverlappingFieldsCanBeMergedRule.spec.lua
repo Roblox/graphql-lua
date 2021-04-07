@@ -105,7 +105,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("Same aliases with different field targets", function()
+		it("Same aliases with different field targets", function()
 			expectErrors(expect, [[
       fragment sameAliasesWithDifferentFieldTargets on Dog {
         fido: name
@@ -137,7 +137,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("Alias masking direct field access", function()
+		it("Alias masking direct field access", function()
 			expectErrors(expect, [[
       fragment aliasMaskingDirectFieldAccess on Dog {
         name: nickname
@@ -154,7 +154,7 @@ return function()
 			})
 		end)
 
-		itSKIP("different args, second adds an argument", function()
+		it("different args, second adds an argument", function()
 			expectErrors(expect, [[
       fragment conflictingArgs on Dog {
         doesKnowCommand
@@ -171,7 +171,7 @@ return function()
 			})
 		end)
 
-		itSKIP("different args, second missing an argument", function()
+		it("different args, second missing an argument", function()
 			expectErrors(expect, [[
       fragment conflictingArgs on Dog {
         doesKnowCommand(dogCommand: SIT)
@@ -188,7 +188,7 @@ return function()
 			})
 		end)
 
-		itSKIP("conflicting arg values", function()
+		it("conflicting arg values", function()
 			expectErrors(expect, [[
       fragment conflictingArgs on Dog {
         doesKnowCommand(dogCommand: SIT)
@@ -205,7 +205,7 @@ return function()
 			})
 		end)
 
-		itSKIP("conflicting arg names", function()
+		it("conflicting arg names", function()
 			expectErrors(expect, [[
       fragment conflictingArgs on Dog {
         isAtLocation(x: 0)
@@ -237,7 +237,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("encounters conflict in fragments", function()
+		it("encounters conflict in fragments", function()
 			expectErrors(expect, [[
       {
         ...A
@@ -260,7 +260,7 @@ return function()
 			})
 		end)
 
-		itSKIP("reports each conflict once", function()
+		it("reports each conflict once", function()
 			expectErrors(expect, [[
       {
         f1 {
@@ -308,7 +308,7 @@ return function()
 			})
 		end)
 
-		itSKIP("deep conflict", function()
+		it("deep conflict", function()
 			expectErrors(expect, [[
       {
         field {
@@ -331,7 +331,7 @@ return function()
 			})
 		end)
 
-		itSKIP("deep conflict with multiple issues", function()
+		it("deep conflict with multiple issues", function()
 			expectErrors(expect, [[
       {
         field {
@@ -358,7 +358,7 @@ return function()
 			})
 		end)
 
-		itSKIP("very deep conflict", function()
+		it("very deep conflict", function()
 			expectErrors(expect, [[
       {
         field {
@@ -387,7 +387,7 @@ return function()
 			})
 		end)
 
-		itSKIP("reports deep conflict to nearest common ancestor", function()
+		it("reports deep conflict to nearest common ancestor", function()
 			expectErrors(expect, [[
       {
         field {
@@ -417,7 +417,7 @@ return function()
 			})
 		end)
 
-		itSKIP("reports deep conflict to nearest common ancestor in fragments", function()
+		it("reports deep conflict to nearest common ancestor in fragments", function()
 			expectErrors(expect, [[
       {
         field {
@@ -455,7 +455,7 @@ return function()
 			})
 		end)
 
-		itSKIP("reports deep conflict in nested fragments", function()
+		it("reports deep conflict in nested fragments", function()
 			expectErrors(expect, [[
       {
         field {
@@ -494,7 +494,7 @@ return function()
 			})
 		end)
 
-		itSKIP("ignores unknown fragments", function()
+		it("ignores unknown fragments", function()
 			expectValid(expect, [[
 				{
 					field
@@ -573,7 +573,7 @@ return function()
 				}
 			]])
 
-			itSKIP("conflicting return types which potentially overlap", function()
+			it("conflicting return types which potentially overlap", function()
 				expectErrorsWithSchema(expect, schema, [[
           {
             someBox {
@@ -618,7 +618,7 @@ return function()
 				]])
 			end)
 
-			itSKIP("disallows differing return types despite no overlap", function()
+			it("disallows differing return types despite no overlap", function()
 				expectErrorsWithSchema(expect, schema, [[
           {
             someBox {
@@ -641,7 +641,7 @@ return function()
 				})
 			end)
 
-			itSKIP("reports correctly when a non-exclusive follows an exclusive", function()
+			it("reports correctly when a non-exclusive follows an exclusive", function()
 				expectErrorsWithSchema(expect, schema, [[
           {
             someBox {
@@ -698,7 +698,7 @@ return function()
 				})
 			end)
 
-			itSKIP("disallows differing return type nullability despite no overlap", function()
+			it("disallows differing return type nullability despite no overlap", function()
 				expectErrorsWithSchema(expect, schema, [[
           {
             someBox {
@@ -721,7 +721,7 @@ return function()
 				})
 			end)
 
-			itSKIP("disallows differing return type list despite no overlap", function()
+			it("disallows differing return type list despite no overlap", function()
 				expectErrorsWithSchema(expect, schema, [[
           {
             someBox {
@@ -772,7 +772,7 @@ return function()
 				})
 			end)
 
-			itSKIP("disallows differing subfields", function()
+			it("disallows differing subfields", function()
 				expectErrorsWithSchema(expect, schema, [[
           {
             someBox {
@@ -800,7 +800,7 @@ return function()
 				})
 			end)
 
-			itSKIP("disallows differing deep return types despite no overlap", function()
+			it("disallows differing deep return types despite no overlap", function()
 				expectErrorsWithSchema(expect, schema, [[
           {
             someBox {
@@ -870,7 +870,7 @@ return function()
 				]])
 			end)
 
-			itSKIP("compares deep types including list", function()
+			it("compares deep types including list", function()
 				expectErrorsWithSchema(expect, schema, [[
           {
             connection {
@@ -905,7 +905,7 @@ return function()
 				})
 			end)
 
-			itSKIP("ignores unknown types", function()
+			it("ignores unknown types", function()
 				expectValidWithSchema(expect, schema, [[
 					{
 						someBox {
@@ -961,7 +961,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("finds invalid case even with immediately recursive fragment", function()
+		it("finds invalid case even with immediately recursive fragment", function()
 			expectErrors(expect, [[
       fragment sameAliasesWithDifferentFieldTargets on Dog {
         ...sameAliasesWithDifferentFieldTargets

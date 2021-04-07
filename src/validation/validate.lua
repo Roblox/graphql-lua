@@ -2,12 +2,27 @@
 
 local validationWorkspace = script.Parent
 local root = validationWorkspace.Parent
+local Error = require(root.luaUtils.Error)
+local PackagesWorkspace = root.Parent.Packages
+local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
+local Array = LuauPolyfill.Array
+type Array<T> = { [number]: T }
+
 local devAssert = require(root.jsutils.devAssert).devAssert
-local GraphQLError = require(root.error.GraphQLError).GraphQLError
+local GraphQLErrorModule = require(root.error.GraphQLError)
+local GraphQLError = GraphQLErrorModule.GraphQLError
+type GraphQLError = GraphQLErrorModule.GraphQLError
+
+local AstModule = require(root.language.ast)
+type DocumentNode = AstModule.DocumentNode
+
+local SchemaModule = require(root.type.schema)
+type GraphQLSchema = SchemaModule.GraphQLSchema
+
 local visitorExports = require(root.language.visitor)
 local visit = visitorExports.visit
 local visitInParallel = visitorExports.visitInParallel
--- local assertValidSchema = require(root.type.validate).assertValidSchema
+local assertValidSchema = require(root.type.validate).assertValidSchema
 local TypeInfoExports = require(root.utilities.TypeInfo)
 local TypeInfo = TypeInfoExports.TypeInfo
 local visitWithTypeInfo = TypeInfoExports.visitWithTypeInfo
@@ -17,10 +32,8 @@ local specifiedSDLRules = specifiedRulesImport.specifiedSDLRules
 local ValidationContextExports = require(validationWorkspace.ValidationContext)
 local SDLValidationContext = ValidationContextExports.SDLValidationContext
 local ValidationContext = ValidationContextExports.ValidationContext
-local Error = require(root.luaUtils.Error)
-local PackagesWorkspace = root.Parent.Packages
-local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
-local Array = LuauPolyfill.Array
+type SDLValidationRule = ValidationContextExports.SDLValidationRule
+type ValidationRule = ValidationContextExports.ValidationRule
 
 local exports = {}
 
@@ -40,27 +53,28 @@ local exports = {}
 --  * Optionally a custom TypeInfo instance may be provided. If not provided, one
 --  * will be created from the provided schema.
 --  */
+
 exports.validate = function(
-	schema,
-	documentAST,
-	rules,
-	typeInfo,
-	options
-)
+	schema: GraphQLSchema,
+	documentAST: DocumentNode,
+	rules: Array<ValidationRule>,
+	options: { maxErrors: number? },
+	-- @deprecate will be removed in 17.0.0
+	typeInfo
+): Array<GraphQLError>
 	if rules == nil then
 		rules = specifiedRules
-	end
-	if typeInfo == nil then
-		typeInfo = TypeInfo.new(schema)
 	end
 	if options == nil then
 		options = {maxErrors = nil}
 	end
+	if typeInfo == nil then
+		typeInfo = TypeInfo.new(schema)
+	end
 
 	devAssert(documentAST, "Must provide document.")
 	-- // If the schema used for validation is invalid, throw an error.
-	-- ROBLOX FIXME: skip assertValidSchema until type/validate.js is converted
-	-- assertValidSchema(schema)
+	assertValidSchema(schema)
 
 	local abortObj = {}
 	local errors = {}
@@ -106,10 +120,11 @@ end
 --  * @internal
 --  */
 exports.validateSDL = function(
-	documentAST,
-	schemaToExtend,
-	rules
-)
+	documentAST: DocumentNode,
+	schemaToExtend: GraphQLSchema?,
+	-- ROBLOX deviation: typed arguments can't have default values
+	rules: Array<SDLValidationRule>?
+): Array<GraphQLError>
 	if rules == nil then
 		rules = specifiedSDLRules
 	end
@@ -134,7 +149,7 @@ end
 --  *
 --  * @internal
 --  */
-exports.assertValidSDL = function(documentAST)
+exports.assertValidSDL = function(documentAST: DocumentNode)
 	local errors = exports.validateSDL(documentAST)
 	if #errors ~= 0 then
 		error(Error.new(
@@ -155,14 +170,17 @@ end
 --  * @internal
 --  */
 exports.assertValidSDLExtension = function(
-	documentAST,
-	schema
+	documentAST: DocumentNode,
+	schema: GraphQLSchema
 )
 	local errors = exports.validateSDL(documentAST, schema)
 	if #errors ~= 0 then
 		error(Error.new(
 			table.concat(
 				Array.map(errors, function(error_)
+					if typeof(error_) == "string" then
+						return error_
+					end
 					return error_.message
 				end),
 				'\n\n'

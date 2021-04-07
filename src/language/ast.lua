@@ -450,6 +450,8 @@ export type NamedTypeNode = {
   kind: string,
   loc: Location?,
   name: NameNode,
+	-- ROBLOX TODO: upstream is missing this field, causing extendSchema usage to be incorect
+  type: TypeNode,
 }
 
 export type ListTypeNode = {

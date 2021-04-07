@@ -7,28 +7,28 @@ return function()
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
-	local function expectErrors(queryStr: string)
+	local function expectErrors(expect_, queryStr: string)
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectValidationErrors(VariablesAreInputTypesRule, "\n" .. queryStr)
+		return expectValidationErrors(expect_, VariablesAreInputTypesRule, "\n" .. queryStr)
 	end
 
-	local function expectValid(queryStr: string)
-		expectErrors(queryStr).toEqual({})
+	local function expectValid(expect_, queryStr: string)
+		expectErrors(expect_, queryStr).toEqual({})
 	end
 
 	describe("Validate: Variables are input types", function()
-		itSKIP("input types are valid", function()
-			expectValid([[
+		it("input types are valid", function()
+			expectValid(expect, [[
 				query Foo($a: String, $b: [Boolean!]!, $c: ComplexInput) {
 					field(a: $a, b: $b, c: $c)
 				}
 			]])
 		end)
 
-		itSKIP("output types are invalid", function()
-			expectErrors([=[
+		it("output types are invalid", function()
+			expectErrors(expect, [=[
       query Foo($a: Dog, $b: [[CatOrDog!]]!, $c: Pet) {
         field(a: $a, b: $b, c: $c)
       }

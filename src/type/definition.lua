@@ -2,7 +2,6 @@
 -- Luau currently requires manual hoisting of types, which causes this file to become extremely unaligned
 -- file checks out okay other than that issue, which looks like "definition.lua:149:5-15: (E001) Generic type 'GraphQLList' expects 0 type arguments, but 1 is specified"
 -- Luau issue: https://jira.rbx.com/browse/CLI-34658
---!nocheck
 
 type Array<T> = { [number]: T }
 local srcWorkspace = script.Parent.Parent
@@ -596,7 +595,7 @@ end
 export type Thunk<T> = (() -> T) | T
 
 local function resolveThunk(thunk: Thunk<any>)
-	return (function()
+	return (function() -- ROBLOX TODO: IFEE not necessary
 		if typeof(thunk) == "function" then
 			-- ROBLOX TODO: workaround for Luau type narrowing bug
 			local _thunk: any = thunk
@@ -608,7 +607,7 @@ local function resolveThunk(thunk: Thunk<any>)
 end
 
 local function undefineIfEmpty(arr: Array<any>?): Array<any>
-	return (function()
+	return (function() -- ROBLOX TODO: IFEE not necessary
 			-- ROBLOX TODO: workaround for Luau type narrowing bug
 			local _arr: any = arr
 		if _arr and #_arr > 0 then
@@ -1475,6 +1474,14 @@ export type GraphQLEnumType = --[[ <T> ]] {
 	_values: Array<GraphQLEnumValue --[[ <T> ]]>,
 	_valueLookup: Map<any --[[ T ]], GraphQLEnumValue>,
 	_nameLookup: ObjMap<GraphQLEnumValue>,
+	-- ROBLOX deviation: add self parameter for all ':' operator methods
+	getValues: (any) -> Array<GraphQLEnumValue --[[ <T> ]]>,
+	getValue: (any, string) -> GraphQLEnumValue?,
+	serialize: (any, any --[[ T ]]) -> string?,
+	parseValue: (any, any) -> any? --[[ T ]],
+	parseLiteral: (any, ValueNode, ObjMap<any>?) -> any? --[[ T ]],
+	toConfig: (any) -> GraphQLEnumTypeNormalizedConfig
+
 }
 
 GraphQLEnumType = {}

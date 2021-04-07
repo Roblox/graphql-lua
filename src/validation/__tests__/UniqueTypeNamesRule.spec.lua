@@ -120,7 +120,7 @@ return function()
 			expectValidSDL(expect, "type Foo", schema)
 		end)
 
-		itSKIP("adding conflicting types to existing schema", function()
+		it("adding conflicting types to existing schema", function()
 			local schema = buildSchema("type Foo")
 			local sdl = [[
       scalar Foo
@@ -137,23 +137,23 @@ return function()
 					locations = {{ line = 2, column = 14 }},
 				},
 				{
-					message = 'Type "Foo" alread  in the schema. It cannot also be defined in this type definition.',
+					message = 'Type "Foo" already exists in the schema. It cannot also be defined in this type definition.',
 					locations = {{ line = 3, column = 12 }},
 				},
 				{
-					message = 'Type "Foo" alread  in the schema. It cannot also be defined in this type definition.',
+					message = 'Type "Foo" already exists in the schema. It cannot also be defined in this type definition.',
 					locations = {{ line = 4, column = 17 }},
 				},
 				{
-					message = 'Type "Foo" alread  in the schema. It cannot also be defined in this type definition.',
+					message = 'Type "Foo" already exists in the schema. It cannot also be defined in this type definition.',
 					locations = {{ line = 5, column = 13 }},
 				},
 				{
-					message = 'Type "Foo" alread  in the schema. It cannot also be defined in this type definition.',
+					message = 'Type "Foo" already exists in the schema. It cannot also be defined in this type definition.',
 					locations = {{ line = 6, column = 12 }},
 				},
 				{
-					message = 'Type "Foo" alread  in the schema. It cannot also be defined in this type definition.',
+					message = 'Type "Foo" already exists in the schema. It cannot also be defined in this type definition.',
 					locations = {{ line = 7, column = 13 }},
 				},
 			})

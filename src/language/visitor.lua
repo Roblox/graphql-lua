@@ -4,12 +4,71 @@ local srcWorkspace = script.Parent.Parent
 local LuauPolyfill = require(srcWorkspace.Parent.Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
-
+type Array<T> = { [number]: T }
+type ObjMap<K, V> = { [K]: V }
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
 
+local astModule = require(srcWorkspace.language.ast)
+type ASTNode = astModule.ASTNode
+type ASTKindToNode = astModule.ASTKindToNode
 local isNode = require(script.Parent.ast).isNode
 
-local QueryDocumentKeys = {
+--[[*
+ * A visitor is provided to visit, it contains the collection of
+ * relevant functions to be called during the visitor's traversal.
+ ]]
+ -- ROBLOX TODO: Luau doesn't support default type args, so we inline
+ type Nodes = any
+ export type ASTVisitor = Visitor<ASTKindToNode, Nodes>
+-- ROBLOX devation: Luau doesn't support the equivalent of $Value or default type args
+-- export type Visitor<KindToNode, Nodes = $Values<KindToNode>> =
+export type Visitor<KindToNode, Nodes> =
+  EnterLeave<
+      VisitFn
+      | ShapeMap<KindToNode, (any) -> VisitFn>
+    >
+  | ShapeMap<
+      KindToNode,
+      (any) -> VisitFn | EnterLeave<VisitFn>
+    >
+type EnterLeave<T> = { enter: T?, leave: T? }
+-- ROBLOX deviation: Luau doesn't have $Shape, so manually mark fields optional
+-- type ShapeMap<O, F> = $Shape<$ObjMap<O, F>>;
+type ShapeMap<O, F> = { [O]: F? }
+
+--[[*
+ * A visitor is comprised of visit functions, which are called on each node
+ * during the visitor's traversal.
+ ]]
+-- ROBLOX TODO: Luau doesn't currently support function generics or default type args
+type TVisitedNode = any
+type TAnyNode = any
+export type VisitFn = (
+  -- The current node being visiting.
+  any,
+  -- The index or key to this node from the parent node or Array.
+  string | number | nil,
+  -- The parent immediately above this node, which may be an Array.
+  TAnyNode | Array<TAnyNode> | nil,
+  -- The key path to get to this node from the root node.
+  Array<string | number>,
+  -- All nodes and Arrays visited before reaching parent of this node.
+  -- These correspond to array indices in `path`.
+  -- Note: ancestors includes arrays which contain the parent of visited node.
+  Array<TAnyNode | Array<TAnyNode>>
+) -> any
+
+--[[*
+ * A KeyMap describes each the traversable properties of each kind of node.
+ ]]
+export type VisitorKeyMap<KindToNode> = ObjMap<
+  KindToNode,
+ -- ROBLOX TODO: Luau doesn't support function generics or $Keys
+--  <T>(T) -> Array<$Keys<T>>,
+ (any) -> Array<any>
+>
+
+local QueryDocumentKeys: VisitorKeyMap<ASTKindToNode> = {
 	Name = {},
 
 	Document = { "definitions" },
@@ -194,7 +253,12 @@ local getVisitFn
 --  *       }
 --  *     })
 --  */
-local function visit(root, visitor, visitorKeys)
+local function visit(
+	root: ASTNode,
+	-- ROBLOX TODO: Luau doesn't support default type args, so inline here
+	visitor: Visitor<ASTKindToNode, Nodes>,
+	visitorKeys: VisitorKeyMap<ASTKindToNode>
+): any
 	visitorKeys = visitorKeys or QueryDocumentKeys
 
 	local stack: any = nil
@@ -351,13 +415,16 @@ local function visit(root, visitor, visitorKeys)
 	return newRoot
 end
 
-function visitInParallel(visitors)
+
+function visitInParallel(
+	-- ROBLOX TODO: Luau doesn't support default type args, so inline here
+	visitors: Array<Visitor<ASTKindToNode, Nodes>>
+): Visitor<ASTKindToNode, Nodes>
 	-- ROBLOX deviation: no predefined Array length
 	local skipping = {}
 
 	return {
-		enter = function(self, ...)
-			local node = ...
+		enter = function(self, node, ...)
 			for i = 1, #visitors do
 				if skipping[i] == nil then
 					local fn = getVisitFn(
@@ -366,7 +433,7 @@ function visitInParallel(visitors)
 						false
 					)
 					if fn then
-						local result = fn(visitors[i], ...)
+						local result = fn(visitors[i], node, ...)
 						if result == false then
 							skipping[i] = node
 						elseif result == BREAK then
@@ -405,7 +472,12 @@ function visitInParallel(visitors)
 	}
 end
 
-function getVisitFn(visitor, kind: string, isLeaving: boolean)
+function getVisitFn(
+	visitor: any, -- ROBLOX FIXME: Visitor<any, Nodes>,
+	kind: string,
+	isLeaving: boolean
+	-- ROBLOX TODO: Luau doesn't currently support default type args
+  ): VisitFn?
 	local kindVisitor = visitor[kind]
 	if kindVisitor then
 		if not isLeaving and type(kindVisitor) == "function" then

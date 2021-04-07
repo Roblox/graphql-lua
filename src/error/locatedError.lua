@@ -14,11 +14,13 @@ local GraphQLError = require(errorWorkspace.GraphQLError).GraphQLError
 local Array = LuauPolyfill.Array
 local instanceOf = require(srcWorkspace.jsutils.instanceOf)
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
+local astModule = require(srcWorkspace.language.ast)
+type ASTNode = astModule.ASTNode
 local Error = require(srcWorkspace.luaUtils.Error)
 
 local function locatedError(
 	rawOriginalError,
-	nodes,
+	nodes: ASTNode | Array<ASTNode> | nil,
 	path: Array<string | number>
 )
 	-- Sometimes a non-error is thrown, wrap it as an Error instance to ensure a consistent Error interface.

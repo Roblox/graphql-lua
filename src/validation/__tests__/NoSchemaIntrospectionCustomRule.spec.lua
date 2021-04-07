@@ -2,9 +2,9 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	-- local root = validationWorkspace.Parent
-	-- local buildASTSchema = require(root.utilities.buildASTSchema)
-	-- local buildSchema = buildASTSchema.buildSchema
+	local root = validationWorkspace.Parent
+	local buildASTSchema = require(root.utilities.buildASTSchema)
+	local buildSchema = buildASTSchema.buildSchema
 	local NoSchemaIntrospectionCustomRule = require(validationWorkspace.rules.custom.NoSchemaIntrospectionCustomRule)
 		.NoSchemaIntrospectionCustomRule
 	local harness = require(script.Parent.harness)
@@ -29,19 +29,19 @@ return function()
 		expectErrors(expect_, queryStr).toEqual({})
 	end
 
-	-- schema = buildSchema([[
-	-- 	type Query {
-	-- 		someQuery: SomeType
-	-- 	}
+	schema = buildSchema([[
+		type Query {
+			someQuery: SomeType
+		}
 
-	-- 	type SomeType {
-	-- 		someField: String
-	-- 		introspectionField: __EnumValue
-	-- 	}
-	-- ]])
+		type SomeType {
+			someField: String
+			introspectionField: __EnumValue
+		}
+	]])
 
 	describe("Validate: Prohibit introspection queries", function()
-		itSKIP("ignores valid fields including __typename", function()
+		it("ignores valid fields including __typename", function()
 			expectValid(expect, [[
 				{
 					someQuery {
@@ -52,7 +52,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("ignores fields not in the schema", function()
+		it("ignores fields not in the schema", function()
 			expectValid(expect, [[
 		{
 			__introspect
@@ -60,7 +60,7 @@ return function()
 			]])
 		end)
 
-		itSKIP("reports error when a field with an introspection type is requested", function()
+		it("reports error when a field with an introspection type is requested", function()
 			expectErrors(expect, [[
       {
         __schema {
@@ -81,7 +81,7 @@ return function()
 			})
 		end)
 
-		itSKIP("reports error when a field with an introspection type is requested and aliased", function()
+		it("reports error when a field with an introspection type is requested and aliased", function()
 			expectErrors(expect, [[
       {
         s: __schema {
@@ -102,7 +102,7 @@ return function()
 			})
 		end)
 
-		itSKIP("reports error when using a fragment with a field with an introspection type", function()
+		it("reports error when using a fragment with a field with an introspection type", function()
 			expectErrors(expect, [[
       {
         ...QueryFragment
@@ -127,7 +127,7 @@ return function()
 			})
 		end)
 
-		itSKIP("reports error for non-standard introspection fields", function()
+		it("reports error for non-standard introspection fields", function()
 			expectErrors(expect, [[
       {
         someQuery {

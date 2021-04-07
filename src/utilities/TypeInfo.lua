@@ -187,7 +187,12 @@ function TypeInfo:enter(node: ASTNode)
 		local namedType = getNamedType(self:getType())
 		table.insert(
 			self._parentTypeStack,
-			isCompositeType(namedType) and namedType or NULL
+			(function()
+				if isCompositeType(namedType) then
+					return namedType
+				end
+				return NULL
+			end)()
 		)
 		return
 	elseif nodeKind == Kind.FIELD then
@@ -200,10 +205,22 @@ function TypeInfo:enter(node: ASTNode)
 				fieldType = fieldDef.type
 			end
 		end
-		table.insert(self._fieldDefStack, fieldDef)
+		table.insert(self._fieldDefStack,
+			(function()
+				if fieldDef then
+					return fieldDef
+				end
+				return NULL
+			end)()
+		)
 		table.insert(
 			self._typeStack,
-			isOutputType(fieldType) and fieldType or NULL
+			(function()
+				if isOutputType(fieldType) then
+					return fieldType
+				end
+				return NULL
+			end)()
 		)
 		return
 	elseif nodeKind == Kind.DIRECTIVE then
@@ -221,7 +238,12 @@ function TypeInfo:enter(node: ASTNode)
 		end
 		table.insert(
 			self._typeStack,
-			isObjectType(type_) and type_ or NULL
+			(function()
+				if isObjectType(type_) then
+					return type_
+				end
+				return NULL
+			end)()
 		)
 		return
 	elseif nodeKind == Kind.INLINE_FRAGMENT or
@@ -311,7 +333,7 @@ function TypeInfo:enter(node: ASTNode)
 			end
 		end
 		table.insert(self._defaultValueStack, (function()
-			if inputField then
+			if inputField and inputField.defaultValue then
 				return inputField.defaultValue
 			end
 			return NULL
@@ -401,12 +423,11 @@ local function visitWithTypeInfo(
 	visitor: Visitor<ASTKindToNode>
 ): Visitor<ASTKindToNode>
 	return {
-		enter = function(_self, ...)
-			local node = ...
+		enter = function(_self, node, ...)
 			typeInfo:enter(node)
 			local fn = getVisitFn(visitor, node.kind, --[[ isLeaving ]] false)
 			if fn then
-				local result = fn(visitor, ...)
+				local result = fn(visitor, node, ...)
 				if result ~= nil then
 					typeInfo:leave(node)
 					if isNode(result) then
@@ -417,12 +438,11 @@ local function visitWithTypeInfo(
 			end
 			return nil
 		end,
-		leave = function(_self, ...)
-			local node = ...
+		leave = function(_self, node, ...)
 			local fn = getVisitFn(visitor, node.kind, --[[ isLeaving ]] true)
 			local result
 			if fn then
-				result = fn(visitor, ...)
+				result = fn(visitor, node, ...)
 			end
 			typeInfo:leave(node)
 			return result

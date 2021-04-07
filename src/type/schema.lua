@@ -37,7 +37,7 @@ local GraphQLErrorModule = require(srcWorkspace.error.GraphQLError)
 type GraphQLError = GraphQLErrorModule.GraphQLError
 
 local directivesModule = require(script.Parent.directives)
-type GraphQLDirective = any -- directivesModule.GraphQLDirective
+type GraphQLDirective = directivesModule.GraphQLDirective
 local isDirective = directivesModule.isDirective
 local specifiedDirectives = directivesModule.specifiedDirectives
 
@@ -46,11 +46,11 @@ type ObjMap<T> = ObjMapModule.ObjMap<T>
 type ObjMapLike<T> = ObjMapModule.ObjMapLike<T>
 
 local definitionModule = require(script.Parent.definition)
-type GraphQLType = any -- definitionModule.GraphQLType
-type GraphQLNamedType = any -- definitionModule.GraphQLNamedType
-type GraphQLAbstractType = any -- definitionModule.GraphQLAbstractType
-type GraphQLObjectType = any -- definitionModule.GraphQLObjectType
-type GraphQLInterfaceType = any -- definitionModule.GraphQLInterfaceType
+type GraphQLType = definitionModule.GraphQLType
+type GraphQLNamedType = definitionModule.GraphQLNamedType
+type GraphQLAbstractType = definitionModule.GraphQLAbstractType
+type GraphQLObjectType = definitionModule.GraphQLObjectType
+type GraphQLInterfaceType = definitionModule.GraphQLInterfaceType
 
 local isObjectType = definitionModule.isObjectType
 local isInterfaceType = definitionModule.isInterfaceType

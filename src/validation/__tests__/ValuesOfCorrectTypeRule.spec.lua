@@ -34,7 +34,7 @@ return function()
 			expect_,
 			schema,
 			ValuesOfCorrectTypeRule,
-			"\n" .. queryStr
+			queryStr
 		)
 	end
 
@@ -945,7 +945,7 @@ return function()
 				})
 			end)
 
-			itSKIP("reports original error for custom scalar which throws", function()
+			it("reports original error for custom scalar which throws", function()
 				local customScalar = GraphQLScalarType.new({
 					name = "Invalid",
 					parseValue = function(value)
@@ -983,7 +983,7 @@ return function()
 				-- expectedErrors.to.have.nested.property("[1].originalError.message", "Invalid scalar is always invalid: 123")
 			end)
 
-			itSKIP("reports error for custom scalar that returns undefined", function()
+			it("reports error for custom scalar that returns undefined", function()
 				local customScalar = GraphQLScalarType.new({
 					name = "CustomScalar",
 					parseValue = function()
@@ -1168,11 +1168,11 @@ return function()
 				})
 			end)
 
-			itSKIP("complex variables missing required field", function()
+			it("complex variables missing required field", function()
 				expectErrors(expect, [[
-			query MissingRequiredField($a: ComplexInput = {intField: 3}) {
-			  dog { name }
-			}
+        query MissingRequiredField($a: ComplexInput = {intField: 3}) {
+          dog { name }
+        }
 				]]).toEqual({
 					{
 						message = 'Field "ComplexInput.requiredField" of required type "Boolean!" was not provided.',
@@ -1181,12 +1181,12 @@ return function()
 				})
 			end)
 
-			itSKIP("list variables with invalid item", function()
+			it("list variables with invalid item", function()
 				expectErrors(expect, [[
-        query MissingRequiredField($a: ComplexInput = {intField: 3}) {
+        query InvalidItem($a: [String] = ["one", 2]) {
           dog { name }
         }
-				]]).toEqual({
+							  ]]).toEqual({
 					{
 						message = 'String cannot represent a non string value: 2',
 						locations = {{ line = 2, column = 50 }},
