@@ -312,13 +312,10 @@ export type ExecutionResult = executionModule.ExecutionResult
 export type FormattedExecutionResult = executionModule.FormattedExecutionResult
 
 
--- ROBLOX FIXME: uncomment when subscribe implemented
--- local subscriptionModule = require(script.subscription)
-
--- exports.subscribe = subscriptionModule.subscribe
--- exports.createSourceEventStream = subscriptionModule.createSourceEventStream
-
--- export type SubscriptionArgs = subscriptionModule.SubscriptionArgs
+local subscriptionModule = require(script.subscription)
+exports.subscribe = subscriptionModule.subscribe
+exports.createSourceEventStream = subscriptionModule.createSourceEventStream
+export type SubscriptionArgs = subscriptionModule.SubscriptionArgs
 
 -- Validate GraphQL documents.
 local validationModule = require(script.validation)
@@ -366,8 +363,7 @@ exports.PossibleTypeExtensionsRule = validationModule.PossibleTypeExtensionsRule
 exports.NoDeprecatedCustomRule = validationModule.NoDeprecatedCustomRule
 exports.NoSchemaIntrospectionCustomRule = validationModule.NoSchemaIntrospectionCustomRule
 
--- ROBLOX FIXME: add types
-export type ValidationRule = any --validationModule.ValidationRule
+export type ValidationRule = validationModule.ValidationRule
 
 -- Create, format, and print GraphQL errors.
 local errorModule = require(script.error)

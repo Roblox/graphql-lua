@@ -1,12 +1,13 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/validation/index.js
 
 local validation = script
+local ValidationContextModule = require(validation.ValidationContext)
+export type ValidationRule = ValidationContextModule.ValidationRule
 
 return {
 	validate = require(validation.validate).validate,
 
-	ValidationContext = require(validation.ValidationContext).ValidationContext,
-	-- type ValidationRule = require(validation.ValidationContext).ValidationContext,
+	ValidationContext = ValidationContextModule.ValidationContext,
 
 	-- // All validation rules in the GraphQL Specification.
 	specifiedRules = require(validation.specifiedRules).specifiedRules,
