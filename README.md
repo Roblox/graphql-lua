@@ -2,12 +2,11 @@
 
 The Roblox Lua reference implementation for GraphQL, a query language for APIs created by Facebook.
 
-[![npm version](https://badge.fury.io/js/graphql.svg)](https://badge.fury.io/js/graphql)
 [![Build Status](https://github.com/Roblox/graphql-lua/workflows/CI/badge.svg?branch=master)](https://github.com/Roblox/graphql-lua/actions?query=branch%3Amaster)
 [![Coverage Status](https://codecov.io/gh/Roblox/graphql-lua/branch/master/graph/badge.svg)](https://codecov.io/gh/Roblox/graphql-lua)
 
 See more complete documentation at https://graphql.org/ and
-https://graphql.org/graphql-js/. GraphQL-Lua has few to no deviations from the upstream documentation and APIs.
+https://graphql.org/graphql-js/. GraphQL-Lua has few to no deviations from the upstream documentation and APIs, with the exception of the subscription API (which is stubbed). A quick search for `SKIP`ped tests will highlight current deviations.
 
 Looking for help? Find resources [from the community](https://graphql.org/community/).
 
@@ -61,12 +60,13 @@ Then, serve the result of a query against that type schema.
 local query = '{ hello }';
 
 graphql(schema, query).then(function (result)
-  // Prints
-  // {
-  //   data: { hello: "world" }
-  // }
+  --[[ Prints
+    {
+      data: { hello: "world" }
+    }
+  ]]
   print(tostring(result));
-end);
+end)
 ```
 
 This runs a query fetching the one field defined. The `graphql` function will
@@ -77,15 +77,16 @@ it, reporting errors otherwise.
 var query = '{ BoyHowdy }';
 
 graphql(schema, query).then(function(result) 
-  // Prints
-  // {
-  //   errors = {
-  //     { message = 'Cannot query field BoyHowdy on RootQueryType',
-  //       locations = { { line = 1, column = 3 } } }
-  //   }
-  // }
+  --[[ Prints
+    {
+      errors = {
+        { message = 'Cannot query field BoyHowdy on RootQueryType',
+          locations = { { line = 1, column = 3 } } }
+      }
+    }
+  ]]
   print(tostring(result));
-end);
+end)
 ```
 
 **Note**: Please don't forget to set `_G.__DEV__` to false (the default) if you are running a production server. It will disable some checks that can be useful during development but will significantly improve performance.
@@ -108,7 +109,7 @@ Changes are tracked as [GitHub releases](https://github.com/Roblox/graphql-lua/r
 
 ### License
 
-GraphQL.js is [MIT-licensed](./LICENSE).
+GraphQL.lua is [MIT-licensed](./LICENSE).
 
 ### Credits
 
