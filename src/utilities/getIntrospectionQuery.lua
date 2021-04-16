@@ -197,7 +197,6 @@ export type IntrospectionQuery = {
   __schema: IntrospectionSchema
 }
 
--- ROBLOX FIXME: implement the rest of the types in this file
 export type IntrospectionSchema = {
   description: string?,
   queryType: any, -- IntrospectionNamedTypeRef<IntrospectionObjectType>,
@@ -206,6 +205,158 @@ export type IntrospectionSchema = {
   types: Array<any>, -- <IntrospectionType>,
   directives: Array<any> -- <IntrospectionDirective>,
 }
+
+export type IntrospectionType =
+  IntrospectionScalarType
+  | IntrospectionObjectType
+  | IntrospectionInterfaceType
+  | IntrospectionUnionType
+  | IntrospectionEnumType
+  | IntrospectionInputObjectType
+
+export type IntrospectionOutputType =
+  IntrospectionScalarType
+  | IntrospectionObjectType
+  | IntrospectionInterfaceType
+  | IntrospectionUnionType
+  | IntrospectionEnumType
+
+export type IntrospectionInputType =
+  IntrospectionScalarType
+  | IntrospectionEnumType
+  | IntrospectionInputObjectType
+
+export type IntrospectionScalarType = {
+  kind: string, -- ROBLOX TODO: Luau doesn't support concrete values as type: 'SCALAR',
+  name: string,
+  description: string?,
+  specifiedByUrl: string?,
+}
+
+export type IntrospectionObjectType = {
+  kind: string, -- ROBLOX TODO: Luau doesn't support concrete values as type:  'OBJECT',
+  name: string,
+  description: string?,
+  fields: Array<IntrospectionField>,
+  interfaces: Array<
+    IntrospectionNamedTypeRef<IntrospectionInterfaceType>
+  >,
+}
+
+export type IntrospectionInterfaceType = {
+  kind: string, -- ROBLOX TODO: Luau doesn't support concrete values as type:  'INTERFACE',
+  name: string,
+  description: string?,
+  fields: Array<IntrospectionField>,
+  interfaces: Array<
+    IntrospectionNamedTypeRef<IntrospectionInterfaceType>
+  >,
+  possibleTypes: Array<
+    IntrospectionNamedTypeRef<IntrospectionObjectType>
+  >,
+}
+
+export type IntrospectionUnionType = {
+  kind: string, -- ROBLOX TODO: Luau doesn't support concrete values as type:  'UNION',
+  name: string,
+  description: string?,
+  possibleTypes: Array<
+    IntrospectionNamedTypeRef<IntrospectionObjectType>
+  >,
+}
+
+export type IntrospectionEnumType = {
+  kind: string, -- ROBLOX TODO: Luau doesn't support concrete values as type:  'ENUM',
+  name: string,
+  description: string?,
+  enumValues: Array<IntrospectionEnumValue>,
+}
+
+export type IntrospectionInputObjectType = {
+  kind: string, -- ROBLOX TODO: Luau doesn't support concrete values as type:  'INPUT_OBJECT',
+  name: string,
+  description: string?,
+  inputFields: Array<IntrospectionInputValue>,
+}
+
+export type IntrospectionListTypeRef<
+  T -- ROBLOX TODO: Luau doesn't support generic constraints or default types: IntrospectionTypeRef = IntrospectionTypeRef,
+> = {
+  kind: string, -- ROBLOX TODO: Luau doesn't support concrete values as type:  'LIST',
+  ofType: T,
+}
+
+export type IntrospectionNonNullTypeRef<
+  T -- ROBLOX TODO: Luau doesn't support generic constraints or default types: IntrospectionTypeRef = IntrospectionTypeRef,
+> = {
+  kind:  string, -- ROBLOX TODO: Luau doesn't support concrete values as type: 'NON_NULL',
+  ofType: T,
+}
+
+export type IntrospectionTypeRef =
+  IntrospectionNamedTypeRef<IntrospectionTypeRef> -- ROBLOX deviation: Luau doesn't support default type args for `<>`, so inline
+  | IntrospectionListTypeRef<IntrospectionTypeRef>
+  | IntrospectionNonNullTypeRef<
+      IntrospectionNamedTypeRef<IntrospectionTypeRef> | IntrospectionListTypeRef<IntrospectionTypeRef>
+    >
+
+export type IntrospectionOutputTypeRef =
+  IntrospectionNamedTypeRef<IntrospectionOutputType>
+  | IntrospectionListTypeRef<IntrospectionOutputTypeRef>
+  | IntrospectionNonNullTypeRef<
+      IntrospectionNamedTypeRef<IntrospectionOutputType>
+      | IntrospectionListTypeRef<IntrospectionOutputTypeRef>
+    >
+
+export type IntrospectionInputTypeRef =
+  IntrospectionNamedTypeRef<IntrospectionInputType>
+  | IntrospectionListTypeRef<IntrospectionInputTypeRef>
+  | IntrospectionNonNullTypeRef<
+      IntrospectionNamedTypeRef<IntrospectionInputType>
+      | IntrospectionListTypeRef<IntrospectionInputTypeRef>
+    >
+
+export type IntrospectionNamedTypeRef<
+  T -- ROBLOX TODO: Luau doesn't support generic constraints or default types: IntrospectionType = IntrospectionType,
+> = {
+  kind: any, -- ROBLOX TODO: Luau doesn't support this type spec: $PropertyType<T, 'kind'>,
+  name: string,
+	ofType: T -- ROBLOX TODO: this field is missing upstream
+}
+
+export type IntrospectionField = {
+  name: string,
+  description: string?,
+  args: Array<IntrospectionInputValue>,
+  type: IntrospectionOutputTypeRef,
+  isDeprecated: boolean,
+  deprecationReason: string?,
+}
+
+export type IntrospectionInputValue = {
+  name: string,
+  description: string?,
+  type: IntrospectionInputTypeRef,
+  defaultValue: string?,
+  isDeprecated: boolean?,
+  deprecationReason: string?,
+}
+
+export type IntrospectionEnumValue = {
+  name: string,
+  description: string?,
+  isDeprecated: boolean,
+  deprecationReason: string?,
+}
+
+export type IntrospectionDirective = {
+  name: string,
+  description: string?,
+  isRepeatable: boolean?,
+  locations: Array<DirectiveLocationEnum>,
+  args: Array<IntrospectionInputValue>,
+}
+
 
 return {
 	getIntrospectionQuery = getIntrospectionQuery,
