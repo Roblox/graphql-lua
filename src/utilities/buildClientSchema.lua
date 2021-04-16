@@ -1,39 +1,8 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/buildClientSchema.js
 
+-- ROBLOX deviation: utils
 local srcWorkspace = script.Parent.Parent
 local luaUtilsWorkspace = srcWorkspace.luaUtils
-
-local inspect = require(srcWorkspace.jsutils.inspect).inspect
-local devAssert = require(srcWorkspace.jsutils.devAssert).devAssert
-local isObjectLike = require(srcWorkspace.jsutils.isObjectLike).isObjectLike
-
-local parseValue = require(srcWorkspace.language.parser).parseValue
-
-local GraphQLSchema = require(srcWorkspace.type.schema).GraphQLSchema
-local GraphQLDirective = require(srcWorkspace.type.directives).GraphQLDirective
-local scalarsImport = require(srcWorkspace.type.scalars)
-local specifiedScalarTypes = scalarsImport.specifiedScalarTypes
-local introspectionImport = require(srcWorkspace.type.introspection)
-local introspectionTypes = introspectionImport.introspectionTypes
-local TypeKind = introspectionImport.TypeKind
-local definition = require(srcWorkspace.type.definition)
-local isInputType = definition.isInputType
-local isOutputType = definition.isOutputType
-local GraphQLList = definition.GraphQLList
-local GraphQLNonNull = definition.GraphQLNonNull
-local GraphQLScalarType = definition.GraphQLScalarType
-local GraphQLObjectType = definition.GraphQLObjectType
-local GraphQLInterfaceType = definition.GraphQLInterfaceType
-local GraphQLUnionType = definition.GraphQLUnionType
-local GraphQLEnumType = definition.GraphQLEnumType
-local GraphQLInputObjectType = definition.GraphQLInputObjectType
-local assertNullableType = definition.assertNullableType
-local assertObjectType = definition.assertObjectType
-local assertInterfaceType = definition.assertInterfaceType
-
-local valueFromAST = require(script.Parent.valueFromAST).valueFromAST
-
--- ROBLOX deviation: utils
 local Error = require(luaUtilsWorkspace.Error)
 local Array = require(luaUtilsWorkspace.Array)
 local NULL = require(luaUtilsWorkspace.null)
@@ -41,6 +10,65 @@ local isNillishModule = require(luaUtilsWorkspace.isNillish)
 local isNillish = isNillishModule.isNillish
 local isNotNillish = isNillishModule.isNotNillish
 local keyValMapOrdered = require(luaUtilsWorkspace.keyValMapOrdered).keyValMapOrdered
+type Array<T> = { [number]: T }
+local inspect = require(srcWorkspace.jsutils.inspect).inspect
+local devAssert = require(srcWorkspace.jsutils.devAssert).devAssert
+local isObjectLike = require(srcWorkspace.jsutils.isObjectLike).isObjectLike
+
+local parseValue = require(srcWorkspace.language.parser).parseValue
+
+local GraphQLSchemaModule = require(srcWorkspace.type.schema)
+type GraphQLSchemaValidationOptions = GraphQLSchemaModule.GraphQLSchemaValidationOptions
+local definition = require(srcWorkspace.type.definition)
+type GraphQLType = definition.GraphQLType
+type GraphQLNamedType = definition.GraphQLNamedType
+-- ROBLOX deviation: inlining any here because Luau doesn't support default type args yet
+type GraphQLFieldConfig<TSource, TContext> = definition.GraphQLFieldConfig<TSource, TContext, any>
+type GraphQLFieldConfigMap<TSource, TContext> = definition.GraphQLFieldConfigMap<TSource, TContext>
+type GraphQLSchema = GraphQLSchemaModule.GraphQLSchema
+local GraphQLSchema = GraphQLSchemaModule.GraphQLSchema
+local GraphQLDirective = require(srcWorkspace.type.directives).GraphQLDirective
+local scalarsImport = require(srcWorkspace.type.scalars)
+local specifiedScalarTypes = scalarsImport.specifiedScalarTypes
+local introspectionImport = require(srcWorkspace.type.introspection)
+local introspectionTypes = introspectionImport.introspectionTypes
+local TypeKind = introspectionImport.TypeKind
+local isInputType = definition.isInputType
+local isOutputType = definition.isOutputType
+local GraphQLList = definition.GraphQLList
+local GraphQLNonNull = definition.GraphQLNonNull
+type GraphQLScalarType = definition.GraphQLScalarType
+local GraphQLScalarType = definition.GraphQLScalarType
+type GraphQLObjectType = definition.GraphQLObjectType
+local GraphQLObjectType = definition.GraphQLObjectType
+type GraphQLInterfaceType = definition.GraphQLInterfaceType
+local GraphQLInterfaceType = definition.GraphQLInterfaceType
+type GraphQLUnionType = definition.GraphQLUnionType
+local GraphQLUnionType = definition.GraphQLUnionType
+type GraphQLEnumType = definition.GraphQLEnumType
+local GraphQLEnumType = definition.GraphQLEnumType
+type GraphQLInputObjectType = definition.GraphQLInputObjectType
+local GraphQLInputObjectType = definition.GraphQLInputObjectType
+local assertNullableType = definition.assertNullableType
+local assertObjectType = definition.assertObjectType
+local assertInterfaceType = definition.assertInterfaceType
+
+local getIntrospectionQueryModule = require(script.Parent.getIntrospectionQuery)
+type IntrospectionQuery = getIntrospectionQueryModule.IntrospectionQuery
+type IntrospectionDirective = getIntrospectionQueryModule.IntrospectionDirective
+type IntrospectionField = getIntrospectionQueryModule.IntrospectionField
+type IntrospectionInputValue = getIntrospectionQueryModule.IntrospectionInputValue
+type IntrospectionType = getIntrospectionQueryModule.IntrospectionType
+type IntrospectionScalarType = getIntrospectionQueryModule.IntrospectionScalarType
+type IntrospectionObjectType = getIntrospectionQueryModule.IntrospectionObjectType
+type IntrospectionInterfaceType = getIntrospectionQueryModule.IntrospectionInterfaceType
+type IntrospectionUnionType = getIntrospectionQueryModule.IntrospectionUnionType
+type IntrospectionEnumType = getIntrospectionQueryModule.IntrospectionEnumType
+type IntrospectionInputObjectType = getIntrospectionQueryModule.IntrospectionInputObjectType
+type IntrospectionTypeRef = getIntrospectionQueryModule.IntrospectionTypeRef
+type IntrospectionNamedTypeRef<T> = getIntrospectionQueryModule.IntrospectionNamedTypeRef<T>
+local valueFromAST = require(script.Parent.valueFromAST).valueFromAST
+
 --[[*
 --  * Build a GraphQLSchema for use by client tools.
 --  *
@@ -53,7 +81,12 @@ local keyValMapOrdered = require(luaUtilsWorkspace.keyValMapOrdered).keyValMapOr
 --  * This function expects a complete introspection result. Don't forget to check
 --  * the "errors" field of a server response before calling this function.
 --  *]]
-local function buildClientSchema(introspection, options)
+
+local function buildClientSchema(
+	introspection: IntrospectionQuery,
+	-- ROBLOX deviation: this is nil-ble upstream, but Luau narrowing bug makes analysis fail
+	options: GraphQLSchemaValidationOptions
+): GraphQLSchema
 	-- ROBLOX deviation: predeclare functions
 	local getType
 	local getNamedType
@@ -81,7 +114,7 @@ local function buildClientSchema(introspection, options)
 
 	-- Given a type reference in introspection, return the GraphQLType instance.
 	-- preferring cached instances before building new instances.
-	function getType(typeRef)
+	function getType(typeRef: IntrospectionTypeRef): GraphQLType
 		if typeRef.kind == TypeKind.LIST then
 			local itemRef = typeRef.ofType
 			if not itemRef then
@@ -102,7 +135,9 @@ local function buildClientSchema(introspection, options)
 		return getNamedType(typeRef)
 	end
 
-	function getNamedType(typeRef)
+	function getNamedType(
+		typeRef: IntrospectionNamedTypeRef<any>
+	): GraphQLNamedType
 		local typeName = typeRef.name
 		if isNillish(typeName) then
 			error(Error.new(("Unknown type reference: %s."):format(inspect(typeRef))))
@@ -117,17 +152,21 @@ local function buildClientSchema(introspection, options)
 		return type_
 	end
 
-	function getObjectType(typeRef)
+	function getObjectType(
+		typeRef: IntrospectionNamedTypeRef<IntrospectionObjectType>
+	): GraphQLObjectType
 		return assertObjectType(getNamedType(typeRef))
 	end
 
-	function getInterfaceType(typeRef)
+	function getInterfaceType(
+		typeRef: IntrospectionNamedTypeRef<IntrospectionInterfaceType>
+	): GraphQLInterfaceType
 		return assertInterfaceType(getNamedType(typeRef))
 	end
 
 	-- Given a type's introspection result, construct the correct
 	-- GraphQLType instance.
-	function buildType(type_)
+	function buildType(type_: IntrospectionType): GraphQLNamedType
 		if isNotNillish(type_) and isNotNillish(type_.name) and isNotNillish(type_.kind) then
 			if type_.kind == TypeKind.SCALAR then
 				return buildScalarDef(type_)
@@ -147,7 +186,9 @@ local function buildClientSchema(introspection, options)
 		error(Error.new(("Invalid or incomplete introspection result. Ensure that a full introspection query is used in order to build a client schema: %s."):format(typeStr)))
 	end
 
-	function buildScalarDef(scalarIntrospection)
+	function buildScalarDef(
+		scalarIntrospection: IntrospectionScalarType
+	): GraphQLScalarType
 		return GraphQLScalarType.new({
 			name = scalarIntrospection.name,
 			description = scalarIntrospection.description,
@@ -155,7 +196,11 @@ local function buildClientSchema(introspection, options)
 		})
 	end
 
-	function buildImplementationsList(implementingIntrospection)
+	function buildImplementationsList(
+		implementingIntrospection:
+		  IntrospectionObjectType
+		  | IntrospectionInterfaceType
+	): Array<GraphQLInterfaceType>
 		-- TODO: Temporary workaround until GraphQL ecosystem will fully support
 		-- 'interfaces' on interface types.
 		if implementingIntrospection.interfaces == nil and implementingIntrospection.kind == TypeKind.INTERFACE then
@@ -170,7 +215,9 @@ local function buildClientSchema(introspection, options)
 		return Array.map(implementingIntrospection.interfaces, getInterfaceType)
 	end
 
-	function buildObjectDef(objectIntrospection)
+	function buildObjectDef(
+		objectIntrospection: IntrospectionObjectType
+	): GraphQLObjectType
 		return GraphQLObjectType.new({
 			name = objectIntrospection.name,
 			description = objectIntrospection.description,
@@ -183,7 +230,9 @@ local function buildClientSchema(introspection, options)
 		})
 	end
 
-	function buildInterfaceDef(interfaceIntrospection)
+	function buildInterfaceDef(
+		interfaceIntrospection: IntrospectionInterfaceType
+	): GraphQLInterfaceType
 		return GraphQLInterfaceType.new({
 			name = interfaceIntrospection.name,
 			description = interfaceIntrospection.description,
@@ -196,7 +245,9 @@ local function buildClientSchema(introspection, options)
 		})
 	end
 
-	function buildUnionDef(unionIntrospection)
+	function buildUnionDef(
+		unionIntrospection: IntrospectionUnionType
+	): GraphQLUnionType
 		if not unionIntrospection.possibleTypes then
 			local unionIntrospectionStr = inspect(unionIntrospection)
 			error(Error.new(("Introspection result missing possibleTypes: %s."):format(unionIntrospectionStr)))
@@ -211,7 +262,9 @@ local function buildClientSchema(introspection, options)
 		})
 	end
 
-	function buildEnumDef(enumIntrospection)
+	function buildEnumDef(
+		enumIntrospection: IntrospectionEnumType
+	): GraphQLEnumType
 		if not enumIntrospection.enumValues then
 			local enumIntrospectionStr = inspect(enumIntrospection)
 			error(Error.new(("Introspection result missing enumValues: %s."):format(enumIntrospectionStr)))
@@ -230,7 +283,9 @@ local function buildClientSchema(introspection, options)
 		})
 	end
 
-	function buildInputObjectDef(inputObjectIntrospection)
+	function buildInputObjectDef(
+		inputObjectIntrospection: IntrospectionInputObjectType
+	): GraphQLInputObjectType
 		if not inputObjectIntrospection.inputFields then
 			local inputObjectIntrospectionStr = inspect(inputObjectIntrospection)
 			error(Error.new(("Introspection result missing inputFields: %s."):format(inputObjectIntrospectionStr)))
@@ -244,7 +299,9 @@ local function buildClientSchema(introspection, options)
 		})
 	end
 
-	function buildFieldDefMap(typeIntrospection)
+	function buildFieldDefMap(
+		typeIntrospection: IntrospectionObjectType | IntrospectionInterfaceType
+	): GraphQLFieldConfigMap<any, any>
 		if not typeIntrospection.fields then
 			error(Error.new(("Introspection result missing fields: %s."):format(inspect(typeIntrospection))))
 		end
@@ -258,7 +315,9 @@ local function buildClientSchema(introspection, options)
 		)
 	end
 
-	function buildField(fieldIntrospection)
+	function buildField(
+		fieldIntrospection: IntrospectionField
+	): GraphQLFieldConfig<any, any>
 		local type_ = getType(fieldIntrospection.type)
 		if not isOutputType(type_) then
 			local typeStr = inspect(type_)
@@ -279,7 +338,9 @@ local function buildClientSchema(introspection, options)
 		}
 	end
 
-	function buildInputValueDefMap(inputValueIntrospections)
+	function buildInputValueDefMap(
+		inputValueIntrospections: Array<IntrospectionInputValue>
+	)
 		return keyValMapOrdered(
 			inputValueIntrospections,
 			function(inputValue)
@@ -289,7 +350,9 @@ local function buildClientSchema(introspection, options)
 		)
 	end
 
-	function buildInputValue(inputValueIntrospection)
+	function buildInputValue(
+		inputValueIntrospection: IntrospectionInputValue
+	)
 		local type_ = getType(inputValueIntrospection.type)
 		if not isInputType(type_) then
 			local typeStr = inspect(type_)
@@ -310,7 +373,9 @@ local function buildClientSchema(introspection, options)
 		}
 	end
 
-	function buildDirective(directiveIntrospection)
+	function buildDirective(
+		directiveIntrospection: IntrospectionDirective
+	)
 		if not directiveIntrospection.args then
 			local directiveIntrospectionStr = inspect(directiveIntrospection)
 
