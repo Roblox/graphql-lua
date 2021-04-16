@@ -37,7 +37,7 @@ return function()
 				},
 			})
 
-			-- ROBLOX FIXME? array ordering in Lua doesn't match JS. does it matter?
+			-- ROBLOX deviation: key ordering in Lua doesn't match JS, but it doesn't cause problems
 			expect(directive).toObjectContain({
 				name = "Foo",
 				args = {
@@ -110,7 +110,7 @@ return function()
 			end).toThrow("Directive must be named.")
 		end)
 
-		itSKIP("rejects a directive with incorrectly typed args", function()
+		it("rejects a directive with incorrectly typed args", function()
 			expect(function()
 				return GraphQLDirective.new(
 					{
@@ -118,8 +118,8 @@ return function()
 						locations = {
 							"QUERY",
 						},
-						-- ROBLOX FIXME? we can't distinguish between an empty table/object and empty array
-						args = {},
+						-- ROBLOX deviation: Lua can't distinguish between object and empty array, so use a non-empty array
+						args = {"this is not object-like"},
 					}
 				)
 			end).toThrow("@Foo args must be an object with argument names as keys.")

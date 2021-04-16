@@ -89,8 +89,7 @@ exports.GraphQLSpecifiedByDirective = directivesModule.GraphQLSpecifiedByDirecti
 -- Constant Deprecation Reason
 exports.DEFAULT_DEPRECATION_REASON = directivesModule.DEFAULT_DEPRECATION_REASON
 
--- ROBLOX deviation: add types
-export type GraphQLDirectiveConfig = any -- directivesModule.GraphQLDirectiveConfig
+export type GraphQLDirectiveConfig = directivesModule.GraphQLDirectiveConfig
 
 -- Common built-in scalar instances.
 local scalarsModule = require(script.scalars)
@@ -128,43 +127,43 @@ exports.TypeNameMetaFieldDef = introspectionModule.TypeNameMetaFieldDef
 
 
 -- ROBLOX deviation: add types
-export type GraphQLType = any -- definitionModule.GraphQLType
-export type GraphQLInputType = any -- definitionModule.GraphQLInputType
-export type GraphQLOutputType = any -- definitionModule.GraphQLOutputType
-export type GraphQLLeafType = any -- definitionModule.GraphQLLeafType
-export type GraphQLCompositeType = any -- definitionModule.GraphQLCompositeType
-export type GraphQLAbstractType = any -- definitionModule.GraphQLAbstractType
-export type GraphQLWrappingType = any -- definitionModule.GraphQLWrappingType
-export type GraphQLNullableType = any -- definitionModule.GraphQLNullableType
-export type GraphQLNamedType = any -- definitionModule.GraphQLNamedType
-export type Thunk = any -- definitionModule.Thunk
-export type GraphQLArgument = any -- definitionModule.GraphQLArgument
-export type GraphQLArgumentConfig = any -- definitionModule.GraphQLArgumentConfig
-export type GraphQLEnumTypeConfig = any -- definitionModule.GraphQLEnumTypeConfig
-export type GraphQLEnumValue = any -- definitionModule.GraphQLEnumValue
-export type GraphQLEnumValueConfig = any -- definitionModule.GraphQLEnumValueConfig
-export type GraphQLEnumValueConfigMap = any -- definitionModule.GraphQLEnumValueConfigMap
-export type GraphQLField = any -- definitionModule.GraphQLField
-export type GraphQLFieldConfig = any -- definitionModule.GraphQLFieldConfig
-export type GraphQLFieldConfigArgumentMap = any -- definitionModule.GraphQLFieldConfigArgumentMap
-export type GraphQLFieldConfigMap = any -- definitionModule.GraphQLFieldConfigMap
-export type GraphQLFieldMap = any -- definitionModule.GraphQLFieldMap
-export type GraphQLFieldResolver = any -- definitionModule.GraphQLFieldResolver
-export type GraphQLInputField = any -- definitionModule.GraphQLInputField
-export type GraphQLInputFieldConfig = any -- definitionModule.GraphQLInputFieldConfig
-export type GraphQLInputFieldConfigMap = any -- definitionModule.GraphQLInputFieldConfigMap
-export type GraphQLInputFieldMap = any -- definitionModule.GraphQLInputFieldMap
-export type GraphQLInputObjectTypeConfig = any -- definitionModule.GraphQLInputObjectTypeConfig
-export type GraphQLInterfaceTypeConfig = any -- definitionModule.GraphQLInterfaceTypeConfig
-export type GraphQLIsTypeOfFn = any -- definitionModule.GraphQLIsTypeOfFn
-export type GraphQLObjectTypeConfig = any -- definitionModule.GraphQLObjectTypeConfig
-export type GraphQLResolveInfo = any -- definitionModule.GraphQLResolveInfo
-export type GraphQLScalarTypeConfig = any -- definitionModule.GraphQLScalarTypeConfig
-export type GraphQLTypeResolver = any -- definitionModule.GraphQLTypeResolver
-export type GraphQLUnionTypeConfig = any -- definitionModule.GraphQLUnionTypeConfig
-export type GraphQLScalarSerializer = any -- definitionModule.GraphQLScalarSerializer
-export type GraphQLScalarValueParser = any -- definitionModule.GraphQLScalarValueParser
-export type GraphQLScalarLiteralParser = any -- definitionModule.GraphQLScalarLiteralParser
+export type GraphQLType = definitionModule.GraphQLType
+export type GraphQLInputType = definitionModule.GraphQLInputType
+export type GraphQLOutputType = definitionModule.GraphQLOutputType
+export type GraphQLLeafType = definitionModule.GraphQLLeafType
+export type GraphQLCompositeType = definitionModule.GraphQLCompositeType
+export type GraphQLAbstractType = definitionModule.GraphQLAbstractType
+export type GraphQLWrappingType = definitionModule.GraphQLWrappingType
+export type GraphQLNullableType = definitionModule.GraphQLNullableType
+export type GraphQLNamedType = definitionModule.GraphQLNamedType
+export type Thunk<T> = definitionModule.Thunk<T>
+export type GraphQLArgument = definitionModule.GraphQLArgument
+export type GraphQLArgumentConfig = definitionModule.GraphQLArgumentConfig
+export type GraphQLEnumTypeConfig = definitionModule.GraphQLEnumTypeConfig
+export type GraphQLEnumValue = definitionModule.GraphQLEnumValue
+export type GraphQLEnumValueConfig = definitionModule.GraphQLEnumValueConfig
+export type GraphQLEnumValueConfigMap = definitionModule.GraphQLEnumValueConfigMap
+export type GraphQLField<TSource, TContext, TArgs> = definitionModule.GraphQLField<TSource, TContext, TArgs>
+export type GraphQLFieldConfig<TSource, TContext, TArgs> = definitionModule.GraphQLFieldConfig<TSource, TContext, TArgs>
+export type GraphQLFieldConfigArgumentMap = definitionModule.GraphQLFieldConfigArgumentMap
+export type GraphQLFieldConfigMap<TSource, TContext> = definitionModule.GraphQLFieldConfigMap<TSource, TContext>
+export type GraphQLFieldMap<TSource, TContext> = definitionModule.GraphQLFieldMap<TSource, TContext>
+export type GraphQLFieldResolver<TSource, TContext, TArgs> = definitionModule.GraphQLFieldResolver<TSource, TContext, TArgs>
+export type GraphQLInputField = definitionModule.GraphQLInputField
+export type GraphQLInputFieldConfig = definitionModule.GraphQLInputFieldConfig
+export type GraphQLInputFieldConfigMap = definitionModule.GraphQLInputFieldConfigMap
+export type GraphQLInputFieldMap = definitionModule.GraphQLInputFieldMap
+export type GraphQLInputObjectTypeConfig = definitionModule.GraphQLInputObjectTypeConfig
+export type GraphQLInterfaceTypeConfig<TSource, TContext> = definitionModule.GraphQLInterfaceTypeConfig<TSource, TContext>
+export type GraphQLIsTypeOfFn<TSource, TContext> = definitionModule.GraphQLIsTypeOfFn<TSource, TContext>
+export type GraphQLObjectTypeConfig<TSource, TContext> = definitionModule.GraphQLObjectTypeConfig<TSource, TContext>
+export type GraphQLResolveInfo = definitionModule.GraphQLResolveInfo
+export type GraphQLScalarTypeConfig<TInternal, TExternal> = definitionModule.GraphQLScalarTypeConfig<TInternal, TExternal>
+export type GraphQLTypeResolver<TSource, TContext> = definitionModule.GraphQLTypeResolver<TSource, TContext>
+export type GraphQLUnionTypeConfig<TSource, TContext> = definitionModule.GraphQLUnionTypeConfig<TSource, TContext>
+export type GraphQLScalarSerializer<TExternal> = definitionModule.GraphQLScalarSerializer<TExternal>
+export type GraphQLScalarValueParser<TInternal> = definitionModule.GraphQLScalarValueParser<TInternal>
+export type GraphQLScalarLiteralParser<TInternal> = definitionModule.GraphQLScalarLiteralParser<TInternal>
 
 -- Validate GraphQL schema.
 local validateModule = require(script.validate)

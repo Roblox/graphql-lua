@@ -6,10 +6,7 @@ return function()
 
 	local dedent = require(root.__testUtils__.dedent).dedent
 
-	-- ROBLOX TODO: revert to import when printSchema is implemented
-	-- local printSchema = require(root.utilities.printSchema).printSchema
-	local printSchema = function()
-	end
+	local printSchema = require(root.utilities.printSchema).printSchema
 
 	local GraphQLSchema = require(root.type.schema).GraphQLSchema
 	local directives = require(root.type.directives)
@@ -27,7 +24,7 @@ return function()
 	local GraphQLInputObjectType = definition.GraphQLInputObjectType
 
 	describe("Type System: Schema", function()
-		itSKIP("Define sample schema", function()
+		it("Define sample schema", function()
 			local BlogImage = GraphQLObjectType.new({
 				name = "Image",
 				fields = {
@@ -78,7 +75,7 @@ return function()
 						type = BlogArticle,
 					},
 					feed = {
-						type = GraphQLList(BlogArticle),
+						type = GraphQLList.new(BlogArticle),
 					},
 				},
 			})
@@ -109,8 +106,9 @@ return function()
 				subscription = BlogSubscription,
 			})
 
+			-- ROBLOX deviation: when doing real parsing, order is preserved, but in these manually created objects it isn't
+			-- re-order some of the fields here (Query, Article, Author, ...)
 			expect(printSchema(schema)).to.equal(dedent([[
-
       """Sample schema"""
       schema {
         query: Query
@@ -119,29 +117,29 @@ return function()
       }
 
       type Query {
-        article(id: String): Article
         feed: [Article]
+        article(id: String): Article
       }
 
       type Article {
-        id: String
-        isPublished: Boolean
-        author: Author
         title: String
+        id: String
+        author: Author
         body: String
+        isPublished: Boolean
       }
 
       type Author {
         id: String
-        name: String
-        pic(width: Int, height: Int): Image
         recentArticle: Article
+        name: String
+        pic(height: Int, width: Int): Image
       }
 
       type Image {
+        height: Int
         url: String
         width: Int
-        height: Int
       }
 
       type Mutation {
@@ -290,7 +288,6 @@ return function()
 			end)
 		end)
 
-		-- ROBLOX TODO: figure out how to do stable-order insertions that will perform well
 		it("preserves the order of user provided types", function()
 			local aType = GraphQLObjectType.new({
 				name = "A",
@@ -317,10 +314,9 @@ return function()
 				query = queryType,
 			})
 
-			-- ROBLOX FIXME: we check if the map contains all the keys
-			-- instead of putting them in an array
-			local typeMap = schema:getTypeMap()
-			for _, key in ipairs({
+			-- ROBLOX deviation: use Map type keys method
+			local typeNames = schema:getTypeMap():keys()
+			expect(typeNames).toEqual({
 				"Z",
 				"ZSub",
 				"Query",
@@ -337,39 +333,12 @@ return function()
 				"__EnumValue",
 				"__Directive",
 				"__DirectiveLocation",
-			}) do
-				-- ROBLOX deviation: use Map type
-				expect(typeMap:get(key)).to.be.ok()
-			end
-			-- ROBLOX deviation: use Map type
-			-- local typeNames = schema:getTypeMap():keys()
-			-- expect(typeNames).toEqual({
-			-- 	"Z",
-			-- 	"ZSub",
-			-- 	"Query",
-			-- 	"QuerySub",
-			-- 	"A",
-			-- 	"ASub",
-			-- 	"Boolean",
-			-- 	"String",
-			-- 	"__Schema",
-			-- 	"__Type",
-			-- 	"__TypeKind",
-			-- 	"__Field",
-			-- 	"__InputValue",
-			-- 	"__EnumValue",
-			-- 	"__Directive",
-			-- 	"__DirectiveLocation",
-			-- })
-
-			-- ROBLOX deviation: the order of the type names will not be stable in Lua.
-			-- From a quick look into the upstream codebase, that does not seem to be
-			-- problematic.
+			})
 
 			-- // Also check that this order is stable
-			-- local copySchema = GraphQLSchema.new(schema:toConfig())
+			local copySchema = GraphQLSchema.new(schema:toConfig())
 			-- ROBLOX deviation: use Map type
-			-- expect(copySchema:getTypeMap():keys()).toEqual(typeNames)
+			expect(copySchema:getTypeMap():keys()).toEqual(typeNames)
 		end)
 
 		it("can be Object.toStringified", function()
@@ -386,8 +355,7 @@ return function()
 					}).__validationErrors).to.equal(nil)
 				end)
 
-				-- ROBLOX FIXME: enable these tests when in the branch that implements validation
-				itSKIP("checks the configuration for mistakes", function()
+				it("checks the configuration for mistakes", function()
 					-- // $FlowExpectedError[incompatible-exact]
 					-- ROBLOX deviation: use JSONDecode instead of JSON.parse
 					expect(function()
@@ -397,11 +365,13 @@ return function()
 					end).toThrow()
 					-- // $FlowExpectedError[incompatible-call]
 					expect(function()
-						return GraphQLSchema.new({ types = {} })
+						-- ROBLOX deviation: Lua empty object/array is indistinguishable, so make it a non-empty object
+						return GraphQLSchema.new({ types = {nonEmpty = true} })
 					end).toThrow()
 					-- // $FlowExpectedError[incompatible-call]
 					expect(function()
-						return GraphQLSchema.new({ directives = {} })
+						-- ROBLOX deviation: Lua empty object/array is indistinguishable, so make it a non-empty object
+						return GraphQLSchema.new({ directives = {nonEmpty = true} })
 					end).toThrow()
 				end)
 			end)

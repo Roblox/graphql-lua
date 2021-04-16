@@ -963,8 +963,8 @@ return function()
 		end)
 
 		--[[
-			ROBLOX deviation Object.tostringigy relies on porting native Object.prototype.toString
-			also serailiztion to string already handle by global tostring() method
+			ROBLOX TODO: add Object.toString to luau-polyfill, then we can enable this JS-specific test
+			also, serialization to string already handle by global tostring() method
 		]]
 		itSKIP("Object.toStringifies types", function()
 			local function toString(obj)

@@ -1,8 +1,33 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/getIntrospectionQuery.js
 
 local Object = require(script.Parent.Parent.Parent.Packages.LuauPolyfill).Object
+type Array<T> = { [number]: T }
+local directiveLocationModule = require(script.Parent.Parent.language.directiveLocation)
+type DirectiveLocationEnum = directiveLocationModule.DirectiveLocationEnum
 
-function getIntrospectionQuery(options): string
+export type IntrospectionOptions = {
+  -- Whether to include descriptions in the introspection result.
+  -- Default: true
+  descriptions: boolean?,
+
+  -- Whether to include `specifiedByUrl` in the introspection result.
+  -- Default: false
+  specifiedByUrl: boolean?,
+
+  -- Whether to include `isRepeatable` field on directives.
+  -- Default: false
+  directiveIsRepeatable: boolean?,
+
+  -- Whether to include `description` field on schema.
+  -- Default: false
+  schemaDescription: boolean?,
+
+  -- Whether target GraphQL server support deprecation of input values.
+  -- Default: false
+  inputValueDeprecation: boolean?,
+}
+
+function getIntrospectionQuery(options: IntrospectionOptions?): string
 	local optionsWithDefault = Object.assign(
 		{
 			descriptions = true,
@@ -167,6 +192,20 @@ function getIntrospectionQuery(options): string
 		inputDeprecation("deprecationReason")
 	)
 end
+
+export type IntrospectionQuery = {
+  __schema: IntrospectionSchema
+}
+
+-- ROBLOX FIXME: implement the rest of the types in this file
+export type IntrospectionSchema = {
+  description: string?,
+  queryType: any, -- IntrospectionNamedTypeRef<IntrospectionObjectType>,
+  mutationType: any, -- ?IntrospectionNamedTypeRef<IntrospectionObjectType>,
+  subscriptionType: any, -- ?IntrospectionNamedTypeRef<IntrospectionObjectType>,
+  types: Array<any>, -- <IntrospectionType>,
+  directives: Array<any> -- <IntrospectionDirective>,
+}
 
 return {
 	getIntrospectionQuery = getIntrospectionQuery,

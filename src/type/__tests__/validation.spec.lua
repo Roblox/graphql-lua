@@ -945,7 +945,7 @@ return function()
 			end
 		)
 
-		itSKIP("rejects Input Objects with multiple non-breakable circular reference", function()
+		it("rejects Input Objects with multiple non-breakable circular reference", function()
 			local schema = buildSchema([[
 
       type Query {
@@ -984,9 +984,7 @@ return function()
 			})
 
 			expect(validationResult[2]).toObjectContain({
-				-- ROBLOX FIXME: we get this instead: 'Cannot reference Input Object "AnotherInputObject" within itself through a series of non-null fields: "startSecondLoop.closeSecondLoop".
 				message = "Cannot reference Input Object \"AnotherInputObject\" within itself through a series of non-null fields: \"startSecondLoop.closeSecondLoop\".",
-				-- ROBLOX TODO: one too many locations, seeingly left over from previous location
 				locations = {
 					{
 						line = 12,
@@ -1830,8 +1828,7 @@ return function()
 			})
 		end)
 
-		-- ROBLOX TODO: the reported column is 32 instead of 19, everything else correct
-		itSKIP("rejects a non-input type as a field arg with locations", function()
+		it("rejects a non-input type as a field arg with locations", function()
 			local schema = buildSchema([[
 
       type Query {
