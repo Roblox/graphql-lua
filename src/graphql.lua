@@ -6,6 +6,10 @@ local rootWorkspace = script.Parent
 local Error = require(rootWorkspace.luaUtils.Error)
 local Packages = rootWorkspace.Parent.Packages
 local Promise = require(Packages.Promise)
+local PromiseModule = require(rootWorkspace.luaUtils.Promise)
+type Promise<T> = PromiseModule.Promise<T>
+local PromiseOrValueModule = require(rootWorkspace.jsutils.PromiseOrValue)
+type PromiseOrValue<T> = PromiseOrValueModule.PromiseOrValue<T>
 
 local isPromise = require(rootWorkspace.jsutils.isPromise).isPromise
 
@@ -13,17 +17,19 @@ local sourceModule = require(rootWorkspace.language.source)
 type Source = sourceModule.Source
 local parse = require(rootWorkspace.language.parser).parse
 
--- ROBLOX FIXME: add types once available from definition
---local definitionModule = require(rootWorkspace.type.definition)
-type GraphQLFieldResolver<T, V> = any -- definitionModule.GraphQLFieldResolver<T, V>
-type GraphQLTypeResolver<T, V> = any -- definitionModule.GraphQLTypeResolver<T, V>
+local definitionModule = require(rootWorkspace.type.definition)
+-- ROBLOX deviation: Luau doesn't currently support default type args, so add the third one here until it does
+type GraphQLFieldResolver<T, V> = definitionModule.GraphQLFieldResolver<T, V, any>
+type GraphQLTypeResolver<T, V> = definitionModule.GraphQLTypeResolver<T, V>
 local schemaModule = require(rootWorkspace.type.schema)
 type GraphQLSchema = schemaModule.GraphQLSchema
 local validate = require(rootWorkspace.validation.validate).validate
 
 local validateSchema = require(rootWorkspace.type.validate).validateSchema
 
-local execute = require(rootWorkspace.execution.execute).execute
+local executeModule = require(rootWorkspace.execution.execute)
+local execute = executeModule.execute
+type ExecutionResult = executeModule.ExecutionResult
 
 local exports = {}
 
@@ -80,7 +86,7 @@ export type GraphQLArgs = {
 -- ROBLOX deviation: pre-declare variables
 local graphqlImpl
 
-exports.graphql = function(args: GraphQLArgs) -- :Promise<ExecutionResult>
+exports.graphql = function(args: GraphQLArgs): Promise<ExecutionResult>
 	-- Always return a Promise for a consistent API.
 	return Promise.new(function(resolve)
 		return resolve(graphqlImpl(args))
@@ -93,7 +99,7 @@ end
 --  * However, it guarantees to complete synchronously (or throw an error) assuming
 --  * that all field resolvers are also synchronous.
 --  *]]
-exports.graphqlSync = function(args: GraphQLArgs) --: ExecutionResult
+exports.graphqlSync = function(args: GraphQLArgs): ExecutionResult
 	local result = graphqlImpl(args)
 
 	-- Assert that the execution was synchronous.
@@ -104,7 +110,7 @@ exports.graphqlSync = function(args: GraphQLArgs) --: ExecutionResult
 	return result
 end
 
-function graphqlImpl(args: GraphQLArgs) -- :PromiseOrValue<ExecutionResult>
+function graphqlImpl(args: GraphQLArgs):PromiseOrValue<ExecutionResult>
 	local schema = args.schema
 	local source = args.source
 	local rootValue = args.rootValue

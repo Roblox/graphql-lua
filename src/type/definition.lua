@@ -594,6 +594,7 @@ end
  ]]
 export type Thunk<T> = (() -> T) | T
 
+-- ROBLOX TODO: align once Luau has function generics
 local function resolveThunk(thunk: Thunk<any>)
 	return (function() -- ROBLOX TODO: IFEE not necessary
 		if typeof(thunk) == "function" then
@@ -606,7 +607,7 @@ local function resolveThunk(thunk: Thunk<any>)
 	end)()
 end
 
-local function undefineIfEmpty(arr: Array<any>?): Array<any>
+local function undefineIfEmpty(arr: Array<any>?): Array<any>?
 	return (function() -- ROBLOX TODO: IFEE not necessary
 			-- ROBLOX TODO: workaround for Luau type narrowing bug
 			local _arr: any = arr
@@ -658,7 +659,7 @@ GraphQLScalarType = {}
 
 GraphQLScalarType.__index = GraphQLScalarType
 
-function GraphQLScalarType.new(config)
+function GraphQLScalarType.new(config: GraphQLScalarTypeConfig<any, any>)
 	local self = {}
 	local parseValue
 	if config.parseValue then
@@ -857,7 +858,7 @@ export type GraphQLObjectType = {
 GraphQLObjectType = {}
 GraphQLObjectType.__index = GraphQLObjectType
 
-function GraphQLObjectType.new(config)
+function GraphQLObjectType.new(config: GraphQLObjectTypeConfig<any, any>)
 	local self = {}
 	self.name = config.name
 	self.description = config.description
@@ -930,7 +931,7 @@ end
 function defineInterfaces(
 	config: GraphQLObjectTypeConfig<any, any>
     | GraphQLInterfaceTypeConfig<any, any>
-)
+): Array<GraphQLInterfaceType>
 	local interfaces = (function()
 		local _ref = resolveThunk(config.interfaces)
 
@@ -1021,7 +1022,7 @@ function defineFieldMap(
 	end)
 end
 
-function isPlainObj(obj: any)
+function isPlainObj(obj: any): boolean
 	--[[
 		ROBLOX deviation:
 		* we need to exclude NULL specifically as it's represented as a regular table
@@ -1101,7 +1102,7 @@ export type GraphQLTypeResolver<TSource, TContext> = (
   TContext,
   GraphQLResolveInfo,
   GraphQLAbstractType
-) -> PromiseOrValue<string>
+) -> PromiseOrValue<string | nil>
 
 export type GraphQLIsTypeOfFn<TSource, TContext> = (
   TSource,
@@ -1194,7 +1195,7 @@ export type GraphQLArgument = {
 }
 
 
-function isRequiredArgument(arg)
+function isRequiredArgument(arg: GraphQLArgument): boolean
 	return isNonNullType(arg.type) and arg.defaultValue == nil
 end
 
@@ -1236,7 +1237,7 @@ export type GraphQLInterfaceType = {
 GraphQLInterfaceType = {}
 GraphQLInterfaceType.__index = GraphQLInterfaceType
 
-function GraphQLInterfaceType.new(config)
+function GraphQLInterfaceType.new(config: GraphQLInterfaceTypeConfig<any, any>)
 	local self = {}
 	self.name = config.name
 	self.description = config.description
@@ -1287,15 +1288,15 @@ function GraphQLInterfaceType:toConfig(): GraphQLInterfaceTypeNormalizedConfig
 	}
 end
 
-function GraphQLInterfaceType.__tostring(self)
+function GraphQLInterfaceType.__tostring(self): string
 	return self:toString()
 end
 
-function GraphQLInterfaceType.toString(self)
+function GraphQLInterfaceType.toString(self): string
 	return self.name
 end
 
-function GraphQLInterfaceType.toJSON(self)
+function GraphQLInterfaceType.toJSON(self): string
 	return self:toString()
 end
 
@@ -1373,7 +1374,7 @@ export type GraphQLUnionType = {
 GraphQLUnionType = {}
 GraphQLUnionType.__index = GraphQLUnionType
 
-function GraphQLUnionType.new(config)
+function GraphQLUnionType.new(config: GraphQLUnionTypeConfig<any, any>)
 	local self = {}
 	self.name = config.name
 	self.description = config.description
@@ -1394,14 +1395,14 @@ function GraphQLUnionType.new(config)
 	return setmetatable(self, GraphQLUnionType)
 end
 
-function GraphQLUnionType:getTypes(): Array<any>
+function GraphQLUnionType:getTypes(): Array<GraphQLObjectType>
 	if typeof(self._types) == "function" then
 		self._types = self._types()
 	end
 	return self._types
 end
 
-function GraphQLUnionType:toConfig()
+function GraphQLUnionType:toConfig(): GraphQLUnionTypeNormalizedConfig
 	return {
 		name = self.name,
 		description = self.description,
@@ -1413,15 +1414,15 @@ function GraphQLUnionType:toConfig()
 	}
 end
 
-function GraphQLUnionType.__tostring(self)
+function GraphQLUnionType.__tostring(self): string
 	return self:toString()
 end
 
-function GraphQLUnionType.toString(self)
+function GraphQLUnionType.toString(self): string
 	return self.name
 end
 
-function GraphQLUnionType.toJSON(self)
+function GraphQLUnionType.toJSON(self): string
 	return self:toString()
 end
 
@@ -1432,7 +1433,10 @@ end
 --   }
 -- }
 
-function defineTypes(config)
+function defineTypes(
+	config: GraphQLUnionTypeConfig<any, any>
+): Array<GraphQLObjectType>
+
 	local types = resolveThunk(config.types)
 
 	devAssert(
@@ -1442,6 +1446,34 @@ function defineTypes(config)
 
 	return types
 end
+
+export type GraphQLUnionTypeConfig<TSource, TContext> = {
+  name: string,
+  description: string?,
+  types: Thunk<Array<GraphQLObjectType>>,
+  --[[*
+   * Optionally provide a custom type resolver function. If one is not provided,
+   * the default implementation will call `isTypeOf` on each implementing
+   * Object type.
+   ]]
+  resolveType: GraphQLTypeResolver<TSource, TContext>?,
+  extensions: ReadOnlyObjMapLike<any>?,
+  astNode: UnionTypeDefinitionNode?,
+  extensionASTNodes: Array<UnionTypeExtensionNode>?,
+}
+
+type GraphQLUnionTypeNormalizedConfig = {
+  -- ROBLOX TODO: Lua doesn't currently support inlining/spreading, so we inline manually
+  --...GraphQLUnionTypeConfig<any, any>,
+  name: string,
+  description: string,
+  resolveType: GraphQLTypeResolver<any, any>?,
+  astNode: UnionTypeDefinitionNode?,
+
+  types: Array<GraphQLObjectType>,
+  extensions: ReadOnlyObjMap<any>?,
+  extensionASTNodes: Array<UnionTypeExtensionNode>
+}
 
 -- /**
 --  * Enum Type Definition
@@ -1487,7 +1519,7 @@ export type GraphQLEnumType = --[[ <T> ]] {
 GraphQLEnumType = {}
 GraphQLEnumType.__index = GraphQLEnumType
 
-function GraphQLEnumType.new(config)
+function GraphQLEnumType.new(config: GraphQLEnumTypeConfig)
 	local self = {}
 	self.name = config.name
 	self.description = config.description
@@ -1518,15 +1550,15 @@ function GraphQLEnumType.new(config)
 	return setmetatable(self, GraphQLEnumType)
 end
 
-function GraphQLEnumType:getValues(): Array<any>
+function GraphQLEnumType:getValues(): Array<GraphQLEnumValue>
 	return self._values
 end
 
-function GraphQLEnumType:getValue(name: string)
+function GraphQLEnumType:getValue(name: string): GraphQLEnumValue?
 	return self._nameLookup[name]
 end
 
-function GraphQLEnumType:serialize(outputValue)
+function GraphQLEnumType:serialize(outputValue: any): string?
 	local enumValue
 	--[[
 		ROBLOX deviation: we can't use NaN as a key
@@ -1544,7 +1576,7 @@ function GraphQLEnumType:serialize(outputValue)
 	return enumValue.name
 end
 
-function GraphQLEnumType:parseValue(inputValue)
+function GraphQLEnumType:parseValue(inputValue: any): any?
 	if typeof(inputValue) ~= "string" then
 		local valueStr = inspect(inputValue)
 		error(GraphQLError.new(("Enum \"%s\" cannot represent non-string value: %s." .. didYouMeanEnumValue(self, valueStr)):format(self.name, valueStr)))
@@ -1557,7 +1589,7 @@ function GraphQLEnumType:parseValue(inputValue)
 	return enumValue.value
 end
 
-function GraphQLEnumType:parseLiteral(valueNode, _variables)
+function GraphQLEnumType:parseLiteral(valueNode: ValueNode, _variables: ObjMap<any>?): any?
 	-- Note: variables will be resolved to a value before calling this function.
 	if valueNode.kind ~= Kind.ENUM then
 		local valueStr = print_(valueNode)
@@ -1578,7 +1610,7 @@ function GraphQLEnumType:parseLiteral(valueNode, _variables)
 	return enumValue.value
 end
 
-function GraphQLEnumType:toConfig()
+function GraphQLEnumType:toConfig(): GraphQLEnumTypeNormalizedConfig
 	-- ROBLOX deviation: use ordered Map
 	local values = keyValMapOrdered(self:getValues(), function(value)
 		return value.name
@@ -1755,7 +1787,7 @@ export type GraphQLInputObjectType = {
 GraphQLInputObjectType = {}
 GraphQLInputObjectType.__index = GraphQLInputObjectType
 
-function GraphQLInputObjectType.new(config)
+function GraphQLInputObjectType.new(config: GraphQLInputObjectTypeConfig)
 	local self = {}
 	self.name = config.name
 	self.description = config.description
@@ -1770,14 +1802,14 @@ function GraphQLInputObjectType.new(config)
 	return setmetatable(self, GraphQLInputObjectType)
 end
 
-function GraphQLInputObjectType:getFields()
+function GraphQLInputObjectType:getFields(): GraphQLInputFieldMap
 	if typeof(self._fields) == "function" then
 		self._fields = self._fields()
 	end
 	return self._fields
 end
 
-function GraphQLInputObjectType:toConfig()
+function GraphQLInputObjectType:toConfig(): GraphQLInputObjectTypeNormalizedConfig
 	-- ROBLOX deviation: use Map
 	local fields = mapValueOrdered(self:getFields(), function(field)
 		return {
@@ -1799,15 +1831,15 @@ function GraphQLInputObjectType:toConfig()
 	}
 end
 
-function GraphQLInputObjectType.__tostring(self)
+function GraphQLInputObjectType.__tostring(self): string
 	return self:toString()
 end
 
-function GraphQLInputObjectType.toString(self)
+function GraphQLInputObjectType.toString(self): string
 	return self.name
 end
 
-function GraphQLInputObjectType.toJSON(self)
+function GraphQLInputObjectType.toJSON(self): string
 	return self:toString()
 end
 
@@ -1818,7 +1850,9 @@ end
 --   }
 -- }
 
-function defineInputFieldMap(config)
+function defineInputFieldMap(
+	config: GraphQLInputObjectTypeConfig
+): GraphQLInputFieldMap
 	local fieldMap_ = resolveThunk(config.fields)
 
 	-- ROBLOX deviation: valueMap is either Map object or vanilla table
@@ -1890,7 +1924,9 @@ export type GraphQLInputField = {
   astNode: InputValueDefinitionNode?,
 }
 
-function isRequiredInputField(field)
+function isRequiredInputField(
+	field: GraphQLInputField
+): boolean
 	return isNonNullType(field.type) and field.defaultValue == nil
 end
 

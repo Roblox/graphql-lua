@@ -12,7 +12,7 @@ return function()
 
 	describe("Introspection", function()
 
-		itSKIP("executes an introspection query", function()
+		it("executes an introspection query", function()
 			local schema = buildSchema([[
       type SomeObject {
         someField: String
@@ -31,7 +31,7 @@ return function()
 
 			local result = graphqlSync({ schema = schema, source = source })
 
-			expect(result).toEqual({
+			expect(result).toObjectContain({
 				data = {
 					__schema = {
 						queryType = {
@@ -999,7 +999,7 @@ return function()
 			})
 		end)
 
-		itSKIP("introspects on input object", function()
+		it("introspects on input object", function()
 			local schema = buildSchema([[
 				input SomeInputObject {
 					a: String = "tes\t de\fault"
@@ -1012,6 +1012,7 @@ return function()
 				}
 			]])
 			local source = [[
+
 				{
 					__type(name: "SomeInputObject") {
 						kind
@@ -1042,7 +1043,7 @@ return function()
 				}
 			]]
 
-			expect(graphqlSync({ schema = schema, source = source })).toEqual({
+			expect(graphqlSync({ schema = schema, source = source })).toObjectContain({
 				data = {
 					__type = {
 						kind = "INPUT_OBJECT",
@@ -1085,7 +1086,7 @@ return function()
 			})
 		end)
 
-		itSKIP("supports the __type root field", function()
+		it("supports the __type root field", function()
 			local schema = buildSchema([[
 		type Query {
 			someField: String
@@ -1106,7 +1107,7 @@ return function()
 			})
 		end)
 
-		itSKIP("identifies deprecated fields", function()
+		it("identifies deprecated fields", function()
 			local schema = buildSchema([[
 				type Query {
 					nonDeprecated: String
@@ -1115,6 +1116,7 @@ return function()
 				}
 			]])
 			local source = [[
+
 				{
 					__type(name: "Query") {
 						fields(includeDeprecated: true) {
@@ -1126,7 +1128,7 @@ return function()
 				}
 			]]
 
-			expect(graphqlSync({ schema = schema, source = source })).toEqual({
+			expect(graphqlSync({ schema = schema, source = source })).toObjectContain({
 				data = {
 					__type = {
 						fields = {
@@ -1151,7 +1153,7 @@ return function()
 			})
 		end)
 
-		itSKIP("respects the includeDeprecated parameter for fields", function()
+		it("respects the includeDeprecated parameter for fields", function()
 			local schema = buildSchema([[
 				type Query {
 					nonDeprecated: String
@@ -1185,7 +1187,7 @@ return function()
 			})
 		end)
 
-		itSKIP("identifies deprecated args", function()
+		it("identifies deprecated args", function()
 			local schema = buildSchema([[
 				type Query {
 					someField(
@@ -1196,6 +1198,7 @@ return function()
 				}
 			]])
 			local source = [[
+
 				{
 					__type(name: "Query") {
 						fields {
@@ -1209,7 +1212,7 @@ return function()
 				}
 			]]
 
-			expect(graphqlSync({ schema = schema, source = source })).toEqual({
+			expect(graphqlSync({ schema = schema, source = source })).toObjectContain({
 				data = {
 					__type = {
 						fields = {
@@ -1238,7 +1241,7 @@ return function()
 			})
 		end)
 
-		itSKIP("respects the includeDeprecated parameter for args", function()
+		it("respects the includeDeprecated parameter for args", function()
 			local schema = buildSchema([[
 				type Query {
 					someField(
@@ -1280,7 +1283,7 @@ return function()
 			})
 		end)
 
-		itSKIP("identifies deprecated enum values", function()
+		it("identifies deprecated enum values", function()
 			local schema = buildSchema([[
 				enum SomeEnum {
 					NON_DEPRECATED
@@ -1293,6 +1296,7 @@ return function()
 				}
 			]])
 			local source = [[
+
 				{
 					__type(name: "SomeEnum") {
 						enumValues(includeDeprecated: true) {
@@ -1304,7 +1308,7 @@ return function()
 				}
 			]]
 
-			expect(graphqlSync({ schema = schema, source = source })).toEqual({
+			expect(graphqlSync({ schema = schema, source = source })).toObjectContain({
 				data = {
 					__type = {
 						enumValues = {
@@ -1329,7 +1333,7 @@ return function()
 			})
 		end)
 
-		itSKIP("respects the includeDeprecated parameter for enum values", function()
+		it("respects the includeDeprecated parameter for enum values", function()
 			local schema = buildSchema([[
 				enum SomeEnum {
 					NON_DEPRECATED
@@ -1380,7 +1384,7 @@ return function()
 			})
 		end)
 
-		itSKIP("identifies deprecated for input fields", function()
+		it("identifies deprecated for input fields", function()
 			local schema = buildSchema([[
 				input SomeInputObject {
 					nonDeprecated: String
@@ -1393,6 +1397,7 @@ return function()
 				}
 			]])
 			local source = [[
+
 				{
 					__type(name: "SomeInputObject") {
 						inputFields(includeDeprecated: true) {
@@ -1404,7 +1409,7 @@ return function()
 				}
 			]]
 
-			expect(graphqlSync({ schema = schema, source = source })).toEqual({
+			expect(graphqlSync({ schema = schema, source = source })).toObjectContain({
 				data = {
 					__type = {
 						inputFields = {
@@ -1429,7 +1434,7 @@ return function()
 			})
 		end)
 
-		itSKIP("respects the includeDeprecated parameter for input fields", function()
+		it("respects the includeDeprecated parameter for input fields", function()
 			local schema = buildSchema([[
 				input SomeInputObject {
 					nonDeprecated: String
@@ -1467,13 +1472,14 @@ return function()
 			})
 		end)
 
-		itSKIP("fails as expected on the __type root field without an arg", function()
+		it("fails as expected on the __type root field without an arg", function()
 			local schema = buildSchema([[
 				type Query {
 					someField: String
 				}
 			]])
 			local source = [[
+
       {
         __type {
           name
@@ -1481,7 +1487,7 @@ return function()
       }
 			]]
 
-			expect(graphqlSync({ schema = schema, source = source })).toEqual({
+			expect(graphqlSync({ schema = schema, source = source })).toObjectContain({
 				errors = {
 					{
 						message = "Field \"__type\" argument \"name\" of type \"String!\" is required, but it was not provided.",
@@ -1491,7 +1497,7 @@ return function()
 			})
 		end)
 
-		itSKIP("exposes descriptions", function()
+		it("exposes descriptions", function()
 			local schema = buildSchema([[
 				"""Enum description"""
 				enum SomeEnum {
@@ -1557,7 +1563,7 @@ return function()
 			})
 		end)
 
-		itSKIP("executes an introspection query without calling global resolvers", function()
+		it("executes an introspection query without calling global resolvers", function()
 			local schema = buildSchema([[
 				type Query {
 					someField: String

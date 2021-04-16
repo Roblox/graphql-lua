@@ -32,7 +32,6 @@ return function()
 		end)
 
 		it("fails with more than one root field", function()
-			-- ROBLOX FIXME: location is not quite exact
 			expectErrors(expect, [[
       subscription ImportantEmails {
         importantEmails
@@ -47,7 +46,6 @@ return function()
 		end)
 
 		it("fails with more than one root field including introspection", function()
-			-- ROBLOX FIXME: location is not quite exact
 			expectErrors(expect, [[
       subscription ImportantEmails {
         importantEmails
@@ -62,7 +60,6 @@ return function()
 		end)
 
 		it("fails with many more than one root field", function()
-			-- ROBLOX FIXME: location is not quite exact
 			expectErrors(expect, [[
       subscription ImportantEmails {
         importantEmails
@@ -81,7 +78,6 @@ return function()
 		end)
 
 		it("fails with more than one root field in anonymous subscriptions", function()
-			-- ROBLOX FIXME: location is not quite exact
 			expectErrors(expect, [[
       subscription {
         importantEmails

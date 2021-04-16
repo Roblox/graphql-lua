@@ -387,9 +387,9 @@ function validateFields(
 				context:reportError(
 					("The type of %s.%s(%s:) must be Input "):format(type_.name, field.name, argName) .. ("Type but got: %s."):format(inspect(arg.type)),
 					(function()
-						if field.astNode ~= nil then
+						if arg.astNode ~= nil then
 							-- istanbul ignore next (TODO need to write coverage tests)
-							return field.astNode.type
+							return arg.astNode.type
 						end
 						return
 					end)()
@@ -604,7 +604,7 @@ end
 
 function validateUnionMembers(
 	context: SchemaValidationContext,
-	union -- : GraphQLUnionType
+	union: GraphQLUnionType
 ): ()
 	local memberTypes = union:getTypes()
 
@@ -717,7 +717,7 @@ end
 
 function createInputObjectCircularRefsValidator(
 	context: SchemaValidationContext
-): (any) -> ()
+): (GraphQLInputObjectType) -> ()
 	-- Modified copy of algorithm from 'src/validation/rules/NoFragmentCycles.lua'.
 	-- Tracks already visited types to maintain O(N) and to ensure that cycles
 	-- are not redundantly reported.
@@ -741,7 +741,8 @@ function createInputObjectCircularRefsValidator(
 		-- ROBLOX deviation: upstream can receive a GraphQLList with no name member, but Lua can't store a nil key
 		visitedTypes[tostring(inputObj.name)] = true
 		-- ROBLOX deviation: upstream can receive a GraphQLList with no name member, but Lua can't store a nil key
-		fieldPathIndexByTypeName[tostring(inputObj.name)] = #fieldPath
+		-- ROBLOX deviation: we add 1 to fieldPath length, since Lua array indices start at 1 and length can be zero
+		fieldPathIndexByTypeName[tostring(inputObj.name)] = #fieldPath + 1
 
 		-- ROBLOX deviation: use Map
 		local fields = inputObj:getFields():values()
@@ -757,13 +758,8 @@ function createInputObjectCircularRefsValidator(
 				if cycleIndex == nil then
 					detectCycleRecursive(fieldType)
 				else
-					-- ROBLOX FiXME? This is a gross workaround since our slice() polyfill doesn't return a shallow copy for a 0 index
 					local cyclePath
-					if cycleIndex == 0 then
-						cyclePath = Array.slice(fieldPath, 1)
-					else
-						cyclePath = Array.slice(fieldPath, cycleIndex)
-					end
+					cyclePath = Array.slice(fieldPath, cycleIndex)
 					local pathStr = Array.join(
 						Array.map(cyclePath, function(fieldObj)
 							return fieldObj.name

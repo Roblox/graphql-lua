@@ -51,7 +51,6 @@ return function()
 			]])
 		end)
 
-		-- ROBLOX FIXME: this test is passing sometimes
 		it("unique directives in different locations", function()
 			expectValid(expect, [[
 				fragment Test on Type @directiveA {

@@ -15,9 +15,8 @@ local parse = require(srcWorkspace.language.parser).parse
 local executeSync = require(srcWorkspace.execution.execute).executeSync
 
 local getIntrospectionQueryModule = require(script.Parent.getIntrospectionQuery)
--- ROBLOX FIXME: add types once available from getIntrospectionQuery
-type IntrospectionQuery = any -- getIntrospectionQueryModule.IntrospectionQuery
-type IntrospectionOptions = any -- getIntrospectionQueryModule.IntrospectionOptions
+type IntrospectionQuery = getIntrospectionQueryModule.IntrospectionQuery
+type IntrospectionOptions = getIntrospectionQueryModule.IntrospectionOptions
 local getIntrospectionQuery = getIntrospectionQueryModule.getIntrospectionQuery
 
 --[[**
