@@ -76,7 +76,8 @@ local valueFromASTUntyped = require(srcWorkspace.utilities.valueFromASTUntyped).
 
 -- ROBLOX deviation: this results in a circular dependency, so we fudge the type here
 -- local schemaModule = require(script.Parent.schema)
-type GraphQLSchema = any -- schemaModule.GraphQLSchema
+-- type GraphQLSchema = schemaModule.GraphQLSchema
+type GraphQLSchema = any
 
 -- ROBLOX deviation: predeclare functions
 local isType
@@ -653,6 +654,11 @@ export type GraphQLScalarType = {
 	extensions: ReadOnlyObjMap<any>?,
 	astNode: ScalarTypeDefinitionNode?,
 	extensionASTNodes: Array<ScalarTypeExtensionNode>?,
+
+	-- ROBLOX deviation: add extra parameter for self
+	toConfig: (any) -> GraphQLScalarTypeNormalizedConfig,
+	toString: (any) -> string,
+	toJSON: (any) -> string
 }
 
 GraphQLScalarType = {}
@@ -726,7 +732,7 @@ function GraphQLScalarType.new(config: GraphQLScalarTypeConfig<any, any>)
 	return setmetatable(self, GraphQLScalarType)
 end
 
-function GraphQLScalarType.toConfig(self): GraphQLScalarTypeNormalizedConfig
+function GraphQLScalarType:toConfig(): GraphQLScalarTypeNormalizedConfig
 	return {
 		name = self.name,
 		description = self.description,
@@ -751,11 +757,11 @@ function GraphQLScalarType.__tostring(self): string
 	return self:toString()
 end
 
-function GraphQLScalarType.toString(self): string
+function GraphQLScalarType:toString(): string
 	return self.name
 end
 
-function GraphQLScalarType.toJSON(self): string
+function GraphQLScalarType:toJSON(): string
 	return self:toString()
 end
 
@@ -794,14 +800,7 @@ export type GraphQLScalarTypeConfig<TInternal, TExternal> = {
   extensionASTNodes: Array<ScalarTypeExtensionNode>?,
 }
 
-type GraphQLScalarTypeNormalizedConfig = {
--- ROBLOX deviation: Luau can't spread/inline, so we duplicate
---   ...GraphQLScalarTypeConfig<any, any>,
-  name: string,
-  description: string?,
-  specifiedByUrl: string?,
-  astNode: ScalarTypeDefinitionNode?,
-
+type GraphQLScalarTypeNormalizedConfig = GraphQLScalarTypeConfig<any, any> & {
   serialize: GraphQLScalarSerializer<any>,
   parseValue: GraphQLScalarValueParser<any>,
   parseLiteral: GraphQLScalarLiteralParser<any>,
@@ -853,6 +852,12 @@ export type GraphQLObjectType = {
 	extensions: ReadOnlyObjMap<any>?,
 	astNode: ObjectTypeDefinitionNode?,
 	extensionASTNodes: Array<ObjectTypeExtensionNode>?,
+	-- ROBLOX deviation: extra argument for self
+	getFields: (any) -> GraphQLFieldMap<any, any>,
+	getInterfaces: (any) -> Array<GraphQLInterfaceType>,
+	toConfig: (any) -> GraphQLObjectTypeNormalizedConfig,
+	toString: (any) -> string,
+	toJSON: (any) -> string
 }
 
 GraphQLObjectType = {}
@@ -1080,14 +1085,7 @@ export type GraphQLObjectTypeConfig<TSource, TContext> = {
   extensionASTNodes: Array<ObjectTypeExtensionNode>?,
 }
 
-type GraphQLObjectTypeNormalizedConfig = {
--- ROBLOX deviation: Luau can't inline/spread types, so we inline
---   ...GraphQLObjectTypeConfig<any, any>,
-	name: string,
-	description: string?,
-	isTypeOf: GraphQLIsTypeOfFn<TSource, TContext>?,
-	astNode: ObjectTypeDefinitionNode?,
-
+type GraphQLObjectTypeNormalizedConfig = GraphQLObjectTypeConfig<any, any> & {
   interfaces: Array<GraphQLInterfaceType>,
   fields: GraphQLFieldConfigMap<any, any>,
   extensions: ReadOnlyObjMap<any>?,
@@ -1231,7 +1229,15 @@ export type GraphQLInterfaceType = {
 	extensionASTNodes: Array<InterfaceTypeExtensionNode>?,
 
 	_fields: Thunk<GraphQLFieldMap<any, any>>,
-	_interfaces: Thunk<Array<GraphQLInterfaceType>>
+	_interfaces: Thunk<Array<GraphQLInterfaceType>>,
+
+	-- ROBLOX deviation: extra argument for self
+	getFields: (any) -> GraphQLFieldMap<any, any>,
+	getInterfaces: (any) -> Array<GraphQLInterfaceType>,
+	toConfig: (any) -> GraphQLInterfaceTypeNormalizedConfig,
+	toString: (any) -> string,
+	toJSON: (any) -> string
+
 }
 
 GraphQLInterfaceType = {}
@@ -1323,14 +1329,7 @@ export type GraphQLInterfaceTypeConfig<TSource, TContext> = {
   extensionASTNodes: Array<InterfaceTypeExtensionNode>?,
 }
 
-export type GraphQLInterfaceTypeNormalizedConfig = {
--- ROBLOX deviation: Luau can't spread/inline, so we duplicate
---   ...GraphQLInterfaceTypeConfig<any, any>,
-  name: string,
-  description: string?,
-  resolveType: GraphQLTypeResolver<TSource, TContext>?,
-  astNode: InterfaceTypeDefinitionNode?,
-
+export type GraphQLInterfaceTypeNormalizedConfig = GraphQLInterfaceTypeConfig<any, any> & {
   interfaces: Array<GraphQLInterfaceType>,
   fields: GraphQLFieldConfigMap<any, any>,
   extensions: ReadOnlyObjMap<any>?,
@@ -1462,14 +1461,7 @@ export type GraphQLUnionTypeConfig<TSource, TContext> = {
   extensionASTNodes: Array<UnionTypeExtensionNode>?,
 }
 
-type GraphQLUnionTypeNormalizedConfig = {
-  -- ROBLOX TODO: Lua doesn't currently support inlining/spreading, so we inline manually
-  --...GraphQLUnionTypeConfig<any, any>,
-  name: string,
-  description: string,
-  resolveType: GraphQLTypeResolver<any, any>?,
-  astNode: UnionTypeDefinitionNode?,
-
+type GraphQLUnionTypeNormalizedConfig = GraphQLUnionTypeConfig<any, any> & {
   types: Array<GraphQLObjectType>,
   extensions: ReadOnlyObjMap<any>?,
   extensionASTNodes: Array<UnionTypeExtensionNode>
@@ -1512,8 +1504,8 @@ export type GraphQLEnumType = --[[ <T> ]] {
 	serialize: (any, any --[[ T ]]) -> string?,
 	parseValue: (any, any) -> any? --[[ T ]],
 	parseLiteral: (any, ValueNode, ObjMap<any>?) -> any? --[[ T ]],
+	-- ROBLOX deviation: we add a parameter here to account for self
 	toConfig: (any) -> GraphQLEnumTypeNormalizedConfig
-
 }
 
 GraphQLEnumType = {}
@@ -1723,14 +1715,7 @@ export type GraphQLEnumTypeConfig --[[ <T> ]] = {
   extensionASTNodes: Array<EnumTypeExtensionNode>?,
 }
 
-type GraphQLEnumTypeNormalizedConfig = {
--- ROBLOX deviation: Luau can't spread/inline, so we duplicate
---   ...GraphQLEnumTypeConfig,
-  name: string,
-  description: string?,
-  values: GraphQLEnumValueConfigMap --[[ <T> ]],
-  astNode: EnumTypeDefinitionNode?,
-
+type GraphQLEnumTypeNormalizedConfig = GraphQLEnumTypeConfig & {
   extensions: ReadOnlyObjMap<any>?,
   extensionASTNodes: Array<EnumTypeExtensionNode>,
 }
@@ -1781,7 +1766,14 @@ export type GraphQLInputObjectType = {
 	astNode: InputObjectTypeDefinitionNode?,
 	extensionASTNodes: Array<InputObjectTypeExtensionNode>?,
 
-	_fields: Thunk<GraphQLInputFieldMap>
+	_fields: Thunk<GraphQLInputFieldMap>,
+
+	-- ROBLOX deviation: extra argument for self
+	getFields: (any) -> GraphQLInputFieldMap,
+	getInterfaces: (any) -> Array<GraphQLInterfaceType>,
+	toConfig: (any) -> GraphQLInputObjectTypeNormalizedConfig,
+	toString: (any) -> string,
+	toJSON: (any) -> string
 }
 
 GraphQLInputObjectType = {}
@@ -1891,13 +1883,7 @@ export type GraphQLInputObjectTypeConfig = {
   extensionASTNodes: Array<InputObjectTypeExtensionNode>?,
 }
 
-type GraphQLInputObjectTypeNormalizedConfig = {
--- ROBLOX deviation: Luau can't spread/inline, so we duplicate
---   ...GraphQLInputObjectTypeConfig,
-  name: string,
-  description: string?,
-  astNode: InputObjectTypeDefinitionNode?,
-
+type GraphQLInputObjectTypeNormalizedConfig = GraphQLInputObjectTypeConfig & {
   fields: GraphQLInputFieldConfigMap,
   extensions: ReadOnlyObjMap<any>?,
   extensionASTNodes: Array<InputObjectTypeExtensionNode>,

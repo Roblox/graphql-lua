@@ -34,11 +34,8 @@ type DirectiveLocationEnum = DirectiveLocationModule.DirectiveLocationEnum
 local DirectiveLocation = DirectiveLocationModule.DirectiveLocation
 
 local definition = require(script.Parent.definition)
--- ROBLOX deviation: these types exist, but aren't exported due to Luau manual hoisting issues
--- type GraphQLArgument = definition.GraphQLArgument
--- type GraphQLFieldConfigArgumentMap = definition.GraphQLFieldConfigArgumentMap
-type GraphQLArgument = any
-type GraphQLFieldConfigArgumentMap = ObjMap<any>
+type GraphQLArgument = definition.GraphQLArgument
+type GraphQLFieldConfigArgumentMap = definition.GraphQLFieldConfigArgumentMap
 local scalars = require(script.Parent.scalars)
 local GraphQLString = scalars.GraphQLString
 local GraphQLBoolean = scalars.GraphQLBoolean
@@ -73,7 +70,11 @@ end
 	args: Array<GraphQLArgument>,
 	isRepeatable: boolean,
 	extensions: ObjMap<any>?,
-	astNode: DirectiveDefinitionNode?
+	astNode: DirectiveDefinitionNode?,
+	-- ROBLOX deviation: add extra parameter for self
+	toConfig: (any) -> GraphQLDirectiveNormalizedConfig,
+	toString: (any) -> string,
+	toJSON: (any) -> string
 }
 
 GraphQLDirective = {}
@@ -173,14 +174,7 @@ export type GraphQLDirectiveConfig = {
   astNode: DirectiveDefinitionNode?,
 }
 
-type GraphQLDirectiveNormalizedConfig = {
--- ROBLOX deviation: can't spread previous type decl, so we duplicate
-	--   ...GraphQLDirectiveConfig,
-  name: string,
-  description: string?,
-  locations: Array<DirectiveLocationEnum>,
-  astNode: DirectiveDefinitionNode?,
-
+type GraphQLDirectiveNormalizedConfig = GraphQLDirectiveConfig & {
   args: GraphQLFieldConfigArgumentMap,
   isRepeatable: boolean,
   extensions: ReadOnlyObjMap<any>?,

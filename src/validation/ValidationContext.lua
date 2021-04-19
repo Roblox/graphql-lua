@@ -1,7 +1,12 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/661ff1a6b591eea1e7a7e7c9e6b8b2dcfabf3bd7/src/validation/ValidationContext.js
+-- ROBLOX deviation: use map type
+local srcWorkspace = script.Parent.Parent
+type Map<T,V> = { [T]: V }
+local jsutilsWorkspace = srcWorkspace.jsutils
+local ObjMap = require(jsutilsWorkspace.ObjMap)
+type ObjMap<T> = ObjMap.ObjMap<T>
 
-local root = script.Parent.Parent
-local language = root.language
+local language = srcWorkspace.language
 local Kind = require(language.kinds).Kind
 local visitor = require(language.visitor)
 local visit = visitor.visit
@@ -15,20 +20,20 @@ type SelectionSetNode = _ast.SelectionSetNode
 type FragmentSpreadNode = _ast.FragmentSpreadNode
 type FragmentDefinitionNode = _ast.FragmentDefinitionNode
 
-local _GraphQLErrorExports = require(root.error.GraphQLError)
+local _GraphQLErrorExports = require(srcWorkspace.error.GraphQLError)
 type GraphQLError = _GraphQLErrorExports.GraphQLError
 
-local TypeInfoExports = require(root.utilities.TypeInfo)
+local TypeInfoExports = require(srcWorkspace.utilities.TypeInfo)
 local TypeInfo = TypeInfoExports.TypeInfo
 local visitWithTypeInfo = TypeInfoExports.visitWithTypeInfo
 type TypeInfo = TypeInfoExports.TypeInfo
 
-local _schemaExports = require(root.type.schema)
+local _schemaExports = require(srcWorkspace.type.schema)
 type GraphQLSchema = _schemaExports.GraphQLSchema
-local directivesExports = require(root.type.directives)
+local directivesExports = require(srcWorkspace.type.directives)
 type GraphQLDirective = directivesExports.GraphQLDirective
 
-local definitionModule = require(root.type.definition)
+local definitionModule = require(srcWorkspace.type.definition)
 type GraphQLInputType = definitionModule.GraphQLInputType
 type GraphQLOutputType = definitionModule.GraphQLOutputType
 type GraphQLCompositeType = definitionModule.GraphQLCompositeType
@@ -38,7 +43,7 @@ type GraphQLField<T, U> = definitionModule.GraphQLField<T, U, GraphQLFieldDefaul
 type GraphQLArgument = definitionModule.GraphQLArgument
 type GraphQLEnumValue = definitionModule.GraphQLEnumValue
 
-local Array = require(root.luaUtils.Array)
+local Array = require(srcWorkspace.luaUtils.Array)
 
 type NodeWithSelectionSet = OperationDefinitionNode | FragmentDefinitionNode
 type VariableUsage = {
@@ -54,11 +59,29 @@ type Array<T> = { [number]: T }
 --  * validation rule.
 --  */
 -- ROBLOX TODO: add proper type
-type ASTValidationContext = any
+type ASTValidationContext = {
+	_ast: DocumentNode,
+	_onError: (GraphQLError) -> (),
+	_fragments: ObjMap<FragmentDefinitionNode>?,
+	_fragmentSpreads: Map<SelectionSetNode, Array<FragmentSpreadNode>>,
+	_recursivelyReferencedFragments: Map<
+	  OperationDefinitionNode,
+	  Array<FragmentDefinitionNode>
+	>,
+	reportError: (GraphQLError) -> (),
+	getDocument: () -> DocumentNode,
+	getFragment: (string) -> FragmentDefinitionNode?,
+	getFragmentSpreads: (SelectionSetNode) -> Array<FragmentSpreadNode>,
+	getRecursivelyReferencedFragments: (OperationDefinitionNode) -> Array<FragmentDefinitionNode>
+}
+
 local ASTValidationContext = {}
 local ASTValidationContextMetatable = {__index = ASTValidationContext}
 
-function ASTValidationContext.new(ast: DocumentNode, onError: (GraphQLError) -> ())
+function ASTValidationContext.new(
+	ast: DocumentNode,
+	onError: (GraphQLError) -> ()
+) -- ROBLOX TODO: Luau doesn't think this metatable is convertible to: ASTValidationContext
 	return setmetatable({
 		_ast = ast,
 		_fragments = nil,
@@ -68,7 +91,7 @@ function ASTValidationContext.new(ast: DocumentNode, onError: (GraphQLError) -> 
 	}, ASTValidationContextMetatable)
 end
 
-function ASTValidationContext:reportError(error_: GraphQLError)
+function ASTValidationContext:reportError(error_: GraphQLError): ()
 	self._onError(error_)
 end
 
@@ -141,8 +164,12 @@ end
 
 export type ASTValidationRule = (ASTValidationContext) -> ASTVisitor
 
--- ROBLOX TODO: add proper type
-type SDLValidationContext = any
+type SDLValidationContext = ASTValidationContext & {
+	_schema: GraphQLSchema?,
+
+	-- ROBLOX deviation: add argument for self
+	getSchema: () -> GraphQLSchema?
+}
 local SDLValidationContext = setmetatable({}, {__index = ASTValidationContext})
 local SDLValidationContextMetatable = {__index = SDLValidationContext}
 
@@ -150,7 +177,7 @@ function SDLValidationContext.new(
 	ast: DocumentNode,
 	schema: GraphQLSchema?,
 	onError: (GraphQLError) -> ()
-)
+): SDLValidationContext
 	local self = setmetatable(
 		ASTValidationContext.new(ast, onError),
 		SDLValidationContextMetatable
@@ -165,8 +192,28 @@ end
 
 export type SDLValidationRule = (SDLValidationContext) -> ASTVisitor
 
--- ROBLOX TODO: add proper type
-type ValidationContext = any
+type ValidationContext = ASTValidationContext & {
+	_schema: GraphQLSchema,
+	_typeInfo: TypeInfo,
+	_variableUsages: Map<NodeWithSelectionSet, Array<VariableUsage>>,
+	_recursiveVariableUsages: Map<
+	  OperationDefinitionNode,
+	  Array<VariableUsage>
+	>,
+	-- ROBLOX deviation: add argument for self
+	getSchema: (any) -> GraphQLSchema,
+	getVariableUsages: (any, NodeWithSelectionSet) -> Array<VariableUsage>,
+	getRecursiveVariableUsages: (any, OperationDefinitionNode) -> Array<VariableUsage>,
+	getType: (any) -> GraphQLOutputType?,
+	getParentType: (any) -> GraphQLCompositeType?,
+	getInputType: (any) -> GraphQLInputType?,
+	getParentInputType: (any) -> GraphQLInputType?,
+	getFieldDef: (any) -> GraphQLField<any, any>?,
+	getDirective: (any) -> GraphQLDirective?,
+	getArgument: (any) -> GraphQLArgument?,
+	getEnumValue: (any) -> GraphQLEnumValue?
+}
+
 local ValidationContext = setmetatable({}, {__index = ASTValidationContext})
 local ValidationContextMetatable = {__index = ValidationContext}
 
@@ -175,7 +222,7 @@ function ValidationContext.new(
 	ast: DocumentNode,
 	typeInfo: TypeInfo,
 	onError: (GraphQLError) -> ()
-)
+): ValidationContext
 	local self = setmetatable(
 		ASTValidationContext.new(ast, onError),
 		ValidationContextMetatable

@@ -76,6 +76,7 @@ exports.Kind = {
 --[[
  * The enum type representing the possible kind values of AST nodes.
  *]]
-export type KindEnum = any
+-- ROBLOX deviation: Luau can't express this $Values<typeof Kind>
+export type KindEnum = string
 
 return exports

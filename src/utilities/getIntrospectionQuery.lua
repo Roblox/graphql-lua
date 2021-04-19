@@ -199,11 +199,11 @@ export type IntrospectionQuery = {
 
 export type IntrospectionSchema = {
   description: string?,
-  queryType: any, -- IntrospectionNamedTypeRef<IntrospectionObjectType>,
-  mutationType: any, -- ?IntrospectionNamedTypeRef<IntrospectionObjectType>,
-  subscriptionType: any, -- ?IntrospectionNamedTypeRef<IntrospectionObjectType>,
-  types: Array<any>, -- <IntrospectionType>,
-  directives: Array<any> -- <IntrospectionDirective>,
+  queryType:  IntrospectionNamedTypeRef<IntrospectionObjectType>,
+  mutationType: IntrospectionNamedTypeRef<IntrospectionObjectType>?,
+  subscriptionType: IntrospectionNamedTypeRef<IntrospectionObjectType>?,
+  types: Array<IntrospectionType>,
+  directives: Array<IntrospectionDirective>
 }
 
 export type IntrospectionType =
@@ -319,7 +319,7 @@ export type IntrospectionInputTypeRef =
 export type IntrospectionNamedTypeRef<
   T -- ROBLOX TODO: Luau doesn't support generic constraints or default types: IntrospectionType = IntrospectionType,
 > = {
-  kind: any, -- ROBLOX TODO: Luau doesn't support this type spec: $PropertyType<T, 'kind'>,
+  kind: any, -- ROBLOX deviation: Luau doesn't support this type spec: $PropertyType<T, 'kind'>,
   name: string,
 	ofType: T -- ROBLOX TODO: this field is missing upstream
 }

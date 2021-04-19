@@ -1,11 +1,16 @@
 local srcWorkspace = script.Parent.Parent
 local PromiseModule = require(srcWorkspace.luaUtils.Promise)
 type Promise<T> = PromiseModule.Promise<T>
+local astModule = require(srcWorkspace.language.ast)
+type DocumentNode = astModule.DocumentNode
+local executeModule = require(srcWorkspace.execution.execute)
+type ExecutionResult = executeModule.ExecutionResult
+type ExecutionContext = executeModule.ExecutionContext
 local schemaModule = require(srcWorkspace.type.schema)
 type GraphQLSchema = schemaModule.GraphQLSchema
-type DocumentNode = any
-type GraphQLFieldResolver<T, U> = any
-type ExecutionResult = any
+local definitionModule = require(srcWorkspace.type.definition)
+-- ROBLOX TODO: Luau doesn't currently support default type args, so inline any
+type GraphQLFieldResolver<T, V> = definitionModule.GraphQLFieldResolver<T, V, any>
 
 export type SubscriptionArgs = {
     schema: GraphQLSchema,
