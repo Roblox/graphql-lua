@@ -3,19 +3,43 @@
 local Array = require(script.Parent.Parent.Parent.Packages.LuauPolyfill).Array
 local devAssertModule = require(script.Parent.Parent.jsutils.devAssert)
 local devAssert = devAssertModule.devAssert
+local sourceModule = require(script.Parent.Parent.language.source)
+type Source = sourceModule.Source
+local astModule = require(script.Parent.Parent.language.ast)
+type DocumentNode = astModule.DocumentNode
+local parserModule = require(script.Parent.Parent.language.parser)
+type ParseOptions = parserModule.ParseOptions
 local kinds = require(script.Parent.Parent.language.kinds)
 local Kind = kinds.Kind
-local parser = require(script.Parent.Parent.language.parser)
-local parse = parser.parse
+local parse = parserModule.parse
+
 local assertValidSDL = require(script.Parent.Parent.validation.validate).assertValidSDL
-local schema = require(script.Parent.Parent.type.schema)
-local GraphQLSchema = schema.GraphQLSchema
+
+local schemaModule = require(script.Parent.Parent.type.schema)
+type GraphQLSchemaValidationOptions = schemaModule.GraphQLSchemaValidationOptions
+type GraphQLSchema = schemaModule.GraphQLSchema
+local GraphQLSchema = schemaModule.GraphQLSchema
 local directivesModule = require(script.Parent.Parent.type.directives)
 local specifiedDirectives = directivesModule.specifiedDirectives
+
 local extendSchema = require(script.Parent.extendSchema)
 local extendSchemaImpl = extendSchema.extendSchemaImpl
 
-local buildASTSchema = function(documentAST, options)
+export type BuildSchemaOptions =
+  GraphQLSchemaValidationOptions & {
+
+  --[[*
+   * Set to true to assume the SDL is valid.
+   *
+   * Default: false
+   ]]
+  assumeValidSDL: boolean?,
+}
+
+local buildASTSchema = function(
+	documentAST: DocumentNode,
+	options: BuildSchemaOptions -- ROBLOX TODO: this is nilable upstream, working around Luau narrow issues for now
+  ): GraphQLSchema
 	devAssert(
 		documentAST ~= nil and documentAST.kind == Kind.DOCUMENT,
 		"Must provide valid Document AST."
@@ -60,7 +84,10 @@ local buildASTSchema = function(documentAST, options)
 	return GraphQLSchema.new(config)
 end
 
-local function buildSchema(source, options)
+local function buildSchema(
+	source: string | Source,
+	options: { BuildSchemaOptions & ParseOptions }
+  ): GraphQLSchema
 	local document = parse(source, {
 		noLocation = (function()
 			if options ~= nil then

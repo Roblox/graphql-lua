@@ -59,6 +59,7 @@ local Kind = require(srcWorkspace.language.kinds).Kind
 local schemaImport = require(typeWorkspace.schema)
 type GraphQLSchema = schemaImport.GraphQLSchema
 local definitionImport = require(typeWorkspace.definition)
+type GraphQLType = definitionImport.GraphQLType
 type GraphQLObjectType = definitionImport.GraphQLObjectType
 type GraphQLOutputType = definitionImport.GraphQLOutputType
 type GraphQLLeafType = definitionImport.GraphQLLeafType
@@ -124,7 +125,7 @@ export type ExecutionContext = {
 	rootValue: any,
 	contextValue: any,
 	operation: OperationDefinitionNode,
-	variableValues: { [string]: any },
+	variableValues: { [string]: any }, -- ROBLOX TODO: missing type varargs
 	fieldResolver: GraphQLFieldResolver<any, any>,
 	typeResolver: GraphQLTypeResolver<any, any>,
 	errors: Array<GraphQLError>,
@@ -154,7 +155,7 @@ export type ExecutionArgs = {
 	document: DocumentNode,
 	rootValue: any?,
 	contextValue: any?,
-	variableValues: { [string]: any }?,
+	variableValues: { [string]: any }?, -- ROBLOX TODO: missing type varargs
 	operationName: string?,
 	fieldResolver: GraphQLFieldResolver<any, any>?,
 	typeResolver: GraphQLTypeResolver<any, any>?,
@@ -167,8 +168,8 @@ local assertValidExecutionArguments
 local buildExecutionContext
 local collectFields
 local buildResolveInfo
-local defaultTypeResolver
-local defaultFieldResolver
+local defaultTypeResolver: GraphQLFieldResolver<any, any>
+local defaultFieldResolver: GraphQLFieldResolver<any, any>
 local getFieldDef
 local buildResponse
 local executeOperation
@@ -265,7 +266,7 @@ end
 --  *]]
 function buildResponse(
 	exeContext: ExecutionContext,
-	-- ROBLOX deviation: workaround Luau, which doesn't have predicates. should be PromiseOrValue<ObjMap<any>?>
+	-- ROBLOX deviation: workaround Luau, which doesn't have predicates, and has nilability narrowing issues. should be PromiseOrValue<ObjMap<any>?>
 	data: PromiseOrValue<ObjMap<any>>
 ): PromiseOrValue<ExecutionResult>
 	if isPromise(data) then
@@ -292,7 +293,11 @@ end
 --  *
 --  * @internal
 --  *]]
-function assertValidExecutionArguments(schema: GraphQLSchema, document: DocumentNode, rawVariableValues)
+function assertValidExecutionArguments(
+	schema: GraphQLSchema,
+	document: DocumentNode,
+	rawVariableValues: { [string]: any }? -- ROBLOX TODO: missing type varargs
+)
 	devAssert(document, "Must provide document.")
 
 	-- If the schema used for execution is invalid, throw an error.
@@ -313,8 +318,17 @@ end
 --  *
 --  * @internal
 --  *]]
-function buildExecutionContext(schema: GraphQLSchema, document: DocumentNode, rootValue, contextValue, rawVariableValues, operationName, fieldResolver, typeResolver): Array<GraphQLError> | ExecutionContext
-	local operation
+function buildExecutionContext(
+	schema: GraphQLSchema,
+	document: DocumentNode,
+	rootValue,
+	contextValue,
+	rawVariableValues: { [string]: any }?, -- ROBLOX TODO: missing type varargs
+	operationName: string, -- ROBLOX TODO: should be nilable, needs Luau type narrowing fix
+	fieldResolver: GraphQLFieldResolver<any, any>?,
+	typeResolver: GraphQLFieldResolver<any, any>?
+): Array<GraphQLError> | ExecutionContext
+	local operation: OperationDefinitionNode -- ROBLOX TODO: should be nilable, fix then Luau narrowing is fixed
 	local fragments = {}
 
 	for _, definition in ipairs(document.definitions) do
@@ -376,7 +390,11 @@ end
 --[[*
 --  * Implements the "Evaluating operations" section of the spec.
 --  *]]
-function executeOperation(exeContext, operation, rootValue)
+function executeOperation(
+	exeContext: ExecutionContext,
+	operation: OperationDefinitionNode,
+	rootValue: any
+): PromiseOrValue<ObjMap<any> | nil>
 	local type_ = getOperationRootType(exeContext.schema, operation)
 	local fields = collectFields(
 		exeContext,
@@ -419,7 +437,13 @@ end
 --  * Implements the "Evaluating selection sets" section of the spec
 --  * for "write" mode.
 --  *]]
-function executeFieldsSerially(exeContext, parentType, sourceValue, path, fields)
+function executeFieldsSerially(
+	exeContext: ExecutionContext,
+	parentType: GraphQLObjectType,
+	sourceValue: any,
+	path: Path | nil, -- ROBLOX deviation: Luau can't express void, use nil instead
+	fields: Map<string, Array<FieldNode>> -- ROBLOX deviation: use our ordered Map
+): PromiseOrValue<ObjMap<any>>
 	return promiseReduce(
 		-- ROBLOX deviation: use Map
 		fields:keys(),
@@ -455,9 +479,9 @@ function executeFields(
 	exeContext: ExecutionContext,
 	parentType: GraphQLObjectType,
 	sourceValue: any,
-	path: Path?,
-	fields: Map<string, Array<FieldNode>>
-  ): PromiseOrValue<ObjMap<any>>
+	path: Path | nil, -- ROBLOX deviation: Luau can't express void, so use nil
+	fields: Map<string, Array<FieldNode>> -- ROBLOX deviation: use our ordered Map
+): PromiseOrValue<ObjMap<any>>
 	local results = {}
 	local containsPromise = false
 
@@ -501,7 +525,7 @@ function collectFields(
 	exeContext: ExecutionContext,
 	runtimeType: GraphQLObjectType,
 	selectionSet: SelectionSetNode,
-	fields: Map<string, Array<FieldNode>>,
+	fields: Map<string, Array<FieldNode>>, -- ROBLOX deviation: use our ordered Map
 	visitedFragmentNames: ObjMap<boolean>
 ): Map<string, Array<FieldNode>>
 
@@ -557,7 +581,10 @@ end
 --  * Determines if a field should be included based on the @include and @skip
 --  * directives, where @skip has higher precedence than @include.
 --  *]]
-function shouldIncludeNode(exeContext, node)
+function shouldIncludeNode(
+	exeContext: ExecutionContext,
+	node: FragmentSpreadNode | FieldNode | InlineFragmentNode
+): boolean
 	local skip = getDirectiveValues(GraphQLSkipDirective, node, exeContext.variableValues)
 
 	if (skip and skip["if"]) == true then
@@ -576,7 +603,11 @@ end
 --[[*
 --  * Determines if a fragment is applicable to the given type.
 --  *]]
-function doesFragmentConditionMatch(exeContext, fragment, type_)
+function doesFragmentConditionMatch(
+	exeContext: ExecutionContext,
+	fragment: FragmentDefinitionNode | InlineFragmentNode,
+	type_: GraphQLObjectType
+): boolean
 	local typeConditionNode = fragment.typeCondition
 
 	if not typeConditionNode then
@@ -598,7 +629,7 @@ end
 --[[*
 --  * Implements the logic to compute the key of a given field's entry
 --  *]]
-function getFieldEntryKey(node)
+function getFieldEntryKey(node: FieldNode): string
 	return (function()
 		if node.alias then
 			return node.alias.value
@@ -614,7 +645,13 @@ end
 --  * then calls completeValue to complete promises, serialize scalars, or execute
 --  * the sub-selection-set for objects.
 --  *]]
-function resolveField(exeContext, parentType, source, fieldNodes, path)
+function resolveField(
+	exeContext: ExecutionContext,
+	parentType: GraphQLObjectType,
+	source: any,
+	fieldNodes: Array<FieldNode>,
+	path: Path
+): PromiseOrValue<any>? -- ROBLOX TODO: added nilability here due to the void return below, upstream PR
 	local fieldNode = fieldNodes[1]
 	local fieldName = fieldNode.name.value
 
@@ -682,7 +719,12 @@ end
 --[[*
 --  * @internal
 --  *]]
-function buildResolveInfo(exeContext: ExecutionContext, fieldDef: GraphQLField<any, any>, fieldNodes: Array<FieldNode>, parentType: GraphQLObjectType, path: Path): GraphQLResolveInfo
+function buildResolveInfo(exeContext: ExecutionContext,
+	fieldDef: GraphQLField<any, any>,
+	fieldNodes: Array<FieldNode>,
+	parentType: GraphQLObjectType,
+	path: Path
+): GraphQLResolveInfo
 	-- The resolve function's optional fourth argument is a collection of
 	-- information about the current execution state.
 	return {
@@ -699,7 +741,11 @@ function buildResolveInfo(exeContext: ExecutionContext, fieldDef: GraphQLField<a
 	}
 end
 
-function handleFieldError(error_, returnType, exeContext)
+function handleFieldError(
+	error_: GraphQLError,
+	returnType: GraphQLOutputType,
+	exeContext: ExecutionContext
+): nil
 	-- If the field type is non-nullable, then it is resolved without any
 	-- protection from errors, however it still properly locates the error.
 	if isNonNullType(returnType) then
@@ -733,7 +779,14 @@ end
 --  * Otherwise, the field type expects a sub-selection set, and will complete the
 --  * value by evaluating all sub-selections.
 --  *]]
-function completeValue(exeContext, returnType, fieldNodes, info, path, result)
+function completeValue(
+	exeContext: ExecutionContext,
+	returnType: any, -- ROBLOX deviation: Luau doesn't have predicates GraphQLOutputType,
+	fieldNodes: Array<FieldNode>,
+	info: GraphQLResolveInfo,
+	path: Path,
+	result: any
+): PromiseOrValue<any>? -- ROBLOX TODO: add nilability here because Luau doesn't understand invariant
 	-- If result is an Error, throw a located error.
 	if instanceOf(result, Error) then
 		error(result)
@@ -742,8 +795,15 @@ function completeValue(exeContext, returnType, fieldNodes, info, path, result)
 	-- If field type is NonNull, complete for inner type, and throw field error
 	-- if result is null.
 	if isNonNullType(returnType) then
-		local completed = completeValue(exeContext, returnType.ofType, fieldNodes, info, path, result)
+		local completed = completeValue(
+			exeContext,
+			returnType.ofType,
+			fieldNodes,
+			info, path,
+			result
+		)
 
+		-- ROBLOX deviation: checks for concrete nil or NULL sentinel
 		if isNillish(completed) then
 			error(Error.new(("Cannot return null for non-nullable field %s.%s."):format(info.parentType.name, info.fieldName)))
 		end
@@ -783,15 +843,22 @@ function completeValue(exeContext, returnType, fieldNodes, info, path, result)
 		false,
 		"Cannot complete value of unexpected output type: " .. inspect(returnType)
 	)
-	return -- ROBLOX deviation: no implicit return
+	return nil -- ROBLOX deviation: no implicit return
 end
 
 --[[*
 --  * Complete a list value by completing each item in the list with the
 --  * inner type
 --  *]]
-function completeListValue(exeContext, returnType, fieldNodes, info, path, result)
-	-- Roblox deviation: Set isn't iterable, so resolve before continuing
+function completeListValue(
+	exeContext: ExecutionContext,
+	returnType: GraphQLList<GraphQLOutputType>,
+	fieldNodes: Array<FieldNode>,
+	info: GraphQLResolveInfo,
+	path: Path,
+	result: any
+): PromiseOrValue<Array<any>>
+	-- ROBLOX deviation: Set isn't iterable, so resolve before continuing
 	if instanceOf(result, Set) then
 		local iterableResult = {}
 		for _, item in result:ipairs() do
@@ -871,7 +938,14 @@ end
 --  * Complete a Scalar or Enum by serializing to a valid value, returning
 --  * null if serialization is not possible.
 --  *]]
-function completeLeafValue(returnType, result)
+-- ROBLOX FIXME: this type is a workaround for Luau type narrowing gap
+type ROBLOX_Luau_workaround = {
+	serialize: (any, any) -> string?
+}
+function completeLeafValue(
+	returnType: ROBLOX_Luau_workaround, -- ROBLOX FIXME: shoud be GraphQLLeafType, see above
+	result: any
+)
 	local serializedResult = returnType:serialize(result)
 
 	if serializedResult == nil then
@@ -885,7 +959,14 @@ end
 --  * Complete a value of an abstract type by determining the runtime object type
 --  * of that value, then complete the value for that type.
 --  *]]
-function completeAbstractValue(exeContext, returnType, fieldNodes, info, path, result)
+function completeAbstractValue(
+	exeContext: ExecutionContext,
+	returnType: GraphQLAbstractType,
+	fieldNodes: Array<FieldNode>,
+	info: GraphQLResolveInfo,
+	path: Path,
+	result: any
+): PromiseOrValue<ObjMap<any>>
 	local resolveTypeFn = returnType.resolveType or exeContext.typeResolver
 	local contextValue = exeContext.contextValue
 	local runtimeType = resolveTypeFn(result, contextValue, info, returnType)
@@ -913,7 +994,14 @@ function completeAbstractValue(exeContext, returnType, fieldNodes, info, path, r
 	)
 end
 
-function ensureValidRuntimeType(runtimeTypeName, exeContext, returnType, fieldNodes, info, result)
+function ensureValidRuntimeType(
+	runtimeTypeName: any,
+	exeContext: ExecutionContext,
+	returnType: GraphQLAbstractType,
+	fieldNodes: Array<FieldNode>,
+	info: GraphQLResolveInfo,
+	result: any
+): GraphQLObjectType
 	if runtimeTypeName == nil then
 		error(GraphQLError.new(
 			("Abstract type \"%s\" must resolve to an Object type at runtime for field \"%s.%s\". Either the \"%s\" type should provide a \"resolveType\" function or each possible type should provide an \"isTypeOf\" function."):format(returnType.name, info.parentType.name, info.fieldName, returnType.name),
@@ -959,7 +1047,14 @@ end
 --[[*
 --  * Complete an Object value by executing all sub-selections.
 --  *]]
-function completeObjectValue(exeContext, returnType, fieldNodes, info, path, result)
+function completeObjectValue(
+	exeContext: ExecutionContext,
+	returnType: GraphQLObjectType,
+	fieldNodes: Array<FieldNode>,
+	info: GraphQLResolveInfo,
+	path: Path,
+	result: any
+): PromiseOrValue<ObjMap<any>>
 	-- If there is an isTypeOf predicate function, call it with the
 	-- current result. If isTypeOf returns false, then raise an error rather
 	-- than continuing execution.
@@ -984,14 +1079,24 @@ function completeObjectValue(exeContext, returnType, fieldNodes, info, path, res
 	return collectAndExecuteSubfields(exeContext, returnType, fieldNodes, path, result)
 end
 
-function invalidReturnTypeError(returnType, result, fieldNodes)
+function invalidReturnTypeError(
+	returnType: GraphQLObjectType,
+	result: any,
+	fieldNodes: Array<FieldNode>
+): GraphQLError
 	return GraphQLError.new(
 		("Expected value of type \"%s\" but got: %s."):format(returnType.name, inspect(result)),
 		fieldNodes
 	)
 end
 
-function collectAndExecuteSubfields(exeContext, returnType, fieldNodes, path, result)
+function collectAndExecuteSubfields(
+	exeContext: ExecutionContext,
+	returnType: GraphQLObjectType,
+	fieldNodes: Array<FieldNode>,
+	path: Path,
+	result: any
+): PromiseOrValue<ObjMap<any>>
 	-- Collect sub-fields to execute to complete this value.
 	local subFieldNodes = collectSubfields(exeContext, returnType, fieldNodes)
 	return executeFields(exeContext, returnType, result, path, subFieldNodes)
@@ -1001,7 +1106,11 @@ end
 --	ROBLOX deviation: no hoisting in Lua so need to declare col
 --  need to declare _collectSubfields before collectSubfields assignment
 --]]
-function _collectSubfields(exeContext, returnType, fieldNodes)
+function _collectSubfields(
+	exeContext: ExecutionContext,
+	returnType: GraphQLObjectType,
+	fieldNodes: Array<FieldNode>
+): ObjMap<Array<FieldNode>>
 	-- ROBLOX deviation: use Map
 	local subFieldNodes = Map.new()
 	local visitedFragmentNames = {}
@@ -1081,7 +1190,7 @@ end
 --  * of calling that function while passing along args and context value.
 --  *]]
 -- ROBLOX TODO: the upstream return type annotation should be nil, since this resolve can fail
-defaultFieldResolver = function(source: any, args, contextValue, info): GraphQLFieldResolver<any, any>?
+defaultFieldResolver = function(source: any, args, contextValue, info)
 	-- ensure source is a value for which property access is acceptable.
 	if isObjectLike(source) or typeof(source) == "function" then
 		local property = source[info.fieldName]
@@ -1105,7 +1214,11 @@ end
 --  *
 --  * @internal
 --  *]]
-function getFieldDef(schema: GraphQLSchema, parentType: GraphQLObjectType, fieldName: string): GraphQLField<any, any>?
+function getFieldDef(
+	schema: GraphQLSchema,
+	parentType: GraphQLObjectType,
+	fieldName: string
+): GraphQLField<any, any>?
 	if fieldName == SchemaMetaFieldDef.name and schema:getQueryType() == parentType then
 		return SchemaMetaFieldDef
 	elseif fieldName == TypeMetaFieldDef.name and schema:getQueryType() == parentType then

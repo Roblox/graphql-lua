@@ -21,9 +21,7 @@ local print_ = require(script.Parent.Parent.language.printer).print
 local GraphQLError = require(script.Parent.Parent.error.GraphQLError).GraphQLError
 
 local DefinitionModule = require(script.Parent.definition)
--- ROBLOX TODO: fundamental Luau issue in definition's type decls, so we workaround here
--- type GraphQLNamedType = DefinitionModule.GraphQLNamedType
-type GraphQLNamedType = any
+type GraphQLNamedType = DefinitionModule.GraphQLNamedType
 local GraphQLScalarType = DefinitionModule.GraphQLScalarType
 
 -- As per the GraphQL Spec, Integers are only treated as valid when a valid

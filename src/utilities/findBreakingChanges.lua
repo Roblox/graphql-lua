@@ -6,6 +6,7 @@ local rootWorkspace = srcWorkspace.Parent
 local LuauPolyfill = require(rootWorkspace.Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
 local Array = LuauPolyfill.Array
+type Array<T> = { [number]: T }
 local UtilArray = require(srcWorkspace.luaUtils.Array)
 local keyMapOrdered = require(srcWorkspace.luaUtils.keyMapOrdered).keyMapOrdered
 
@@ -19,8 +20,21 @@ local print_ = require(language.printer).print
 local visit = require(language.visitor).visit
 
 local typeDir = srcWorkspace.type
-local isSpecifiedScalarType = require(typeDir.scalars).isSpecifiedScalarType
+local schemaModule = require(typeDir.schema)
+type GraphQLSchema = schemaModule.GraphQLSchema
 local definition = require(typeDir.definition)
+-- ROBLOX TODO: Luau doesn't support default type args, so we inline `any` here
+type GraphQLField<TSource, TContext> = definition.GraphQLField<TSource, TContext, any>
+type GraphQLType = definition.GraphQLType
+type GraphQLInputType = definition.GraphQLInputType
+type GraphQLNamedType = definition.GraphQLNamedType
+type GraphQLEnumType = definition.GraphQLEnumType
+type GraphQLUnionType = definition.GraphQLUnionType
+type GraphQLObjectType = definition.GraphQLObjectType
+type GraphQLInterfaceType = definition.GraphQLInterfaceType
+type GraphQLInputObjectType = definition.GraphQLInputObjectType
+
+local isSpecifiedScalarType = require(typeDir.scalars).isSpecifiedScalarType
 local isScalarType = definition.isScalarType
 local isObjectType = definition.isObjectType
 local isInterfaceType = definition.isInterfaceType
@@ -78,11 +92,24 @@ local DangerousChangeType = Object.freeze({
 	ARG_DEFAULT_VALUE_CHANGE = "ARG_DEFAULT_VALUE_CHANGE",
 })
 
+export type BreakingChange = {
+  type: string, -- ROBLOX deviation: Luau can't express this: $Keys<typeof BreakingChangeType>,
+  description: string
+}
+
+export type DangerousChange = {
+  type: string, -- ROBLOX deviation: Luau can't express this: $Keys<typeof DangerousChangeType>,
+  description: string
+}
+
 --[[*
 --  * Given two schemas, returns an Array containing descriptions of all the types
 --  * of breaking changes covered by the other functions down below.
 --  *]]
-local function findBreakingChanges(oldSchema, newSchema)
+local function findBreakingChanges(
+	oldSchema: GraphQLSchema,
+	newSchema: GraphQLSchema
+  ): Array<BreakingChange>
 	local breakingChanges = Array.filter(findSchemaChanges(oldSchema, newSchema), function(change)
 		return BreakingChangeType[change.type] ~= nil
 	end)
@@ -93,21 +120,30 @@ end
 --  * Given two schemas, returns an Array containing descriptions of all the types
 --  * of potentially dangerous changes covered by the other functions down below.
 --  *]]
-local function findDangerousChanges(oldSchema, newSchema)
+local function findDangerousChanges(
+	oldSchema: GraphQLSchema,
+	newSchema: GraphQLSchema
+): Array<DangerousChange>
 	local dangerousChanges = Array.filter(findSchemaChanges(oldSchema, newSchema), function(change)
 		return DangerousChangeType[change.type] ~= nil
 	end)
 	return dangerousChanges
 end
 
-function findSchemaChanges(oldSchema, newSchema)
+function findSchemaChanges(
+	oldSchema: GraphQLSchema,
+	newSchema: GraphQLSchema
+): Array<BreakingChange | DangerousChange>
 	return UtilArray.concat(
 		findTypeChanges(oldSchema, newSchema),
 		findDirectiveChanges(oldSchema, newSchema)
 	)
 end
 
-function findDirectiveChanges(oldSchema, newSchema)
+function findDirectiveChanges(
+	oldSchema: GraphQLSchema,
+	newSchema: GraphQLSchema
+): Array<BreakingChange | DangerousChange>
 	local schemaChanges = {}
 
 	local directivesDiff = diff(oldSchema:getDirectives(), newSchema:getDirectives())
@@ -160,7 +196,10 @@ function findDirectiveChanges(oldSchema, newSchema)
 	return schemaChanges
 end
 
-function findTypeChanges(oldSchema, newSchema)
+function findTypeChanges(
+	oldSchema: GraphQLSchema,
+	newSchema: GraphQLSchema
+): Array<BreakingChange | DangerousChange>
 	local schemaChanges = {}
 
 	local typesDiff = diff(oldSchema:getTypeMap():values(), newSchema:getTypeMap():values())
@@ -212,7 +251,10 @@ function findTypeChanges(oldSchema, newSchema)
 	return schemaChanges
 end
 
-function findInputObjectTypeChanges(oldType, newType)
+function findInputObjectTypeChanges(
+	oldType: GraphQLInputObjectType,
+	newType: GraphQLInputObjectType
+): Array<BreakingChange | DangerousChange>
 	local schemaChanges = {}
 	-- ROBLOX deviation: use Map
 	local fieldsDiff = diff(oldType:getFields():values(), newType:getFields():values())
@@ -253,7 +295,11 @@ function findInputObjectTypeChanges(oldType, newType)
 	return schemaChanges
 end
 
-function findUnionTypeChanges(oldType, newType)
+function findUnionTypeChanges(
+	oldType: GraphQLUnionType,
+	newType: GraphQLUnionType
+): Array<BreakingChange | DangerousChange>
+
 	local schemaChanges = {}
 	local possibleTypesDiff = diff(oldType:getTypes(), newType:getTypes())
 
@@ -273,7 +319,10 @@ function findUnionTypeChanges(oldType, newType)
 	return schemaChanges
 end
 
-function findEnumTypeChanges(oldType, newType)
+function findEnumTypeChanges(
+	oldType: GraphQLEnumType,
+	newType: GraphQLEnumType
+): Array<BreakingChange | DangerousChange>
 	local schemaChanges = {}
 	local valuesDiff = diff(oldType:getValues(), newType:getValues())
 
@@ -292,7 +341,11 @@ function findEnumTypeChanges(oldType, newType)
 
 	return schemaChanges
 end
-function findImplementedInterfacesChanges(oldType, newType)
+function findImplementedInterfacesChanges(
+	oldType: GraphQLObjectType | GraphQLInterfaceType,
+	newType: GraphQLObjectType | GraphQLInterfaceType
+): Array<BreakingChange | DangerousChange>
+
 	local schemaChanges = {}
 	local interfacesDiff = diff(oldType:getInterfaces(), newType:getInterfaces())
 
@@ -312,7 +365,10 @@ function findImplementedInterfacesChanges(oldType, newType)
 	return schemaChanges
 end
 
-function findFieldChanges(oldType, newType)
+function findFieldChanges(
+	oldType: GraphQLObjectType | GraphQLInterfaceType,
+	newType: GraphQLObjectType | GraphQLInterfaceType
+): Array<BreakingChange | DangerousChange>
 	local schemaChanges = {}
 	-- ROBLOX deviation: use Map
 	local fieldsDiff = diff(oldType:getFields():values(), newType:getFields():values())
@@ -344,7 +400,11 @@ function findFieldChanges(oldType, newType)
 	return schemaChanges
 end
 
-function findArgChanges(oldType, oldField, newField)
+function findArgChanges(
+	oldType: GraphQLObjectType | GraphQLInterfaceType,
+	oldField: GraphQLField<any, any>,
+	newField: GraphQLField<any, any>
+): Array<BreakingChange | DangerousChange>
 	local schemaChanges = {}
 	local argsDiff = diff(oldField.args, newField.args)
 
@@ -403,7 +463,11 @@ function findArgChanges(oldType, oldField, newField)
 	return schemaChanges
 end
 
-function isChangeSafeForObjectOrInterfaceField(oldType, newType): boolean
+function isChangeSafeForObjectOrInterfaceField(
+	-- ROBLOX deviation: isListType/isNonNullType use checks directives, which Luau doesn't have
+	oldType: any,
+	newType: any
+): boolean
 	if isListType(oldType) then
 		return isListType(newType)
 			and isChangeSafeForObjectOrInterfaceField(oldType.ofType, newType.ofType) -- if they're both lists, make sure the underlying types are compatible
@@ -421,7 +485,11 @@ function isChangeSafeForObjectOrInterfaceField(oldType, newType): boolean
 		and isChangeSafeForObjectOrInterfaceField(oldType, newType.ofType) -- moving from nullable to non-null of the same underlying type is safe
 end
 
-function isChangeSafeForInputObjectFieldOrFieldArg(oldType, newType): boolean
+function isChangeSafeForInputObjectFieldOrFieldArg(
+	-- ROBLOX deviation: isListType/isNonNullType use checks directives, which Luau doesn't have
+	oldType: any,
+	newType: any
+): boolean
 	if isListType(oldType) then
 		-- if they're both lists, make sure the underlying types are compatible
 		return isListType(newType) and isChangeSafeForInputObjectFieldOrFieldArg(oldType.ofType, newType.ofType)
@@ -437,7 +505,7 @@ function isChangeSafeForInputObjectFieldOrFieldArg(oldType, newType): boolean
 	return isNamedType(newType) and oldType.name == newType.name
 end
 
-function typeKindName(type_): string
+function typeKindName(type_: GraphQLNamedType): string
 	if isScalarType(type_) then
 		return "a Scalar type"
 	end
@@ -464,7 +532,7 @@ function typeKindName(type_): string
 	return "" -- ROBLOX deviation: no implicit return
 end
 
-function stringifyValue(value, type_): string
+function stringifyValue(value: any, type_: GraphQLInputType): string
 	local ast = astFromValue(value, type_)
 
 	invariant(ast ~= nil)
@@ -485,7 +553,16 @@ function stringifyValue(value, type_): string
 	return print_(sortedAST)
 end
 
-function diff(oldArray, newArray)
+-- ROBLOX TODO: align to upstream once Luau supports function generics
+-- function diff<T: { name: string, ... }>(
+function diff(
+	oldArray: Array<any>,
+	newArray: Array<any>
+): {
+	added: Array<any>,
+	removed: Array<any>,
+	persisted: Array<any>
+}
 	local added = {}
 	local removed = {}
 	local persisted = {}

@@ -24,11 +24,11 @@ type GraphQLSchema = SchemaModule.GraphQLSchema
 local GraphQLDirective = require(srcWorkspace.type.directives).GraphQLDirective
 
 local DefinitionModule = require(srcWorkspace.type.definition)
-type GraphQLType = any -- DefinitionModule.GraphQLType
-type GraphQLNamedType = any -- DefinitionModule.GraphQLNamedType
-type GraphQLFieldConfigMap<T,V> = any -- DefinitionModule.GraphQLFieldConfigMap
-type GraphQLFieldConfigArgumentMap = any -- DefinitionModule.GraphQLFieldConfigArgumentMap
-type GraphQLInputFieldConfigMap = any -- DefinitionModule.GraphQLInputFieldConfigMap
+type GraphQLType = DefinitionModule.GraphQLType
+type GraphQLNamedType = DefinitionModule.GraphQLNamedType
+type GraphQLFieldConfigMap<T, V> = DefinitionModule.GraphQLFieldConfigMap<T, V>
+type GraphQLFieldConfigArgumentMap = DefinitionModule.GraphQLFieldConfigArgumentMap
+type GraphQLInputFieldConfigMap = DefinitionModule.GraphQLInputFieldConfigMap
 
 local isIntrospectionType = require(srcWorkspace.type.introspection).isIntrospectionType
 local GraphQLList = DefinitionModule.GraphQLList

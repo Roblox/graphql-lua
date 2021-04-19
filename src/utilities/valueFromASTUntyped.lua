@@ -2,6 +2,10 @@
 local srcWorkspace = script.Parent.Parent
 local jsUtilsWorkspace = srcWorkspace.jsutils
 local languageWorkspace = srcWorkspace.language
+-- ROBLOX deviation: bring in polyfills
+local Array = require(srcWorkspace.Parent.Packages.LuauPolyfill).Array
+type Array<T> = { [number]: T }
+local NULL = require(srcWorkspace.luaUtils.null)
 
 local ObjMapModule = require(jsUtilsWorkspace.ObjMap)
 type ObjMap<T> = ObjMapModule.ObjMap<T>
@@ -11,10 +15,8 @@ local invariant = require(jsUtilsWorkspace.invariant).invariant
 local keyValMap = require(jsUtilsWorkspace.keyValMap).keyValMap
 
 local Kind = require(languageWorkspace.kinds).Kind
-
--- ROBLOX deviation: bring in polyfills
-local Array = require(srcWorkspace.Parent.Packages.LuauPolyfill).Array
-local NULL = require(srcWorkspace.luaUtils.null)
+local astModule = require(languageWorkspace.ast)
+type ValueNode = astModule.ValueNode
 
 --[[**
  * Produces a JavaScript value given a GraphQL Value AST.
@@ -33,7 +35,11 @@ local NULL = require(srcWorkspace.luaUtils.null)
  *
  *]]
 
-local function valueFromASTUntyped(valueNode, variables: ObjMap<any>): any
+local function valueFromASTUntyped(
+	-- ROBLOX TODO: this looks like a type bug in upstream, where ValueNode doesn't always have a value/values/fields field
+	valueNode: any, -- ValueNode
+	variables: ObjMap<any> -- ROBLOX TODO: should be nilable
+): any
 	if valueNode.kind == Kind.NULL then
 		return NULL
 	elseif valueNode.kind == Kind.INT then

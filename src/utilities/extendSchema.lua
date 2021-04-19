@@ -61,7 +61,7 @@ local introspectionImport = require(typeWorkspace.introspection)
 local introspectionTypes = introspectionImport.introspectionTypes
 local isIntrospectionType = introspectionImport.isIntrospectionType
 local directives = require(typeWorkspace.directives)
-type GraphQLDirective = any -- directives.GraphQLDirective
+type GraphQLDirective = directives.GraphQLDirective
 local GraphQLDirective = directives.GraphQLDirective
 local GraphQLDeprecatedDirective = directives.GraphQLDeprecatedDirective
 local GraphQLSpecifiedByDirective = directives.GraphQLSpecifiedByDirective
@@ -88,17 +88,17 @@ local isInputObjectType = definitionImport.isInputObjectType
 local GraphQLList = definitionImport.GraphQLList
 local GraphQLNonNull = definitionImport.GraphQLNonNull
 local GraphQLScalarType = definitionImport.GraphQLScalarType
-type GraphQLScalarType = any -- definitionImport.GraphQLScalarType
+type GraphQLScalarType = definitionImport.GraphQLScalarType
 local GraphQLObjectType = definitionImport.GraphQLObjectType
-type GraphQLObjectType = any -- definitionImport.GraphQLObjectType
+type GraphQLObjectType = definitionImport.GraphQLObjectType
 local GraphQLInterfaceType = definitionImport.GraphQLInterfaceType
-type GraphQLInterfaceType = any -- definitionImport.GraphQLInterfaceType
+type GraphQLInterfaceType = definitionImport.GraphQLInterfaceType
 local GraphQLUnionType = definitionImport.GraphQLUnionType
-type GraphQLUnionType = any -- definitionImport.GraphQLUnionType
+type GraphQLUnionType = definitionImport.GraphQLUnionType
 local GraphQLEnumType = definitionImport.GraphQLEnumType
 type GraphQLEnumType = definitionImport.GraphQLEnumType
 local GraphQLInputObjectType = definitionImport.GraphQLInputObjectType
-type GraphQLInputObjectType = any -- definitionImport.GraphQLInputObjectType
+type GraphQLInputObjectType = definitionImport.GraphQLInputObjectType
 
 local valueFromAST = require(script.Parent.valueFromAST).valueFromAST
 
@@ -690,7 +690,7 @@ function extendSchemaImpl(
 	end
 
 	local function buildType(astNode: TypeDefinitionNode): GraphQLNamedType
-		-- ROBLOX deviation: workaround Luau bug:  (E001) Type 'StringValueNode?' does not have key 'value'
+		-- ROBLOX deviation: workaround Luau narrowing bug:  (E001) Type 'StringValueNode?' does not have key 'value'
 		local _astNode: any = astNode
 		local name = astNode.name.value
 		-- ROBLOX deviation: use Map type

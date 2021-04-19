@@ -6,9 +6,21 @@ local typeWorkspace = srcWorkspace.type
 
 local visitorImport = require(language.visitor)
 local astImport = require(language.ast)
-type Visitor<T> = any -- visitorImport.Visitor<T>
-type ASTNode = any -- astImport.ASTNode
-type ASTKindToNode = any -- astImport.ASTKindToNode
+-- ROBLOX deviation: Luau can't do default type args, so we inline here
+type Visitor<T> = visitorImport.Visitor<T, any>
+-- ROBLOX TODO: looks like a type violation in upstream, not all members of ASTNode union have 'name' or 'value' fields
+type TypeNode = astImport.TypeNode
+type NameNode = astImport.NameNode
+type NamedTypeNode = astImport.NamedTypeNode
+type ASTNode = {
+	kind: string,
+	name: NameNode,
+	value: string,
+	operation: any,
+	typeCondition: NamedTypeNode,
+	type: TypeNode
+} -- astImport.ASTNode
+type ASTKindToNode = astImport.ASTKindToNode
 type FieldNode = astImport.FieldNode
 local Kind = require(language.kinds).Kind
 local isNode = astImport.isNode
@@ -16,17 +28,18 @@ local getVisitFn = visitorImport.getVisitFn
 
 local schemaImport = require(typeWorkspace.schema)
 type GraphQLSchema = schemaImport.GraphQLSchema
--- local _directivesImport = require(typeWorkspace.directives)
-type GraphQLDirective = any -- _directivesImport.GraphQLDirective
+local _directivesImport = require(typeWorkspace.directives)
+type GraphQLDirective = _directivesImport.GraphQLDirective
 local definitionImport = require(typeWorkspace.definition)
-type GraphQLType = any -- definitionImport.GraphQLType
-type GraphQLInputType = any -- definitionImport.GraphQLInputType
-type GraphQLOutputType = any -- definitionImport.GraphQLOutputType
-type GraphQLCompositeType = any -- definitionImport.GraphQLCompositeType
-type GraphQLField<T, U> = any -- definitionImport.GraphQLField<T, U>
-type GraphQLArgument = any -- definitionImport.GraphQLArgument
-type GraphQLInputField = any -- definitionImport.GraphQLInputField
-type GraphQLEnumValue = any -- definitionImport.GraphQLEnumValue
+type GraphQLType = definitionImport.GraphQLType
+type GraphQLInputType = definitionImport.GraphQLInputType
+type GraphQLOutputType = definitionImport.GraphQLOutputType
+type GraphQLCompositeType = definitionImport.GraphQLCompositeType
+-- ROBLOX deviation: Luau can't do default type args, so we inline here
+type GraphQLField<T, U> = definitionImport.GraphQLField<T, U, any>
+type GraphQLArgument = definitionImport.GraphQLArgument
+type GraphQLInputField = definitionImport.GraphQLInputField
+type GraphQLEnumValue = definitionImport.GraphQLEnumValue
 local isObjectType = definitionImport.isObjectType
 local isInterfaceType = definitionImport.isInterfaceType
 local isEnumType = definitionImport.isEnumType
@@ -392,8 +405,8 @@ end
 --  * and need to handle Interface and Union types.
 --  */
 function getFieldDef(
-	schema: GraphQLSchema,
-	parentType: GraphQLType,
+	schema: { getQueryType: (any) -> any }, -- ROBLOX TODO: Luau error says GraphQLSchema can't be converted to `any?`
+	parentType: { getFields: (any) -> any }, -- ROBLOX TODO: type violation from upstream, not all GraphQLType union members have getFields()
 	fieldNode: FieldNode
 ): GraphQLField<any, any>?
 	local name = fieldNode.name.value

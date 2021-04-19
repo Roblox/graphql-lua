@@ -321,7 +321,7 @@ export type SelectionNode = FieldNode | FragmentSpreadNode | InlineFragmentNode
 export type FieldNode = {
   kind: string,
   loc: Location?,
-  alias: NameNode?,
+  alias: NameNode, -- ROBLOX TODO: nilability removed due to Luau narrowing bugs
   name: NameNode,
   argument: Array<ArgumentNode>?,
   directives: Array<DirectiveNode>?,

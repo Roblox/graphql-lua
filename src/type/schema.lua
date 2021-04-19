@@ -11,8 +11,16 @@ local MapModule = require(script.Parent.Parent.luaUtils.Map)
 local Map = MapModule.Map
 type Map<T, V> = MapModule.Map<T, V>
 
--- ROBLOX TODO: add implemenation of types from LuauPolyfill
-type Set<T> = any -- LuauPolyfill.Set<T>
+-- ROBLOX TODO: for some reason, I can't import types exported from a package
+type Set<T> = { -- LuauPolyfill.Set<T>
+	size: number,
+	-- method definitions
+	add: (any, T) -> Set<T>,
+	clear: (any) -> (),
+	delete: (any, T) -> boolean,
+	has: (any, T) -> boolean,
+	ipairs: (any) -> any,
+}
 type Array<T> = { [number]: T } -- LuauPolyfill.Array<T>
 local Error = require(luaUtilsWorkspace.Error)
 local isNillishModule = require(luaUtilsWorkspace.isNillish)
@@ -439,14 +447,12 @@ export type GraphQLSchemaConfig = {
 	extensions: ObjMapLike<any>?,
 	astNode: SchemaDefinitionNode?,
 	extensionASTNodes: Array<SchemaExtensionNode>?,
--- ...GraphQLSchemaValidationOptions,
 } & GraphQLSchemaValidationOptions
 
 -- /**
 --  * @internal
 --  */
 export type GraphQLSchemaNormalizedConfig = GraphQLSchemaConfig & {
-	-- ...GraphQLSchemaConfig,
 	description: string?,
 	types: Array<GraphQLNamedType>,
 	directives: Array<GraphQLDirective>,

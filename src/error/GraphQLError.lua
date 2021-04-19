@@ -1,35 +1,34 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/error/GraphQLError.js
 type Array<T> = { [number]: T }
 
--- ROBLOX directory
+-- ROBLOX deviation: preamble
 local srcWorkspace = script.Parent.Parent
 local languageWorkspace = srcWorkspace.language
-
--- ROBLOX deviation: utils
+local Array = require(srcWorkspace.Parent.Packages.LuauPolyfill).Array
+local Error = require(srcWorkspace.luaUtils.Error)
+-- ROBLOX TODO: hoist this into luau-polyfill
+type Error = {
+    name: string,
+    message: string,
+    stack: string?
+}
 local HttpService = game:GetService("HttpService")
 
+local isObjectLike = require(srcWorkspace.jsutils.isObjectLike).isObjectLike
+
+local _astModule = require(languageWorkspace.ast)
+type ASTNode = _astModule.ASTNode
 local _sourceModule = require(languageWorkspace.source)
 type Source = _sourceModule.Source
-
--- require
 local locationModule = require(languageWorkspace.location)
 type SourceLocation = locationModule.SourceLocation
 local getLocation = locationModule.getLocation
-local printLocationIndex = require(languageWorkspace.printLocation)
-local printLocation = printLocationIndex.printLocation
-local printSourceLocation = printLocationIndex.printSourceLocation
-
--- lua helpers & polyfills
-local isObjectLike = require(srcWorkspace.jsutils.isObjectLike).isObjectLike
-local Array = require(srcWorkspace.Parent.Packages.LuauPolyfill).Array
-local Error = require(srcWorkspace.luaUtils.Error)
+local printLocationModule = require(languageWorkspace.printLocation)
+local printLocation = printLocationModule.printLocation
+local printSourceLocation = printLocationModule.printSourceLocation
 
 -- ROBLOX deviation: pre-declare functions
 local printError
-
--- ROBLOX deviation: type not implemented yet
-type ASTNode = any
-type Error = any
 
 local GraphQLError = setmetatable({}, { __index = Error })
 GraphQLError.__index = GraphQLError
@@ -57,7 +56,7 @@ export type GraphQLError = {
 	--  *
 	--  * Enumerable, and appears in the result of JSON.stringify().
 	--  */
-	locations: Array<SourceLocation> | nil,
+	locations: Array<SourceLocation>, -- ROBLOX TODO: Luau can't express void type, so use nil instead once it supports narrowing properly
 
 	-- /**
 	--  * An array describing the JSON-path into the execution response which
@@ -65,12 +64,12 @@ export type GraphQLError = {
 	--  *
 	--  * Enumerable, and appears in the result of JSON.stringify().
 	--  */
-	path: Array<string | number> | nil,
+	path: Array<string | number> | nil, -- ROBLOX deviation: Luau can't express void type, so use nil instead
 
 	-- /**
 	--  * An array of GraphQL AST Nodes corresponding to this error.
 	--  */
-	nodes: Array<ASTNode> | nil,
+	nodes: Array<ASTNode>, -- ROBLOX TODO: Luau can't express void type, so use nil instead once it supports narrowing properly
 
 	-- /**
 	--  * The source GraphQL document for the first location of this error.
@@ -78,13 +77,13 @@ export type GraphQLError = {
 	--  * Note that if this Error represents more than one node, the source may not
 	--  * represent nodes after the first node.
 	--  */
-	source: Source | nil,
+	source: Source | nil, -- ROBLOX deviation: Luau can't express void type, so use nil instead
 
 	-- /**
 	--  * An array of character offsets within the source GraphQL document
 	--  * which correspond to this error.
 	--  */
-	positions: Array<number> | nil,
+	positions: Array<number> | nil, -- ROBLOX deviation: Luau can't express void type, so use nil instead
 
 	-- /**
 	--  * The original error thrown from a field resolver during execution.
@@ -94,17 +93,19 @@ export type GraphQLError = {
 	-- /**
 	--  * Extension fields to add to the formatted error.
 	--  */
-	extensions: { [string]: any } | nil,
+	extensions: { [string]: any }?, -- ROBLOX TODO: missing type varargs from upstream
 }
 
 function GraphQLError.new(
 	message: string,
-	nodes,
-	source,
+	nodes: any, -- ROBLOX deviation: Luau doesn't have `%checks` functionality Array<ASTNode> | ASTNode | nil,
+	source: Source?,
 	positions: Array<number>,
 	path: Array<string | number>,
-	originalError,
-	extensions
+	-- ROBLOX TODO: missing type varargs from upstream
+	-- ROBLOX TODO: missing nil-ability due to Luau narrowing bug
+	originalError: (Error & { extensions: any? }),
+	extensions: { [string]: any }? -- ROBLOX TODO: missing type varargs from upstream
 ): GraphQLError
 
 	-- Compute list of blame nodes.
@@ -203,7 +204,7 @@ function GraphQLError:toJSON(): string
 	end, {}))
 end
 
-function printError(error_)
+function printError(error_: GraphQLError): string
 	local output = error_.message
 
 	if error_.nodes ~= nil then

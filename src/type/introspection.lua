@@ -23,6 +23,14 @@ local scalarsModule = require(script.Parent.scalars)
 local GraphQLString = scalarsModule.GraphQLString
 local GraphQLBoolean = scalarsModule.GraphQLBoolean
 local definitionModule = require(script.Parent.definition)
+type GraphQLType = definitionModule.GraphQLType
+type GraphQLNamedType = definitionModule.GraphQLNamedType
+type GraphQLInputField = definitionModule.GraphQLInputField
+type GraphQLEnumValue = definitionModule.GraphQLEnumValue
+-- ROBLOX TODO: Luau doesn't support default type args, so inline any
+type GraphQLField<TSource, TContext> = definitionModule.GraphQLField<TSource, TContext, any>
+type GraphQLFieldConfigMap<TSource, TContext> = definitionModule.GraphQLFieldConfigMap<TSource, TContext>
+
 local GraphQLList = definitionModule.GraphQLList
 local GraphQLNonNull = definitionModule.GraphQLNonNull
 local GraphQLObjectType = definitionModule.GraphQLObjectType
@@ -779,7 +787,7 @@ exports.__TypeKind = GraphQLEnumType.new({
 --  * so the format for args is different.
 --  */
 
-exports.SchemaMetaFieldDef = {
+local SchemaMetaFieldDef: GraphQLField<any, any> = {
 	name = "__schema",
 	type = GraphQLNonNull.new(exports.__Schema),
 	description = "Access the current type schema of this server.",
@@ -793,8 +801,9 @@ exports.SchemaMetaFieldDef = {
 	extensions = nil,
 	astNode = nil,
 }
+exports.SchemaMetaFieldDef = SchemaMetaFieldDef
 
-exports.TypeMetaFieldDef = {
+local TypeMetaFieldDef: GraphQLField<any, any> = {
 	name = "__type",
 	type = exports.__Type,
 	description = "Request the type information of a single type.",
@@ -819,8 +828,9 @@ exports.TypeMetaFieldDef = {
 	extensions = nil,
 	astNode = nil,
 }
+exports.TypeMetaFieldDef = TypeMetaFieldDef
 
-exports.TypeNameMetaFieldDef = {
+local TypeNameMetaFieldDef: GraphQLField<any, any> = {
 	name = "__typename",
 	type = GraphQLNonNull.new(GraphQLString),
 	description = "The name of the current Object type at runtime.",
@@ -834,6 +844,7 @@ exports.TypeNameMetaFieldDef = {
 	extensions = nil,
 	astNode = nil,
 }
+exports.TypeNameMetaFieldDef = TypeNameMetaFieldDef
 
 exports.introspectionTypes = Object.freeze({
 	exports.__Schema,

@@ -5,6 +5,8 @@ local graphql = jsutils.Parent
 local Packages = graphql.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
+local PromiseOrValueModule = require(jsutils.PromiseOrValue)
+type PromiseOrValue<T> = PromiseOrValueModule.PromiseOrValue<T>
 local isPromise = require(jsutils.isPromise).isPromise
 
 --[[
@@ -16,9 +18,9 @@ local isPromise = require(jsutils.isPromise).isPromise
  ]]
 local function promiseReduce(
 	values: Array<any>,
-	callback: (any, any) -> any,
-	initialValue: any
-)
+	callback: (any, any) -> PromiseOrValue<any>,
+	initialValue: PromiseOrValue<any>
+): PromiseOrValue<any>
 	return Array.reduce(
 		values,
 		function(previous, value)

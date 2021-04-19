@@ -473,7 +473,7 @@ function visitInParallel(
 end
 
 function getVisitFn(
-	visitor: any, -- ROBLOX FIXME: Visitor<any, Nodes>,
+	visitor: any, -- ROBLOX FIXME: Visitor<any, Nodes> errors with Expected type table, got 'EnterLeave<< VALUELESS BY EXCEPTION >> | ShapeMap<< VALUELESS BY EXCEPTION >, < VALUELESS BY EXCEPTION >>' instead
 	kind: string,
 	isLeaving: boolean
 	-- ROBLOX TODO: Luau doesn't currently support default type args
