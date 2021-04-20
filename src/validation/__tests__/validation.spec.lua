@@ -1,3 +1,4 @@
+-- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/1611bbb08a88f734e9490b14cfe6afea11a838e0/src/validation/__tests__/validation-test.js
 return function()
 	local validationWorkspace = script.Parent.Parent
 	local root = validationWorkspace.Parent
