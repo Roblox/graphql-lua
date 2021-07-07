@@ -3,7 +3,7 @@
 type Array<T> = { [number]: T }
 
 local srcWorkspace = script.Parent.Parent
-local Packages = srcWorkspace.Parent.Packages
+local Packages = srcWorkspace.Parent
 
 -- ROBLOX deviation: util
 local MapModule = require(srcWorkspace.luaUtils.Map)

@@ -3,7 +3,7 @@
 local validationWorkspace = script.Parent
 local root = validationWorkspace.Parent
 local Error = require(root.luaUtils.Error)
-local PackagesWorkspace = root.Parent.Packages
+local PackagesWorkspace = root.Parent
 local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
 local Array = LuauPolyfill.Array
 type Array<T> = { [number]: T }

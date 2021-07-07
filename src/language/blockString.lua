@@ -3,7 +3,7 @@
 local language = script.Parent
 local src = language.Parent
 
-local PolyArray = require(script.Parent.Parent.Parent.Packages.LuauPolyfill).Array
+local PolyArray = require(script.Parent.Parent.Parent.LuauPolyfill).Array
 
 local slice = require(src.luaUtils.slice)
 local sliceString = slice.sliceString

@@ -5,7 +5,7 @@ local srcWorkspace = language.Parent
 local root = srcWorkspace.Parent
 
 local getLocation = require(language.location).getLocation
-local Packages = root.Packages
+local Packages = root
 local LuauPolyfill = require(Packages.LuauPolyfill)
 
 local Array = LuauPolyfill.Array

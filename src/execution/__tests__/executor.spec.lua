@@ -30,8 +30,8 @@ return function()
 	-- ROBLOX deviation: utils
 	local Error = require(luaUtilsWorkspace.Error)
 	local Array = require(luaUtilsWorkspace.Array)
-	local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
-	local Promise = require(srcWorkspace.Parent.Packages.Promise)
+	local Object = require(srcWorkspace.Parent.LuauPolyfill).Object
+	local Promise = require(srcWorkspace.Parent.Promise)
 	local instanceOf = require(srcWorkspace.jsutils.instanceOf)
 	local NULL = require(luaUtilsWorkspace.null)
 	local HttpService = game:GetService("HttpService")

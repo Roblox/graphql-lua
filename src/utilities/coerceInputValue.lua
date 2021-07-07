@@ -5,7 +5,7 @@ local rootWorkspace = srcWorkspace.Parent
 local jsutilsWorkspace = srcWorkspace.jsutils
 local luaUtilsWorkspace = srcWorkspace.luaUtils
 
-local LuauPolyfill = require(rootWorkspace.Packages.LuauPolyfill)
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
 
 local Object = LuauPolyfill.Object
 local Array = LuauPolyfill.Array

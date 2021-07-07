@@ -2,7 +2,7 @@
 
 local srcWorkspace = script.Parent.Parent
 local rootWorkspace = srcWorkspace.Parent
-local PackagesWorkspace = rootWorkspace.Packages
+local PackagesWorkspace = rootWorkspace
 
 -- ROBLOX deviation: add polyfills for JS Primitives
 local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)

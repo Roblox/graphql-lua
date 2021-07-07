@@ -18,7 +18,7 @@ local typeDirectory = root.type
 local specifiedScalarTypes = require(typeDirectory.scalars).specifiedScalarTypes
 local introspectionTypes = require(typeDirectory.introspection).introspectionTypes
 local Array = require(root.luaUtils.Array)
-local PackagesWorkspace = root.Parent.Packages
+local PackagesWorkspace = root.Parent
 local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
 local Object = LuauPolyfill.Object
 

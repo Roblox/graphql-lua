@@ -1,7 +1,7 @@
 return function()
 	local jsutils = script.Parent.Parent
 	local graphql = jsutils.Parent
-	local Packages = graphql.Parent.Packages
+	local Packages = graphql.Parent
 	local Promise = require(Packages.Promise)
 	local promiseReduce = require(jsutils.promiseReduce).promiseReduce
 

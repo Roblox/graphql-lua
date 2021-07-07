@@ -12,7 +12,7 @@ return function()
 	local validate = require(validationWorkspace.validate).validate
 	local harness = require(script.Parent.harness)
 	local testSchema = harness.testSchema
-	local PackageWorkspace = root.Parent.Packages
+	local PackageWorkspace = root.Parent
 	local Error = require(root.luaUtils.Error)
 	local LuauPolyfill = require(PackageWorkspace.LuauPolyfill)
 	local Array = LuauPolyfill.Array

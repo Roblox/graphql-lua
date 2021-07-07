@@ -2,7 +2,7 @@
 
 return function()
 	local srcWorkspace = script.Parent.Parent.Parent
-	local PackagesWorkspace = srcWorkspace.Parent.Packages
+	local PackagesWorkspace = srcWorkspace.Parent
 
 	local parse = require(srcWorkspace.language.parser).parse
 

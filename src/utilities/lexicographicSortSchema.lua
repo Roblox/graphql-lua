@@ -3,7 +3,7 @@
 -- ROBLOX deviation: add polyfills
 local srcWorkspace = script.Parent.Parent
 local rootWorkspace = srcWorkspace.Parent
-local LuauPolyfill = require(rootWorkspace.Packages.LuauPolyfill)
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
 local MapModule = require(srcWorkspace.luaUtils.Map)

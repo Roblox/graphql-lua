@@ -1,4 +1,4 @@
-local Object = require(script.Parent.Parent.Parent.Packages.LuauPolyfill).Object
+local Object = require(script.Parent.Parent.Parent.LuauPolyfill).Object
 
 local DirectiveLocation = Object.freeze({
     -- Request Definitions

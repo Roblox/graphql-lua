@@ -2,7 +2,7 @@
 type Array<T> = { [number]: T }
 local jsutils = script.Parent
 local graphql = jsutils.Parent
-local Packages = graphql.Parent.Packages
+local Packages = graphql.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local PromiseOrValueModule = require(jsutils.PromiseOrValue)

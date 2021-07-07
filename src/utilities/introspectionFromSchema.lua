@@ -3,7 +3,7 @@
 local srcWorkspace = script.Parent.Parent
 
 -- ROBLOX deviation: utils
-local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
+local Object = require(srcWorkspace.Parent.LuauPolyfill).Object
 
 local invariant = require(srcWorkspace.jsutils.invariant).invariant
 

@@ -4,7 +4,7 @@ local root = script.Parent.Parent.Parent
 local GraphQLError = require(root.error.GraphQLError).GraphQLError
 local language = root.language
 local Kind = require(language.kinds).Kind
-local PackagesWorkspace = root.Parent.Packages
+local PackagesWorkspace = root.Parent
 local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
 local Array = LuauPolyfill.Array
 

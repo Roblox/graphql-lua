@@ -1,5 +1,5 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1611bbb08a88f734e9490b14cfe6afea11a838e0/src/__tests__/starWarsIntrospection-test.js
-local Packages = script.Parent.Parent.Parent.Packages
+local Packages = script.Parent.Parent.Parent
 local Object = require(Packages.LuauPolyfill).Object
 local NULL = require(script.Parent.Parent.luaUtils.null)
 local graphql = require(script.Parent.Parent.graphql)

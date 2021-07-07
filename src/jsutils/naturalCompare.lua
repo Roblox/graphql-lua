@@ -9,7 +9,7 @@
 
 local srcWorkspace = script.Parent.Parent
 local charCodeAt = require(srcWorkspace.luaUtils.charCodeAt)
-local Packages = script.Parent.Parent.Parent.Packages
+local Packages = script.Parent.Parent.Parent
 local Number = require(Packages.LuauPolyfill).Number
 local isNaN = Number.isNaN
 local isDigit, DIGIT_0, DIGIT_9

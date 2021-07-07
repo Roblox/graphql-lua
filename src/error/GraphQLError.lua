@@ -4,7 +4,7 @@ type Array<T> = { [number]: T }
 -- ROBLOX deviation: preamble
 local srcWorkspace = script.Parent.Parent
 local languageWorkspace = srcWorkspace.language
-local Array = require(srcWorkspace.Parent.Packages.LuauPolyfill).Array
+local Array = require(srcWorkspace.Parent.LuauPolyfill).Array
 local Error = require(srcWorkspace.luaUtils.Error)
 -- ROBLOX TODO: hoist this into luau-polyfill
 type Error = {

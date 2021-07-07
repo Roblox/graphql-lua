@@ -1,7 +1,7 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/suggestionList.js
 local jsutils = script.Parent
 local graphql = jsutils.Parent
-local Packages = graphql.Parent.Packages
+local Packages = graphql.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
 

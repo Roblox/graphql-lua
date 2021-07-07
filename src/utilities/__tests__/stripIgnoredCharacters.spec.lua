@@ -16,7 +16,7 @@ return function()
 	local parse = require(languageWorkspace.parser).parse
 	local Source = require(languageWorkspace.source).Source
 
-	local Array = require(srcWorkspace.Parent.Packages.LuauPolyfill).Array
+	local Array = require(srcWorkspace.Parent.LuauPolyfill).Array
 	local UtilArray = require(srcWorkspace.luaUtils.Array)
 	local inspect = require(srcWorkspace.jsutils.inspect).inspect
 

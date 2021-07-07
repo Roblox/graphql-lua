@@ -2,7 +2,7 @@
 
 local language = script.Parent
 local src = language.Parent
-local Packages = src.Parent.Packages
+local Packages = src.Parent
 
 local Number = require(Packages.LuauPolyfill).Number
 local isNaN = Number.isNaN

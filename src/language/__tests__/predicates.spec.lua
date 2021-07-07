@@ -2,7 +2,7 @@
 type Array<T> = { [number]: T }
 
 return function()
-	local LuauPolyfill = require(script.Parent.Parent.Parent.Parent.Packages.LuauPolyfill)
+	local LuauPolyfill = require(script.Parent.Parent.Parent.Parent.LuauPolyfill)
 	local Object = LuauPolyfill.Object
 	local Array = LuauPolyfill.Array
 	local Kind = require(script.Parent.Parent.kinds).Kind

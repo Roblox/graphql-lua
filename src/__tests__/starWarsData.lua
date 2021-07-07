@@ -4,7 +4,7 @@
 local rootWorkspace = script.Parent.Parent
 
 -- ROBLOX deviation: add polyfills
-local Packages = rootWorkspace.Parent.Packages
+local Packages = rootWorkspace.Parent
 local Promise = require(Packages.Promise)
 local Array = require(Packages.LuauPolyfill).Array
 type Array<T> = { [number]: T }

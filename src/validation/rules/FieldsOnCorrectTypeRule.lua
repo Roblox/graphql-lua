@@ -9,7 +9,7 @@ local definition = require(root.type.definition)
 local isObjectType = definition.isObjectType
 local isInterfaceType = definition.isInterfaceType
 local isAbstractType = definition.isAbstractType
-local PackagesWorkspace = root.Parent.Packages
+local PackagesWorkspace = root.Parent
 local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
 local Array = LuauPolyfill.Array
 

@@ -5,7 +5,7 @@ return function()
 	local srcWorkspace = executionWorkspace.Parent
 
 	-- ROBLOX deviation: utils
-	local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
+	local Object = require(srcWorkspace.Parent.LuauPolyfill).Object
 	local NULL = require(srcWorkspace.luaUtils.null)
 	local Map = require(srcWorkspace.luaUtils.Map).Map
 

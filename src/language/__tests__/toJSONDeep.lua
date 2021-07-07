@@ -2,7 +2,7 @@
 
 local srcWorkspace = script.Parent.Parent.Parent
 local root = srcWorkspace.Parent
-local Array = require(root.Packages.LuauPolyfill).Array
+local Array = require(root.LuauPolyfill).Array
 
 local isObjectLike = require(srcWorkspace.jsutils.isObjectLike).isObjectLike
 -- /**

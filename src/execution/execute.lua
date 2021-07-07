@@ -15,10 +15,10 @@ local PromiseOrValueImport = require(jsUtilsWorkspace.PromiseOrValue)
 type PromiseOrValue<T> = PromiseOrValueImport.PromiseOrValue<T>
 
 -- ROBLOX deviation: utils
-local Set = require(srcWorkspace.Parent.Packages.LuauPolyfill).Set
+local Set = require(srcWorkspace.Parent.LuauPolyfill).Set
 local Array = require(luaUtilsWorkspace.Array)
 local Error = require(luaUtilsWorkspace.Error)
-local Promise = require(srcWorkspace.Parent.Packages.Promise)
+local Promise = require(srcWorkspace.Parent.Promise)
 local instanceOf = require(jsUtilsWorkspace.instanceOf)
 local NULL = require(luaUtilsWorkspace.null)
 local isNillish = require(luaUtilsWorkspace.isNillish).isNillish

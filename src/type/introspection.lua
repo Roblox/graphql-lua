@@ -3,7 +3,7 @@
 local srcWorkspace = script.Parent.Parent
 local jsutilsWorkspace = srcWorkspace.jsutils
 local languageWorkspace = srcWorkspace.language
-local Packages = srcWorkspace.Parent.Packages
+local Packages = srcWorkspace.Parent
 
 -- ROBLOX deviation: utils
 local LuauPolyfill = require(Packages.LuauPolyfill)

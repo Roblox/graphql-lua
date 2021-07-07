@@ -1,4 +1,4 @@
-local Number = require(script.Parent.Parent.Parent.Packages.LuauPolyfill).Number
+local Number = require(script.Parent.Parent.Parent.LuauPolyfill).Number
 
 local function toBeNaN(a)
 	local success = Number.isNaN(a)

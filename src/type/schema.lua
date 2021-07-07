@@ -3,7 +3,7 @@
 local srcWorkspace = script.Parent.Parent
 local luaUtilsWorkspace = srcWorkspace.luaUtils
 
-local Packages = srcWorkspace.Parent.Packages
+local Packages = srcWorkspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Set = LuauPolyfill.Set

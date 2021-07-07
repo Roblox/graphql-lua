@@ -9,7 +9,7 @@ local invariant = require(jsutils.invariant).invariant
 local Kind = require(language.kinds).Kind
 local DirectiveLocation = require(language.directiveLocation).DirectiveLocation
 local specifiedDirectives = require(root.type.directives).specifiedDirectives
-local PackagesWorkspace = root.Parent.Packages
+local PackagesWorkspace = root.Parent
 local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
 local Array = LuauPolyfill.Array
 
