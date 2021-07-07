@@ -3,7 +3,7 @@
 return function()
 	local executionWorkspace = script.Parent.Parent
 	local srcWorkspace = executionWorkspace.Parent
-	local Packages = srcWorkspace.Parent.Packages
+	local Packages = srcWorkspace.Parent
 
 	-- ROBLOX deviation: utils
 	local Error = require(srcWorkspace.luaUtils.Error)

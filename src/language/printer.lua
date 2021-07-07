@@ -7,7 +7,7 @@ local root = srcWorkspace.Parent
 local visit = require(script.Parent.visitor).visit
 local printBlockString = require(script.Parent.blockString).printBlockString
 
-local Array = require(root.Packages.LuauPolyfill).Array
+local Array = require(root.LuauPolyfill).Array
 local UtilArray = require(srcWorkspace.luaUtils.Array)
 
 local HttpService = game:GetService("HttpService")

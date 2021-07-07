@@ -102,7 +102,7 @@ type GraphQLInputObjectType = definitionImport.GraphQLInputObjectType
 
 local valueFromAST = require(script.Parent.valueFromAST).valueFromAST
 
-local LuauPolyfillImport = require(root.Packages.LuauPolyfill)
+local LuauPolyfillImport = require(root.LuauPolyfill)
 local Object = LuauPolyfillImport.Object
 local Error = require(srcWorkspace.luaUtils.Error)
 local Array = require(srcWorkspace.luaUtils.Array)

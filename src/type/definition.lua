@@ -6,7 +6,7 @@
 type Array<T> = { [number]: T }
 local srcWorkspace = script.Parent.Parent
 local Error = require(srcWorkspace.luaUtils.Error)
-local LuauPolyfillImport = require(srcWorkspace.Parent.Packages.LuauPolyfill)
+local LuauPolyfillImport = require(srcWorkspace.Parent.LuauPolyfill)
 local PromiseModule = require(srcWorkspace.luaUtils.Promise)
 type Promise<T> = PromiseModule.Promise<T>
 local NULL = require(srcWorkspace.luaUtils.null)

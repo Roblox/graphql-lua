@@ -1,6 +1,6 @@
 return function()
 	local srcWorkspace = script.Parent.Parent.Parent
-	local Promise = require(srcWorkspace.Parent.Packages.Promise)
+	local Promise = require(srcWorkspace.Parent.Promise)
 
 	local coerceToPromise = require(script.Parent.Parent.coerceToPromise).coerceToPromise
 

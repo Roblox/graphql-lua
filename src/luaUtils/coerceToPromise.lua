@@ -1,5 +1,5 @@
 local srcWorkspace = script.Parent.Parent
-local Promise = require(srcWorkspace.Parent.Packages.Promise)
+local Promise = require(srcWorkspace.Parent.Promise)
 local PromiseOrValueModule = require(srcWorkspace.jsutils.PromiseOrValue)
 type PromiseOrValue<T> = PromiseOrValueModule.PromiseOrValue<T>
 local PromiseModule = require(srcWorkspace.luaUtils.Promise)

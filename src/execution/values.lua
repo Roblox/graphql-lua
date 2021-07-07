@@ -3,7 +3,7 @@
 local srcWorkspace = script.Parent.Parent
 
 local root = srcWorkspace.Parent
-local LuauPolyfill = require(root.Packages.LuauPolyfill)
+local LuauPolyfill = require(root.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local NULL = require(srcWorkspace.luaUtils.null)
 local isNillish = require(srcWorkspace.luaUtils.isNillish).isNillish

@@ -10,7 +10,7 @@ return function()
 	local lexerExport = require(language.lexer)
 	local sourceExport = require(language.source)
 	local tokenKindExport = require(language.tokenKind)
-	local Array = require(root.Packages.LuauPolyfill).Array
+	local Array = require(root.LuauPolyfill).Array
 	local UtilArray = require(src.luaUtils.Array)
 	local instanceOf = require(src.jsutils.instanceOf)
 	local GraphQLError = require(src.error.GraphQLError).GraphQLError

@@ -1,4 +1,4 @@
-local Number = require(script.Parent.Parent.Parent.Packages.LuauPolyfill).Number
+local Number = require(script.Parent.Parent.Parent.LuauPolyfill).Number
 local NULL = require(script.Parent.null)
 
 local function deepContains(a: any, b: any)

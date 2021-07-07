@@ -20,7 +20,7 @@ return function()
 	local visitWithTypeInfo = TypeInfoImport.visitWithTypeInfo
 	local testSchema = require(srcWorkspace.validation.__tests__.harness).testSchema
 
-	local Packages = srcWorkspace.Parent.Packages
+	local Packages = srcWorkspace.Parent
 	local LuauPolyfill = require(Packages.LuauPolyfill)
 	local Object = LuauPolyfill.Object
 

@@ -4,7 +4,7 @@ type Array<T> = { [number]: T }
 local testUtilsWorkspace = script.Parent
 local srcWorkspace = testUtilsWorkspace.Parent
 local rootWorkspace = srcWorkspace.Parent
-local PackagesWorkspace = rootWorkspace.Packages
+local PackagesWorkspace = rootWorkspace
 
 local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
 local Array = LuauPolyfill.Array

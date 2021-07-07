@@ -4,7 +4,7 @@ local rootWorkspace = script.Parent
 
 -- ROBLOX deviation: add polyfills
 local Error = require(rootWorkspace.luaUtils.Error)
-local Packages = rootWorkspace.Parent.Packages
+local Packages = rootWorkspace.Parent
 local Promise = require(Packages.Promise)
 local PromiseModule = require(rootWorkspace.luaUtils.Promise)
 type Promise<T> = PromiseModule.Promise<T>

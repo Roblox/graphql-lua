@@ -12,7 +12,7 @@ return function()
 	local GraphQLObjectType = require(srcWorkspace.type.definition).GraphQLObjectType
 	local getOperationRootType = require(utilitiesWorkspace.getOperationRootType).getOperationRootType
 
-	local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
+	local Object = require(srcWorkspace.Parent.LuauPolyfill).Object
 
 	local queryType = GraphQLObjectType.new({
 		name = "FooQuery",

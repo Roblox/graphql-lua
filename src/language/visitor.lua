@@ -1,7 +1,7 @@
 -- upstream https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/visitor.js
 
 local srcWorkspace = script.Parent.Parent
-local LuauPolyfill = require(srcWorkspace.Parent.Packages.LuauPolyfill)
+local LuauPolyfill = require(srcWorkspace.Parent.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
 type Array<T> = { [number]: T }

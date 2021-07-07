@@ -1,5 +1,5 @@
 local Root = script.Parent.TestingBundle
-local GraphQL = Root.GraphQL
+local GraphQL = Root.Packages.GraphQL
 
 local TestEZ = require(Root.Packages.Dev.TestEZ)
 

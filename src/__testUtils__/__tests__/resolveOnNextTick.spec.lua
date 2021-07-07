@@ -2,7 +2,7 @@
 
 return function()
 	local resolveOnNextTick = require(script.Parent.Parent.resolveOnNextTick)
-	local Promise = require(script.Parent.Parent.Parent.Parent.Packages.Promise)
+	local Promise = require(script.Parent.Parent.Parent.Parent.Promise)
 
 	describe("resolveOnNextTick", function()
 		it("resolves promise on the next tick", function()

@@ -6,7 +6,7 @@ type Array<T> = { [number]: T }
 local errorWorkspace = script.Parent
 local srcWorkspace = errorWorkspace.Parent
 local rootWorkspace = srcWorkspace.Parent
-local Packages = rootWorkspace.Packages
+local Packages = rootWorkspace
 -- require
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local GraphQLError = require(errorWorkspace.GraphQLError).GraphQLError

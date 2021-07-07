@@ -3,7 +3,7 @@ return function()
 	local root = luaUtils.Parent.Parent
 
 	local slice = require(luaUtils.slice)
-	local LuauPolyfill = require(root.Packages.LuauPolyfill)
+	local LuauPolyfill = require(root.LuauPolyfill)
 	local Array = LuauPolyfill.Array
 
 	local sliceString = slice.sliceString

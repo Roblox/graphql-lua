@@ -3,7 +3,7 @@ local srcWorkspace = script.Parent.Parent
 local jsUtilsWorkspace = srcWorkspace.jsutils
 local languageWorkspace = srcWorkspace.language
 -- ROBLOX deviation: bring in polyfills
-local Array = require(srcWorkspace.Parent.Packages.LuauPolyfill).Array
+local Array = require(srcWorkspace.Parent.LuauPolyfill).Array
 type Array<T> = { [number]: T }
 local NULL = require(srcWorkspace.luaUtils.null)
 

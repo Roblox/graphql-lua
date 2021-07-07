@@ -2,7 +2,7 @@ local luaUtilsWorkspace = script.Parent
 local srcWorkspace = luaUtilsWorkspace.Parent
 
 local Array = require(luaUtilsWorkspace.Array)
-local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
+local Object = require(srcWorkspace.Parent.LuauPolyfill).Object
 local instanceOf = require(srcWorkspace.jsutils.instanceOf)
 
 type Array<T> = { [number]: T }

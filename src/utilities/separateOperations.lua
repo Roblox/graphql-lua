@@ -7,7 +7,7 @@ type Array<T> = { [number]: T }
 type Set<T> = { [T]: boolean }
 
 local srcWorkspace = script.Parent.Parent
-local PackagesWorkspace = srcWorkspace.Parent.Packages
+local PackagesWorkspace = srcWorkspace.Parent
 
 local Kind = require(srcWorkspace.language.kinds).Kind
 local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)

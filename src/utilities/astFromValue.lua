@@ -23,8 +23,8 @@ local isInputObjectType = definitionImport.isInputObjectType
 local isListType = definitionImport.isListType
 local isNonNullType = definitionImport.isNonNullType
 
-local _Number = require(srcWorkspace.Parent.Packages.LuauPolyfill).Number
-local RegExp = require(srcWorkspace.Parent.Packages.LuauPolyfill).RegExp
+local _Number = require(srcWorkspace.Parent.LuauPolyfill).Number
+local RegExp = require(srcWorkspace.Parent.LuauPolyfill).RegExp
 local Error = require(luaUtilsWorkspace.Error)
 local NULL = require(luaUtilsWorkspace.null)
 local isNillishModule = require(luaUtilsWorkspace.isNillish)

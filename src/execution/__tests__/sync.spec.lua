@@ -5,10 +5,10 @@ return function()
 	local srcWorkspace = executionWorkspace.Parent
 
 	-- ROBLOX deviation: utils
-	local LuauPolyfillModule = require(srcWorkspace.Parent.Packages.LuauPolyfill)
+	local LuauPolyfillModule = require(srcWorkspace.Parent.LuauPolyfill)
 	local Object = LuauPolyfillModule.Object
 	local Array = LuauPolyfillModule.Array
-	local Promise = require(srcWorkspace.Parent.Packages.Promise)
+	local Promise = require(srcWorkspace.Parent.Promise)
 	local HttpService = game:GetService("HttpService")
 	local inspect = require(srcWorkspace.jsutils.inspect).inspect
 

@@ -6,7 +6,7 @@ return function()
 
 	local parseValue = require(srcWorkspace.language.parser).parseValue
 	local valueFromASTUntyped = require(script.Parent.Parent.valueFromASTUntyped).valueFromASTUntyped
-	local Number = require(root.Packages.LuauPolyfill).Number
+	local Number = require(root.LuauPolyfill).Number
 
 	local NaN = 0 / 0
 	local NULL = require(srcWorkspace.luaUtils.null)

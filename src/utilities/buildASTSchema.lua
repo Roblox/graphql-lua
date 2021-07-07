@@ -1,6 +1,6 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/aa650618426a301e3f0f61ead3adcd755055a627/src/utilities/buildASTSchema.js
 
-local Array = require(script.Parent.Parent.Parent.Packages.LuauPolyfill).Array
+local Array = require(script.Parent.Parent.Parent.LuauPolyfill).Array
 local devAssertModule = require(script.Parent.Parent.jsutils.devAssert)
 local devAssert = devAssertModule.devAssert
 local sourceModule = require(script.Parent.Parent.language.source)

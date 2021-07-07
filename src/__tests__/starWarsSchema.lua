@@ -2,7 +2,7 @@
 local rootWorkspace = script.Parent.Parent
 
 -- ROBLOX deviation: add polyfills
-local Packages = rootWorkspace.Parent.Packages
+local Packages = rootWorkspace.Parent
 local LuauPolyfillModule = require(Packages.LuauPolyfill)
 local Error = LuauPolyfillModule.Error
 type Array<T> = { [number]: T }

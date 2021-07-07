@@ -4,7 +4,7 @@ return function()
 	local srcWorkspace = script.Parent.Parent
 
 	-- ROBLOX deviation: add utilities
-	local Object = require(srcWorkspace.Parent.Packages.LuauPolyfill).Object
+	local Object = require(srcWorkspace.Parent.LuauPolyfill).Object
 
 	local versionModule = require(script.Parent.Parent.version)
 	local version = versionModule.version

@@ -4,8 +4,8 @@ local srcWorkspace = script.Parent.Parent.Parent
 local luaUtilsWorkspace = srcWorkspace.luaUtils
 
 -- ROBLOX deviation: utils
-local Set = require(srcWorkspace.Parent.Packages.LuauPolyfill).Set
-local Promise = require(srcWorkspace.Parent.Packages.Promise)
+local Set = require(srcWorkspace.Parent.LuauPolyfill).Set
+local Promise = require(srcWorkspace.Parent.Promise)
 local Error = require(luaUtilsWorkspace.Error)
 local Array = require(luaUtilsWorkspace.Array)
 local instanceOf = require(srcWorkspace.jsutils.instanceOf)
