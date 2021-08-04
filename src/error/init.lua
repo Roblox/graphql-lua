@@ -4,6 +4,7 @@ local graphQLErrorModule = require(script.GraphQLError)
 local formatErrorModule = require(script.formatError)
 
 export type GraphQLFormattedError = formatErrorModule.GraphQLFormattedError
+export type GraphQLError = graphQLErrorModule.GraphQLError
 
 return {
 	GraphQLError = graphQLErrorModule.GraphQLError,

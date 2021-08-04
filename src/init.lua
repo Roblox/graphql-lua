@@ -373,8 +373,8 @@ exports.locatedError = errorModule.locatedError
 exports.printError = errorModule.printError
 exports.formatError = errorModule.formatError
 
-
 export type GraphQLFormattedError = errorModule.GraphQLFormattedError
+export type GraphQLError = errorModule.GraphQLError
 
 -- Utilities for operating on GraphQL type schema and parsed sources.
 local utilitiesModule = require(script.utilities)
