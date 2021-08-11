@@ -9,6 +9,7 @@ local visitorModule = require(script.visitor)
 local astModule = require(script.ast)
 local predicatesModule = require(script.predicates)
 local directiveLocationModule = require(script.directiveLocation)
+local sourceModule = require(script.source)
 
 export type SourceLocation = locationModule.SourceLocation
 
@@ -82,11 +83,15 @@ export type InterfaceTypeExtensionNode = astModule.InterfaceTypeExtensionNode
 export type UnionTypeExtensionNode = astModule.UnionTypeExtensionNode
 export type EnumTypeExtensionNode = astModule.EnumTypeExtensionNode
 export type InputObjectTypeExtensionNode = astModule.InputObjectTypeExtensionNode
+export type Location = astModule.Location
+export type Token = astModule.Token
 
 export type DirectiveLocationEnum = directiveLocationModule.DirectiveLocationEnum
 
+export type Source = sourceModule.Source
+
 return {
-	Source = require(script.source).Source,
+	Source = sourceModule.Source,
 	getLocation = locationModule.getLocation,
 	printLocation = printLocationModule.printLocation,
 	printSourceLocation = printLocationModule.printSourceLocation,

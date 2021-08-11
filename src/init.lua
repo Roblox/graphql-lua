@@ -181,6 +181,14 @@ export type GraphQLUnionTypeConfig<TSource, TContext> = typeModule.GraphQLUnionT
 export type GraphQLScalarSerializer<TExternal> = typeModule.GraphQLScalarSerializer<TExternal>
 export type GraphQLScalarValueParser<TExternal> = typeModule.GraphQLScalarValueParser<TExternal>
 export type GraphQLScalarLiteralParser<TInternal> = typeModule.GraphQLScalarLiteralParser<TInternal>
+export type GraphQLScalarType = typeModule.GraphQLScalarType
+export type GraphQLObjectType = typeModule.GraphQLObjectType
+export type GraphQLInterfaceType = typeModule.GraphQLInterfaceType
+export type GraphQLUnionType = typeModule.GraphQLUnionType
+export type GraphQLEnumType = typeModule.GraphQLEnumType
+export type GraphQLInputObjectType = typeModule.GraphQLInputObjectType
+export type GraphQLDirective = typeModule.GraphQLDirective
+export type GraphQLSchema = typeModule.GraphQLSchema
 
 
 local languageModule = require(script.language)
@@ -228,6 +236,9 @@ export type SourceLocation = languageModule.SourceLocation
 export type TokenKindEnum = languageModule.TokenKindEnum
 export type KindEnum = languageModule.KindEnum
 export type DirectiveLocationEnum = languageModule.DirectiveLocationEnum
+export type Location = languageModule.Location
+export type Token = languageModule.Token
+export type Source = languageModule.Source
 
 -- Visitor utilities
 export type ASTVisitor = languageModule.ASTVisitor
@@ -364,6 +375,9 @@ exports.NoDeprecatedCustomRule = validationModule.NoDeprecatedCustomRule
 exports.NoSchemaIntrospectionCustomRule = validationModule.NoSchemaIntrospectionCustomRule
 
 export type ValidationRule = validationModule.ValidationRule
+export type ASTValidationContext = validationModule.ASTValidationContext
+export type SDLValidationContext = validationModule.SDLValidationContext
+export type ValidationContext = validationModule.ValidationContext
 
 -- Create, format, and print GraphQL errors.
 local errorModule = require(script.error)
@@ -468,5 +482,6 @@ export type IntrospectionDirective = utilitiesModule.IntrospectionDirective
 export type BuildSchemaOptions = utilitiesModule.BuildSchemaOptions
 export type BreakingChange = utilitiesModule.BreakingChange
 export type DangerousChange = utilitiesModule.DangerousChange
+export type TypeInfo = utilitiesModule.TypeInfo
 
 return exports

@@ -37,6 +37,8 @@ export type BuildSchemaOptions = buildASTSchemaModule.BuildSchemaOptions
 export type BreakingChange = findBreakingChangesModule.BreakingChange
 export type DangerousChange = findBreakingChangesModule.DangerousChange
 
+export type TypeInfo = TypeInfoModule.TypeInfo
+
 return {
 	-- Produce the GraphQL query recommended for a full schema introspection.
 	-- Accepts optional IntrospectionOptions.
