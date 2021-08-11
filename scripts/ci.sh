@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -x
 
 rojo build test-bundle.project.json --output graphql-tests.rbxm
 

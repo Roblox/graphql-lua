@@ -1,5 +1,5 @@
 [package]
-name = "roblox/graphql-lua"
+name = "GraphQL"
 version = "0.1.0"
 author = "Roblox"
 content_root = "src"
