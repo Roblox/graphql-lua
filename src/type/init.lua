@@ -15,6 +15,7 @@ exports.assertSchema = schemaModule.assertSchema
 exports.GraphQLSchema = schemaModule.GraphQLSchema
 
 export type GraphQLSchemaConfig = schemaModule.GraphQLSchemaConfig
+export type GraphQLSchema = schemaModule.GraphQLSchema
 
 
 local definitionModule = require(script.definition)
@@ -70,6 +71,13 @@ exports.GraphQLInputObjectType = definitionModule.GraphQLInputObjectType
 exports.GraphQLList = definitionModule.GraphQLList
 exports.GraphQLNonNull = definitionModule.GraphQLNonNull
 
+export type GraphQLScalarType = definitionModule.GraphQLScalarType
+export type GraphQLObjectType = definitionModule.GraphQLObjectType
+export type GraphQLInterfaceType = definitionModule.GraphQLInterfaceType
+export type GraphQLUnionType = definitionModule.GraphQLUnionType
+export type GraphQLEnumType = definitionModule.GraphQLEnumType
+export type GraphQLInputObjectType = definitionModule.GraphQLInputObjectType
+
 
 local directivesModule = require(script.directives)
 
@@ -90,6 +98,7 @@ exports.GraphQLSpecifiedByDirective = directivesModule.GraphQLSpecifiedByDirecti
 exports.DEFAULT_DEPRECATION_REASON = directivesModule.DEFAULT_DEPRECATION_REASON
 
 export type GraphQLDirectiveConfig = directivesModule.GraphQLDirectiveConfig
+export type GraphQLDirective = directivesModule.GraphQLDirective
 
 -- Common built-in scalar instances.
 local scalarsModule = require(script.scalars)

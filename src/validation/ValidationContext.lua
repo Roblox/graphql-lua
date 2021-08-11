@@ -59,7 +59,7 @@ type Array<T> = { [number]: T }
 --  * validation rule.
 --  */
 -- ROBLOX TODO: add proper type
-type ASTValidationContext = {
+export type ASTValidationContext = {
 	_ast: DocumentNode,
 	_onError: (GraphQLError) -> (),
 	_fragments: ObjMap<FragmentDefinitionNode>?,
@@ -164,7 +164,7 @@ end
 
 export type ASTValidationRule = (ASTValidationContext) -> ASTVisitor
 
-type SDLValidationContext = ASTValidationContext & {
+export type SDLValidationContext = ASTValidationContext & {
 	_schema: GraphQLSchema?,
 
 	-- ROBLOX deviation: add argument for self
@@ -192,7 +192,7 @@ end
 
 export type SDLValidationRule = (SDLValidationContext) -> ASTVisitor
 
-type ValidationContext = ASTValidationContext & {
+export type ValidationContext = ASTValidationContext & {
 	_schema: GraphQLSchema,
 	_typeInfo: TypeInfo,
 	_variableUsages: Map<NodeWithSelectionSet, Array<VariableUsage>>,

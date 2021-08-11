@@ -2,7 +2,11 @@
 
 local validation = script
 local ValidationContextModule = require(validation.ValidationContext)
+
 export type ValidationRule = ValidationContextModule.ValidationRule
+export type ASTValidationContext = ValidationContextModule.ASTValidationContext
+export type SDLValidationContext = ValidationContextModule.SDLValidationContext
+export type ValidationContext = ValidationContextModule.ValidationContext
 
 return {
 	validate = require(validation.validate).validate,
