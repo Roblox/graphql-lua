@@ -323,7 +323,7 @@ export type FieldNode = {
   loc: Location?,
   alias: NameNode, -- ROBLOX TODO: nilability removed due to Luau narrowing bugs
   name: NameNode,
-  argument: Array<ArgumentNode>?,
+  arguments: Array<ArgumentNode>?,
   directives: Array<DirectiveNode>?,
   selectionSet: SelectionSetNode?,
 }
