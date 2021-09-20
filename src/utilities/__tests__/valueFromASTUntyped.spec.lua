@@ -13,7 +13,7 @@ return function()
 
 	describe("valueFromASTUntyped", function()
 
-		function expectValueFrom(expect_, valueText: string, variables)
+		local function expectValueFrom(expect_, valueText: string, variables)
 			local ast = parseValue(valueText)
 			local value = valueFromASTUntyped(ast, variables)
 			return expect_(value)

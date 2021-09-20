@@ -64,7 +64,7 @@ return function()
 	end
 
 	local function expectStripped(docString)
-		function toEqual(expected)
+		local function toEqual(expected)
 			local stripped = stripIgnoredCharacters(docString)
 
 			invariant(

@@ -35,7 +35,7 @@ return function()
 
 	describe("coerceInputValue", function()
 
-		function coerceValue(inputValue, type_)
+		local function coerceValue(inputValue, type_)
 			local errors = {}
 			local value = coerceInputValue(inputValue, type_, function(path, invalidValue, error_)
 				table.insert(errors, {

@@ -12,7 +12,7 @@ return function()
 
 	local stripIgnoredCharacters = require(script.Parent.Parent.stripIgnoredCharacters).stripIgnoredCharacters
 
-	function lexValue(str: string)
+	local function lexValue(str: string)
 		local lexer = Lexer.new(Source.new(str))
 		local value = lexer:advance().value
 

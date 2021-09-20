@@ -12,7 +12,7 @@ return function()
 		end)
 
 		it("rejects invalid locationOffset", function()
-			function createSource(locationOffset)
+			local function createSource(locationOffset)
 				return Source.new("", "", locationOffset)
 			end
 

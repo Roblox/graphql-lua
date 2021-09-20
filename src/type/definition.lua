@@ -71,6 +71,7 @@ type OperationDefinitionNode = Ast.OperationDefinitionNode
 type FieldNode = Ast.FieldNode
 type FragmentDefinitionNode = Ast.FragmentDefinitionNode
 type ValueNode = Ast.ValueNode
+type EnumValueNode = Ast.EnumValueNode
 
 local valueFromASTUntyped = require(srcWorkspace.utilities.valueFromASTUntyped).valueFromASTUntyped
 
@@ -1591,7 +1592,7 @@ function GraphQLEnumType:parseLiteral(valueNode: ValueNode, _variables: ObjMap<a
 		))
 	end
 
-	local enumValue = self:getValue(valueNode.value)
+	local enumValue = self:getValue((valueNode :: EnumValueNode).value)
 	if enumValue == nil then
 		local valueStr = print_(valueNode)
 		error(GraphQLError.new(
