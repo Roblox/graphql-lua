@@ -14,10 +14,10 @@ end
 
 return function()
 
-	function expectIntrospectionQuery(options)
+	local function expectIntrospectionQuery(options)
 		local query = getIntrospectionQuery(options)
 		-- ROBLOX Deviation: move the position of toRegExp to the top as they cannot appear after a return statement
-		function toRegExp(name: string)
+		local function toRegExp(name: string)
 			-- ROBLOX Deviation: no exact representation of word boundary, so we watch for non-alphanumeric characters and the underscore
 			local pattern = "[^%a%d_]" .. name .. "[^%a%d_]"
 			return pattern

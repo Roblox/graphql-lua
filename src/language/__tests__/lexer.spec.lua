@@ -913,7 +913,7 @@ return function()
 
 	describe("isPunctuatorTokenKind", function()
 
-		function isPunctuatorToken(text)
+		local function isPunctuatorToken(text)
 			return isPunctuatorTokenKind(lexOne(text).kind)
 		end
 

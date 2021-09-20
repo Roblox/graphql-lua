@@ -14,7 +14,7 @@ return function()
 	local Source = require(language.source).Source
 	local printBlockString = require(language.blockString).printBlockString
 
-	function lexValue(str: string)
+	local function lexValue(str: string)
 		local lexer = Lexer.new(Source.new(str))
 		local value = lexer.advance().value
 

@@ -6,7 +6,7 @@ return function()
 	local getBlockStringIndentation = blockString.getBlockStringIndentation
 	local printBlockString = blockString.printBlockString
 	local Array = require(script.Parent.Parent.Parent.luaUtils.Array)
-	function joinLines(...)
+	local function joinLines(...)
 		return Array.join({ ... }, "\n")
 	end
 
