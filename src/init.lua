@@ -216,6 +216,7 @@ exports.visit = languageModule.visit
 exports.visitInParallel = languageModule.visitInParallel
 exports.getVisitFn = languageModule.getVisitFn
 exports.BREAK = languageModule.BREAK
+exports.REMOVE = languageModule.REMOVE
 exports.Kind = languageModule.Kind
 exports.DirectiveLocation = languageModule.DirectiveLocation
 -- Predicates
