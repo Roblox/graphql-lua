@@ -20,21 +20,22 @@ local isNode = require(script.Parent.ast).isNode
  -- ROBLOX TODO: Luau doesn't support default type args, so we inline
  type Nodes = any
  export type ASTVisitor = Visitor<ASTKindToNode, Nodes>
--- ROBLOX devation: Luau doesn't support the equivalent of $Value or default type args
+-- ROBLOX deviation: Luau doesn't support the equivalent of $Value or default type args
 -- export type Visitor<KindToNode, Nodes = $Values<KindToNode>> =
 export type Visitor<KindToNode, Nodes> =
   EnterLeave<
       VisitFn
-      | ShapeMap<KindToNode, (any) -> VisitFn>
+      | ShapeMap<KindToNode, VisitFn>
     >
   | ShapeMap<
       KindToNode,
-      (any) -> VisitFn | EnterLeave<VisitFn>
+      VisitFn | EnterLeave<VisitFn>
     >
 type EnterLeave<T> = { enter: T?, leave: T? }
 -- ROBLOX deviation: Luau doesn't have $Shape, so manually mark fields optional
+-- ROBLOX deviation: Luau doesn't have $ObjMap type util, so marking indexer type as string | number
 -- type ShapeMap<O, F> = $Shape<$ObjMap<O, F>>;
-type ShapeMap<O, F> = { [O]: F? }
+type ShapeMap<O, F> = { [string | number]: F? }
 
 --[[*
  * A visitor is comprised of visit functions, which are called on each node
@@ -44,6 +45,7 @@ type ShapeMap<O, F> = { [O]: F? }
 type TVisitedNode = any
 type TAnyNode = any
 export type VisitFn = (
+  self: any,
   -- The current node being visiting.
   any,
   -- The index or key to this node from the parent node or Array.
@@ -56,7 +58,7 @@ export type VisitFn = (
   -- These correspond to array indices in `path`.
   -- Note: ancestors includes arrays which contain the parent of visited node.
   Array<TAnyNode | Array<TAnyNode>>
-) -> any
+) -> ...any
 
 --[[*
  * A KeyMap describes each the traversable properties of each kind of node.
@@ -257,9 +259,9 @@ local function visit(
 	root: ASTNode,
 	-- ROBLOX TODO: Luau doesn't support default type args, so inline here
 	visitor: Visitor<ASTKindToNode, Nodes>,
-	visitorKeys: VisitorKeyMap<ASTKindToNode>
+	visitorKeys_: VisitorKeyMap<ASTKindToNode>?
 ): any
-	visitorKeys = visitorKeys or QueryDocumentKeys
+	local visitorKeys: VisitorKeyMap<ASTKindToNode> = visitorKeys_ or QueryDocumentKeys
 
 	local stack: any = nil
 	local inArray = Array.isArray(root)
