@@ -4,10 +4,9 @@ local srcWorkspace = script.Parent.Parent
 local rootWorkspace = srcWorkspace.Parent
 local PackagesWorkspace = rootWorkspace
 
--- ROBLOX deviation: add polyfills for JS Primitives
 local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
+local Array = LuauPolyfill.Array
 local Boolean = LuauPolyfill.Boolean
-local Array = require(srcWorkspace.luaUtils.Array)
 
 local inspect = require(script.Parent.Parent.jsutils.inspect).inspect
 local invariant = require(script.Parent.Parent.jsutils.invariant).invariant
@@ -39,13 +38,9 @@ local isNotNillish = isNillishModule.isNotNillish
 local printScalar, printDescription, printFilteredSchema, isDefinedType, printSchemaDefinition, printDirective, printType, isSchemaOfCommonNames, printObject, printFields, printArgs, printInputValue, printDeprecated, printBlock, printInterface, printUnion, printEnum, printInputObject, printSpecifiedByUrl
 
 local function printSchema(schema)
-	return printFilteredSchema(
-		schema,
-		function(n)
-			return not isSpecifiedDirective(n)
-		end,
-		isDefinedType
-	)
+	return printFilteredSchema(schema, function(n)
+		return not isSpecifiedDirective(n)
+	end, isDefinedType)
 end
 
 local function printIntrospectionSchema(schema)
@@ -56,11 +51,7 @@ function isDefinedType(type_)
 	return not isSpecifiedScalarType(type_) and not isIntrospectionType(type_)
 end
 
-function printFilteredSchema(
-	schema: any,
-	directiveFilter: (any) -> boolean,
-	typeFilter: (any) -> boolean
-): string
+function printFilteredSchema(schema: any, directiveFilter: (any) -> boolean, typeFilter: (any) -> boolean): string
 	local directives = Array.filter(schema:getDirectives(), directiveFilter)
 	-- ROBLOX deviation: use Map type
 	local types = Array.filter(schema:getTypeMap():values(), typeFilter)
@@ -172,9 +163,7 @@ function printType(type_)
 end
 
 function printScalar(type_)
-	return printDescription(type_)
-		.. ("scalar %s"):format(type_.name)
-		.. printSpecifiedByUrl(type_)
+	return printDescription(type_) .. ("scalar %s"):format(type_.name) .. printSpecifiedByUrl(type_)
 end
 
 local function printImplementedInterfaces(type_)
@@ -182,9 +171,12 @@ local function printImplementedInterfaces(type_)
 
 	return (function()
 		if #interfaces > 0 then
-			return " implements " .. Array.join(Array.map(interfaces, function(i)
-				return i.name
-			end), " & ")
+			return " implements " .. Array.join(
+				Array.map(interfaces, function(i)
+					return i.name
+				end),
+				" & "
+			)
 		end
 
 		return ""
@@ -220,10 +212,7 @@ end
 
 function printEnum(type_): string
 	local values = Array.map(type_:getValues(), function(value, i)
-		return printDescription(value, "  ", i == 1)
-			.. "  "
-			.. value.name
-			.. printDeprecated(value.deprecationReason)
+		return printDescription(value, "  ", i == 1) .. "  " .. value.name .. printDeprecated(value.deprecationReason)
 	end)
 
 	return printDescription(type_) .. ("enum %s"):format(type_.name) .. printBlock(values)
@@ -277,23 +266,25 @@ function printArgs(args, indentation_: string?)
 	end
 
 	-- If every arg does not have a description, print them on one line.
-	if Array.every(args, function(arg)
-		-- ROBLOX deviation: execution can return NULL - so we must check for null or nil
-		return isNillish(arg.description)
-	end) then
+	if
+		Array.every(args, function(arg)
+			-- ROBLOX deviation: execution can return NULL - so we must check for null or nil
+			return isNillish(arg.description)
+		end)
+	then
 		return "(" .. Array.join(Array.map(args, printInputValue), ", ") .. ")"
 	end
 
-	return "(\n" .. Array.join(
-		Array.map(args, function(arg, i)
-			return printDescription(arg, "  "
-				.. indentation, i == 1)
-				.. "  "
-				.. indentation
-				.. printInputValue(arg)
-		end),
-		"\n"
-	) .. "\n" .. indentation .. ")"
+	return "(\n"
+		.. Array.join(
+			Array.map(args, function(arg, i)
+				return printDescription(arg, "  " .. indentation, i == 1) .. "  " .. indentation .. printInputValue(arg)
+			end),
+			"\n"
+		)
+		.. "\n"
+		.. indentation
+		.. ")"
 end
 
 function printInputValue(arg): string
@@ -319,8 +310,8 @@ function printDirective(directive)
 
 			return ""
 		end)()
-		 .. " on "
-		 .. Array.join(directive.locations, " | ")
+		.. " on "
+		.. Array.join(directive.locations, " | ")
 end
 
 function printDeprecated(reason: string?): string
@@ -350,11 +341,7 @@ function printSpecifiedByUrl(scalar): string
 	return " @specifiedBy(url: " .. print_(urlAST) .. ")"
 end
 
-function printDescription(
-	def,
-	indentation_: string?,
-	firstInBlock_: boolean?
-)
+function printDescription(def, indentation_: string?, firstInBlock_: boolean?)
 	-- ROBLOX deviation: handle default paramters
 	local indentation = (function()
 		if indentation_ ~= nil then

@@ -1,19 +1,16 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/type/directives.js
-
-type Array<T> = { [number]: T }
-
+--!strict
 local srcWorkspace = script.Parent.Parent
 local Packages = srcWorkspace.Parent
 
--- ROBLOX deviation: util
-local MapModule = require(srcWorkspace.luaUtils.Map)
-local Map = MapModule.Map
-local coerceToMap = MapModule.coerceToMap
-
 local LuauPolyfill = require(Packages.LuauPolyfill)
-local Error = require(srcWorkspace.luaUtils.Error)
 local Array = LuauPolyfill.Array
+local Error = LuauPolyfill.Error
+local Map = LuauPolyfill.Map
 local Object = LuauPolyfill.Object
+local coerceToMap = LuauPolyfill.coerceToMap
+type Array<T> = LuauPolyfill.Array<T>
+
 local _ObjMapModule = require(srcWorkspace.jsutils.ObjMap)
 type ObjMap<T> = _ObjMapModule.ObjMap<T>
 
@@ -41,6 +38,7 @@ local GraphQLString = scalars.GraphQLString
 local GraphQLBoolean = scalars.GraphQLBoolean
 local argsToArgsConfig = definition.argsToArgsConfig
 local GraphQLNonNull = definition.GraphQLNonNull
+type GraphQLNonNull<T> = definition.GraphQLNonNull<T>
 
 local GraphQLDirective
 
@@ -80,7 +78,7 @@ end
 GraphQLDirective = {}
 GraphQLDirective.__index = GraphQLDirective
 
-function GraphQLDirective.new(config: GraphQLDirectiveConfig)
+function GraphQLDirective.new(config: GraphQLDirectiveConfig): GraphQLDirective
 	local self = {}
 
 	self.name = config.name
@@ -104,19 +102,11 @@ function GraphQLDirective.new(config: GraphQLDirectiveConfig)
 		("@%s locations must be an Array."):format(config.name)
 	)
 
-	local args = (function()
-		local _ref = config.args
-
-		if _ref == nil then
-			_ref = {}
-		end
-
-		return _ref
-	end)()
+	local args = if config.args then config.args else {}
 
 	-- ROBLOX deviation: empty table doesn't necessarily mean an array
 	devAssert(
-		(isObjectLike(args) and not (Array.isArray(args) and next(args) ~= nil)) or instanceOf(args, Map),
+		(isObjectLike(args) and not (Array.isArray(args) and next(args :: Array<any>) ~= nil)) or instanceOf(args, Map),
 		("@%s args must be an object with argument names as keys."):format(config.name)
 	)
 
@@ -134,7 +124,7 @@ function GraphQLDirective.new(config: GraphQLDirectiveConfig)
 		}
 	end)
 
-	return setmetatable(self, GraphQLDirective)
+	return (setmetatable(self, GraphQLDirective) :: any) :: GraphQLDirective
 end
 
 function GraphQLDirective:toConfig()
@@ -178,7 +168,7 @@ type GraphQLDirectiveNormalizedConfig = GraphQLDirectiveConfig & {
   args: GraphQLFieldConfigArgumentMap,
   isRepeatable: boolean,
   extensions: ReadOnlyObjMap<any>?,
-};
+}
 
 --[[*
  * Used to conditionally include fields or fragments.
@@ -194,7 +184,8 @@ local GraphQLIncludeDirective = GraphQLDirective.new({
 	args = {
 		["if"] = {
 			type = GraphQLNonNull.new(GraphQLBoolean),
-			description = "Included when true.",
+			-- ROBLOX FIXME Luau: without this any cast, we get "Property 'description' is not compatible. Type 'string?' could not be converted into 'string'"
+			description = "Included when true." :: any,
 		},
 	},
 })
@@ -213,7 +204,8 @@ local GraphQLSkipDirective = GraphQLDirective.new({
 	args = {
 		["if"] = {
 			type = GraphQLNonNull.new(GraphQLBoolean),
-			description = "Skipped when true.",
+			-- ROBLOX FIXME Luau: without this any cast, we get "Property 'description' is not compatible. Type 'string?' could not be converted into 'string'"
+			description = "Skipped when true." :: any,
 		},
 	},
 })
@@ -238,12 +230,15 @@ local GraphQLDeprecatedDirective = GraphQLDirective.new({
 	args = {
 		reason = {
 			type = GraphQLString,
-			description = "Explains why this element was deprecated, usually also including a suggestion for how to access supported similar data. Formatted using the Markdown syntax, as specified by [CommonMark](https://commonmark.org/).",
-			defaultValue = DEFAULT_DEPRECATION_REASON,
+			-- ROBLOX FIXME Luau: both fields need a hard cast to avoid: Property 'defaultValue' is not compatible. Type 'any?' could not be converted into 'string'
+			description = "Explains why this element was deprecated, usually also including a suggestion for how to access supported similar data. Formatted using the Markdown syntax, as specified by [CommonMark](https://commonmark.org/)." :: any,
+			defaultValue = DEFAULT_DEPRECATION_REASON :: any,
 		},
 	},
 })
 
+-- type GraphQLArgumentConfig = {
+	-- description: string?, type: GraphQLInputType, defaultValue: any?, extensions: ReadOnlyObjMapLike<any>?, deprecationReason: string?, astNode: InputValueDefinitionNode?}
 --[[**
  * Used to provide a URL for specifying the behaviour of custom scalar definitions.
  *]]
@@ -256,7 +251,8 @@ local GraphQLSpecifiedByDirective = GraphQLDirective.new({
 	args = {
 		url = {
 			type = GraphQLNonNull.new(GraphQLString),
-			description = "The URL that specifies the behaviour of this scalar.",
+			-- ROBLOX FIXME Luau: without this any cast, we get "Property 'description' is not compatible. Type 'string?' could not be converted into 'string'"
+			description = "The URL that specifies the behaviour of this scalar." :: any,
 		},
 	},
 })

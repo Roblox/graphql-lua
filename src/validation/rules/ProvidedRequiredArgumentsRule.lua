@@ -2,6 +2,11 @@
 
 local root = script.Parent.Parent.Parent
 local jsutils = root.jsutils
+local PackagesWorkspace = root.Parent
+local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local Object = LuauPolyfill.Object
+
 local inspect = require(jsutils.inspect).inspect
 local keyMap = require(jsutils.keyMap).keyMap
 local GraphQLError = require(root.error.GraphQLError).GraphQLError
@@ -13,10 +18,6 @@ local isType = definition.isType
 local isRequiredArgument = definition.isRequiredArgument
 local directives = require(root.type.directives)
 local specifiedDirectives = directives.specifiedDirectives
-local PackagesWorkspace = root.Parent
-local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
-local Array = LuauPolyfill.Array
-local Object = LuauPolyfill.Object
 
 local exports = {}
 
@@ -41,14 +42,17 @@ function exports.ProvidedRequiredArgumentsRule(context)
 				local argNodeMap = keyMap(argNodes, function(arg)
 					return arg.name.value
 				end)
-				for _, argDef in ipairs(fieldDef.args)do
+				for _, argDef in ipairs(fieldDef.args) do
 					local argNode = argNodeMap[argDef.name]
 					if not argNode and isRequiredArgument(argDef) then
 						local argTypeStr = inspect(argDef.type)
 						context:reportError(
 							GraphQLError.new(
-								('Field "%s" argument "%s" of type "%s" is required, but it was not provided.')
-									:format(fieldDef.name, argDef.name, argTypeStr),
+								('Field "%s" argument "%s" of type "%s" is required, but it was not provided.'):format(
+									fieldDef.name,
+									argDef.name,
+									argTypeStr
+								),
 								fieldNode
 							)
 						)
@@ -71,27 +75,21 @@ function exports.ProvidedRequiredArgumentsOnDirectivesRule(context)
 	if schema then
 		definedDirectives = schema:getDirectives()
 	end
-	for _, directive in ipairs(definedDirectives)do
-		requiredArgsMap[directive.name] = keyMap(
-			Array.filter(directive.args, isRequiredArgument),
-			function(arg)
-				return arg.name
-			end
-		)
+	for _, directive in ipairs(definedDirectives) do
+		requiredArgsMap[directive.name] = keyMap(Array.filter(directive.args, isRequiredArgument), function(arg)
+			return arg.name
+		end)
 	end
 
 	local astDefinitions = context:getDocument().definitions
-	for _, def in ipairs(astDefinitions)do
+	for _, def in ipairs(astDefinitions) do
 		if def.kind == Kind.DIRECTIVE_DEFINITION then
 			-- // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
 			local argNodes = def.arguments or {}
 
-			requiredArgsMap[def.name.value] = keyMap(
-				Array.filter(argNodes, isRequiredArgumentNode),
-				function(arg)
-					return arg.name.value
-				end
-			)
+			requiredArgsMap[def.name.value] = keyMap(Array.filter(argNodes, isRequiredArgumentNode), function(arg)
+				return arg.name.value
+			end)
 		end
 	end
 
@@ -108,17 +106,18 @@ function exports.ProvidedRequiredArgumentsOnDirectivesRule(context)
 					local argNodeMap = keyMap(argNodes, function(arg)
 						return arg.name.value
 					end)
-					for _, argName in ipairs(Object.keys(requiredArgs))do
+					for _, argName in ipairs(Object.keys(requiredArgs)) do
 						if not argNodeMap[argName] then
 							local argType = requiredArgs[argName].type
-							local argTypeStr = isType(argType)
-								and inspect(argType)
-								or print_(argType)
+							local argTypeStr = isType(argType) and inspect(argType) or print_(argType)
 
 							context:reportError(
 								GraphQLError.new(
-									('Directive "@%s" argument "%s" of type "%s" is required, but it was not provided.')
-										:format(directiveName, argName, argTypeStr),
+									('Directive "@%s" argument "%s" of type "%s" is required, but it was not provided.'):format(
+										directiveName,
+										argName,
+										argTypeStr
+									),
 									directiveNode
 								)
 							)

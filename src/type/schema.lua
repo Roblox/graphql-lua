@@ -6,23 +6,13 @@ local luaUtilsWorkspace = srcWorkspace.luaUtils
 local Packages = srcWorkspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
+local Error = LuauPolyfill.Error
+local Map = LuauPolyfill.Map
 local Set = LuauPolyfill.Set
-local MapModule = require(script.Parent.Parent.luaUtils.Map)
-local Map = MapModule.Map
-type Map<T, V> = MapModule.Map<T, V>
+type Array<T> = LuauPolyfill.Array<T>
+type Map<T, V> = LuauPolyfill.Map<T, V>
+type Set<T> = LuauPolyfill.Set<T>
 
--- ROBLOX TODO: for some reason, I can't import types exported from a package
-type Set<T> = { -- LuauPolyfill.Set<T>
-	size: number,
-	-- method definitions
-	add: (any, T) -> Set<T>,
-	clear: (any) -> (),
-	delete: (any, T) -> boolean,
-	has: (any, T) -> boolean,
-	ipairs: (any) -> any,
-}
-type Array<T> = { [number]: T } -- LuauPolyfill.Array<T>
-local Error = require(luaUtilsWorkspace.Error)
 local isNillishModule = require(luaUtilsWorkspace.isNillish)
 local isNillish = isNillishModule.isNillish
 local isNotNillish = isNillishModule.isNotNillish
@@ -79,9 +69,7 @@ end
 
 local function assertSchema(schema: any): GraphQLSchema
 	if not isSchema(schema) then
-		error(Error.new(
-			("Expected %s to be a GraphQL schema."):format(inspect(schema))
-		))
+		error(Error.new(("Expected %s to be a GraphQL schema."):format(inspect(schema))))
 	end
 	return schema
 end
@@ -177,7 +165,10 @@ export type GraphQLSchema = {
 	getTypeMap: (GraphQLSchema) -> TypeMap,
 	getType: (GraphQLSchema, any) -> GraphQLNamedType?,
 	getPossibleTypes: (GraphQLSchema, GraphQLAbstractType) -> Array<GraphQLObjectType>,
-	getImplementations: (GraphQLSchema, GraphQLInterfaceType) -> {
+	getImplementations: (
+		GraphQLSchema,
+		GraphQLInterfaceType
+	) -> {
 		objects: Array<GraphQLObjectType>,
 		interfaces: Array<GraphQLInterfaceType>,
 	},
@@ -203,11 +194,11 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 	devAssert(isObjectLike(config), "Must provide configuration object.")
 	devAssert(
 		not config.types or Array.isArray(config.types),
-		("\"types\" must be Array if provided but got: %s."):format(inspect(config.types))
+		('"types" must be Array if provided but got: %s.'):format(inspect(config.types))
 	)
 	devAssert(
 		not config.directives or Array.isArray(config.directives),
-		"\"directives\" must be Array if provided but got: " .. ("%s."):format(inspect(config.directives))
+		'"directives" must be Array if provided but got: ' .. ("%s."):format(inspect(config.directives))
 	)
 
 	self.description = config.description
@@ -275,14 +266,15 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 			typeName = tostring(namedType)
 		end
 
-		devAssert(
-			typeName and typeName ~= "",
-			"One of the provided types for building the Schema is missing a name."
-		)
+		devAssert(typeName and typeName ~= "", "One of the provided types for building the Schema is missing a name.")
 		if self._typeMap:has(typeName) then
-			error(Error.new(
-				("Schema must contain uniquely named types but contains multiple types named \"%s\"."):format(typeName)
-			))
+			error(
+				Error.new(
+					('Schema must contain uniquely named types but contains multiple types named "%s".'):format(
+						typeName
+					)
+				)
+			)
 		end
 		self._typeMap:set(typeName, namedType)
 
@@ -345,9 +337,7 @@ function GraphQLSchema:getType(name): GraphQLNamedType?
 	return self:getTypeMap():get(name)
 end
 
-function GraphQLSchema:getPossibleTypes(
-	abstractType: GraphQLAbstractType
-): Array<GraphQLObjectType>
+function GraphQLSchema:getPossibleTypes(abstractType: GraphQLAbstractType): Array<GraphQLObjectType>
 	if isUnionType(abstractType) then
 		return abstractType:getTypes()
 	else
@@ -461,10 +451,7 @@ export type GraphQLSchemaNormalizedConfig = GraphQLSchemaConfig & {
 	assumeValid: boolean,
 }
 
-function collectReferencedTypes(
-	type_: GraphQLType,
-	typeSet: Set<GraphQLNamedType>
-)
+function collectReferencedTypes(type_: GraphQLType, typeSet: Set<GraphQLNamedType>)
 	local namedType = getNamedType(type_)
 
 	if not typeSet:has(namedType) then

@@ -1,10 +1,11 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/validation/rules/NoFragmentCyclesRule.js
 
 local root = script.Parent.Parent.Parent
-local GraphQLError = require(root.error.GraphQLError).GraphQLError
 local PackagesWorkspace = root.Parent
 local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
 local Array = LuauPolyfill.Array
+
+local GraphQLError = require(root.error.GraphQLError).GraphQLError
 
 local exports = {}
 
@@ -50,17 +51,17 @@ exports.NoFragmentCyclesRule = function(context)
 				end
 			else
 				local cyclePath = Array.slice(spreadPath, cycleIndex + 1)
-				local viaPath = table.concat(Array.map(
-					Array.slice(cyclePath, 1, #cyclePath),
-					function(s)
+				local viaPath = table.concat(
+					Array.map(Array.slice(cyclePath, 1, #cyclePath), function(s)
 						return '"' .. s.name.value .. '"'
-					end
-				), ", ")
+					end),
+					", "
+				)
 
 				context:reportError(
 					GraphQLError.new(
 						('Cannot spread fragment "%s" within itself'):format(spreadName)
-							.. (viaPath ~= '' and (" via %s."):format(viaPath) or "."),
+							.. (viaPath ~= "" and (" via %s."):format(viaPath) or "."),
 						cyclePath
 					)
 				)

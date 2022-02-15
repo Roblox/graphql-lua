@@ -1,21 +1,22 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/1611bbb08a88f734e9490b14cfe6afea11a838e0/src/validation/__tests__/validation-test.js
+local validationWorkspace = script.Parent.Parent
+local srcWorkspace = validationWorkspace.Parent
+local Packages = srcWorkspace.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local Error = LuauPolyfill.Error
+
 return function()
-	local validationWorkspace = script.Parent.Parent
-	local root = validationWorkspace.Parent
-	local GraphQLError = require(root.error.GraphQLError).GraphQLError
-	local parser = require(root.language.parser)
+	local GraphQLError = require(srcWorkspace.error.GraphQLError).GraphQLError
+	local parser = require(srcWorkspace.language.parser)
 	local parse = parser.parse
-	local utilities = root.utilities
+	local utilities = srcWorkspace.utilities
 	local TypeInfo = require(utilities.TypeInfo).TypeInfo
 	local buildASTSchema = require(utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
 	local validate = require(validationWorkspace.validate).validate
 	local harness = require(script.Parent.harness)
 	local testSchema = harness.testSchema
-	local PackageWorkspace = root.Parent
-	local Error = require(root.luaUtils.Error)
-	local LuauPolyfill = require(PackageWorkspace.LuauPolyfill)
-	local Array = LuauPolyfill.Array
 
 	describe("Validate: Supports full validation", function()
 		it("rejects invalid documents", function()
@@ -55,7 +56,7 @@ return function()
 			local errors = validate(testSchema, doc)
 			-- ROBLOX deviation: TestEZ can't seem to do a partial object match within an array
 			expect(errors[1]).toObjectContain({
-				locations = {{ line = 3, column = 9 }},
+				locations = { { line = 3, column = 9 } },
 				message = 'Cannot query field "unknown" on type "QueryRoot".',
 			})
 		end)
@@ -116,20 +117,17 @@ return function()
 				return {
 					Directive = function(_self, node)
 						local directiveDef = context:getDirective()
-						local error_ = GraphQLError.new(
-							"Reporting directive: " .. tostring(directiveDef),
-							node
-						)
+						local error_ = GraphQLError.new("Reporting directive: " .. tostring(directiveDef), node)
 						context:reportError(error_)
 					end,
 				}
 			end
 
-			local errors = validate(schema, doc, {customRule})
+			local errors = validate(schema, doc, { customRule })
 			-- ROBLOX deviation: TestEZ can't seem to do a partial object match within an array
 			expect(errors[1]).toObjectContain({
-					message = "Reporting directive: @custom",
-					locations = {{ line = 3, column = 14 }},
+				message = "Reporting directive: @custom",
+				locations = { { line = 3, column = 14 } },
 			})
 		end)
 	end)
@@ -142,7 +140,7 @@ return function()
 				thirdUnknownField
 			}
 		]]
-		local doc = parse(query, {noLocation = true})
+		local doc = parse(query, { noLocation = true })
 
 		local function validateDocument(options)
 			return validate(testSchema, doc, nil, options)
@@ -151,35 +149,24 @@ return function()
 		local function invalidFieldError(fieldName: string)
 			return {
 				message = ('Cannot query field "%s" on type "QueryRoot".'):format(fieldName),
-				locations = {}
 			}
 		end
 
 		it("when maxError is equal number of errors", function()
 			local expect: any = expect
-			local errors = validateDocument({maxErrors = 3})
+			local errors = validateDocument({ maxErrors = 3 })
 			-- ROBLOX deviation: TestEZ can't seem to do a partial object match within an array
-			expect(errors[1]).toObjectContain(
-				invalidFieldError("firstUnknownField")
-			)
-			expect(errors[2]).toObjectContain(
-				invalidFieldError("secondUnknownField")
-			)
-			expect(errors[3]).toObjectContain(
-				invalidFieldError("thirdUnknownField")
-			)
+			expect(errors[1]).toObjectContain(invalidFieldError("firstUnknownField"))
+			expect(errors[2]).toObjectContain(invalidFieldError("secondUnknownField"))
+			expect(errors[3]).toObjectContain(invalidFieldError("thirdUnknownField"))
 		end)
 
 		it("when maxErrors is less than number of errors", function()
 			local expect: any = expect
-			local errors = validateDocument({maxErrors = 2})
+			local errors = validateDocument({ maxErrors = 2 })
 			-- ROBLOX deviation: TestEZ can't seem to do a partial object match within an array
-			expect(errors[1]).toObjectContain(
-				invalidFieldError("firstUnknownField")
-			)
-			expect(errors[2]).toObjectContain(
-				invalidFieldError("secondUnknownField")
-			)
+			expect(errors[1]).toObjectContain(invalidFieldError("firstUnknownField"))
+			expect(errors[2]).toObjectContain(invalidFieldError("secondUnknownField"))
 			expect(errors[3]).toObjectContain({
 				message = "Too many validation errors, error limit reached. Validation aborted.",
 			})
@@ -196,7 +183,7 @@ return function()
 				}
 			end
 			expect(function()
-				return validate(testSchema, doc, {customRule}, {maxErrors = 1})
+				return validate(testSchema, doc, { customRule }, { maxErrors = 1 })
 			end).toThrow("Error from custom rule!")
 		end)
 	end)

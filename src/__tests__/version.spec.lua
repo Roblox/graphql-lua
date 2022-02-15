@@ -3,49 +3,44 @@
 return function()
 	local srcWorkspace = script.Parent.Parent
 
-	-- ROBLOX deviation: add utilities
 	local Object = require(srcWorkspace.Parent.LuauPolyfill).Object
 
 	local versionModule = require(script.Parent.Parent.version)
 	local version = versionModule.version
 	local versionInfo = versionModule.versionInfo
 
-	describe('Version', function()
-
-		it('version', function()
-			expect(version).to.be.a('string')
+	describe("Version", function()
+		it("version", function()
+			expect(version).to.be.a("string")
 			-- ROBLOX deviation: skip complicated regex
 		end)
 
-		it('versionInfo', function()
+		it("versionInfo", function()
 			local expect: any = expect
 
-			expect(versionInfo).to.be.a('table')
-			expect(Object.keys(versionInfo)).toHaveSameMembers(
-				{'major', 'minor', 'patch', 'preReleaseTag'}
-			)
+			expect(versionInfo).to.be.a("table")
+			expect(Object.keys(versionInfo)).toHaveSameMembers({ "major", "minor", "patch", "preReleaseTag" })
 
 			local major = versionInfo.major
 			local minor = versionInfo.minor
 			local patch = versionInfo.patch
 			local preReleaseTag = versionInfo.preReleaseTag
 
-			expect(major).to.be.a('number')
-			expect(minor).to.be.a('number')
-			expect(patch).to.be.a('number')
+			expect(major).to.be.a("number")
+			expect(minor).to.be.a("number")
+			expect(patch).to.be.a("number")
 
 			if preReleaseTag ~= "" then
-				expect(preReleaseTag).to.be.a('string')
+				expect(preReleaseTag).to.be.a("string")
 			end
 
-			expect(('%s.%s.%s'):format(major, minor, patch) .. (function()
+			expect(("%s.%s.%s"):format(major, minor, patch) .. (function()
 				if preReleaseTag ~= "" then
-					return'-' .. preReleaseTag
+					return "-" .. preReleaseTag
 				end
 
 				return ""
 			end)()).to.equal(version)
-
 		end)
 	end)
 end

@@ -1,9 +1,12 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/type/__tests__/validation-test.js
 return function()
-	local LuauPolyfill = require(script.Parent.Parent.Parent.Parent.LuauPolyfill)
 	local typeWorkspace = script.Parent.Parent
 	local srcWorkspace = typeWorkspace.Parent
+	local rootWorkspace = srcWorkspace.Parent
+	
+	local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
 	local Array = LuauPolyfill.Array
+	
 	local luaUtilsWorkspace = srcWorkspace.luaUtils
 	local NULL = require(luaUtilsWorkspace.null)
 

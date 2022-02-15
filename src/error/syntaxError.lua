@@ -12,5 +12,5 @@ local function syntaxError(source, position: number, description: string)
 end
 
 return {
-	syntaxError = syntaxError
+	syntaxError = syntaxError,
 }

@@ -1,18 +1,17 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/Path.js
+local rootWorkspace = script.Parent.Parent.Parent
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+type Array<T> = LuauPolyfill.Array<T>
+
 export type Path = {
 	prev: Path?,
 	key: string | number,
 	typename: string?,
 }
-type Array<T> = { [number]: T }
 
 local exports = {}
 
-function exports.addPath(
-	prev: Path,
-	key: string | number,
-	typename: string?
-): Path
+function exports.addPath(prev: Path, key: string | number, typename: string?): Path
 	return {
 		prev = prev,
 		key = key,

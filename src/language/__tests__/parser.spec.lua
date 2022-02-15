@@ -3,6 +3,9 @@
 return function()
 	local languageWorkspace = script.Parent.Parent
 	local srcWorkspace = languageWorkspace.Parent
+	local Packages = srcWorkspace.Parent
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Array = LuauPolyfill.Array
 
 	local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
 	local kitchenSinkQuery = require(srcWorkspace.__fixtures__).kitchenSinkQuery
@@ -18,8 +21,6 @@ return function()
 	local parseType = parser.parseType
 
 	local toJSONDeep = require(script.Parent.toJSONDeep).toJSONDeep
-
-	local UtilArray = require(srcWorkspace.luaUtils.Array)
 
 	-- ROBLOX deviation: expect cannot be called unless inside of an it
 	-- ROBLOX deviation: pass expect into this function and use local scope
@@ -60,37 +61,34 @@ return function()
 
 			expectSyntaxError(
 				expect,
-				UtilArray.join(
-					{
-						"",
-						"      { ...MissingOn }",
-						"      fragment MissingOn Type",
-						"    ",
-					},
-					"\n"
-				)
+				Array.join({
+					"",
+					"      { ...MissingOn }",
+					"      fragment MissingOn Type",
+					"    ",
+				}, "\n")
 			).toObjectContain({
-				message = "Syntax Error: Expected \"on\", found Name \"Type\".",
+				message = 'Syntax Error: Expected "on", found Name "Type".',
 				locations = { { line = 3, column = 26 } },
 			})
 
 			expectSyntaxError(expect, "{ field: {} }").toObjectContain({
-				message = "Syntax Error: Expected Name, found \"{\".",
+				message = 'Syntax Error: Expected Name, found "{".',
 				locations = { { line = 1, column = 10 } },
 			})
 
 			expectSyntaxError(expect, "notAnOperation Foo { field }").toObjectContain({
-				message = "Syntax Error: Unexpected Name \"notAnOperation\".",
+				message = 'Syntax Error: Unexpected Name "notAnOperation".',
 				locations = { { line = 1, column = 1 } },
 			})
 
 			expectSyntaxError(expect, "...").toObjectContain({
-				message = "Syntax Error: Unexpected \"...\".",
+				message = 'Syntax Error: Unexpected "...".',
 				locations = { { line = 1, column = 1 } },
 			})
 
-			expectSyntaxError(expect, "{ \"\"").toObjectContain({
-				message = "Syntax Error: Expected Name, found String \"\".",
+			expectSyntaxError(expect, '{ ""').toObjectContain({
+				message = 'Syntax Error: Expected Name, found String "".',
 				locations = { { line = 1, column = 3 } },
 			})
 		end)
@@ -119,7 +117,7 @@ return function()
 
 		it("parses constant default values", function()
 			expectSyntaxError(expect, "query Foo($x: Complex = { a: { b: [ $var ] } }) { field }").toObjectContain({
-				message = "Syntax Error: Unexpected \"$\".",
+				message = 'Syntax Error: Unexpected "$".',
 				locations = { { line = 1, column = 37 } },
 			})
 		end)
@@ -130,31 +128,28 @@ return function()
 			end).never.to.throw()
 		end)
 
-		it("does not accept fragments named \"on\"", function()
+		it('does not accept fragments named "on"', function()
 			expectSyntaxError(expect, "fragment on on on { on }").toObjectContain({
-				message = "Syntax Error: Unexpected Name \"on\".",
+				message = 'Syntax Error: Unexpected Name "on".',
 				locations = { { line = 1, column = 10 } },
 			})
 		end)
 
-		it("does not accept fragments spread of \"on\"", function()
+		it('does not accept fragments spread of "on"', function()
 			expectSyntaxError(expect, "{ ...on }").toObjectContain({
-				message = "Syntax Error: Expected Name, found \"}\".",
+				message = 'Syntax Error: Expected Name, found "}".',
 				locations = { { line = 1, column = 9 } },
 			})
 		end)
 
 		it("parses multi-byte characters", function()
 			-- // Note: \u0A0A could be naively interpreted as two line-feed chars.
-			local ast = parse(UtilArray.join(
-				{
-					"",
-					"      # This comment has a \u{0A0A} multi-byte character.",
-					"      { field(arg: \"Has a \u{0A0A} multi-byte character.\") }",
-					"",
-				},
-				"\n"
-			))
+			local ast = parse(Array.join({
+				"",
+				"      # This comment has a \u{0A0A} multi-byte character.",
+				'      { field(arg: "Has a \u{0A0A} multi-byte character.") }',
+				"",
+			}, "\n"))
 			expect(ast.definitions[1].selectionSet.selections[1].arguments[1].value.value).to.equal(
 				"Has a \u{0A0A} multi-byte character."
 			)
@@ -185,21 +180,18 @@ return function()
 						return "a"
 					end
 				end)()
-				local document = UtilArray.join(
-					{
-						"",
-						"        query " .. keyword .. " {",
-						"          ... " .. fragmentName,
-						"          ... on " .. keyword .. " { field }",
-						"        }",
-						"        fragment " .. fragmentName .. " on Type {",
-						"          " .. keyword .. "(" .. keyword .. ": $" .. keyword .. ")",
-						"            @" .. keyword .. "(" .. keyword .. ": " .. keyword .. ")",
-						"        }",
-						"      ",
-					},
-					"\n"
-				)
+				local document = Array.join({
+					"",
+					"        query " .. keyword .. " {",
+					"          ... " .. fragmentName,
+					"          ... on " .. keyword .. " { field }",
+					"        }",
+					"        fragment " .. fragmentName .. " on Type {",
+					"          " .. keyword .. "(" .. keyword .. ": $" .. keyword .. ")",
+					"            @" .. keyword .. "(" .. keyword .. ": " .. keyword .. ")",
+					"        }",
+					"      ",
+				}, "\n")
 				expect(function()
 					parse(document)
 				end).never.to.throw()
@@ -208,61 +200,49 @@ return function()
 
 		it("parses anonymous mutation operations", function()
 			expect(function()
-				parse(UtilArray.join(
-					{
-						"",
-						"      mutation {",
-						"        mutationField",
-						"      }",
-						"    ",
-					},
-					"\n"
-				))
+				parse(Array.join({
+					"",
+					"      mutation {",
+					"        mutationField",
+					"      }",
+					"    ",
+				}, "\n"))
 			end).never.to.throw()
 		end)
 
 		it("parses anonymous subscription operations", function()
 			expect(function()
-				parse(UtilArray.join(
-					{
-						"",
-						"      subscription {",
-						"        subscriptionField",
-						"      }",
-						"    ",
-					},
-					"\n"
-				))
+				parse(Array.join({
+					"",
+					"      subscription {",
+					"        subscriptionField",
+					"      }",
+					"    ",
+				}, "\n"))
 			end).never.to.throw()
 		end)
 
 		it("parses named mutation operations", function()
 			expect(function()
-				parse(UtilArray.join(
-					{
-						"",
-						"      mutation Foo {",
-						"        mutationField",
-						"      }",
-						"    ",
-					},
-					"\n"
-				))
+				parse(Array.join({
+					"",
+					"      mutation Foo {",
+					"        mutationField",
+					"      }",
+					"    ",
+				}, "\n"))
 			end).never.to.throw()
 		end)
 
 		it("parses named subscription operations", function()
 			expect(function()
-				parse(UtilArray.join(
-					{
-						"",
-						"      subscription Foo {",
-						"        subscriptionField",
-						"      }",
-						"    ",
-					},
-					"\n"
-				))
+				parse(Array.join({
+					"",
+					"      subscription Foo {",
+					"        subscriptionField",
+					"      }",
+					"    ",
+				}, "\n"))
 			end).never.to.throw()
 		end)
 
@@ -464,39 +444,35 @@ return function()
 			it("parses null value", function()
 				local result = parseValue("null")
 
-				expect(toJSONDeep(result)).toEqual(
-					{
-						kind = Kind.NULL,
-						loc = { start = 1, _end = 5 }, -- ROBLOX deviation: indexes are 1-based
-					}
-				)
+				expect(toJSONDeep(result)).toEqual({
+					kind = Kind.NULL,
+					loc = { start = 1, _end = 5 }, -- ROBLOX deviation: indexes are 1-based
+				})
 			end)
 
 			it("parses list values", function()
-				local result = parseValue("[123 \"abc\"]")
-				expect(toJSONDeep(result)).toEqual(
-					{
-						kind = Kind.LIST,
-						loc = { start = 1, _end = 12 }, -- ROBLOX deviation: indexes are 1-based
-						values = {
-							{
-								kind = Kind.INT,
-								loc = { start = 2, _end = 5 }, -- ROBLOX deviation: indexes are 1-based
-								value = "123",
-							},
-							{
-								kind = Kind.STRING,
-								loc = { start = 6, _end = 11 }, -- ROBLOX deviation: indexes are 1-based
-								value = "abc",
-								block = false,
-							},
+				local result = parseValue('[123 "abc"]')
+				expect(toJSONDeep(result)).toEqual({
+					kind = Kind.LIST,
+					loc = { start = 1, _end = 12 }, -- ROBLOX deviation: indexes are 1-based
+					values = {
+						{
+							kind = Kind.INT,
+							loc = { start = 2, _end = 5 }, -- ROBLOX deviation: indexes are 1-based
+							value = "123",
 						},
-					}
-				)
+						{
+							kind = Kind.STRING,
+							loc = { start = 6, _end = 11 }, -- ROBLOX deviation: indexes are 1-based
+							value = "abc",
+							block = false,
+						},
+					},
+				})
 			end)
 
 			it("parses block strings", function()
-				local result = parseValue("[\"\"\"long\"\"\" \"short\"]")
+				local result = parseValue('["""long""" "short"]')
 				expect(toJSONDeep(result)).toEqual({
 					kind = Kind.LIST,
 					loc = { start = 1, _end = 21 },

@@ -1,13 +1,15 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/error/__tests__/GraphQLError-test.js
 
 return function()
-
-	-- directory
 	local errorWorkspace = script.Parent.Parent
 	local srcWorkspace = errorWorkspace.Parent
 	local languageWorkspace = srcWorkspace.language
+	local Packages = srcWorkspace.Parent
 
-	-- require
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Error = LuauPolyfill.Error
+	local instanceof = LuauPolyfill.instanceof
+
 	local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
 	local invariant = require(srcWorkspace.jsutils.invariant).invariant
 	local Kind = require(languageWorkspace.kinds).Kind
@@ -15,11 +17,6 @@ return function()
 	local Source = require(languageWorkspace.source).Source
 	local GraphQLError = require(errorWorkspace.GraphQLError).GraphQLError
 	local printError = require(errorWorkspace.GraphQLError).printError
-
-	-- lua helpers & polyfills
-	local instanceOf = require(srcWorkspace.jsutils.instanceOf)
-	local Error = require(srcWorkspace.luaUtils.Error)
-	local HttpService = game:GetService("HttpService")
 
 	local source = Source.new(dedent([[
   {
@@ -35,8 +32,8 @@ return function()
 	describe("GraphQLError", function()
 		it("is a class and is a subclass of Error", function()
 			local instance = GraphQLError.new("str")
-			expect(instanceOf(instance, GraphQLError)).to.equal(true)
-			expect(instanceOf(instance, Error)).to.equal(true)
+			expect(instanceof(instance, GraphQLError)).to.equal(true)
+			expect(instanceof(instance, Error)).to.equal(true)
 		end)
 
 		it("has a name, message, and stack trace", function()
@@ -109,24 +106,12 @@ return function()
 
 		it("serializes to include message", function()
 			local e = GraphQLError.new("msg")
-			-- ROBLOX deviation: GraphQLError has more objects than required for this test
-			local testObj = {
-				message = e.message,
-			}
-			expect(HttpService:JSONEncode(testObj)).to.equal("{\"message\":\"msg\"}")
+			expect(e:toJSON()).to.equal('{"message":"msg"}')
 		end)
 
 		it("serializes to include message and locations", function()
 			local e = GraphQLError.new("msg", fieldNode)
-			-- ROBLOX deviation: GraphQLError has more objects than required for this test
-			local testObj = {
-				message = e.message,
-				locations = e.locations,
-			}
-			-- ROBLOX deviation: key order is different
-			expect(HttpService:JSONEncode(testObj)).to.equal(
-				"{\"locations\":[{\"line\":2,\"column\":3}],\"message\":\"msg\"}"
-			)
+			expect(e:toJSON()).to.equal('{"message":"msg","locations":[{"line":2,"column":3}]}')
 		end)
 
 		it("serializes to include path", function()
@@ -137,70 +122,56 @@ return function()
 				"field",
 			})
 			expect(e.path).toObjectContain({ "path", 3, "to", "field" })
-			-- ROBLOX deviation: GraphQLError has more objects than required for this test
-			local testObj = {
-				message = e.message,
-				path = e.path,
-			}
 			-- ROBLOX deviation: key order is different
-			expect(HttpService:JSONEncode(testObj)).to.equal(
-				"{\"path\":[\"path\",3,\"to\",\"field\"],\"message\":\"msg\"}"
-			)
+			expect(e:toJSON()).to.equal('{"message":"msg","path":["path",3,"to","field"]}')
 		end)
 	end)
 
 	describe("printError", function()
-
 		it("prints an error without location", function()
-			local error_ = GraphQLError.new('Error without location');
-			expect(printError(error_)).toEqual('Error without location');
+			local error_ = GraphQLError.new("Error without location")
+			expect(printError(error_)).toEqual("Error without location")
 		end)
 
 		it("prints an error using node without location", function()
 			local error_ = GraphQLError.new(
-			  'Error attached to node without location',
-			  parse('{ foo }', { noLocation = true })
-			);
-			expect(printError(error_)).to.equal(
-			  'Error attached to node without location'
-			);
+				"Error attached to node without location",
+				parse("{ foo }", { noLocation = true })
+			)
+			expect(printError(error_)).to.equal("Error attached to node without location")
 		end)
 
 		it("prints an error with nodes from different sources", function()
-			local docA = parse(
-			  Source.new(
+			local docA = parse(Source.new(
 				dedent([[
 				  type Foo {
 				    field: String
 				  }
 				]]),
-				'SourceA'
-			  )
-			)
-			local opA = docA.definitions[1];
-			invariant(opA.kind == Kind.OBJECT_TYPE_DEFINITION and opA.fields);
-			local fieldA = opA.fields[1];
+				"SourceA"
+			))
+			local opA = docA.definitions[1]
+			invariant(opA.kind == Kind.OBJECT_TYPE_DEFINITION and opA.fields)
+			local fieldA = opA.fields[1]
 
-			local docB = parse(
-				Source.new(
+			local docB = parse(Source.new(
 				dedent([[
 				  type Foo {
 				    field: Int
 				  }
 				]]),
-				'SourceB'
-			  )
-			)
-			local opB = docB.definitions[1];
-			invariant(opB.kind == Kind.OBJECT_TYPE_DEFINITION and opB.fields);
-			local fieldB = opB.fields[1];
+				"SourceB"
+			))
+			local opB = docB.definitions[1]
+			invariant(opB.kind == Kind.OBJECT_TYPE_DEFINITION and opB.fields)
+			local fieldB = opB.fields[1]
 
-			local error_ = GraphQLError.new('Example error with two nodes', {
-			  fieldA.type,
-			  fieldB.type
-			});
+			local error_ = GraphQLError.new("Example error with two nodes", {
+				fieldA.type,
+				fieldB.type,
+			})
 
-			expect(printError(error_) .. '\n').to.equal(dedent([[
+			expect(printError(error_) .. "\n").to.equal(dedent([[
       			Example error with two nodes
 
       			SourceA:2:10
@@ -214,9 +185,7 @@ return function()
       			2 |   field: Int
       			  |          ^
       			3 | }
-			]]));
+			]]))
 		end)
-
 	end)
-
 end

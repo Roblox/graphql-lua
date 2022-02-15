@@ -1,7 +1,11 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/language/__tests__/schema-printer-test.js
-
+--!strict
 local languageWorkspace = script.Parent.Parent
 local srcWorkspace = languageWorkspace.Parent
+local Packages = srcWorkspace.Parent
+local JestGlobals = require(Packages.Dev.JestGlobals)
+-- ROBLOX deviation: use jestExpect here so that we get reasonably text diffing on failures
+local jestExpect = JestGlobals.expect
 local testUtilsWorkspace = srcWorkspace.__testUtils__
 
 local dedent = require(testUtilsWorkspace.dedent).dedent
@@ -24,7 +28,7 @@ return function()
 				},
 			}
 
-			expect(print_(ast)).toEqual("scalar foo")
+			jestExpect(print_(ast)).toEqual("scalar foo")
 		end)
 
 		it("produces helpful error messages", function()
@@ -32,9 +36,10 @@ return function()
 				random = "Data",
 			}
 
-			expect(function()
-				return print_(badAST)
-			end).to.throw("Invalid AST Node: { random: \"Data\" }.")
+			jestExpect(function()
+				-- ROBLOX deviation: strong typing prevents this from analyzing (yay!), so cast away safety
+				return print_(badAST :: any)
+			end).toThrow("Invalid AST Node: { random: \"Data\" }.")
 		end)
 
 		it("does not alter ast", function()
@@ -44,13 +49,13 @@ return function()
 
 			print_(ast)
 
-			expect(inspect(ast)).toEqual(astBefore)
+			jestExpect(inspect(ast)).toEqual(astBefore)
 		end)
 
 		it("prints kitchen sink", function()
 			local printed = print_(parse(kitchenSinkSDL))
 
-			expect(printed).toEqual(dedent([[
+			jestExpect(printed).toEqual(dedent([[
       """This is a description of the schema as a whole."""
       schema {
         query: QueryType

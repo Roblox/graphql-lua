@@ -1,15 +1,14 @@
---!nocheck
+--!strict
 -- upstream: https://github.com/graphql/graphql-js/blob/1611bbb08a88f734e9490b14cfe6afea11a838e0/src/__tests__/starWarsData.js
--- ROBLOX TODO: remove this nocheck once we know how to extend types Luau
 local rootWorkspace = script.Parent.Parent
-
--- ROBLOX deviation: add polyfills
 local Packages = rootWorkspace.Parent
-local Promise = require(Packages.Promise)
+
+local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = require(Packages.LuauPolyfill).Array
-type Array<T> = { [number]: T }
-local PromiseTypeModule = require(rootWorkspace.luaUtils.Promise)
-type Promise<T> = PromiseTypeModule.Promise<T>
+type Array<T> = LuauPolyfill.Array<T>
+type Promise<T> = LuauPolyfill.Promise<T>
+
+local Promise = require(Packages.Promise)
 
 --[[*
  * These are types which correspond to the schema.

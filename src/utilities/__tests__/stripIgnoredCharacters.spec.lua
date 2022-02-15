@@ -2,6 +2,7 @@
 
 return function()
 	local srcWorkspace = script.Parent.Parent.Parent
+	local Array = require(srcWorkspace.Parent.LuauPolyfill).Array
 	local testUtilsWorkspace = script.Parent.Parent.Parent.__testUtils__
 	local languageWorkspace = script.Parent.Parent.Parent.language
 
@@ -16,8 +17,6 @@ return function()
 	local parse = require(languageWorkspace.parser).parse
 	local Source = require(languageWorkspace.source).Source
 
-	local Array = require(srcWorkspace.Parent.LuauPolyfill).Array
-	local UtilArray = require(srcWorkspace.luaUtils.Array)
 	local inspect = require(srcWorkspace.jsutils.inspect).inspect
 
 	local stripIgnoredCharacters = require(script.Parent.Parent.stripIgnoredCharacters).stripIgnoredCharacters
@@ -28,7 +27,7 @@ return function()
 		"\n",
 		"\r",
 		"\r\n",
-		"# \"Comment\" string\n",
+		'# "Comment" string\n',
 		",",
 	}
 	local punctuatorTokens = {
@@ -50,8 +49,8 @@ return function()
 		"name_token",
 		"1",
 		"3.14",
-		"\"some string value\"",
-		"\"\"\"block\nstring\nvalue\"\"\"",
+		'"some string value"',
+		'"""block\nstring\nvalue"""',
 	}
 
 	local function lexValue(str)
@@ -109,7 +108,9 @@ return function()
         }
         ]])
 
-			expect(stripIgnoredCharacters(query)).to.equal("query SomeQuery($foo:String!$bar:String){someField(foo:$foo bar:$bar){a b{c d}}}")
+			expect(stripIgnoredCharacters(query)).to.equal(
+				"query SomeQuery($foo:String!$bar:String){someField(foo:$foo bar:$bar){a b{c d}}}"
+			)
 		end)
 
 		it("accepts Source object", function()
@@ -129,13 +130,15 @@ return function()
         }
         ]])
 
-			expect(stripIgnoredCharacters(sdl)).to.equal("\"\"\"Type description\"\"\" type Foo{\"\"\"Field description\"\"\" bar:String}")
+			expect(stripIgnoredCharacters(sdl)).to.equal(
+				'"""Type description""" type Foo{"""Field description""" bar:String}'
+			)
 		end)
 
 		it("report document with invalid token", function()
 			local caughtError
 			xpcall(function()
-				stripIgnoredCharacters("{ foo(arg: \"\n\"")
+				stripIgnoredCharacters('{ foo(arg: "\n"')
 			end, function(e)
 				caughtError = e
 			end)
@@ -150,7 +153,7 @@ return function()
 		end)
 
 		it("strips non-parsable document", function()
-			expectStripped("{ foo(arg: \"str\"").toEqual("{foo(arg:\"str\"")
+			expectStripped('{ foo(arg: "str"').toEqual('{foo(arg:"str"')
 		end)
 
 		it("strips documents with only ignored characters", function()
@@ -167,7 +170,7 @@ return function()
 				end
 			end
 
-			expectStripped(UtilArray.join(ignoredTokens, "")).toEqual("")
+			expectStripped(Array.join(ignoredTokens, "")).toEqual("")
 		end)
 
 		it("strips leading and trailing ignored tokens", function()
@@ -181,7 +184,7 @@ return function()
 			expectStripped("1,,").toEqual("1")
 			expectStripped("1#comment\n, \n").toEqual("1")
 
-			for _, token in ipairs(UtilArray.concat(punctuatorTokens, nonPunctuatorTokens)) do
+			for _, token in ipairs(Array.concat(punctuatorTokens, nonPunctuatorTokens)) do
 				for _, ignored in ipairs(ignoredTokens) do
 					expectStripped(ignored .. token).toEqual(token)
 					expectStripped(token .. ignored).toEqual(token)
@@ -192,8 +195,8 @@ return function()
 					end
 				end
 
-				expectStripped(UtilArray.join(ignoredTokens, "") .. token).toEqual(token)
-				expectStripped(token .. UtilArray.join(ignoredTokens, "")).toEqual(token)
+				expectStripped(Array.join(ignoredTokens, "") .. token).toEqual(token)
+				expectStripped(token .. Array.join(ignoredTokens, "")).toEqual(token)
 			end
 		end)
 
@@ -214,7 +217,7 @@ return function()
 						end
 					end
 
-					expectStripped(left .. UtilArray.join(ignoredTokens, "") .. right).toEqual(left .. right)
+					expectStripped(left .. Array.join(ignoredTokens, "") .. right).toEqual(left .. right)
 				end
 			end
 		end)
@@ -232,11 +235,15 @@ return function()
 						expectStripped(punctuator .. ignored .. nonPunctuator).toEqual(punctuator .. nonPunctuator)
 
 						for _, anotherIgnored in ipairs(ignoredTokens) do
-							expectStripped(punctuator .. ignored .. anotherIgnored .. nonPunctuator).toEqual(punctuator .. nonPunctuator)
+							expectStripped(punctuator .. ignored .. anotherIgnored .. nonPunctuator).toEqual(
+								punctuator .. nonPunctuator
+							)
 						end
 					end
 
-					expectStripped(punctuator .. UtilArray.join(ignoredTokens, "") .. nonPunctuator).toEqual(punctuator .. nonPunctuator)
+					expectStripped(punctuator .. Array.join(ignoredTokens, "") .. nonPunctuator).toEqual(
+						punctuator .. nonPunctuator
+					)
 				end
 			end
 		end)
@@ -259,39 +266,42 @@ return function()
 						expectStripped(nonPunctuator .. ignored .. punctuator).toEqual(nonPunctuator .. punctuator)
 
 						for _, anotherIgnored in ipairs(ignoredTokens) do
-							expectStripped(nonPunctuator .. ignored .. anotherIgnored .. punctuator).toEqual(nonPunctuator .. punctuator)
+							expectStripped(nonPunctuator .. ignored .. anotherIgnored .. punctuator).toEqual(
+								nonPunctuator .. punctuator
+							)
 						end
 					end
 
-					expectStripped(nonPunctuator .. UtilArray.join(ignoredTokens, "") .. punctuator).toEqual(nonPunctuator .. punctuator)
+					expectStripped(nonPunctuator .. Array.join(ignoredTokens, "") .. punctuator).toEqual(
+						nonPunctuator .. punctuator
+					)
 				end
 			end
 		end)
 
-		it(
-			"replace ignored tokens between non-punctuator tokens and spread with space",
-			function()
-				expectStripped("a ...").toEqual("a ...")
-				expectStripped("1 ...").toEqual("1 ...")
-				expectStripped("1 ... ...").toEqual("1 ......")
+		it("replace ignored tokens between non-punctuator tokens and spread with space", function()
+			expectStripped("a ...").toEqual("a ...")
+			expectStripped("1 ...").toEqual("1 ...")
+			expectStripped("1 ... ...").toEqual("1 ......")
 
-				for _, nonPunctuator in ipairs(nonPunctuatorTokens) do
-					for _, ignored in ipairs(ignoredTokens) do
-						expectStripped(nonPunctuator .. ignored .. "...").toEqual(nonPunctuator .. " ...")
+			for _, nonPunctuator in ipairs(nonPunctuatorTokens) do
+				for _, ignored in ipairs(ignoredTokens) do
+					expectStripped(nonPunctuator .. ignored .. "...").toEqual(nonPunctuator .. " ...")
 
-						for _, anotherIgnored in ipairs(ignoredTokens) do
-							expectStripped(nonPunctuator .. ignored .. anotherIgnored .. " ...").toEqual(nonPunctuator .. " ...")
-						end
+					for _, anotherIgnored in ipairs(ignoredTokens) do
+						expectStripped(nonPunctuator .. ignored .. anotherIgnored .. " ...").toEqual(
+							nonPunctuator .. " ..."
+						)
 					end
-
-					expectStripped(nonPunctuator .. UtilArray.join(ignoredTokens, "") .. "...").toEqual(nonPunctuator .. " ...")
 				end
+
+				expectStripped(nonPunctuator .. Array.join(ignoredTokens, "") .. "...").toEqual(nonPunctuator .. " ...")
 			end
-		)
+		end)
 
 		it("replace ignored tokens between non-punctuator tokens with space", function()
 			expectStripped("1 2").toStayTheSame()
-			expectStripped("\"\" \"\"").toStayTheSame()
+			expectStripped('"" ""').toStayTheSame()
 			expectStripped("a b").toStayTheSame()
 
 			expectStripped("a,1").toEqual("a 1")
@@ -309,16 +319,16 @@ return function()
 						end
 					end
 
-					expectStripped(left .. UtilArray.join(ignoredTokens, "") .. right).toEqual(left .. " " .. right)
+					expectStripped(left .. Array.join(ignoredTokens, "") .. right).toEqual(left .. " " .. right)
 				end
 			end
 		end)
 
 		it("does not strip ignored tokens embedded in the string", function()
-			expectStripped("\" \"").toStayTheSame()
-			expectStripped("\",\"").toStayTheSame()
-			expectStripped("\",,\"").toStayTheSame()
-			expectStripped("\",|\"").toStayTheSame()
+			expectStripped('" "').toStayTheSame()
+			expectStripped('","').toStayTheSame()
+			expectStripped('",,"').toStayTheSame()
+			expectStripped('",|"').toStayTheSame()
 
 			for _, ignored in ipairs(ignoredTokens) do
 				-- ROBLOX deviation: no JSON.stringify and node inspect in Lua
@@ -331,27 +341,27 @@ return function()
 			end
 
 			-- ROBLOX deviation: no JSON.stringify and node inspect in Lua
-			expectStripped(inspect(UtilArray.join(ignoredTokens, ""))).toStayTheSame()
+			expectStripped(inspect(Array.join(ignoredTokens, ""))).toStayTheSame()
 		end)
 
 		it("does not strip ignored tokens embedded in the block string", function()
-			expectStripped("\"\"\",\"\"\"").toStayTheSame()
-			expectStripped("\"\"\",,\"\"\"").toStayTheSame()
-			expectStripped("\"\"\",|\"\"\"").toStayTheSame()
+			expectStripped('""","""').toStayTheSame()
+			expectStripped('""",,"""').toStayTheSame()
+			expectStripped('""",|"""').toStayTheSame()
 
 			local ignoredTokensWithoutFormatting = Array.filter(ignoredTokens, function(token)
 				return Array.indexOf({ "\n", "\r", "\r\n", "\t", " " }, token) == -1
 			end)
 
 			for _, ignored in ipairs(ignoredTokensWithoutFormatting) do
-				expectStripped("\"\"\"|" .. ignored .. "|\"\"\"").toStayTheSame()
+				expectStripped('"""|' .. ignored .. '|"""').toStayTheSame()
 
 				for _, anotherIgnored in ipairs(ignoredTokensWithoutFormatting) do
-					expectStripped("\"\"\"|" .. ignored .. anotherIgnored .. "|\"\"\"").toStayTheSame()
+					expectStripped('"""|' .. ignored .. anotherIgnored .. '|"""').toStayTheSame()
 				end
 			end
 
-			expectStripped("\"\"\"|" .. UtilArray.join(ignoredTokensWithoutFormatting, "") .. "|\"\"\"").toStayTheSame()
+			expectStripped('"""|' .. Array.join(ignoredTokensWithoutFormatting, "") .. '|"""').toStayTheSame()
 		end)
 
 		it("strips ignored characters inside block strings", function()
@@ -371,26 +381,26 @@ return function()
 				return expectStripped(blockStr)
 			end
 
-			expectStrippedString("\"\"\"\"\"\"").toStayTheSame()
-			expectStrippedString("\"\"\" \"\"\"").toEqual("\"\"\"\"\"\"")
+			expectStrippedString('""""""').toStayTheSame()
+			expectStrippedString('""" """').toEqual('""""""')
 
-			expectStrippedString("\"\"\"a\"\"\"").toStayTheSame()
-			expectStrippedString("\"\"\" a\"\"\"").toEqual("\"\"\" a\"\"\"")
-			expectStrippedString("\"\"\" a \"\"\"").toEqual("\"\"\" a \"\"\"")
+			expectStrippedString('"""a"""').toStayTheSame()
+			expectStrippedString('""" a"""').toEqual('""" a"""')
+			expectStrippedString('""" a """').toEqual('""" a """')
 
-			expectStrippedString("\"\"\"\n\"\"\"").toEqual("\"\"\"\"\"\"")
-			expectStrippedString("\"\"\"a\nb\"\"\"").toEqual("\"\"\"a\nb\"\"\"")
-			expectStrippedString("\"\"\"a\rb\"\"\"").toEqual("\"\"\"a\nb\"\"\"")
-			expectStrippedString("\"\"\"a\r\nb\"\"\"").toEqual("\"\"\"a\nb\"\"\"")
-			expectStrippedString("\"\"\"a\r\n\nb\"\"\"").toEqual("\"\"\"a\n\nb\"\"\"")
+			expectStrippedString('"""\n"""').toEqual('""""""')
+			expectStrippedString('"""a\nb"""').toEqual('"""a\nb"""')
+			expectStrippedString('"""a\rb"""').toEqual('"""a\nb"""')
+			expectStrippedString('"""a\r\nb"""').toEqual('"""a\nb"""')
+			expectStrippedString('"""a\r\n\nb"""').toEqual('"""a\n\nb"""')
 
-			expectStrippedString("\"\"\"\\\n\"\"\"").toStayTheSame()
-			expectStrippedString("\"\"\"\"\n\"\"\"").toStayTheSame()
-			expectStrippedString("\"\"\"\\\"\"\"\n\"\"\"").toEqual("\"\"\"\\\"\"\"\"\"\"")
+			expectStrippedString('"""\\\n"""').toStayTheSame()
+			expectStrippedString('""""\n"""').toStayTheSame()
+			expectStrippedString('"""\\"""\n"""').toEqual('"""\\""""""')
 
-			expectStrippedString("\"\"\"\na\n b\"\"\"").toStayTheSame()
-			expectStrippedString("\"\"\"\n a\n b\"\"\"").toEqual("\"\"\"a\nb\"\"\"")
-			expectStrippedString("\"\"\"\na\n b\nc\"\"\"").toEqual("\"\"\"a\n b\nc\"\"\"")
+			expectStrippedString('"""\na\n b"""').toStayTheSame()
+			expectStrippedString('"""\n a\n b"""').toEqual('"""a\nb"""')
+			expectStrippedString('"""\na\n b\nc"""').toEqual('"""a\n b\nc"""')
 		end)
 
 		it("strips kitchen sink query but maintains the exact same AST", function()

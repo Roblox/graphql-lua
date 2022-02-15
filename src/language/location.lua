@@ -1,6 +1,9 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/location.js
-local src = script.Parent.Parent
-local String = require(src.luaUtils.String)
+local Packages = script.Parent.Parent.Parent
+local String = require(Packages.LuauPolyfill).String
+
+local Source = require(script.Parent.source)
+type Source = Source.Source
 
 -- /**
 --  * Represents a location in a Source.
@@ -15,7 +18,7 @@ export type SourceLocation = {
 --  * line and column as a SourceLocation.
 --  * ROBLOX deviation: position takes 1-based index
 --  */
-local function getLocation(source, position: number): SourceLocation
+local function getLocation(source: Source, position: number): SourceLocation
 	local terms = { "\r\n", "\r", "\n" }
 	local line = 1
 	local column = position

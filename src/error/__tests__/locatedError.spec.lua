@@ -3,11 +3,13 @@
 return function()
 	local errorsWorkspace = script.Parent.Parent
 	local srcWorkspace = script.Parent.Parent.Parent
+	local Packages = srcWorkspace.Parent
+
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Error = LuauPolyfill.Error
 
 	local GraphQLError = require(errorsWorkspace.GraphQLError).GraphQLError
 	local locatedError = require(errorsWorkspace.locatedError).locatedError
-
-	local Error = require(srcWorkspace.luaUtils.Error)
 
 	describe("locatedError", function()
 		it("passes GraphQLError through", function()

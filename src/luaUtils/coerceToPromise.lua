@@ -1,18 +1,20 @@
 local srcWorkspace = script.Parent.Parent
-local Promise = require(srcWorkspace.Parent.Promise)
+local rootWorkspace = srcWorkspace.Parent
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+type Promise<T> = LuauPolyfill.Promise<T>
+
+local Promise = require(rootWorkspace.Promise)
 local PromiseOrValueModule = require(srcWorkspace.jsutils.PromiseOrValue)
 type PromiseOrValue<T> = PromiseOrValueModule.PromiseOrValue<T>
-local PromiseModule = require(srcWorkspace.luaUtils.Promise)
-type Promise<T> = PromiseModule.Promise<T>
 
-local function coerceToPromise(value: PromiseOrValue<any>) : Promise<any>
+local function coerceToPromise<T>(value: PromiseOrValue<T>): Promise<T>
 	if Promise.is(value) then
-		return value
+		return value :: Promise<T>
 	else
-		return Promise.resolve(value)
+		return Promise.resolve(value) :: Promise<T>
 	end
 end
 
 return {
-	coerceToPromise = coerceToPromise
+	coerceToPromise = coerceToPromise,
 }

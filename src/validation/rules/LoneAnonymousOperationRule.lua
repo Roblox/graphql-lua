@@ -1,12 +1,13 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/validation/rules/LoneAnonymousOperationRule.js
 
 local root = script.Parent.Parent.Parent
-local GraphQLError = require(root.error.GraphQLError).GraphQLError
-local language = root.language
-local Kind = require(language.kinds).Kind
 local PackagesWorkspace = root.Parent
 local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
 local Array = LuauPolyfill.Array
+
+local GraphQLError = require(root.error.GraphQLError).GraphQLError
+local language = root.language
+local Kind = require(language.kinds).Kind
 
 local exports = {}
 
@@ -27,10 +28,7 @@ exports.LoneAnonymousOperationRule = function(context)
 		OperationDefinition = function(_self, node)
 			if not node.name and operationCount > 1 then
 				context:reportError(
-					GraphQLError.new(
-						"This anonymous operation must be the only defined operation.",
-						node
-					)
+					GraphQLError.new("This anonymous operation must be the only defined operation.", node)
 				)
 			end
 		end,

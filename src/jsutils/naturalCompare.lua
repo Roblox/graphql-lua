@@ -7,10 +7,10 @@
  *
  ]]
 
-local srcWorkspace = script.Parent.Parent
-local charCodeAt = require(srcWorkspace.luaUtils.charCodeAt)
 local Packages = script.Parent.Parent.Parent
-local Number = require(Packages.LuauPolyfill).Number
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Number = LuauPolyfill.Number
+local String = LuauPolyfill.String
 local isNaN = Number.isNaN
 local isDigit, DIGIT_0, DIGIT_9
 
@@ -19,22 +19,22 @@ local function naturalCompare(aStr: string, bStr: string): number
 	local bIdx = 1
 
 	while aIdx <= #aStr and bIdx <= #bStr do
-		local aChar = charCodeAt(aStr, aIdx)
-		local bChar = charCodeAt(bStr, bIdx)
+		local aChar = String.charCodeAt(aStr, aIdx)
+		local bChar = String.charCodeAt(bStr, bIdx)
 
 		if isDigit(aChar) and isDigit(bChar) then
 			local aNum = 0
 			repeat
 				aIdx += 1
 				aNum = aNum * 10 + aChar - DIGIT_0
-				aChar = charCodeAt(aStr, aIdx)
+				aChar = String.charCodeAt(aStr, aIdx)
 			until not (isDigit(aChar) and aNum > 0)
 
 			local bNum = 0
 			repeat
 				bIdx += 1
 				bNum = bNum * 10 + bChar - DIGIT_0
-				bChar = charCodeAt(bStr, bIdx)
+				bChar = String.charCodeAt(bStr, bIdx)
 			until not (isDigit(bChar) and bNum > 0)
 
 			if aNum < bNum then

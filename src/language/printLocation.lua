@@ -1,16 +1,13 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/printLocation.js
-
 local language = script.Parent
 local srcWorkspace = language.Parent
-local root = srcWorkspace.Parent
+local Packages = srcWorkspace.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
+type Array<T> = LuauPolyfill.Array<T>
+local String = LuauPolyfill.String
 
 local getLocation = require(language.location).getLocation
-local Packages = root
-local LuauPolyfill = require(Packages.LuauPolyfill)
-
-local Array = LuauPolyfill.Array
-local UtilArray = require(srcWorkspace.luaUtils.Array)
-local String = require(srcWorkspace.luaUtils.String)
 
 -- deviation: pre-declare functions
 local whitespace
@@ -51,23 +48,30 @@ function printSourceLocation(source, sourceLocation): string
 		for i = 1, string.len(locationLine), 80 do
 			table.insert(subLines, String.slice(locationLine, i, i + 80))
 		end
-		return (locationStr .. printPrefixedLines(UtilArray.concat(
-			{ { tostring(lineNum), subLines[1] } },
-			Array.map(Array.slice(subLines, 2, subLineIndex + 1), function(subLine)
-				return { "", subLine }
-			end),
-			{ { " ", whitespace(subLineColumnNum - 1) .. "^" } },
-			{ { "", subLines[subLineIndex + 1] } }
-		)))
+		return (
+				locationStr
+				.. printPrefixedLines(Array.concat(
+					{ { tostring(lineNum), subLines[1] } },
+					Array.map(Array.slice(subLines, 2, subLineIndex + 1), function(subLine)
+						return { "", subLine }
+					end),
+					{ { " ", whitespace(subLineColumnNum - 1) .. "^" } },
+					{ { "", subLines[subLineIndex + 1] } }
+				))
+			)
 	end
 
-	return (locationStr .. printPrefixedLines({
-		-- // Lines specified like this: ["prefix", "string"],
-		{ lineNum - 1, lines[lineIndex - 1] },
-		{ lineNum, locationLine },
-		{ "", whitespace(columnNum - 1) .. "^" },
-		{ lineNum + 1, lines[lineIndex + 1] },
-	}))
+	return (
+			locationStr
+			.. printPrefixedLines({
+				-- // Lines specified like this: ["prefix", "string"],
+				-- ROBLOX Luau TODO: Luau doesn't understand packed array types
+				{ lineNum - 1, lines[lineIndex - 1] } :: Array<any>,
+				{ lineNum, locationLine } :: Array<any>,
+				{ "", whitespace(columnNum - 1) .. "^" },
+				{ lineNum + 1, lines[lineIndex + 1] } :: Array<any>,
+			})
+		)
 end
 
 function printPrefixedLines(lines): string
@@ -80,7 +84,7 @@ function printPrefixedLines(lines): string
 		local prefix = val[1]
 		return string.len(prefix)
 	end)))
-	return UtilArray.join(
+	return Array.join(
 		Array.map(existingLines, function(val)
 			local prefix = val[1]
 			local line = val[2]

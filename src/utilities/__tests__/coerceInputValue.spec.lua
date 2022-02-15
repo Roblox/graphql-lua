@@ -2,13 +2,14 @@
 
 return function()
 	local srcWorkspace = script.Parent.Parent.Parent
+	local Packages = srcWorkspace.Parent
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Error = LuauPolyfill.Error
+	local Map = LuauPolyfill.Map
+	local Number = LuauPolyfill.Number
 
-	-- ROBLOX deviation: get JS primitives
-	local NaN = 0 / 0
-	local Error = require(srcWorkspace.luaUtils.Error)
 	local NULL = require(srcWorkspace.luaUtils.null)
 	local isNotNillish = require(srcWorkspace.luaUtils.isNillish).isNotNillish
-	local Map = require(srcWorkspace.luaUtils.Map).Map
 
 	local invariant = require(srcWorkspace.jsutils.invariant).invariant
 
@@ -34,7 +35,6 @@ return function()
 	end
 
 	describe("coerceInputValue", function()
-
 		local function coerceValue(inputValue, type_)
 			local errors = {}
 			local value = coerceInputValue(inputValue, type_, function(path, invalidValue, error_)
@@ -63,7 +63,7 @@ return function()
 				local result = coerceValue(nil, TestNonNull)
 				expectErrors(expect, result).toEqual({
 					{
-						error = "Expected non-nullable type \"Int!\" not to be null.",
+						error = 'Expected non-nullable type "Int!" not to be null.',
 						path = {},
 						value = nil,
 					},
@@ -74,7 +74,7 @@ return function()
 				local result = coerceValue(NULL, TestNonNull)
 				expectErrors(expect, result).toEqual({
 					{
-						error = "Expected non-nullable type \"Int!\" not to be null.",
+						error = 'Expected non-nullable type "Int!" not to be null.',
 						path = {},
 						value = NULL,
 					},
@@ -105,7 +105,7 @@ return function()
 			end)
 
 			it("returns no error for NaN result", function()
-				local result = coerceValue({ value = NaN }, TestScalar)
+				local result = coerceValue({ value = Number.NaN }, TestScalar)
 				expectValue(expect, result).toBeNaN()
 			end)
 
@@ -115,7 +115,7 @@ return function()
 				local result = coerceValue({ value = nil }, TestScalar)
 				expectErrors(expect, result).toEqual({
 					{
-						error = "Expected type \"TestScalar\".",
+						error = 'Expected type "TestScalar".',
 						path = {},
 						value = { value = nil },
 					},
@@ -129,7 +129,7 @@ return function()
 				local result = coerceValue(inputValue, TestScalar)
 				expectErrors(expect, result).toEqual({
 					{
-						error = "Expected type \"TestScalar\". Some error message",
+						error = 'Expected type "TestScalar". Some error message',
 						path = {},
 						value = { error = "Some error message" },
 					},
@@ -158,7 +158,7 @@ return function()
 				local result = coerceValue("foo", TestEnum)
 				expectErrors(expect, result).toEqual({
 					{
-						error = "Value \"foo\" does not exist in \"TestEnum\" enum. Did you mean the enum value \"FOO\"?",
+						error = 'Value "foo" does not exist in "TestEnum" enum. Did you mean the enum value "FOO"?',
 						path = {},
 						value = "foo",
 					},
@@ -169,7 +169,7 @@ return function()
 				local result1 = coerceValue(123, TestEnum)
 				expectErrors(expect, result1).toEqual({
 					{
-						error = "Enum \"TestEnum\" cannot represent non-string value: 123.",
+						error = 'Enum "TestEnum" cannot represent non-string value: 123.',
 						path = {},
 						value = 123,
 					},
@@ -178,7 +178,7 @@ return function()
 				local result2 = coerceValue({ field = "value" }, TestEnum)
 				expectErrors(expect, result2).toEqual({
 					{
-						error = "Enum \"TestEnum\" cannot represent non-string value: { field: \"value\" }.",
+						error = 'Enum "TestEnum" cannot represent non-string value: { field: "value" }.',
 						path = {},
 						value = { field = "value" },
 					},
@@ -190,9 +190,9 @@ return function()
 			local TestInputObject = GraphQLInputObjectType.new({
 				name = "TestInputObject",
 				fields = Map.new({
-					{ "foo", { type = GraphQLNonNull.new(GraphQLInt) }},
-					{ "bar", { type = GraphQLInt }},
-				})
+					{ "foo", { type = GraphQLNonNull.new(GraphQLInt) } },
+					{ "bar", { type = GraphQLInt } },
+				}),
 			})
 
 			it("returns no error for a valid input", function()
@@ -204,7 +204,7 @@ return function()
 				local result = coerceValue(123, TestInputObject)
 				expectErrors(expect, result).toEqual({
 					{
-						error = "Expected type \"TestInputObject\" to be an object.",
+						error = 'Expected type "TestInputObject" to be an object.',
 						path = {},
 						value = 123,
 					},
@@ -212,8 +212,8 @@ return function()
 			end)
 
 			it("returns an error for an invalid field", function()
-				local result = coerceValue({ foo = NaN }, TestInputObject)
-				-- ROBLOX deviation: NaN != NaN so we need special test handler
+				local result = coerceValue({ foo = Number.NaN }, TestInputObject)
+				-- ROBLOX deviation: NaN != Number.NaN so we need special test handler
 				expect(result.errors[1].error).toEqual("Int cannot represent non-integer value: NaN")
 				expect(result.errors[1].path).toEqual({ "foo" })
 				expect(result.errors[1].value).toBeNaN()
@@ -223,12 +223,12 @@ return function()
 				local result = coerceValue({ foo = "abc", bar = "def" }, TestInputObject)
 				expectErrors(expect, result).toEqual({
 					{
-						error = "Int cannot represent non-integer value: \"abc\"",
+						error = 'Int cannot represent non-integer value: "abc"',
 						path = { "foo" },
 						value = "abc",
 					},
 					{
-						error = "Int cannot represent non-integer value: \"def\"",
+						error = 'Int cannot represent non-integer value: "def"',
 						path = { "bar" },
 						value = "def",
 					},
@@ -239,7 +239,7 @@ return function()
 				local result = coerceValue({ bar = 123 }, TestInputObject)
 				expectErrors(expect, result).toEqual({
 					{
-						error = "Field \"foo\" of required type \"Int!\" was not provided.",
+						error = 'Field "foo" of required type "Int!" was not provided.',
 						path = {},
 						value = { bar = 123 },
 					},
@@ -250,7 +250,7 @@ return function()
 				local result = coerceValue({ foo = 123, unknownField = 123 }, TestInputObject)
 				expectErrors(expect, result).toEqual({
 					{
-						error = "Field \"unknownField\" is not defined by type \"TestInputObject\".",
+						error = 'Field "unknownField" is not defined by type "TestInputObject".',
 						path = {},
 						value = { foo = 123, unknownField = 123 },
 					},
@@ -261,7 +261,7 @@ return function()
 				local result = coerceValue({ foo = 123, bart = 123 }, TestInputObject)
 				expectErrors(expect, result).toEqual({
 					{
-						error = "Field \"bart\" is not defined by type \"TestInputObject\". Did you mean \"bar\"?",
+						error = 'Field "bart" is not defined by type "TestInputObject". Did you mean "bar"?',
 						path = {},
 						value = { foo = 123, bart = 123 },
 					},
@@ -298,7 +298,7 @@ return function()
 			end)
 
 			it("returns NaN as value", function()
-				local result = coerceValue({}, makeTestInputObject(NaN))
+				local result = coerceValue({}, makeTestInputObject(Number.NaN))
 				-- ROBLOX deviation: no test matcher for toHaveProperty
 				expect(result.errors).toEqual({})
 				expect(result.value.foo).toBeNaN()
@@ -330,7 +330,7 @@ return function()
 				local result = coerceValue({ 1, "b", true, 4 }, TestList)
 				expectErrors(expect, result).toEqual({
 					{
-						error = "Int cannot represent non-integer value: \"b\"",
+						error = 'Int cannot represent non-integer value: "b"',
 						path = { 2 },
 						value = "b",
 					},
@@ -363,7 +363,7 @@ return function()
 				local result = coerceValue("INVALID", TestList)
 				expectErrors(expect, result).toEqual({
 					{
-						error = "Int cannot represent non-integer value: \"INVALID\"",
+						error = 'Int cannot represent non-integer value: "INVALID"',
 						path = {},
 						value = "INVALID",
 					},
@@ -409,13 +409,13 @@ return function()
 			it("throw error without path", function()
 				expect(function()
 					return coerceInputValue(NULL, GraphQLNonNull.new(GraphQLInt))
-				end).toThrow("Invalid value null: Expected non-nullable type \"Int!\" not to be null.")
+				end).toThrow('Invalid value null: Expected non-nullable type "Int!" not to be null.')
 			end)
 
 			it("throw error with path", function()
 				expect(function()
 					return coerceInputValue({ NULL }, GraphQLList.new(GraphQLNonNull.new(GraphQLInt)))
-				end).toThrow("Invalid value null at \"value[1]\": Expected non-nullable type \"Int!\" not to be null.")
+				end).toThrow('Invalid value null at "value[1]": Expected non-nullable type "Int!" not to be null.')
 			end)
 		end)
 	end)

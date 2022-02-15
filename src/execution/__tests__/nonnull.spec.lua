@@ -5,12 +5,13 @@ return function()
 	local srcWorkspace = executionWorkspace.Parent
 	local Packages = srcWorkspace.Parent
 
-	-- ROBLOX deviation: utils
-	local Error = require(srcWorkspace.luaUtils.Error)
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Error = LuauPolyfill.Error
+	local Object = LuauPolyfill.Object
+
 	local NULL = require(srcWorkspace.luaUtils.null)
 	local isNotNillish = require(srcWorkspace.luaUtils.isNillish).isNotNillish
 	local Promise = require(Packages.Promise)
-	local Object = require(Packages.LuauPolyfill).Object
 	local HttpService = game:GetService("HttpService")
 	local inspect = require(srcWorkspace.jsutils.inspect).inspect
 
@@ -128,7 +129,6 @@ return function()
   }
 ]])
 
-
 	function executeQuery(query: string, rootValue: any)
 		return execute({
 			schema = schema,
@@ -136,7 +136,6 @@ return function()
 			rootValue = rootValue,
 		})
 	end
-
 
 	function patch(str)
 		-- ROBLOX deviation: no regexp in Lua
@@ -163,7 +162,7 @@ return function()
 				promise = data.data.sync,
 				promiseNonNull = data.data.syncNonNull,
 			}) or data.data,
-			errors = data.errors and HttpService:JSONDecode(patch(inspect(data.errors)))
+			errors = data.errors and HttpService:JSONDecode(patch(inspect(data.errors))),
 		})
 		if isNotNillish(patched.data) then
 			patched.data.sync = nil
@@ -185,7 +184,6 @@ return function()
 			document = parse(patchedQuery),
 			rootValue = rootValue,
 		}):andThen(function(asyncResult)
-
 			local data = patchData(syncResult)
 			if asyncResult.errors then
 				expect_(asyncResult.errors).toArrayEqual(data.errors, true)
@@ -225,23 +223,20 @@ return function()
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
 				expect(result.data).toEqual({ sync = NULL })
-				expect(result.errors).toArrayEqual(
+				expect(result.errors).toArrayEqual({
 					{
-						{
-							message = syncError.message,
-							path = {
-								"sync",
-							},
-							locations = {
-								{
-									line = 3,
-									column = 9,
-								},
+						message = syncError.message,
+						path = {
+							"sync",
+						},
+						locations = {
+							{
+								line = 3,
+								column = 9,
 							},
 						},
 					},
-					true
-				)
+				}, true)
 			end)
 		end)
 
@@ -263,24 +258,21 @@ return function()
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
 				expect(result.data).toEqual({ syncNest = NULL })
-				expect(result.errors).toArrayEqual(
+				expect(result.errors).toArrayEqual({
 					{
-						{
-							message = "Cannot return null for non-nullable field DataType.syncNonNull.",
-							path = {
-								"syncNest",
-								"syncNonNull",
-							},
-							locations = {
-								{
-									line = 4,
-									column = 11,
-								},
+						message = "Cannot return null for non-nullable field DataType.syncNonNull.",
+						path = {
+							"syncNest",
+							"syncNonNull",
+						},
+						locations = {
+							{
+								line = 4,
+								column = 11,
 							},
 						},
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("that throws", function()
@@ -291,24 +283,21 @@ return function()
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
 				expect(result.data).toEqual({ syncNest = NULL })
-				expect(result.errors).toArrayEqual(
+				expect(result.errors).toArrayEqual({
 					{
-						{
-							message = syncNonNullError.message,
-							path = {
-								"syncNest",
-								"syncNonNull",
-							},
-							locations = {
-								{
-									line = 4,
-									column = 11,
-								},
+						message = syncNonNullError.message,
+						path = {
+							"syncNest",
+							"syncNonNull",
+						},
+						locations = {
+							{
+								line = 4,
+								column = 11,
 							},
 						},
 					},
-					true
-				)
+				}, true)
 			end)
 		end)
 
@@ -369,175 +358,172 @@ return function()
 				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
 				expect(result.data).toEqual(data)
 				-- ROBLOX deviation: order of error messages not preserved because data is in table
-				expect(result.errors).toHaveSameMembers(
+				expect(result.errors).toHaveSameMembers({
 					{
-						{
-							message = syncError.message,
-							path = {
-								"syncNest",
-								"sync",
-							},
-							locations = {
-								{
-									line = 4,
-									column = 11,
-								},
-							},
+						message = syncError.message,
+						path = {
+							"syncNest",
+							"sync",
 						},
-						{
-							message = syncError.message,
-							path = {
-								"syncNest",
-								"syncNest",
-								"sync",
-							},
-							locations = {
-								{
-									line = 6,
-									column = 22,
-								},
-							},
-						},
-						{
-							message = syncError.message,
-							path = {
-								"syncNest",
-								"promiseNest",
-								"sync",
-							},
-							locations = {
-								{
-									line = 7,
-									column = 25,
-								},
-							},
-						},
-						{
-							message = syncError.message,
-							path = {
-								"promiseNest",
-								"sync",
-							},
-							locations = {
-								{
-									line = 10,
-									column = 11,
-								},
-							},
-						},
-						{
-							message = syncError.message,
-							path = {
-								"promiseNest",
-								"syncNest",
-								"sync",
-							},
-							locations = {
-								{
-									line = 12,
-									column = 22,
-								},
-							},
-						},
-						{
-							message = promiseError.message,
-							path = {
-								"syncNest",
-								"promise",
-							},
-							locations = {
-								{
-									line = 5,
-									column = 11,
-								},
-							},
-						},
-						{
-							message = promiseError.message,
-							path = {
-								"syncNest",
-								"syncNest",
-								"promise",
-							},
-							locations = {
-								{
-									line = 6,
-									column = 27,
-								},
-							},
-						},
-						{
-							message = syncError.message,
-							path = {
-								"promiseNest",
-								"promiseNest",
-								"sync",
-							},
-							locations = {
-								{
-									line = 13,
-									column = 25,
-								},
-							},
-						},
-						{
-							message = promiseError.message,
-							path = {
-								"syncNest",
-								"promiseNest",
-								"promise",
-							},
-							locations = {
-								{
-									line = 7,
-									column = 30,
-								},
-							},
-						},
-						{
-							message = promiseError.message,
-							path = {
-								"promiseNest",
-								"promise",
-							},
-							locations = {
-								{
-									line = 11,
-									column = 11,
-								},
-							},
-						},
-						{
-							message = promiseError.message,
-							path = {
-								"promiseNest",
-								"syncNest",
-								"promise",
-							},
-							locations = {
-								{
-									line = 12,
-									column = 27,
-								},
-							},
-						},
-						{
-							message = promiseError.message,
-							path = {
-								"promiseNest",
-								"promiseNest",
-								"promise",
-							},
-							locations = {
-								{
-									line = 13,
-									column = 30,
-								},
+						locations = {
+							{
+								line = 4,
+								column = 11,
 							},
 						},
 					},
-					true
-				)
+					{
+						message = syncError.message,
+						path = {
+							"syncNest",
+							"syncNest",
+							"sync",
+						},
+						locations = {
+							{
+								line = 6,
+								column = 22,
+							},
+						},
+					},
+					{
+						message = syncError.message,
+						path = {
+							"syncNest",
+							"promiseNest",
+							"sync",
+						},
+						locations = {
+							{
+								line = 7,
+								column = 25,
+							},
+						},
+					},
+					{
+						message = syncError.message,
+						path = {
+							"promiseNest",
+							"sync",
+						},
+						locations = {
+							{
+								line = 10,
+								column = 11,
+							},
+						},
+					},
+					{
+						message = syncError.message,
+						path = {
+							"promiseNest",
+							"syncNest",
+							"sync",
+						},
+						locations = {
+							{
+								line = 12,
+								column = 22,
+							},
+						},
+					},
+					{
+						message = promiseError.message,
+						path = {
+							"syncNest",
+							"promise",
+						},
+						locations = {
+							{
+								line = 5,
+								column = 11,
+							},
+						},
+					},
+					{
+						message = promiseError.message,
+						path = {
+							"syncNest",
+							"syncNest",
+							"promise",
+						},
+						locations = {
+							{
+								line = 6,
+								column = 27,
+							},
+						},
+					},
+					{
+						message = syncError.message,
+						path = {
+							"promiseNest",
+							"promiseNest",
+							"sync",
+						},
+						locations = {
+							{
+								line = 13,
+								column = 25,
+							},
+						},
+					},
+					{
+						message = promiseError.message,
+						path = {
+							"syncNest",
+							"promiseNest",
+							"promise",
+						},
+						locations = {
+							{
+								line = 7,
+								column = 30,
+							},
+						},
+					},
+					{
+						message = promiseError.message,
+						path = {
+							"promiseNest",
+							"promise",
+						},
+						locations = {
+							{
+								line = 11,
+								column = 11,
+							},
+						},
+					},
+					{
+						message = promiseError.message,
+						path = {
+							"promiseNest",
+							"syncNest",
+							"promise",
+						},
+						locations = {
+							{
+								line = 12,
+								column = 27,
+							},
+						},
+					},
+					{
+						message = promiseError.message,
+						path = {
+							"promiseNest",
+							"promiseNest",
+							"promise",
+						},
+						locations = {
+							{
+								line = 13,
+								column = 30,
+							},
+						},
+					},
+				}, true)
 			end)
 		end)
 
@@ -606,79 +592,76 @@ return function()
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
 				expect(result.data).toEqual(data)
-				expect(result.errors).toArrayEqual(
+				expect(result.errors).toArrayEqual({
 					{
-						{
-							message = "Cannot return null for non-nullable field DataType.syncNonNull.",
-							path = {
-								"syncNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"syncNonNull",
-							},
-							locations = {
-								{
-									line = 8,
-									column = 19,
-								},
-							},
+						message = "Cannot return null for non-nullable field DataType.syncNonNull.",
+						path = {
+							"syncNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"syncNonNull",
 						},
-						{
-							message = "Cannot return null for non-nullable field DataType.syncNonNull.",
-							path = {
-								"promiseNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"syncNonNull",
-							},
-							locations = {
-								{
-									line = 19,
-									column = 19,
-								},
-							},
-						},
-						{
-							message = "Cannot return null for non-nullable field DataType.promiseNonNull.",
-							path = {
-								"anotherNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"promiseNonNull",
-							},
-							locations = {
-								{
-									line = 30,
-									column = 19,
-								},
-							},
-						},
-						{
-							message = "Cannot return null for non-nullable field DataType.promiseNonNull.",
-							path = {
-								"anotherPromiseNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"promiseNonNull",
-							},
-							locations = {
-								{
-									line = 41,
-									column = 19,
-								},
+						locations = {
+							{
+								line = 8,
+								column = 19,
 							},
 						},
 					},
-					true
-				)
+					{
+						message = "Cannot return null for non-nullable field DataType.syncNonNull.",
+						path = {
+							"promiseNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"syncNonNull",
+						},
+						locations = {
+							{
+								line = 19,
+								column = 19,
+							},
+						},
+					},
+					{
+						message = "Cannot return null for non-nullable field DataType.promiseNonNull.",
+						path = {
+							"anotherNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"promiseNonNull",
+						},
+						locations = {
+							{
+								line = 30,
+								column = 19,
+							},
+						},
+					},
+					{
+						message = "Cannot return null for non-nullable field DataType.promiseNonNull.",
+						path = {
+							"anotherPromiseNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"promiseNonNull",
+						},
+						locations = {
+							{
+								line = 41,
+								column = 19,
+							},
+						},
+					},
+				}, true)
 			end)
 			it("that throws", function()
 				local result = executeQuery(query, throwingData):expect()
@@ -688,79 +671,76 @@ return function()
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
 				expect(result.data).toEqual(data)
-				expect(result.errors).toArrayEqual(
+				expect(result.errors).toArrayEqual({
 					{
-						{
-							message = syncNonNullError.message,
-							path = {
-								"syncNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"syncNonNull",
-							},
-							locations = {
-								{
-									line = 8,
-									column = 19,
-								},
-							},
+						message = syncNonNullError.message,
+						path = {
+							"syncNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"syncNonNull",
 						},
-						{
-							message = syncNonNullError.message,
-							path = {
-								"promiseNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"syncNonNull",
-							},
-							locations = {
-								{
-									line = 19,
-									column = 19,
-								},
-							},
-						},
-						{
-							message = promiseNonNullError.message,
-							path = {
-								"anotherNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"promiseNonNull",
-							},
-							locations = {
-								{
-									line = 30,
-									column = 19,
-								},
-							},
-						},
-						{
-							message = promiseNonNullError.message,
-							path = {
-								"anotherPromiseNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"syncNonNullNest",
-								"promiseNonNullNest",
-								"promiseNonNull",
-							},
-							locations = {
-								{
-									line = 41,
-									column = 19,
-								},
+						locations = {
+							{
+								line = 8,
+								column = 19,
 							},
 						},
 					},
-					true
-				)
+					{
+						message = syncNonNullError.message,
+						path = {
+							"promiseNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"syncNonNull",
+						},
+						locations = {
+							{
+								line = 19,
+								column = 19,
+							},
+						},
+					},
+					{
+						message = promiseNonNullError.message,
+						path = {
+							"anotherNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"promiseNonNull",
+						},
+						locations = {
+							{
+								line = 30,
+								column = 19,
+							},
+						},
+					},
+					{
+						message = promiseNonNullError.message,
+						path = {
+							"anotherPromiseNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"syncNonNullNest",
+							"promiseNonNullNest",
+							"promiseNonNull",
+						},
+						locations = {
+							{
+								line = 41,
+								column = 19,
+							},
+						},
+					},
+				}, true)
 			end)
 		end)
 
@@ -780,23 +760,20 @@ return function()
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
 				expect(result.data).toEqual(NULL)
-				expect(result.errors).toArrayEqual(
+				expect(result.errors).toArrayEqual({
 					{
-						{
-							message = "Cannot return null for non-nullable field DataType.syncNonNull.",
-							path = {
-								"syncNonNull",
-							},
-							locations = {
-								{
-									line = 3,
-									column = 9,
-								},
+						message = "Cannot return null for non-nullable field DataType.syncNonNull.",
+						path = {
+							"syncNonNull",
+						},
+						locations = {
+							{
+								line = 3,
+								column = 9,
 							},
 						},
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("that throws", function()
@@ -806,23 +783,20 @@ return function()
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
 				expect(result.data).toEqual(NULL)
-				expect(result.errors).toArrayEqual(
+				expect(result.errors).toArrayEqual({
 					{
-						{
-							message = syncNonNullError.message,
-							path = {
-								"syncNonNull",
-							},
-							locations = {
-								{
-									line = 3,
-									column = 9,
-								},
+						message = syncNonNullError.message,
+						path = {
+							"syncNonNull",
+						},
+						locations = {
+							{
+								line = 3,
+								column = 9,
 							},
 						},
 					},
-					true
-				)
+				}, true)
 			end)
 		end)
 
@@ -924,28 +898,25 @@ return function()
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
 				expect(result.data).toEqual({ withNonNullArg = NULL })
-				expect(result.errors).toArrayEqual(
+				expect(result.errors).toArrayEqual({
 					{
-						{
-							message = "Argument \"cannotBeNull\" of required type \"String!\" was not provided.",
-							locations = {
-								{
-									line = 3,
-									column = 13,
-								},
-							},
-							path = {
-								"withNonNullArg",
+						message = 'Argument "cannotBeNull" of required type "String!" was not provided.',
+						locations = {
+							{
+								line = 3,
+								column = 13,
 							},
 						},
+						path = {
+							"withNonNullArg",
+						},
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("field error when non-null arg provided null", function()
 				-- Note: validation should identify this issue first (values of correct
-      	--       type rule) however execution should still protect against this.
+				--       type rule) however execution should still protect against this.
 				local result = executeSync({
 					schema = schemaWithNonNullArg,
 					document = parse([[
@@ -961,28 +932,25 @@ return function()
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
 				expect(result.data).toEqual({ withNonNullArg = NULL })
-				expect(result.errors).toArrayEqual(
+				expect(result.errors).toArrayEqual({
 					{
-						{
-							message = "Argument \"cannotBeNull\" of non-null type \"String!\" must not be null.",
-							locations = {
-								{
-									line = 3,
-									column = 42,
-								},
-							},
-							path = {
-								"withNonNullArg",
+						message = 'Argument "cannotBeNull" of non-null type "String!" must not be null.',
+						locations = {
+							{
+								line = 3,
+								column = 42,
 							},
 						},
+						path = {
+							"withNonNullArg",
+						},
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("field error when non-null arg not provided variable value", function()
 				-- Note: validation should identify this issue first (variables in allowed
-      	--       position rule) however execution should still protect against this.
+				--       position rule) however execution should still protect against this.
 				local result = executeSync({
 					schema = schemaWithNonNullArg,
 					document = parse([[
@@ -1001,23 +969,20 @@ return function()
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
 				expect(result.data).toEqual({ withNonNullArg = NULL })
-				expect(result.errors).toArrayEqual(
+				expect(result.errors).toArrayEqual({
 					{
-						{
-							message = "Argument \"cannotBeNull\" of required type \"String!\" was provided the variable \"$testVar\" which was not provided a runtime value.",
-							locations = {
-								{
-									line = 3,
-									column = 42,
-								},
-							},
-							path = {
-								"withNonNullArg",
+						message = 'Argument "cannotBeNull" of required type "String!" was provided the variable "$testVar" which was not provided a runtime value.',
+						locations = {
+							{
+								line = 3,
+								column = 42,
 							},
 						},
+						path = {
+							"withNonNullArg",
+						},
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("field error when non-null arg provided variable with explicit null value", function()
@@ -1037,23 +1002,20 @@ return function()
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
 				expect(result.data).toEqual({ withNonNullArg = NULL })
-				expect(result.errors).toArrayEqual(
+				expect(result.errors).toArrayEqual({
 					{
-						{
-							message = "Argument \"cannotBeNull\" of non-null type \"String!\" must not be null.",
-							locations = {
-								{
-									line = 3,
-									column = 43,
-								},
-							},
-							path = {
-								"withNonNullArg",
+						message = 'Argument "cannotBeNull" of non-null type "String!" must not be null.',
+						locations = {
+							{
+								line = 3,
+								column = 43,
 							},
 						},
+						path = {
+							"withNonNullArg",
+						},
 					},
-					true
-				)
+				}, true)
 			end)
 		end)
 	end)

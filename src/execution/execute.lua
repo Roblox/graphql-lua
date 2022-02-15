@@ -1,5 +1,5 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/execution/execute.js
-
+--!nonstrict
 local srcWorkspace = script.Parent.Parent
 local jsUtilsWorkspace = srcWorkspace.jsutils
 local errorWorkspace = srcWorkspace.error
@@ -7,24 +7,25 @@ local languageWorkspace = srcWorkspace.language
 local typeWorkspace = srcWorkspace.type
 local utilitiesWorkspace = srcWorkspace.utilities
 local luaUtilsWorkspace = srcWorkspace.luaUtils
+local Packages = srcWorkspace.Parent
 
-type Array<T> = { [number]: T }
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local Error = LuauPolyfill.Error
+local Map = LuauPolyfill.Map
+local Set = LuauPolyfill.Set
+local instanceof = LuauPolyfill.instanceof
+type Array<T> = LuauPolyfill.Array<T>
+type Map<T, V> = LuauPolyfill.Map<T, V>
+
 local ObjMapImport = require(jsUtilsWorkspace.ObjMap)
 type ObjMap<T> = ObjMapImport.ObjMap<T>
 local PromiseOrValueImport = require(jsUtilsWorkspace.PromiseOrValue)
 type PromiseOrValue<T> = PromiseOrValueImport.PromiseOrValue<T>
 
--- ROBLOX deviation: utils
-local Set = require(srcWorkspace.Parent.LuauPolyfill).Set
-local Array = require(luaUtilsWorkspace.Array)
-local Error = require(luaUtilsWorkspace.Error)
 local Promise = require(srcWorkspace.Parent.Promise)
-local instanceOf = require(jsUtilsWorkspace.instanceOf)
 local NULL = require(luaUtilsWorkspace.null)
 local isNillish = require(luaUtilsWorkspace.isNillish).isNillish
-local MapModule = require(luaUtilsWorkspace.Map)
-local Map = MapModule.Map
-type Map<T,V> = MapModule.Map<T,V>
 
 local inspect = require(jsUtilsWorkspace.inspect).inspect
 local memoize3 = require(jsUtilsWorkspace.memoize3).memoize3
@@ -324,7 +325,7 @@ function buildExecutionContext(
 	rootValue,
 	contextValue,
 	rawVariableValues: { [string]: any }?, -- ROBLOX TODO: missing type varargs
-	operationName: string, -- ROBLOX TODO: should be nilable, needs Luau type narrowing fix
+	operationName: string?,
 	fieldResolver: GraphQLFieldResolver<any, any>?,
 	typeResolver: GraphQLFieldResolver<any, any>?
 ): Array<GraphQLError> | ExecutionContext
@@ -351,7 +352,7 @@ function buildExecutionContext(
 	if not operation then
 		if operationName ~= nil then
 			return {
-				GraphQLError.new(("Unknown operation named \"%s\"."):format(operationName)),
+				GraphQLError.new(('Unknown operation named "%s".'):format(operationName)),
 			}
 		end
 
@@ -394,7 +395,7 @@ function executeOperation(
 	exeContext: ExecutionContext,
 	operation: OperationDefinitionNode,
 	rootValue: any
-): PromiseOrValue<ObjMap<any> | nil>
+): PromiseOrValue<ObjMap<any> | typeof(NULL)>
 	local type_ = getOperationRootType(exeContext.schema, operation)
 	local fields = collectFields(
 		exeContext,
@@ -528,7 +529,6 @@ function collectFields(
 	fields: Map<string, Array<FieldNode>>, -- ROBLOX deviation: use our ordered Map
 	visitedFragmentNames: ObjMap<boolean>
 ): Map<string, Array<FieldNode>>
-
 	for _, selection in ipairs(selectionSet.selections) do
 		if selection.kind == Kind.FIELD then
 			if not shouldIncludeNode(exeContext, selection) then
@@ -536,10 +536,10 @@ function collectFields(
 			end
 			local name = getFieldEntryKey(selection)
 			-- ROBLOX deviation: use Map
-			if not fields:get(name) then
-				fields:set(name, {})
+			if not fields[name] then
+				fields[name] = {}
 			end
-			table.insert(fields:get(name), selection)
+			table.insert(fields[name], selection)
 		elseif selection.kind == Kind.INLINE_FRAGMENT then
 			if
 				not shouldIncludeNode(exeContext, selection)
@@ -547,13 +547,7 @@ function collectFields(
 			then
 				continue
 			end
-			collectFields(
-				exeContext,
-				runtimeType,
-				selection.selectionSet,
-				fields,
-				visitedFragmentNames
-			)
+			collectFields(exeContext, runtimeType, selection.selectionSet, fields, visitedFragmentNames)
 		elseif selection.kind == Kind.FRAGMENT_SPREAD then
 			local fragName = selection.name.value
 			if visitedFragmentNames[fragName] or not shouldIncludeNode(exeContext, selection) then
@@ -564,13 +558,7 @@ function collectFields(
 			if not fragment or not doesFragmentConditionMatch(exeContext, fragment, runtimeType) then
 				continue
 			end
-			collectFields(
-				exeContext,
-				runtimeType,
-				fragment.selectionSet,
-				fields,
-				visitedFragmentNames
-			)
+			collectFields(exeContext, runtimeType, fragment.selectionSet, fields, visitedFragmentNames)
 		end
 	end
 
@@ -686,14 +674,7 @@ function resolveField(
 				return completeValue(exeContext, returnType, fieldNodes, info, path, resolved)
 			end)
 		else
-			completed = completeValue(
-				exeContext,
-				returnType,
-				fieldNodes,
-				info,
-				path,
-				result
-			)
+			completed = completeValue(exeContext, returnType, fieldNodes, info, path, result)
 		end
 
 		if isPromise(completed) then
@@ -719,7 +700,8 @@ end
 --[[*
 --  * @internal
 --  *]]
-function buildResolveInfo(exeContext: ExecutionContext,
+function buildResolveInfo(
+	exeContext: ExecutionContext,
 	fieldDef: GraphQLField<any, any>,
 	fieldNodes: Array<FieldNode>,
 	parentType: GraphQLObjectType,
@@ -741,11 +723,7 @@ function buildResolveInfo(exeContext: ExecutionContext,
 	}
 end
 
-function handleFieldError(
-	error_: GraphQLError,
-	returnType: GraphQLOutputType,
-	exeContext: ExecutionContext
-): nil
+function handleFieldError(error_: GraphQLError, returnType: GraphQLOutputType, exeContext: ExecutionContext): typeof(NULL)
 	-- If the field type is non-nullable, then it is resolved without any
 	-- protection from errors, however it still properly locates the error.
 	if isNonNullType(returnType) then
@@ -788,24 +766,22 @@ function completeValue(
 	result: any
 ): PromiseOrValue<any>? -- ROBLOX TODO: add nilability here because Luau doesn't understand invariant
 	-- If result is an Error, throw a located error.
-	if instanceOf(result, Error) then
+	if instanceof(result, Error) then
 		error(result)
 	end
 
 	-- If field type is NonNull, complete for inner type, and throw field error
 	-- if result is null.
 	if isNonNullType(returnType) then
-		local completed = completeValue(
-			exeContext,
-			returnType.ofType,
-			fieldNodes,
-			info, path,
-			result
-		)
+		local completed = completeValue(exeContext, returnType.ofType, fieldNodes, info, path, result)
 
 		-- ROBLOX deviation: checks for concrete nil or NULL sentinel
 		if isNillish(completed) then
-			error(Error.new(("Cannot return null for non-nullable field %s.%s."):format(info.parentType.name, info.fieldName)))
+			error(
+				Error.new(
+					("Cannot return null for non-nullable field %s.%s."):format(info.parentType.name, info.fieldName)
+				)
+			)
 		end
 
 		return completed
@@ -839,10 +815,7 @@ function completeValue(
 		return completeObjectValue(exeContext, returnType, fieldNodes, info, path, result)
 	end
 
-	invariant(
-		false,
-		"Cannot complete value of unexpected output type: " .. inspect(returnType)
-	)
+	invariant(false, "Cannot complete value of unexpected output type: " .. inspect(returnType))
 	return nil -- ROBLOX deviation: no implicit return
 end
 
@@ -859,7 +832,7 @@ function completeListValue(
 	result: any
 ): PromiseOrValue<Array<any>>
 	-- ROBLOX deviation: Set isn't iterable, so resolve before continuing
-	if instanceOf(result, Set) then
+	if instanceof(result, Set) then
 		local iterableResult = {}
 		for _, item in result:ipairs() do
 			table.insert(iterableResult, item)
@@ -868,7 +841,14 @@ function completeListValue(
 	end
 
 	if not isIteratableObject(result) then
-		error(GraphQLError.new(("Expected Iterable, but did not find one for field \"%s.%s\"."):format(info.parentType.name, info.fieldName)))
+		error(
+			GraphQLError.new(
+				('Expected Iterable, but did not find one for field "%s.%s".'):format(
+					info.parentType.name,
+					info.fieldName
+				)
+			)
+		)
 	end
 
 	-- This is specified as a simple map, however we're optimizing the path
@@ -884,24 +864,10 @@ function completeListValue(
 			local completedItem
 			if isPromise(item) then
 				completedItem = item:andThen(function(resolved)
-					return completeValue(
-						exeContext,
-						itemType,
-						fieldNodes,
-						info,
-						itemPath,
-						resolved
-					)
+					return completeValue(exeContext, itemType, fieldNodes, info, itemPath, resolved)
 				end)
 			else
-				completedItem = completeValue(
-					exeContext,
-					itemType,
-					fieldNodes,
-					info,
-					itemPath,
-					item
-				)
+				completedItem = completeValue(exeContext, itemType, fieldNodes, info, itemPath, item)
 			end
 
 			if isPromise(completedItem) then
@@ -940,7 +906,7 @@ end
 --  *]]
 -- ROBLOX FIXME: this type is a workaround for Luau type narrowing gap
 type ROBLOX_Luau_workaround = {
-	serialize: (any, any) -> string?
+	serialize: (any, any) -> string?,
 }
 function completeLeafValue(
 	returnType: ROBLOX_Luau_workaround, -- ROBLOX FIXME: shoud be GraphQLLeafType, see above
@@ -949,7 +915,12 @@ function completeLeafValue(
 	local serializedResult = returnType:serialize(result)
 
 	if serializedResult == nil then
-		error(Error.new(("Expected a value of type \"%s\" but "):format(inspect(returnType)) .. ("received: %s"):format(inspect(result))))
+		error(
+			Error.new(
+				('Expected a value of type "%s" but '):format(inspect(returnType))
+					.. ("received: %s"):format(inspect(result))
+			)
+		)
 	end
 
 	return serializedResult
@@ -1003,42 +974,67 @@ function ensureValidRuntimeType(
 	result: any
 ): GraphQLObjectType
 	if runtimeTypeName == nil then
-		error(GraphQLError.new(
-			("Abstract type \"%s\" must resolve to an Object type at runtime for field \"%s.%s\". Either the \"%s\" type should provide a \"resolveType\" function or each possible type should provide an \"isTypeOf\" function."):format(returnType.name, info.parentType.name, info.fieldName, returnType.name),
-			fieldNodes
-		))
+		error(
+			GraphQLError.new(
+				(
+					'Abstract type "%s" must resolve to an Object type at runtime for field "%s.%s". Either the "%s" type should provide a "resolveType" function or each possible type should provide an "isTypeOf" function.'
+				):format(returnType.name, info.parentType.name, info.fieldName, returnType.name),
+				fieldNodes
+			)
+		)
 	end
 
 	-- releases before 16.0.0 supported returning `GraphQLObjectType` from `resolveType`
 	-- TODO: remove in 17.0.0 release
 	if isObjectType(runtimeTypeName) then
-		error(GraphQLError.new("Support for returning GraphQLObjectType from resolveType was removed in graphql-js@16.0.0 please return type name instead."))
+		error(
+			GraphQLError.new(
+				"Support for returning GraphQLObjectType from resolveType was removed in graphql-js@16.0.0 please return type name instead."
+			)
+		)
 	end
 
 	if typeof(runtimeTypeName) ~= "string" then
-		error(GraphQLError.new(("Abstract type \"%s\" must resolve to an Object type at runtime for field \"%s.%s\" with "):format(returnType.name, info.parentType.name, info.fieldName) .. ("value %s, received \"%s\"."):format(inspect(result), inspect(runtimeTypeName))))
+		error(
+			GraphQLError.new(
+				('Abstract type "%s" must resolve to an Object type at runtime for field "%s.%s" with '):format(
+					returnType.name,
+					info.parentType.name,
+					info.fieldName
+				) .. ('value %s, received "%s".'):format(inspect(result), inspect(runtimeTypeName))
+			)
+		)
 	end
 
 	local runtimeType = exeContext.schema:getType(runtimeTypeName)
 	if runtimeType == nil then
-		error(GraphQLError.new(
-			("Abstract type \"%s\" was resolve to a type \"%s\" that does not exist inside schema."):format(returnType.name, runtimeTypeName),
-			fieldNodes
-		))
+		error(
+			GraphQLError.new(
+				('Abstract type "%s" was resolve to a type "%s" that does not exist inside schema.'):format(
+					returnType.name,
+					runtimeTypeName
+				),
+				fieldNodes
+			)
+		)
 	end
 
 	if not isObjectType(runtimeType) then
-		error(GraphQLError.new(
-			("Abstract type \"%s\" was resolve to a non-object type \"%s\"."):format(returnType.name, runtimeTypeName),
-			fieldNodes
-		))
+		error(
+			GraphQLError.new(
+				('Abstract type "%s" was resolve to a non-object type "%s".'):format(returnType.name, runtimeTypeName),
+				fieldNodes
+			)
+		)
 	end
 
 	if not exeContext.schema:isSubType(returnType, runtimeType) then
-		error(GraphQLError.new(
-			("Runtime Object type \"%s\" is not a possible type for \"%s\"."):format(runtimeType.name, returnType.name),
-			fieldNodes
-		))
+		error(
+			GraphQLError.new(
+				('Runtime Object type "%s" is not a possible type for "%s".'):format(runtimeType.name, returnType.name),
+				fieldNodes
+			)
+		)
 	end
 
 	return runtimeType
@@ -1058,8 +1054,8 @@ function completeObjectValue(
 	-- If there is an isTypeOf predicate function, call it with the
 	-- current result. If isTypeOf returns false, then raise an error rather
 	-- than continuing execution.
-	if returnType.isTypeOf then
-		local isTypeOf = returnType:isTypeOf(result, exeContext.contextValue, info)
+	if returnType.isTypeOf ~= nil then
+		local isTypeOf = returnType.isTypeOf(returnType, result, exeContext.contextValue, info)
 
 		if isPromise(isTypeOf) then
 			return isTypeOf:andThen(function(resolvedIsTypeOf)
@@ -1079,13 +1075,9 @@ function completeObjectValue(
 	return collectAndExecuteSubfields(exeContext, returnType, fieldNodes, path, result)
 end
 
-function invalidReturnTypeError(
-	returnType: GraphQLObjectType,
-	result: any,
-	fieldNodes: Array<FieldNode>
-): GraphQLError
+function invalidReturnTypeError(returnType: GraphQLObjectType, result: any, fieldNodes: Array<FieldNode>): GraphQLError
 	return GraphQLError.new(
-		("Expected value of type \"%s\" but got: %s."):format(returnType.name, inspect(result)),
+		('Expected value of type "%s" but got: %s.'):format(returnType.name, inspect(result)),
 		fieldNodes
 	)
 end
@@ -1214,11 +1206,7 @@ end
 --  *
 --  * @internal
 --  *]]
-function getFieldDef(
-	schema: GraphQLSchema,
-	parentType: GraphQLObjectType,
-	fieldName: string
-): GraphQLField<any, any>?
+function getFieldDef(schema: GraphQLSchema, parentType: GraphQLObjectType, fieldName: string): GraphQLField<any, any>?
 	if fieldName == SchemaMetaFieldDef.name and schema:getQueryType() == parentType then
 		return SchemaMetaFieldDef
 	elseif fieldName == TypeMetaFieldDef.name and schema:getQueryType() == parentType then
@@ -1227,7 +1215,7 @@ function getFieldDef(
 		return TypeNameMetaFieldDef
 	end
 
-	-- ROBLOX deviation: use Map
+	-- ROBLOX deviation: getFields returns Map
 	return parentType:getFields():get(fieldName)
 end
 

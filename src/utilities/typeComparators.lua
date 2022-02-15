@@ -1,14 +1,16 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/typeComparators.js
 
-local root = script.Parent.Parent
-local definitionImport = require(root.type.definition)
+local srcRoot = script.Parent.Parent
+local Packages = srcRoot.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
+
+local definitionImport = require(srcRoot.type.definition)
 local isInterfaceType = definitionImport.isInterfaceType
 local isObjectType = definitionImport.isObjectType
 local isListType = definitionImport.isListType
 local isNonNullType = definitionImport.isNonNullType
 local isAbstractType = definitionImport.isAbstractType
-
-local Array = require(root.luaUtils.Array)
 
 --[[*
 --  * Provided two types, return true if the types are equal (invariant).

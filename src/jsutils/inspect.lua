@@ -1,5 +1,4 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/inspect.js
-type Array<T> = { [number]: T }
 local HttpService = game:GetService("HttpService")
 
 local jsutils = script.Parent
@@ -9,6 +8,7 @@ local Packages = graphql.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
+type Array<T> = LuauPolyfill.Array<T>
 local NULL = require(srcWorkspace.luaUtils.null)
 
 local MAX_ARRAY_LENGTH = 10
@@ -32,7 +32,7 @@ function formatValue(value, seenValues)
 	local valueType = typeof(value)
 	if valueType == "string" then
 		return HttpService:JSONEncode(value)
-	-- deviation: format numbers like in JS
+		-- deviation: format numbers like in JS
 	elseif valueType == "number" then
 		if value ~= value then
 			return "NaN"
@@ -48,7 +48,7 @@ function formatValue(value, seenValues)
 		return "[function]"
 	elseif valueType == "table" then
 		if value == NULL then
-			return 'null'
+			return "null"
 		end
 		return formatObjectValue(value, seenValues)
 	else
@@ -122,7 +122,7 @@ function formatArray(array: Array<any>, seenValues: Array<any>): string
 	if remaining == 1 then
 		table.insert(items, "... 1 more item")
 	elseif remaining > 1 then
-		table.insert(items, ("... %s more items"):format(remaining))
+		table.insert(items, ("... %d more items"):format(remaining))
 	end
 
 	return "[" .. table.concat(items, ", ") .. "]"

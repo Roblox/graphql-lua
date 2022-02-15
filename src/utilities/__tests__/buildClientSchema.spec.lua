@@ -3,6 +3,13 @@
 return function()
 	local utilitiesWorkspace = script.Parent.Parent
 	local srcWorkspace = utilitiesWorkspace.Parent
+	local rootWorkspace = srcWorkspace.Parent
+	local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+	local Array = LuauPolyfill.Array
+	local Map = LuauPolyfill.Map
+
+	-- ROBLOX deviation: utils
+	local NULL = require(srcWorkspace.luaUtils.null)
 
 	local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
 
@@ -25,11 +32,6 @@ return function()
 	local buildSchema = require(utilitiesWorkspace.buildASTSchema).buildSchema
 	local buildClientSchema = require(utilitiesWorkspace.buildClientSchema).buildClientSchema
 	local introspectionFromSchema = require(utilitiesWorkspace.introspectionFromSchema).introspectionFromSchema
-
-	-- ROBLOX deviation: utils
-	local Array = require(srcWorkspace.luaUtils.Array)
-	local NULL = require(srcWorkspace.luaUtils.null)
-	local Map = require(srcWorkspace.luaUtils.Map).Map
 
 	--[[*
 	--  * This function does a full cycle of going from a string with the contents of
@@ -667,13 +669,17 @@ return function()
 				-- $FlowExpectedError[incompatible-call]
 				expect(function()
 					return buildClientSchema(NULL)
-				end).toThrow("Invalid or incomplete introspection result. Ensure that you are passing \"data\" property of introspection response and no \"errors\" was returned alongside: null.")
+				end).toThrow(
+					'Invalid or incomplete introspection result. Ensure that you are passing "data" property of introspection response and no "errors" was returned alongside: null.'
+				)
 
 				-- ROBLOX deviation: {} is treated as an Array in Lua so when printed it becomes [] rather than {}
 				-- $FlowExpectedError[prop-missing]
 				expect(function()
 					return buildClientSchema({})
-				end).toThrow("Invalid or incomplete introspection result. Ensure that you are passing \"data\" property of introspection response and no \"errors\" was returned alongside: [].")
+				end).toThrow(
+					'Invalid or incomplete introspection result. Ensure that you are passing "data" property of introspection response and no "errors" was returned alongside: [].'
+				)
 			end)
 
 			it("throws when referenced unknown type", function()
@@ -686,7 +692,9 @@ return function()
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).toThrow("Invalid or incomplete schema, unknown type: Query. Ensure that a full introspection query is used in order to build a client schema.")
+				end).toThrow(
+					"Invalid or incomplete schema, unknown type: Query. Ensure that a full introspection query is used in order to build a client schema."
+				)
 			end)
 
 			it("throws when missing definition for one of the standard scalars", function()
@@ -705,7 +713,9 @@ return function()
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).toThrow("Invalid or incomplete schema, unknown type: Float. Ensure that a full introspection query is used in order to build a client schema.")
+				end).toThrow(
+					"Invalid or incomplete schema, unknown type: Float. Ensure that a full introspection query is used in order to build a client schema."
+				)
 			end)
 
 			it("throws when type reference is missing name", function()
@@ -741,7 +751,7 @@ return function()
 						With original ordering would be:
 						"Invalid or incomplete introspection result. Ensure that a full introspection query is used in order to build a client schema: { name: \"Query\", .* }%."
 					]]
-					"Invalid or incomplete introspection result. Ensure that a full introspection query is used in order to build a client schema: { .* ?name: \"Query\",?.* }%.",
+					'Invalid or incomplete introspection result. Ensure that a full introspection query is used in order to build a client schema: { .* ?name: "Query",?.* }%.',
 					true
 				)
 			end)
@@ -766,16 +776,13 @@ return function()
 						With original ordering would be:
 						"Introspection result missing interfaces: { kind: \"OBJECT\", name: \"Query\", .* }%."
 					]]
-					"Introspection result missing interfaces: { .* ?kind: \"OBJECT\",?.* }%.",
+					'Introspection result missing interfaces: { .* ?kind: "OBJECT",?.* }%.',
 					true
 				)
 				-- ROBLOX deviation: adding second matcher to test for both 'kind' and 'name' properties.
 				expect(function()
 					return buildClientSchema(introspection)
-				end).toThrow(
-					"Introspection result missing interfaces: { .* ?name: \"Query\",?.* }%.",
-					true
-				)
+				end).toThrow('Introspection result missing interfaces: { .* ?name: "Query",?.* }%.', true)
 			end)
 
 			it("Legacy support for interfaces with null as interfaces field", function()
@@ -811,16 +818,13 @@ return function()
 						With original ordering would be:
 						"Introspection result missing fields: { kind: \"OBJECT\", name: \"Query\", .* }%."
 					]]
-					"Introspection result missing fields: { .* ?kind: \"OBJECT\",?.* }%.",
+					'Introspection result missing fields: { .* ?kind: "OBJECT",?.* }%.',
 					true
 				)
 				-- ROBLOX deviation: adding second matcher to test for both 'kind' and 'name' properties.
 				expect(function()
 					return buildClientSchema(introspection)
-				end).toThrow(
-					"Introspection result missing fields: { .* ?name: \"Query\",?.* }%.",
-					true
-				)
+				end).toThrow('Introspection result missing fields: { .* ?name: "Query",?.* }%.', true)
 			end)
 
 			it("throws when missing field args", function()
@@ -842,7 +846,7 @@ return function()
 						With original ordering would be:
 						"Introspection result missing field args: { name: \"foo\", .* }%."
 					]]
-					"Introspection result missing field args: { .* ?name: \"foo\",?.* }%.",
+					'Introspection result missing field args: { .* ?name: "foo",?.* }%.',
 					true
 				)
 			end)
@@ -896,16 +900,13 @@ return function()
 						With original ordering would be:
 						"Introspection result missing possibleTypes: { kind: \"UNION\", name: \"SomeUnion\",.* }%."
 					]]
-					"Introspection result missing possibleTypes: { .* ?kind: \"UNION\",?.* }%.",
+					'Introspection result missing possibleTypes: { .* ?kind: "UNION",?.* }%.',
 					true
 				)
 				-- ROBLOX deviation: adding second matcher to test for both 'kind' and 'name' properties.
 				expect(function()
 					return buildClientSchema(introspection)
-				end).toThrow(
-					"Introspection result missing possibleTypes: { .* ?name: \"SomeUnion\",?.* }%.",
-					true
-				)
+				end).toThrow('Introspection result missing possibleTypes: { .* ?name: "SomeUnion",?.* }%.', true)
 			end)
 
 			it("throws when missing enumValues", function()
@@ -927,16 +928,13 @@ return function()
 						With original ordering would be:
 						"Introspection result missing enumValues: { kind: \"ENUM\", name: \"SomeEnum\", .* }%."
 					]]
-					"Introspection result missing enumValues: { .* ?kind: \"ENUM\",?.* }%.",
+					'Introspection result missing enumValues: { .* ?kind: "ENUM",?.* }%.',
 					true
 				)
 				-- ROBLOX deviation: adding second matcher to test for both 'kind' and 'name' properties.
 				expect(function()
 					return buildClientSchema(introspection)
-				end).toThrow(
-					"Introspection result missing enumValues: { .* ?name: \"SomeEnum\",?.* }%.",
-					true
-				)
+				end).toThrow('Introspection result missing enumValues: { .* ?name: "SomeEnum",?.* }%.', true)
 			end)
 
 			it("throws when missing inputFields", function()
@@ -958,14 +956,14 @@ return function()
 						With original ordering would be:
 						"Introspection result missing inputFields: { kind: \"INPUT_OBJECT\", name: \"SomeInputObject\", .* }%."
 					]]
-					"Introspection result missing inputFields: { .* ?kind: \"INPUT_OBJECT\",?.* }%.",
+					'Introspection result missing inputFields: { .* ?kind: "INPUT_OBJECT",?.* }%.',
 					true
 				)
 				-- ROBLOX deviation: adding second matcher to test for both 'kind' and 'name' properties.
 				expect(function()
 					return buildClientSchema(introspection)
 				end).toThrow(
-					"Introspection result missing inputFields: { .* ?name: \"SomeInputObject\",?.* }%.",
+					'Introspection result missing inputFields: { .* ?name: "SomeInputObject",?.* }%.',
 					true
 				)
 			end)
@@ -991,7 +989,7 @@ return function()
 						With original ordering would be:
 						"Introspection result missing directive locations: { name: \"SomeDirective\", .* }%."
 					]]
-					"Introspection result missing directive locations: { .* ?name: \"SomeDirective\",?.* }%.",
+					'Introspection result missing directive locations: { .* ?name: "SomeDirective",?.* }%.',
 					true
 				)
 			end)
@@ -1015,7 +1013,7 @@ return function()
 						With original ordering would be:
 						"Introspection result missing directive args: { name: \"SomeDirective\", .* }%."
 					]]
-					"Introspection result missing directive args: { .* ?name: \"SomeDirective\",?.* }%.",
+					'Introspection result missing directive args: { .* ?name: "SomeDirective",?.* }%.',
 					true
 				)
 			end)

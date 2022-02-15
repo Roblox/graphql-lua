@@ -1,16 +1,16 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/lexer.js
-
+--!nonstrict
 local language = script.Parent
 local src = language.Parent
 local Packages = src.Parent
-
-local Number = require(Packages.LuauPolyfill).Number
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Number = LuauPolyfill.Number
+local String = LuauPolyfill.String
 local isNaN = Number.isNaN
 
 local syntaxError = require(src.error.syntaxError).syntaxError
 local TokenKind = require(language.tokenKind).TokenKind
 local Token = require(language.ast).Token
-local slice = require(src.luaUtils.slice).sliceString
 local toUnicodeString = require(src.luaUtils.toUnicodeString)
 local dedentBlockStringValue = require(language.blockString).dedentBlockStringValue
 
@@ -22,7 +22,6 @@ local readString
 local uniCharCode
 local char2hex
 
-local charCodeAt = require(src.luaUtils.charCodeAt)
 
 --[[
  * Converts four hexadecimal chars to the integer that the
@@ -42,12 +41,7 @@ function uniCharCode(a, b, c, d)
 	if aHex < 0 or bHex < 0 or cHex < 0 or dHex < 0 then
 		return -1
 	end
-	return bit32.bor(
-		bit32.lshift(aHex, 12),
-		bit32.lshift(bHex, 8),
-		bit32.lshift(cHex, 4),
-		dHex
-	)
+	return bit32.bor(bit32.lshift(aHex, 12), bit32.lshift(bHex, 8), bit32.lshift(cHex, 4), dHex)
 end
 
 --[[
@@ -86,7 +80,7 @@ local function readName(source, start, line, col, prev)
 		return position ~= bodyLength + 1
 	end
 	local secondCondition = function()
-		code = charCodeAt(body, position)
+		code = String.charCodeAt(body, position)
 		return not isNaN(code)
 	end
 	local thirdConditionFirstPart = function()
@@ -112,15 +106,7 @@ local function readName(source, start, line, col, prev)
 		position += 1
 	end
 
-	return Token.new(
-		TokenKind.NAME,
-		start,
-		position,
-		line,
-		col,
-		prev,
-		slice(body, start, position)
-	)
+	return Token.new(TokenKind.NAME, start, position, line, col, prev, String.slice(body, start, position))
 end
 
 --[[
@@ -136,19 +122,11 @@ local function readComment(source, start, line, col, prev)
 
 	repeat
 		position = position + 1
-		code = charCodeAt(body, position)
+		code = String.charCodeAt(body, position)
 	-- // SourceCharacter but not LineTerminator
 	until not ((not isNaN(code)) and (code > 0x001f or code == 0x0009))
 
-	return Token.new(
-		TokenKind.COMMENT,
-		start,
-		position,
-		line,
-		col,
-		prev,
-		slice(body, start + 1, position)
-	)
+	return Token.new(TokenKind.COMMENT, start, position, line, col, prev, String.slice(body, start + 1, position))
 end
 
 function printCharCode(code)
@@ -161,7 +139,7 @@ function printCharCode(code)
 			return HttpService:JSONEncode(string.char(code))
 		else
 			-- Otherwise print the escaped form.
-			return toUnicodeString(tostring(code))
+			return toUnicodeString(code)
 		end
 	end
 end
@@ -178,15 +156,11 @@ function readDigits(source, start, firstCode)
 	if code >= 48 and code <= 57 then
 		repeat
 			position += 1
-			code = charCodeAt(body, position)
+			code = String.charCodeAt(body, position)
 		until not (code >= 48 and code <= 57) -- 0-9
 		return position
 	end
-	error(syntaxError(
-		source,
-		position,
-		"Invalid number, expected digit but got: " .. printCharCode(code) .. "."
-	))
+	error(syntaxError(source, position, "Invalid number, expected digit but got: " .. printCharCode(code) .. "."))
 end
 
 --[[
@@ -231,23 +205,25 @@ function readNumber(source, start, firstCode, line, col, prev)
 	if code == 45 then
 		-- -
 		position += 1
-		code = charCodeAt(body, position)
+		code = String.charCodeAt(body, position)
 	end
 
 	if code == 48 then
 		-- 0
 		position += 1
-		code = charCodeAt(body, position)
+		code = String.charCodeAt(body, position)
 		if code >= 48 and code <= 57 then
-			error(syntaxError(
-				source,
-				position,
-				"Invalid number, unexpected digit after 0: " .. printCharCode(code) .. "."
-			))
+			error(
+				syntaxError(
+					source,
+					position,
+					"Invalid number, unexpected digit after 0: " .. printCharCode(code) .. "."
+				)
+			)
 		end
 	else
 		position = readDigits(source, position, code)
-		code = charCodeAt(body, position)
+		code = String.charCodeAt(body, position)
 	end
 
 	if code == 46 then
@@ -255,10 +231,10 @@ function readNumber(source, start, firstCode, line, col, prev)
 		isFloat = true
 
 		position += 1
-		code = charCodeAt(body, position)
+		code = String.charCodeAt(body, position)
 		position = readDigits(source, position, code)
 
-		code = charCodeAt(body, position)
+		code = String.charCodeAt(body, position)
 	end
 
 	if code == 69 or code == 101 then
@@ -266,23 +242,19 @@ function readNumber(source, start, firstCode, line, col, prev)
 		isFloat = true
 
 		position += 1
-		code = charCodeAt(body, position)
+		code = String.charCodeAt(body, position)
 		if code == 43 or code == 45 then
 			-- + -
 			position += 1
-			code = charCodeAt(body, position)
+			code = String.charCodeAt(body, position)
 		end
 		position = readDigits(source, position, code)
-		code = charCodeAt(body, position)
+		code = String.charCodeAt(body, position)
 	end
 
 	-- Numbers cannot be followed by . or NameStart
 	if code == 46 or isNameStart(code) then
-		error(syntaxError(
-			source,
-			position,
-			"Invalid number, expected digit but got: " .. printCharCode(code) .. "."
-		))
+		error(syntaxError(source, position, "Invalid number, expected digit but got: " .. printCharCode(code) .. "."))
 	end
 
 	return Token.new(
@@ -292,7 +264,7 @@ function readNumber(source, start, firstCode, line, col, prev)
 		line,
 		col,
 		prev,
-		slice(body, start, position)
+		String.slice(body, start, position)
 	)
 end
 
@@ -304,7 +276,7 @@ local function readToken(lexer, prev)
 	local pos = prev._end
 
 	while pos <= bodyLength do
-		local code = charCodeAt(body, pos)
+		local code = String.charCodeAt(body, pos)
 
 		local line = lexer.line
 		local col = pos - lexer.lineStart
@@ -327,7 +299,7 @@ local function readToken(lexer, prev)
 		elseif
 			code == 13 -- \r
 		then
-			if charCodeAt(body, pos + 1) == 10 then
+			if String.charCodeAt(body, pos + 1) == 10 then
 				pos += 2
 			else
 				pos += 1
@@ -362,10 +334,10 @@ local function readToken(lexer, prev)
 		elseif
 			code == 46 -- .
 		then
-			if charCodeAt(body, pos + 1) == 46 and charCodeAt(body, pos + 2) == 46 then
+			if String.charCodeAt(body, pos + 1) == 46 and String.charCodeAt(body, pos + 2) == 46 then
 				return Token.new(TokenKind.SPREAD, pos, pos + 3, line, col, prev)
 			end
-		-- don't need break because no case fall through in if statement
+			-- don't need break because no case fall through in if statement
 		elseif
 			code == 58 -- :
 		then
@@ -401,7 +373,7 @@ local function readToken(lexer, prev)
 		elseif
 			code == 34 -- "
 		then
-			if charCodeAt(body, pos + 1) == 34 and charCodeAt(body, pos + 2) == 34 then
+			if String.charCodeAt(body, pos + 1) == 34 and String.charCodeAt(body, pos + 2) == 34 then
 				return readBlockString(source, pos, line, col, prev, lexer)
 			end
 			return readString(source, pos, line, col, prev)
@@ -553,13 +525,11 @@ function readBlockString(source, start, line, col, prev, lexer)
 	local code = 0
 	local rawValue = ""
 
-	while position <= string.len(body) and not isNaN(charCodeAt(body, position)) do
-		code = charCodeAt(body, position)
+	while position <= string.len(body) and not isNaN(String.charCodeAt(body, position)) do
+		code = String.charCodeAt(body, position)
 		-- Closing Triple-Quote (""")
-		if code == 34
-			and charCodeAt(body, position + 1) == 34
-			and charCodeAt(body, position + 2) == 34 then
-			rawValue = rawValue .. slice(body, chunkStart, position)
+		if code == 34 and String.charCodeAt(body, position + 1) == 34 and String.charCodeAt(body, position + 2) == 34 then
+			rawValue = rawValue .. String.slice(body, chunkStart, position)
 			return Token.new(
 				TokenKind.BLOCK_STRING,
 				start,
@@ -573,11 +543,7 @@ function readBlockString(source, start, line, col, prev, lexer)
 
 		-- SourceCharacter
 		if code < 0x0020 and code ~= 0x0009 and code ~= 0x000a and code ~= 0x000d then
-			error(syntaxError(
-				source,
-				position,
-				"Invalid character within String: " .. printCharCode(code) .. "."
-			))
+			error(syntaxError(source, position, "Invalid character within String: " .. printCharCode(code) .. "."))
 		end
 
 		if code == 10 then
@@ -587,7 +553,7 @@ function readBlockString(source, start, line, col, prev, lexer)
 			lexer.lineStart = position - 1
 		elseif code == 13 then
 			-- carriage return
-			if charCodeAt(body, position + 1) == 10 then
+			if String.charCodeAt(body, position + 1) == 10 then
 				position += 2
 			else
 				position += 1
@@ -596,11 +562,11 @@ function readBlockString(source, start, line, col, prev, lexer)
 			lexer.lineStart = position - 1
 		elseif
 			code == 92
-			and charCodeAt(body, position + 1) == 34
-			and charCodeAt(body, position + 2) == 34
-			and charCodeAt(body, position + 3) == 34
+			and String.charCodeAt(body, position + 1) == 34
+			and String.charCodeAt(body, position + 2) == 34
+			and String.charCodeAt(body, position + 3) == 34
 		then
-			rawValue = rawValue .. slice(body, chunkStart, position) .. "\"\"\""
+			rawValue = rawValue .. String.slice(body, chunkStart, position) .. '"""'
 			position += 4
 			chunkStart = position
 		else
@@ -623,46 +589,34 @@ function readString(source, start, line, col, prev)
 	local code = 0
 	local value = ""
 
-	--code = charCodeAt(body, position)
+	--code = String.charCodeAt(body, position)
 	while
 		position <= string.len(body)
 		and not isNaN((function()
-		code = charCodeAt(body, position)
-		return code
-	end)())
+			code = String.charCodeAt(body, position)
+			return code
+		end)())
 		and code ~= 0x000a
 		and code ~= 0x000d
 	do
 		-- Closing Quote (")
 		if code == 34 then
-			value = value .. slice(body, chunkStart, position)
-			return Token.new(
-				TokenKind.STRING,
-				start,
-				position + 1,
-				line,
-				col,
-				prev,
-				value
-			)
+			value = value .. String.slice(body, chunkStart, position)
+			return Token.new(TokenKind.STRING, start, position + 1, line, col, prev, value)
 		end
 
 		-- SourceCharacter
 		if code < 0x0020 and code ~= 0x0009 then
-			error(syntaxError(
-				source,
-				position,
-				"Invalid character within String: " .. printCharCode(code) .. "."
-			))
+			error(syntaxError(source, position, "Invalid character within String: " .. printCharCode(code) .. "."))
 		end
 
 		position += 1
 		if code == 92 then
 			-- \
-			value = value .. slice(body, chunkStart, position - 1)
-			code = charCodeAt(body, position)
+			value = value .. String.slice(body, chunkStart, position - 1)
+			code = String.charCodeAt(body, position)
 			if code == 34 then
-				value = value .. "\""
+				value = value .. '"'
 			elseif code == 47 then
 				value = value .. "/"
 			elseif code == 92 then
@@ -680,33 +634,30 @@ function readString(source, start, line, col, prev)
 			elseif code == 117 then
 				-- uXXXX
 				local charCode = uniCharCode(
-					charCodeAt(body, position + 1),
-					charCodeAt(body, position + 2),
-					charCodeAt(body, position + 3),
-					charCodeAt(body, position + 4)
+					String.charCodeAt(body, position + 1),
+					String.charCodeAt(body, position + 2),
+					String.charCodeAt(body, position + 3),
+					String.charCodeAt(body, position + 4)
 				)
 				if charCode < 0 then
-					local invalidSequence = slice(body, position + 1, position + 5)
-					error(syntaxError(
-						source,
-						position,
-						"Invalid character escape sequence: \\u" .. invalidSequence .. "."
-					))
+					local invalidSequence = String.slice(body, position + 1, position + 5)
+					error(
+						syntaxError(
+							source,
+							position,
+							"Invalid character escape sequence: \\u" .. invalidSequence .. "."
+						)
+					)
 				end
 				value = value .. utf8.char(charCode)
 				position += 4
 			else
-				error(syntaxError(
-					source,
-					position,
-					"Invalid character escape sequence: \\" .. utf8.char(code) .. "."
-				))
+				error(syntaxError(source, position, "Invalid character escape sequence: \\" .. utf8.char(code) .. "."))
 			end
 
 			position += 1
 			chunkStart = position
 		end
-
 	end
 
 	error(syntaxError(source, position, "Unterminated string."))

@@ -1,5 +1,8 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/ast.js
-type Array<T> = { [number]: T }
+local rootWorkspace = script.Parent.Parent.Parent
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+type Array<T> = LuauPolyfill.Array<T>
+
 local SourceModule = require(script.Parent.source)
 type Source = SourceModule.Source
 local TokenKindModule = require(script.Parent.tokenKind)
@@ -9,37 +12,33 @@ export type Location = {
 	--[[*
 	* The character offset at which this Node begins.
 	]]
-   start: number,
+	start: number,
 
-   --[[*
+	--[[*
 	* The character offset at which this Node ends.
 	]]
-   _end: number,
+	_end: number,
 
-   --[[*
+	--[[*
 	* The Token at which this Node begins.
 	]]
-   startToken: Token,
+	startToken: Token,
 
-   --[[*
+	--[[*
 	* The Token at which this Node ends.
 	]]
-   endToken: Token,
+	endToken: Token,
 
-   --[[*
+	--[[*
 	* The Source document the AST represents.
 	]]
-   source: Source,
+	source: Source,
 }
 
 local Location = {}
 Location.__index = Location
 
-function Location.new(
-	startToken: Token,
-	endToken: Token,
-	source: Source
-)
+function Location.new(startToken: Token, endToken: Token, source: Source): Location
 	local self = {}
 	self.start = startToken.start
 	-- ROBLOX FIXME: rename `_end` to `end_`
@@ -48,7 +47,7 @@ function Location.new(
 	self.endToken = endToken
 	self.source = source
 
-	return setmetatable(self, Location)
+	return (setmetatable(self, Location) :: any) :: Location
 end
 
 function Location:toJSON()
@@ -61,64 +60,63 @@ end
 --     return this.toJSON(),
 --   }
 
-
 --[[*
  * Represents a range of characters represented by a lexical token
  * within a Source.
  ]]
 export type Token = {
-  --[[*
+	--[[*
    * The kind of Token.
    ]]
-  kind: TokenKindEnum,
+	kind: TokenKindEnum,
 
-  --[[*
+	--[[*
    * The character offset at which this Node begins.
    ]]
-  start: number,
+	start: number,
 
-  --[[*
+	--[[*
    * The character offset at which this Node ends.
    ]]
-  _end: number,
+	_end: number,
 
-  --[[*
+	--[[*
    * The 1-indexed line number on which this Token appears.
    ]]
-  line: number,
+	line: number,
 
-  --[[*
+	--[[*
    * The 1-indexed column number at which this Token begins.
    ]]
-  column: number,
+	column: number,
 
-  --[[*
+	--[[*
    * For non-punctuation tokens, represents the interpreted value of the token.
    ]]
-  value: string?,
+	value: string?,
 
-  --[[*
+	--[[*
    * Tokens exist as nodes in a double-linked-list amongst all tokens
    * including ignored tokens. <SOF> is always the first node and <EOF>
    * the last.
    ]]
-  prev: Token?,
-  next: Token?,
+	prev: Token?,
+	next: Token?,
 }
 
 local Token = {}
 Token.__index = Token
 
 function Token.new(
-	kind,
+	kind: TokenKindEnum,
 	start: number,
 	-- ROBLOX FIXME: rename `_end` to `end_`
 	_end: number,
 	line: number,
 	column: number,
-	prev,
-	value: string
-)
+	prev: Token | nil,
+	value: string?
+): Token
 	local self = {}
 	self.kind = kind
 	self.start = start
@@ -129,7 +127,7 @@ function Token.new(
 	self.prev = prev
 	self.next = nil
 
-	return setmetatable(self, Token)
+	return (setmetatable(self, Token) :: any) :: Token
 end
 
 function Token:toJSON()
@@ -159,97 +157,97 @@ end
  * The list of all possible AST node types.
  ]]
 export type ASTNode =
-  NameNode
-  | DocumentNode
-  | OperationDefinitionNode
-  | VariableDefinitionNode
-  | VariableNode
-  | SelectionSetNode
-  | FieldNode
-  | ArgumentNode
-  | FragmentSpreadNode
-  | InlineFragmentNode
-  | FragmentDefinitionNode
-  | IntValueNode
-  | FloatValueNode
-  | StringValueNode
-  | BooleanValueNode
-  | NullValueNode
-  | EnumValueNode
-  | ListValueNode
-  | ObjectValueNode
-  | ObjectFieldNode
-  | DirectiveNode
-  | NamedTypeNode
-  | ListTypeNode
-  | NonNullTypeNode
-  | SchemaDefinitionNode
-  | OperationTypeDefinitionNode
-  | ScalarTypeDefinitionNode
-  | ObjectTypeDefinitionNode
-  | FieldDefinitionNode
-  | InputValueDefinitionNode
-  | InterfaceTypeDefinitionNode
-  | UnionTypeDefinitionNode
-  | EnumTypeDefinitionNode
-  | EnumValueDefinitionNode
-  | InputObjectTypeDefinitionNode
-  | DirectiveDefinitionNode
-  | SchemaExtensionNode
-  | ScalarTypeExtensionNode
-  | ObjectTypeExtensionNode
-  | InterfaceTypeExtensionNode
-  | UnionTypeExtensionNode
-  | EnumTypeExtensionNode
-  | InputObjectTypeExtensionNode
+	NameNode
+	| DocumentNode
+	| OperationDefinitionNode
+	| VariableDefinitionNode
+	| VariableNode
+	| SelectionSetNode
+	| FieldNode
+	| ArgumentNode
+	| FragmentSpreadNode
+	| InlineFragmentNode
+	| FragmentDefinitionNode
+	| IntValueNode
+	| FloatValueNode
+	| StringValueNode
+	| BooleanValueNode
+	| NullValueNode
+	| EnumValueNode
+	| ListValueNode
+	| ObjectValueNode
+	| ObjectFieldNode
+	| DirectiveNode
+	| NamedTypeNode
+	| ListTypeNode
+	| NonNullTypeNode
+	| SchemaDefinitionNode
+	| OperationTypeDefinitionNode
+	| ScalarTypeDefinitionNode
+	| ObjectTypeDefinitionNode
+	| FieldDefinitionNode
+	| InputValueDefinitionNode
+	| InterfaceTypeDefinitionNode
+	| UnionTypeDefinitionNode
+	| EnumTypeDefinitionNode
+	| EnumValueDefinitionNode
+	| InputObjectTypeDefinitionNode
+	| DirectiveDefinitionNode
+	| SchemaExtensionNode
+	| ScalarTypeExtensionNode
+	| ObjectTypeExtensionNode
+	| InterfaceTypeExtensionNode
+	| UnionTypeExtensionNode
+	| EnumTypeExtensionNode
+	| InputObjectTypeExtensionNode
 
 --[[*
  * Utility type listing all nodes indexed by their kind.
  ]]
 export type ASTKindToNode = {
-  Name: NameNode,
-  Document: DocumentNode,
-  OperationDefinition: OperationDefinitionNode,
-  VariableDefinition: VariableDefinitionNode,
-  Variable: VariableNode,
-  SelectionSet: SelectionSetNode,
-  Field: FieldNode,
-  Argument: ArgumentNode,
-  FragmentSpread: FragmentSpreadNode,
-  InlineFragment: InlineFragmentNode,
-  FragmentDefinition: FragmentDefinitionNode,
-  IntValue: IntValueNode,
-  FloatValue: FloatValueNode,
-  StringValue: StringValueNode,
-  BooleanValue: BooleanValueNode,
-  NullValue: NullValueNode,
-  EnumValue: EnumValueNode,
-  ListValue: ListValueNode,
-  ObjectValue: ObjectValueNode,
-  ObjectField: ObjectFieldNode,
-  Directive: DirectiveNode,
-  NamedType: NamedTypeNode,
-  ListType: ListTypeNode,
-  NonNullType: NonNullTypeNode,
-  SchemaDefinition: SchemaDefinitionNode,
-  OperationTypeDefinition: OperationTypeDefinitionNode,
-  ScalarTypeDefinition: ScalarTypeDefinitionNode,
-  ObjectTypeDefinition: ObjectTypeDefinitionNode,
-  FieldDefinition: FieldDefinitionNode,
-  InputValueDefinition: InputValueDefinitionNode,
-  InterfaceTypeDefinition: InterfaceTypeDefinitionNode,
-  UnionTypeDefinition: UnionTypeDefinitionNode,
-  EnumTypeDefinition: EnumTypeDefinitionNode,
-  EnumValueDefinition: EnumValueDefinitionNode,
-  InputObjectTypeDefinition: InputObjectTypeDefinitionNode,
-  DirectiveDefinition: DirectiveDefinitionNode,
-  SchemaExtension: SchemaExtensionNode,
-  ScalarTypeExtension: ScalarTypeExtensionNode,
-  ObjectTypeExtension: ObjectTypeExtensionNode,
-  InterfaceTypeExtension: InterfaceTypeExtensionNode,
-  UnionTypeExtension: UnionTypeExtensionNode,
-  EnumTypeExtension: EnumTypeExtensionNode,
-  InputObjectTypeExtension: InputObjectTypeExtensionNode,
+	Name: NameNode,
+	Document: DocumentNode,
+	OperationDefinition: OperationDefinitionNode,
+	VariableDefinition: VariableDefinitionNode,
+	Variable: VariableNode,
+	SelectionSet: SelectionSetNode,
+	Field: FieldNode,
+	Argument: ArgumentNode,
+	FragmentSpread: FragmentSpreadNode,
+	InlineFragment: InlineFragmentNode,
+	FragmentDefinition: FragmentDefinitionNode,
+	IntValue: IntValueNode,
+	FloatValue: FloatValueNode,
+	StringValue: StringValueNode,
+	BooleanValue: BooleanValueNode,
+	NullValue: NullValueNode,
+	EnumValue: EnumValueNode,
+	ListValue: ListValueNode,
+	ObjectValue: ObjectValueNode,
+	ObjectField: ObjectFieldNode,
+	Directive: DirectiveNode,
+	NamedType: NamedTypeNode,
+	ListType: ListTypeNode,
+	NonNullType: NonNullTypeNode,
+	SchemaDefinition: SchemaDefinitionNode,
+	OperationTypeDefinition: OperationTypeDefinitionNode,
+	ScalarTypeDefinition: ScalarTypeDefinitionNode,
+	ObjectTypeDefinition: ObjectTypeDefinitionNode,
+	FieldDefinition: FieldDefinitionNode,
+	InputValueDefinition: InputValueDefinitionNode,
+	InterfaceTypeDefinition: InterfaceTypeDefinitionNode,
+	UnionTypeDefinition: UnionTypeDefinitionNode,
+	EnumTypeDefinition: EnumTypeDefinitionNode,
+	EnumValueDefinition: EnumValueDefinitionNode,
+	InputObjectTypeDefinition: InputObjectTypeDefinitionNode,
+	DirectiveDefinition: DirectiveDefinitionNode,
+	SchemaExtension: SchemaExtensionNode,
+	ScalarTypeExtension: ScalarTypeExtensionNode,
+	ObjectTypeExtension: ObjectTypeExtensionNode,
+	InterfaceTypeExtension: InterfaceTypeExtensionNode,
+	UnionTypeExtension: UnionTypeExtensionNode,
+	EnumTypeExtension: EnumTypeExtensionNode,
+	InputObjectTypeExtension: InputObjectTypeExtensionNode,
 }
 
 -- // Name
@@ -270,14 +268,9 @@ export type DocumentNode = {
 	definitions: Array<DefinitionNode>,
 }
 
-export type DefinitionNode =
-	ExecutableDefinitionNode
-	| TypeSystemDefinitionNode
-	| TypeSystemExtensionNode
+export type DefinitionNode = ExecutableDefinitionNode | TypeSystemDefinitionNode | TypeSystemExtensionNode
 
-export type ExecutableDefinitionNode =
-	OperationDefinitionNode
-	| FragmentDefinitionNode
+export type ExecutableDefinitionNode = OperationDefinitionNode | FragmentDefinitionNode
 
 export type OperationDefinitionNode = {
 	-- kind: 'OperationDefinition',
@@ -319,127 +312,127 @@ export type SelectionSetNode = {
 export type SelectionNode = FieldNode | FragmentSpreadNode | InlineFragmentNode
 
 export type FieldNode = {
-  kind: string,
-  loc: Location?,
-  alias: NameNode?,
-  name: NameNode,
-  arguments: Array<ArgumentNode>?,
-  directives: Array<DirectiveNode>?,
-  selectionSet: SelectionSetNode?,
+	kind: string,
+	loc: Location?,
+	alias: NameNode?,
+	name: NameNode,
+	arguments: Array<ArgumentNode>?,
+	directives: Array<DirectiveNode>?,
+	selectionSet: SelectionSetNode?,
 }
 
 export type ArgumentNode = {
-  kind: string,
-  loc: Location?,
-  name: NameNode,
-  value: ValueNode,
+	kind: string,
+	loc: Location?,
+	name: NameNode,
+	value: ValueNode,
 }
 
 -- Fragments
 
 export type FragmentSpreadNode = {
-  kind: string,
-  loc: Location?,
-  name: NameNode,
-  directives: Array<DirectiveNode>?,
+	kind: string,
+	loc: Location?,
+	name: NameNode,
+	directives: Array<DirectiveNode>?,
 }
 
 export type InlineFragmentNode = {
-  kind: string,
-  loc: Location?,
-  typeCondition: NamedTypeNode?,
-  directives: Array<DirectiveNode>?,
-  selectionSet: SelectionSetNode,
+	kind: string,
+	loc: Location?,
+	typeCondition: NamedTypeNode?,
+	directives: Array<DirectiveNode>?,
+	selectionSet: SelectionSetNode,
 }
 
 export type FragmentDefinitionNode = {
-  kind: string,
-  loc: Location?,
-  name: NameNode,
-  -- Note: fragment variable definitions are experimental and may be changed
-  -- or removed in the future.
-  variableDefinitions: Array<VariableDefinitionNode>?,
-  typeCondition: NamedTypeNode,
-  directives: Array<DirectiveNode>?,
-  selectionSet: SelectionSetNode,
+	kind: string,
+	loc: Location?,
+	name: NameNode,
+	-- Note: fragment variable definitions are experimental and may be changed
+	-- or removed in the future.
+	variableDefinitions: Array<VariableDefinitionNode>?,
+	typeCondition: NamedTypeNode,
+	directives: Array<DirectiveNode>?,
+	selectionSet: SelectionSetNode,
 }
 
 -- Values
 
 export type ValueNode =
-  VariableNode
-  | IntValueNode
-  | FloatValueNode
-  | StringValueNode
-  | BooleanValueNode
-  | NullValueNode
-  | EnumValueNode
-  | ListValueNode
-  | ObjectValueNode
+	VariableNode
+	| IntValueNode
+	| FloatValueNode
+	| StringValueNode
+	| BooleanValueNode
+	| NullValueNode
+	| EnumValueNode
+	| ListValueNode
+	| ObjectValueNode
 
 export type IntValueNode = {
-  kind: string,
-  loc: Location?,
-  value: string,
+	kind: string,
+	loc: Location?,
+	value: string,
 }
 
 export type FloatValueNode = {
-  kind: string,
-  loc: Location?,
-  value: string,
+	kind: string,
+	loc: Location?,
+	value: string,
 }
 
 export type StringValueNode = {
-  kind: string,
-  loc: Location?,
-  value: string,
-  block: boolean?,
+	kind: string,
+	loc: Location?,
+	value: string,
+	block: boolean?,
 }
 
 export type BooleanValueNode = {
-  kind: string,
-  loc: Location?,
-  value: boolean,
+	kind: string,
+	loc: Location?,
+	value: boolean,
 }
 
 export type NullValueNode = {
-  kind: string,
-  loc: Location?,
+	kind: string,
+	loc: Location?,
 }
 
 export type EnumValueNode = {
-  kind: string,
-  loc: Location?,
-  value: string,
+	kind: string,
+	loc: Location?,
+	value: string,
 }
 
 export type ListValueNode = {
-  kind: string,
-  loc: Location?,
-  values: Array<ValueNode>,
+	kind: string,
+	loc: Location?,
+	values: Array<ValueNode>,
 }
 
 export type ObjectValueNode = {
-  kind: string,
-  loc: Location?,
-  fields: Array<ObjectFieldNode>,
+	kind: string,
+	loc: Location?,
+	fields: Array<ObjectFieldNode>,
 }
 
 export type ObjectFieldNode = {
-  kind: string,
-  loc: Location?,
-  name: NameNode,
-  value: ValueNode,
+	kind: string,
+	loc: Location?,
+	name: NameNode,
+	value: ValueNode,
 }
 
 -- Directives
 -- ...
 
 export type DirectiveNode = {
-  kind: string,
-  loc: Location?,
-  name: NameNode,
-  arguments: Array<ArgumentNode>?,
+	kind: string,
+	loc: Location?,
+	name: NameNode,
+	arguments: Array<ArgumentNode>?,
 }
 
 -- // Type Reference
@@ -447,150 +440,147 @@ export type DirectiveNode = {
 export type TypeNode = NamedTypeNode | ListTypeNode | NonNullTypeNode
 
 export type NamedTypeNode = {
-  kind: string,
-  loc: Location?,
-  name: NameNode,
+	kind: string,
+	loc: Location?,
+	name: NameNode,
 	-- ROBLOX TODO: upstream is missing this field, causing extendSchema usage to be incorect
-  type: TypeNode,
+	type: TypeNode,
 }
 
 export type ListTypeNode = {
-  kind: string,
-  loc: Location?,
-  type: TypeNode,
+	kind: string,
+	loc: Location?,
+	type: TypeNode,
 }
 
 export type NonNullTypeNode = {
-  kind: string,
-  loc: Location?,
-  type: NamedTypeNode | ListTypeNode,
+	kind: string,
+	loc: Location?,
+	type: NamedTypeNode | ListTypeNode,
 }
 
 -- Type System Definition
 
-export type TypeSystemDefinitionNode =
-  SchemaDefinitionNode
-  | TypeDefinitionNode
-  | DirectiveDefinitionNode
+export type TypeSystemDefinitionNode = SchemaDefinitionNode | TypeDefinitionNode | DirectiveDefinitionNode
 
 export type SchemaDefinitionNode = {
-  kind: string,
-  loc: Location?,
-  description: StringValueNode?,
-  directives: Array<DirectiveNode>?,
-  operationTypes: Array<OperationTypeDefinitionNode>,
+	kind: string,
+	loc: Location?,
+	description: StringValueNode?,
+	directives: Array<DirectiveNode>?,
+	operationTypes: Array<OperationTypeDefinitionNode>,
 }
 
 export type OperationTypeDefinitionNode = {
-  kind: string,
-  loc: Location?,
-  operation: OperationTypeNode,
-  type: NamedTypeNode,
+	kind: string,
+	loc: Location?,
+	operation: OperationTypeNode,
+	type: NamedTypeNode,
 }
 
 -- Type Definition
 
 export type TypeDefinitionNode =
-  ScalarTypeDefinitionNode
-  | ObjectTypeDefinitionNode
-  | InterfaceTypeDefinitionNode
-  | UnionTypeDefinitionNode
-  | EnumTypeDefinitionNode
-  | InputObjectTypeDefinitionNode
+	ScalarTypeDefinitionNode
+	| ObjectTypeDefinitionNode
+	| InterfaceTypeDefinitionNode
+	| UnionTypeDefinitionNode
+	| EnumTypeDefinitionNode
+	| InputObjectTypeDefinitionNode
 
 export type ScalarTypeDefinitionNode = {
-  kind: string,
-  loc: Location?,
-  description: StringValueNode?,
-  name: NameNode,
-  directives: Array<DirectiveNode>?,
+	kind: string,
+	loc: Location?,
+	description: StringValueNode?,
+	name: NameNode,
+	directives: Array<DirectiveNode>?,
 }
 
 export type ObjectTypeDefinitionNode = {
-  kind: string,
-  loc: Location?,
-  description: StringValueNode?,
-  name: NameNode,
-  interfaces: Array<NamedTypeNode>?,
-  directives: Array<DirectiveNode>?,
-  fields: Array<FieldDefinitionNode>?,
+	kind: string,
+	loc: Location?,
+	description: StringValueNode?,
+	name: NameNode,
+	interfaces: Array<NamedTypeNode>?,
+	directives: Array<DirectiveNode>?,
+	fields: Array<FieldDefinitionNode>?,
 }
 
 export type FieldDefinitionNode = {
-  kind: string,
-  loc: Location?,
-  description: StringValueNode?,
-  name: NameNode,
-  arguments: Array<InputValueDefinitionNode>?,
-  type: TypeNode,
-  directives: Array<DirectiveNode>?,
+	kind: string,
+	loc: Location?,
+	description: StringValueNode?,
+	name: NameNode,
+	arguments: Array<InputValueDefinitionNode>?,
+	type: TypeNode,
+	directives: Array<DirectiveNode>?,
 }
 
 export type InputValueDefinitionNode = {
-  kind: string,
-  loc: Location?,
-  description: StringValueNode?,
-  name: NameNode,
-  type: TypeNode,
-  defaultValue: ValueNode?,
-  directives: Array<DirectiveNode>?,
+	kind: string,
+	loc: Location?,
+	description: StringValueNode?,
+	name: NameNode,
+	type: TypeNode,
+	defaultValue: ValueNode?,
+	directives: Array<DirectiveNode>?,
 }
 
 export type InterfaceTypeDefinitionNode = {
-  kind: string,
-  loc: Location?,
-  description: StringValueNode?,
-  name: NameNode,
-  interfaces: Array<NamedTypeNode>?,
-  directives: Array<DirectiveNode>?,
-  fields: Array<FieldDefinitionNode>?,
+	kind: string,
+	loc: Location?,
+	description: StringValueNode?,
+	name: NameNode,
+	interfaces: Array<NamedTypeNode>?,
+	directives: Array<DirectiveNode>?,
+	fields: Array<FieldDefinitionNode>?,
 }
 
 export type UnionTypeDefinitionNode = {
-  kind: string,
-  loc: Location?,
-  description: StringValueNode?,
-  name: NameNode,
-  directives: Array<DirectiveNode>?,
-  types: Array<NamedTypeNode>?,
+	kind: string,
+	loc: Location?,
+	description: StringValueNode?,
+	name: NameNode,
+	directives: Array<DirectiveNode>?,
+	types: Array<NamedTypeNode>?,
 }
 
 export type EnumTypeDefinitionNode = {
-  kind: string,
-  loc: Location?,
-  description: StringValueNode?,
-  name: NameNode,
-  directives: Array<DirectiveNode>?,
-  values: Array<EnumValueDefinitionNode>?,
+	kind: string,
+	loc: Location?,
+	description: StringValueNode?,
+	name: NameNode,
+	directives: Array<DirectiveNode>?,
+	values: Array<EnumValueDefinitionNode>?,
 }
 
 export type EnumValueDefinitionNode = {
-  kind: string,
-  loc: Location?,
-  description: StringValueNode?,
-  name: NameNode,
-  directives: Array<DirectiveNode>?,
+	kind: string,
+	loc: Location?,
+	description: StringValueNode?,
+	name: NameNode,
+	directives: Array<DirectiveNode>?,
 }
 
 export type InputObjectTypeDefinitionNode = {
-  kind: string,
-  loc: Location?,
-  description: StringValueNode?,
-  name: NameNode,
-  directives: Array<DirectiveNode>?,
-  fields: Array<InputValueDefinitionNode>?,
+	kind: string,
+	loc: Location?,
+	description: StringValueNode?,
+	name: NameNode,
+	directives: Array<DirectiveNode>?,
+	fields: Array<InputValueDefinitionNode>?,
 }
 
 -- Directive Definitions
 
 export type DirectiveDefinitionNode = {
-  kind: string, -- ROBLOX deviation: 'DirectiveDefinition',
-  loc: Location?,
-  description: StringValueNode?,
-  name: NameNode,
-  arguments: Array<InputValueDefinitionNode>?,
-  repeatable: boolean,
-  locations: Array<NameNode>,
+	kind: string, -- ROBLOX deviation: 'DirectiveDefinition',
+	loc: Location?,
+	description: StringValueNode?,
+	name: NameNode,
+	arguments: Array<InputValueDefinitionNode>?,
+	repeatable: boolean,
+	locations: Array<NameNode>,
 }
 
 -- Type System Extensions

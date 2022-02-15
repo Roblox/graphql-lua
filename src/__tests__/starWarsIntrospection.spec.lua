@@ -26,7 +26,9 @@ return function()
 		describe("Basic Introspection", function()
 			it("Allows querying the schema for types", function()
 				local expect: any = expect
-				local data = queryStarWars(expect, [[
+				local data = queryStarWars(
+					expect,
+					[[
 			{
 			__schema {
 				types {
@@ -34,7 +36,8 @@ return function()
 				}
 			}
 			}
-		]])
+		]]
+				)
 				-- Include all types used by StarWars schema, introspection types and
 				-- standard directives. For example, `Boolean` is used in `@skip`,
 				-- `@include` and also inside introspection types.
@@ -62,7 +65,9 @@ return function()
 			end)
 			it("Allows querying the schema for query type", function()
 				local expect: any = expect
-				local data = queryStarWars(expect, [[
+				local data = queryStarWars(
+					expect,
+					[[
 			{
 			__schema {
 				queryType {
@@ -70,7 +75,8 @@ return function()
 				}
 			}
 			}
-		]])
+		]]
+				)
 
 				expect(data).toObjectContain({
 					__schema = {
@@ -82,13 +88,16 @@ return function()
 			end)
 			it("Allows querying the schema for a specific type", function()
 				local expect: any = expect
-				local data = queryStarWars(expect, [[
+				local data = queryStarWars(
+					expect,
+					[[
 			{
 			__type(name: "Droid") {
 				name
 			}
 			}
-		]])
+		]]
+				)
 
 				expect(data).toObjectContain({
 					__type = {
@@ -98,14 +107,17 @@ return function()
 			end)
 			it("Allows querying the schema for an object kind", function()
 				local expect: any = expect
-				local data = queryStarWars(expect, [[
+				local data = queryStarWars(
+					expect,
+					[[
 			{
 			__type(name: "Droid") {
 				name
 				kind
 			}
 			}
-		]])
+		]]
+				)
 
 				expect(data).toObjectContain({
 					__type = {
@@ -116,14 +128,17 @@ return function()
 			end)
 			it("Allows querying the schema for an interface kind", function()
 				local expect: any = expect
-				local data = queryStarWars(expect, [[
+				local data = queryStarWars(
+					expect,
+					[[
 			{
 			__type(name: "Character") {
 				name
 				kind
 			}
 			}
-		]])
+		]]
+				)
 
 				expect(data).toObjectContain({
 					__type = {
@@ -382,14 +397,17 @@ return function()
 			end)
 			it("Allows querying the schema for documentation", function()
 				local expect: any = expect
-				local data = queryStarWars(expect, [[
+				local data = queryStarWars(
+					expect,
+					[[
 			{
 			__type(name: "Droid") {
 				name
 				description
 			}
 			}
-		]])
+		]]
+				)
 
 				expect(data).toObjectContain({
 					__type = {

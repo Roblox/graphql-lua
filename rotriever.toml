@@ -1,12 +1,20 @@
 [package]
 name = "GraphQL"
 version = "0.1.0"
-author = "Roblox"
+authors = [
+    "Kyle Mitofsky <kylemit@gmail.com>",
+	"Matt Hargett <plaztiksyke@gmail.com>",
+	"Olivier Trepanier <otrepanier@roblox.com>",
+	"Ignacio Falk <flakolefluk@gmail.com>",
+	"Chris Trześniewski <k.trzesniewski@gmail.com>",
+]
 content_root = "src"
 
 [dependencies]
-LuauPolyfill = { git = "https://github.com/Roblox/luau-polyfill.git", rev = "v0.1.4" }
+RegExp = "github.com/Roblox/luau-regexp@0.2.0"
+LuauPolyfill = "github.com/Roblox/luau-polyfill@0.3.0"
 Promise = { git = "https://github.com/evaera/roblox-lua-promise.git", tag = "v3.0.1" }
 
 [dev_dependencies]
-TestEZ = "github.com/roblox/testez@0.4.1"
+JestGlobals = "github.com/roblox/jest-roblox@2.3.0"
+

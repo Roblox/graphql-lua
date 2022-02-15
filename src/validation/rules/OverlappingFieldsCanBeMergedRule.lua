@@ -1,10 +1,14 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/05b8d0716ea513a7efc88cd173a2a15a8aba5bbc/src/validation/rules/OverlappingFieldsCanBeMergedRule.js
 
 local root = script.Parent.Parent.Parent
+local PackagesWorkspace = root.Parent
+local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local Map = LuauPolyfill.Map
+local Object = LuauPolyfill.Object
+type Map<T, V> = LuauPolyfill.Map<T, V>
+
 local NULL = require(root.luaUtils.null)
-local MapModule = require(root.luaUtils.Map)
-local Map = MapModule.Map
-type Map<T,V> = MapModule.Map<T,V>
 local jsutils = root.jsutils
 local language = root.language
 local GraphQLError = require(root.error.GraphQLError).GraphQLError
@@ -19,10 +23,6 @@ local isObjectType = definition.isObjectType
 local isListType = definition.isListType
 local isInterfaceType = definition.isInterfaceType
 local typeFromAST = require(root.utilities.typeFromAST).typeFromAST
-local PackagesWorkspace = root.Parent
-local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
-local Array = LuauPolyfill.Array
-local Object = LuauPolyfill.Object
 
 local exports = {}
 
@@ -45,8 +45,7 @@ local function reasonMessage(reason): string
 		return table.concat(
 			Array.map(reason, function(item)
 				local responseName, subReason = item[1], item[2]
-				return('subfields "%s" conflict because '):format(responseName)
-					.. reasonMessage(subReason)
+				return ('subfields "%s" conflict because '):format(responseName) .. reasonMessage(subReason)
 			end),
 			" and "
 		)
@@ -90,10 +89,9 @@ exports.OverlappingFieldsCanBeMergedRule = function(context)
 				local reasonMsg = reasonMessage(reason)
 				context:reportError(
 					GraphQLError.new(
-						('Fields "%s" conflict because %s. Use different aliases on the fields to fetch both if this was intentional.'):format(
-							responseName,
-							reasonMsg
-						),
+						(
+							'Fields "%s" conflict because %s. Use different aliases on the fields to fetch both if this was intentional.'
+						):format(responseName, reasonMsg),
 						Array.concat(fields1, fields2)
 					)
 				)
@@ -169,23 +167,12 @@ function findConflictsWithinSelectionSet(
 )
 	local conflicts = {}
 
-	local fieldsAndFragment = getFieldsAndFragmentNames(
-		context,
-		cachedFieldsAndFragmentNames,
-		parentType,
-		selectionSet
-	)
+	local fieldsAndFragment = getFieldsAndFragmentNames(context, cachedFieldsAndFragmentNames, parentType, selectionSet)
 	local fieldMap, fragmentNames = fieldsAndFragment[1], fieldsAndFragment[2]
 
 	-- // (A) Find find all conflicts "within" the fields of this selection set.
 	-- // Note: this is the *only place* `collectConflictsWithin` is called.
-	collectConflictsWithin(
-		context,
-		conflicts,
-		cachedFieldsAndFragmentNames,
-		comparedFragmentPairs,
-		fieldMap
-	)
+	collectConflictsWithin(context, conflicts, cachedFieldsAndFragmentNames, comparedFragmentPairs, fieldMap)
 
 	if #fragmentNames ~= 0 then
 		-- // (B) Then collect conflicts between these fields and those represented by
@@ -236,11 +223,7 @@ function collectConflictsBetweenFieldsAndFragment(
 		return
 	end
 
-	local fieldsAndFragment = getReferencedFieldsAndFragmentNames(
-		context,
-		cachedFieldsAndFragmentNames,
-		fragment
-	)
+	local fieldsAndFragment = getReferencedFieldsAndFragmentNames(context, cachedFieldsAndFragmentNames, fragment)
 	local fieldMap2, fragmentNames2 = fieldsAndFragment[1], fieldsAndFragment[2]
 
 	-- // Do not compare a fragment's fieldMap to itself.
@@ -292,13 +275,7 @@ function collectConflictsBetweenFragments(
 	end
 
 	-- // Memoize so two fragments are not compared for conflicts more than once.
-	if
-		comparedFragmentPairs:has(
-			fragmentName1,
-			fragmentName2,
-			areMutuallyExclusive
-		)
-	then
+	if comparedFragmentPairs:has(fragmentName1, fragmentName2, areMutuallyExclusive) then
 		return
 	end
 
@@ -310,18 +287,10 @@ function collectConflictsBetweenFragments(
 		return
 	end
 
-	local fieldAndFragment1 = getReferencedFieldsAndFragmentNames(
-		context,
-		cachedFieldsAndFragmentNames,
-		fragment1
-	)
+	local fieldAndFragment1 = getReferencedFieldsAndFragmentNames(context, cachedFieldsAndFragmentNames, fragment1)
 	local fieldMap1, fragmentNames1 = fieldAndFragment1[1], fieldAndFragment1[2]
 
-	local fieldAndFragment2 = getReferencedFieldsAndFragmentNames(
-		context,
-		cachedFieldsAndFragmentNames,
-		fragment2
-	)
+	local fieldAndFragment2 = getReferencedFieldsAndFragmentNames(context, cachedFieldsAndFragmentNames, fragment2)
 	local fieldMap2, fragmentNames2 = fieldAndFragment2[1], fieldAndFragment2[2]
 
 	-- // (F) First, collect all conflicts between these two collections of fields
@@ -459,13 +428,7 @@ local function findConflictsBetweenSubSelectionSets(
 end
 
 -- // Collect all Conflicts "within" one collection of fields.
-function collectConflictsWithin(
-	context,
-	conflicts,
-	cachedFieldsAndFragmentNames,
-	comparedFragmentPairs,
-	fieldMap
-)
+function collectConflictsWithin(context, conflicts, cachedFieldsAndFragmentNames, comparedFragmentPairs, fieldMap)
 	-- // A field map is a keyed collection, where each key represents a response
 	-- // name and the value at that key is a list of all fields which provide that
 	-- // response name. For every response name, if there are multiple fields, they
@@ -565,11 +528,8 @@ function findConflict(
 	-- // different Object types. Interface or Union types might overlap - if not
 	-- // in the current state of the schema, then perhaps in some future version,
 	-- // thus may not safely diverge.
-	local areMutuallyExclusive =
-		parentFieldsAreMutuallyExclusive or
-		(parentType1 ~= parentType2 and
-			isObjectType(parentType1) and
-			isObjectType(parentType2))
+	local areMutuallyExclusive = parentFieldsAreMutuallyExclusive
+		or (parentType1 ~= parentType2 and isObjectType(parentType1) and isObjectType(parentType2))
 
 	if not areMutuallyExclusive then
 		-- // Two aliases must refer to the same field.
@@ -577,9 +537,9 @@ function findConflict(
 		local name2 = node2.name.value
 		if name1 ~= name2 then
 			return {
-				{responseName, ('"%s" and "%s" are different fields'):format(name1, name2)},
-				{node1},
-				{node2},
+				{ responseName, ('"%s" and "%s" are different fields'):format(name1, name2) },
+				{ node1 },
+				{ node2 },
 			}
 		end
 
@@ -593,10 +553,10 @@ function findConflict(
 			return {
 				{
 					responseName,
-					'they have differing arguments',
+					"they have differing arguments",
 				},
-				{node1},
-				{node2},
+				{ node1 },
+				{ node2 },
 			}
 		end
 	end
@@ -606,10 +566,10 @@ function findConflict(
 	local type2 = def2 and def2.type
 
 	if type1 and type2 and doTypesConflict(type1, type2) then
-		return{
-			{responseName, ('they return conflicting types "%s" and "%s"'):format(inspect(type1), inspect(type2))},
-			{node1},
-			{node2},
+		return {
+			{ responseName, ('they return conflicting types "%s" and "%s"'):format(inspect(type1), inspect(type2)) },
+			{ node1 },
+			{ node2 },
 		}
 	end
 
@@ -690,25 +650,14 @@ end
 -- // Given a selection set, return the collection of fields (a mapping of response
 -- // name to field nodes and definitions) as well as a list of fragment names
 -- // referenced via fragment spreads.
-function getFieldsAndFragmentNames(
-	context,
-	cachedFieldsAndFragmentNames,
-	parentType,
-	selectionSet
-)
+function getFieldsAndFragmentNames(context, cachedFieldsAndFragmentNames, parentType, selectionSet)
 	local cached = cachedFieldsAndFragmentNames[selectionSet]
 	if not cached then
 		-- ROBLOX deviation: use Ordered Map object
 		local nodeAndDefs = Map.new()
 		local fragmentNames = {}
-		_collectFieldsAndFragmentNames(
-			context,
-			parentType,
-			selectionSet,
-			nodeAndDefs,
-			fragmentNames
-		)
-		cached = {nodeAndDefs, Object.keys(fragmentNames)}
+		_collectFieldsAndFragmentNames(context, parentType, selectionSet, nodeAndDefs, fragmentNames)
+		cached = { nodeAndDefs, Object.keys(fragmentNames) }
 		cachedFieldsAndFragmentNames[selectionSet] = cached
 	end
 
@@ -717,11 +666,7 @@ end
 
 -- // Given a reference to a fragment, return the represented collection of fields
 -- // as well as a list of nested fragment names referenced via fragment spreads.
-function getReferencedFieldsAndFragmentNames(
-	context,
-	cachedFieldsAndFragmentNames,
-	fragment
-)
+function getReferencedFieldsAndFragmentNames(context, cachedFieldsAndFragmentNames, fragment)
 	-- // Short-circuit building a type from the node if possible.
 	local cached = cachedFieldsAndFragmentNames[fragment.selectionSet]
 	if cached then
@@ -729,21 +674,10 @@ function getReferencedFieldsAndFragmentNames(
 	end
 
 	local fragmentType = typeFromAST(context:getSchema(), fragment.typeCondition)
-	return getFieldsAndFragmentNames(
-		context,
-		cachedFieldsAndFragmentNames,
-		fragmentType,
-		fragment.selectionSet
-	)
+	return getFieldsAndFragmentNames(context, cachedFieldsAndFragmentNames, fragmentType, fragment.selectionSet)
 end
 
-function _collectFieldsAndFragmentNames(
-	context,
-	parentType,
-	selectionSet,
-	nodeAndDefs,
-	fragmentNames
-)
+function _collectFieldsAndFragmentNames(context, parentType, selectionSet, nodeAndDefs, fragmentNames)
 	for _, selection in ipairs(selectionSet.selections) do
 		local selectionKind = selection.kind
 		if selectionKind == Kind.FIELD then
@@ -764,7 +698,7 @@ function _collectFieldsAndFragmentNames(
 				nodeAndDefs[responseName] = {}
 			end
 
-			table.insert(nodeAndDefs[responseName], {parentType or NULL, selection or NULL, fieldDef or NULL})
+			table.insert(nodeAndDefs[responseName], { parentType or NULL, selection or NULL, fieldDef or NULL })
 		elseif selectionKind == Kind.FRAGMENT_SPREAD then
 			fragmentNames[selection.name.value] = true
 		elseif selectionKind == Kind.INLINE_FRAGMENT then
@@ -786,12 +720,7 @@ end
 
 -- // Given a series of Conflicts which occurred between two sub-fields, generate
 -- // a single Conflict.
-function subfieldConflicts(
-	conflicts,
-	responseName: string,
-	node1,
-	node2
-)
+function subfieldConflicts(conflicts, responseName: string, node1, node2)
 	if #conflicts > 0 then
 		return {
 			{
@@ -803,11 +732,11 @@ function subfieldConflicts(
 			Array.reduce(conflicts, function(allFields, fields)
 				local fields1 = fields[2]
 				return Array.concat(allFields, fields1)
-			end, {node1}),
+			end, { node1 }),
 			Array.reduce(conflicts, function(allFields, fields)
 				local fields2 = fields[3]
 				return Array.concat(allFields, fields2)
-			end, {node2}),
+			end, { node2 }),
 		}
 	end
 
@@ -820,7 +749,7 @@ end
 --  * not matter. We do this by maintaining a sort of double adjacency sets.
 --  */
 PairSet = {}
-local PairSetMetatable = {__index = PairSet}
+local PairSetMetatable = { __index = PairSet }
 
 function PairSet.new()
 	local self = setmetatable({}, PairSetMetatable)

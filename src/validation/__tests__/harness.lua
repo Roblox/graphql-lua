@@ -2,6 +2,9 @@
 
 local validationWorkspace = script.Parent.Parent
 local srcWorkspace = validationWorkspace.Parent
+local Packages = srcWorkspace.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
 
 local parse = require(srcWorkspace.language.parser).parse
 
@@ -13,8 +16,6 @@ local buildSchema = require(srcWorkspace.utilities.buildASTSchema).buildSchema
 local validateImport = require(validationWorkspace.validate)
 local validate = validateImport.validate
 local validateSDL = validateImport.validateSDL
-
-local Array = require(srcWorkspace.luaUtils.Array)
 
 local testSchema = buildSchema([[
   interface Being {
@@ -151,14 +152,9 @@ local testSchema = buildSchema([[
 
 -- deviation: expect needs to be passed because it can't be injected
 -- in this file
-local function expectValidationErrorsWithSchema(
-	expect_,
-	schema: GraphQLSchema,
-	rule,
-	queryStr: string
-): any
+local function expectValidationErrorsWithSchema(expect_, schema: GraphQLSchema, rule, queryStr: string): any
 	local doc = parse(queryStr)
-	local errors = validate(schema, doc, {rule})
+	local errors = validate(schema, doc, { rule })
 	-- ROBLOX deviation: our toEqual does not have a special case when
 	-- comparing error objects, so we map each error to the expected shape
 	local reshapedErrors = Array.map(errors, function(errorObject)
@@ -170,27 +166,13 @@ local function expectValidationErrorsWithSchema(
 	return expect_(reshapedErrors)
 end
 
-local function expectValidationErrors(
-	expect,
-	rule,
-	queryStr: string
-)
-	return expectValidationErrorsWithSchema(
-		expect,
-		testSchema,
-		rule,
-		queryStr
-	)
+local function expectValidationErrors(expect, rule, queryStr: string)
+	return expectValidationErrorsWithSchema(expect, testSchema, rule, queryStr)
 end
 
-local function expectSDLValidationErrors(
-	expect,
-	schema: GraphQLSchema,
-	rule,
-	sdlStr: string
-)
+local function expectSDLValidationErrors(expect, schema: GraphQLSchema, rule, sdlStr: string)
 	local doc = parse(sdlStr)
-	local errors = validateSDL(doc, schema, {rule})
+	local errors = validateSDL(doc, schema, { rule })
 	-- ROBLOX deviation: our toEqual does not have a special case when
 	-- comparing error objects, so we map each error to the expected shape
 	local reshapedErrors = Array.map(errors, function(errorObject)
@@ -203,8 +185,8 @@ local function expectSDLValidationErrors(
 end
 
 return {
-  testSchema = testSchema,
-  expectValidationErrorsWithSchema = expectValidationErrorsWithSchema,
-  expectValidationErrors = expectValidationErrors,
-  expectSDLValidationErrors = expectSDLValidationErrors,
+	testSchema = testSchema,
+	expectValidationErrorsWithSchema = expectValidationErrorsWithSchema,
+	expectValidationErrors = expectValidationErrors,
+	expectSDLValidationErrors = expectSDLValidationErrors,
 }

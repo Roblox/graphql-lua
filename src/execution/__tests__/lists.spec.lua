@@ -2,14 +2,19 @@
 
 local srcWorkspace = script.Parent.Parent.Parent
 local luaUtilsWorkspace = srcWorkspace.luaUtils
+local Packages = srcWorkspace.Parent
 
--- ROBLOX deviation: utils
-local Set = require(srcWorkspace.Parent.LuauPolyfill).Set
-local Promise = require(srcWorkspace.Parent.Promise)
-local Error = require(luaUtilsWorkspace.Error)
-local Array = require(luaUtilsWorkspace.Array)
-local instanceOf = require(srcWorkspace.jsutils.instanceOf)
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local Error = LuauPolyfill.Error
+local Set = LuauPolyfill.Set
+local instanceof = LuauPolyfill.instanceof
+
+local Promise = require(Packages.Promise)
 local NULL = require(luaUtilsWorkspace.null)
+
+local JestGlobals = require(Packages.Dev.JestGlobals)
+local jestExpect = JestGlobals.expect
 
 local parse = require(srcWorkspace.language.parser).parse
 
@@ -20,7 +25,6 @@ local execute = executeModule.execute
 local executeSync = executeModule.executeSync
 
 return function()
-
 	describe("Execute: Accepts any iterable as list value", function()
 		local function complete(rootValue)
 			return executeSync({
@@ -87,11 +91,11 @@ return function()
 		it("Does not accept (Iterable) String-literal as a List value", function()
 			local listField = "Singular"
 
-			expect(complete({ listField = listField })).toObjectContain({
+			jestExpect(complete({ listField = listField })).toMatchObject({
 				data = { listField = NULL },
 				errors = {
 					{
-						message = "Expected Iterable, but did not find one for field \"Query.listField\".",
+						message = 'Expected Iterable, but did not find one for field "Query.listField".',
 						locations = {
 							{
 								line = 1,
@@ -124,9 +128,7 @@ return function()
 			end
 
 			local function promisify(value: any)
-				return instanceOf(value, Error)
-					and Promise.reject(value)
-					or Promise.resolve(value)
+				return instanceof(value, Error) and Promise.reject(value) or Promise.resolve(value)
 			end
 
 			-- ROBLOX deviation: helper function
@@ -162,7 +164,6 @@ return function()
 			return Promise.new(function(resolve)
 				resolve(result)
 			end)
-
 		end
 
 		it("Contains values", function()
@@ -191,7 +192,6 @@ return function()
 					listField = { 1, 2 },
 				},
 			})
-
 		end)
 
 		it("Contains null", function()
@@ -212,44 +212,42 @@ return function()
 				},
 			}
 
-			expect(complete({
+			jestExpect(complete({
 				listField = listField,
 				as = "[Int]",
-			}):expect()).toObjectContain({
+			}):expect()).toMatchObject({
 				data = {
 					listField = { 1, NULL, 2 },
 				},
 			})
 
-			expect(complete({
+			jestExpect(complete({
 				listField = listField,
 				as = "[Int]!",
-			}):expect()).toObjectContain({
+			}):expect()).toMatchObject({
 				data = {
 					listField = { 1, NULL, 2 },
 				},
 			})
 
-			expect(complete({
+			jestExpect(complete({
 				listField = listField,
 				as = "[Int!]",
-			}):expect()).toObjectContain({
+			}):expect()).toMatchObject({
 				data = { listField = NULL },
 				errors = errors,
 			})
 
-			expect(complete({
+			jestExpect(complete({
 				listField = listField,
 				as = "[Int!]!",
-			}):expect()).toObjectContain({
+			}):expect()).toMatchObject({
 				data = NULL,
 				errors = errors,
 			})
-
 		end)
 
 		it("Returns null", function()
-
 			local listField = NULL
 			local errors = {
 				{
@@ -266,36 +264,35 @@ return function()
 				},
 			}
 
-			expect(complete({
+			jestExpect(complete({
 				listField = listField,
 				as = "[Int]",
-			}):expect()).toObjectContain({
+			}):expect()).toMatchObject({
 				data = { listField = NULL },
 			})
 
-			expect(complete({
+			jestExpect(complete({
 				listField = listField,
 				as = "[Int]!",
-			}):expect()).toObjectContain({
+			}):expect()).toMatchObject({
 				data = NULL,
 				errors = errors,
 			})
 
-			expect(complete({
+			jestExpect(complete({
 				listField = listField,
 				as = "[Int!]",
-			}):expect()).toObjectContain({
+			}):expect()).toMatchObject({
 				data = { listField = NULL },
 			})
 
-			expect(complete({
+			jestExpect(complete({
 				listField = listField,
 				as = "[Int!]!",
-			}):expect()).toObjectContain({
+			}):expect()).toMatchObject({
 				data = NULL,
 				errors = errors,
 			})
-
 		end)
 
 		it("Contains error", function()
@@ -320,42 +317,41 @@ return function()
 				},
 			}
 
-			expect(complete({
+			jestExpect(complete({
 				listField = listField,
 				as = "[Int]",
-			}):expect()).toObjectContain({
+			}):expect()).toMatchObject({
 				data = {
 					listField = { 1, NULL, 2 },
 				},
 				errors = errors,
 			})
 
-			expect(complete({
+			jestExpect(complete({
 				listField = listField,
 				as = "[Int]!",
-			}):expect()).toObjectContain({
+			}):expect()).toMatchObject({
 				data = {
 					listField = { 1, NULL, 2 },
 				},
 				errors = errors,
 			})
 
-			expect(complete({
+			jestExpect(complete({
 				listField = listField,
 				as = "[Int!]",
-			}):expect()).toObjectContain({
+			}):expect()).toMatchObject({
 				data = { listField = NULL },
 				errors = errors,
 			})
 
-			expect(complete({
+			jestExpect(complete({
 				listField = listField,
 				as = "[Int!]!",
-			}):expect()).toObjectContain({
+			}):expect()).toMatchObject({
 				data = NULL,
 				errors = errors,
 			})
-
 		end)
 
 		it("Results in error", function()
@@ -406,7 +402,6 @@ return function()
 				data = NULL,
 				errors = errors,
 			})
-
 		end)
 	end)
 end

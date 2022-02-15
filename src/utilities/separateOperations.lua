@@ -1,19 +1,23 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/separateOperations.js
-local ObjMapModule = require(script.Parent.Parent.jsutils.ObjMap) -- type { ObjMap } from '../jsutils/ObjMap';
+local srcWorkspace = script.Parent.Parent
+local rootWorkspace = srcWorkspace.Parent
+
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local Set = LuauPolyfill.Set
+type Array<T> = LuauPolyfill.Array<T>
+type Set<T> = LuauPolyfill.Set<T>
+
+local ObjMapModule = require(srcWorkspace.jsutils.ObjMap) -- type { ObjMap } from '../jsutils/ObjMap';
 type ObjMap<T> = ObjMapModule.ObjMap<T>
 
--- ROBLOX deviation: Common types
-type Array<T> = { [number]: T }
-type Set<T> = { [T]: boolean }
-
-local srcWorkspace = script.Parent.Parent
-local PackagesWorkspace = srcWorkspace.Parent
+local languageAstModule = require(srcWorkspace.language.ast)
+type DocumentNode = languageAstModule.DocumentNode
+type OperationDefinitionNode = languageAstModule.OperationDefinitionNode
+type SelectionSetNode = languageAstModule.SelectionSetNode
 
 local Kind = require(srcWorkspace.language.kinds).Kind
-local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
 local visit = require(srcWorkspace.language.visitor).visit
-
-local Array = LuauPolyfill.Array
 
 local collectDependencies
 local collectTransitiveDependencies
@@ -24,9 +28,9 @@ local collectTransitiveDependencies
 	* which contains a single operation as well the fragment definitions it
 	* refers to.
 	*]]
-local function separateOperations(documentAST)
-	local operations = {}
-	local depGraph = {}
+local function separateOperations(documentAST: DocumentNode): ObjMap<DocumentNode>
+	local operations: Array<OperationDefinitionNode> = {}
+	local depGraph: DepGraph = {}
 
 	-- Populate metadata and build a dependency graph
 	for _, definitionNode in pairs(documentAST.definitions) do
@@ -50,7 +54,7 @@ local function separateOperations(documentAST)
 	]]
 	local separatedDocumentASTs = {}
 	for _, operation in pairs(operations) do
-		local dependencies: Set<string> = {}
+		local dependencies: Set<string> = Set.new()
 
 		for _, fragmentName in pairs(collectDependencies(operation.selectionSet)) do
 			collectTransitiveDependencies(dependencies, depGraph, fragmentName)
@@ -65,8 +69,7 @@ local function separateOperations(documentAST)
 			kind = Kind.DOCUMENT,
 			definitions = Array.filter(documentAST.definitions, function(node)
 				return node == operation
-					or (node.kind == Kind.FRAGMENT_DEFINITION
-					and dependencies[node.name.value])
+					or (node.kind == Kind.FRAGMENT_DEFINITION and dependencies:has(node.name.value))
 			end),
 		}
 	end
@@ -78,13 +81,9 @@ type DepGraph = ObjMap<Array<string>>
 
 -- From a dependency graph, collects a list of transitive dependencies by
 -- recursing through a dependency graph.
-function collectTransitiveDependencies(
-	collected: Set<string>,
-	depGraph: DepGraph,
-	fromName: string
-)
-	if not collected[fromName] then
-		collected[fromName] = true
+function collectTransitiveDependencies(collected: Set<string>, depGraph: DepGraph, fromName: string)
+	if not collected:has(fromName) then
+		collected:add(fromName)
 
 		local immediateDeps = depGraph[fromName]
 		if immediateDeps ~= nil then
@@ -95,17 +94,16 @@ function collectTransitiveDependencies(
 	end
 end
 
-function collectDependencies(selectionSet): Array<string>
+function collectDependencies(selectionSet: SelectionSetNode): Array<string>
 	local dependencies = {}
 
 	visit(selectionSet, {
-		FragmentSpread = function(self, node)
+		FragmentSpread = function(_self, node)
 			table.insert(dependencies, node.name.value)
 		end,
 	})
 
 	return dependencies
-
 end
 
 return {

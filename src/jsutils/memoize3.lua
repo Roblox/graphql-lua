@@ -1,9 +1,16 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/memoize3.js
+local jsutils = script.Parent
+local srcWorkspace = jsutils.Parent
+local Packages = srcWorkspace.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
+type Array<T> = LuauPolyfill.Array<T>
+type Function = (...any) -> ...any
+type Object = LuauPolyfill.Object
 -- deviation: we need to replace 'nil' with a symbol
 -- in the table to support it
 local NULL = {}
 
-local function replaceNil(value)
+local function replaceNil<T>(value: T): T | typeof(NULL)
 	if value == nil then
 		return NULL
 	end
@@ -17,7 +24,10 @@ end
 --[[
  * Memoizes the provided three-argument function.
  ]]
-local function memoize3(fn)
+local function memoize3<A1, A2, A3, R>(
+	fn: (A1, A2, A3) -> R
+): (A1, A2, A3) -> R
+
 	local cache0
 
 	return function(a1, a2, a3)
@@ -43,7 +53,8 @@ local function memoize3(fn)
 					-- deviation: since we store nil as NULL
 					-- we need to check for it
 					if cachedValue == NULL then
-						return nil
+						-- ROBLOX FIXME Luau: Type 'nil' could not be converted into 'R'
+						return nil :: any
 					end
 					return cachedValue
 				end

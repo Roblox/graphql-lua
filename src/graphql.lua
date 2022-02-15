@@ -1,13 +1,13 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/graphql.js
-
+--!nonstrict
+-- ROBLOX FIXME Luau: this file causes roblox-cli to hang in strict mode, needs CLI-50589
 local rootWorkspace = script.Parent
 
--- ROBLOX deviation: add polyfills
-local Error = require(rootWorkspace.luaUtils.Error)
 local Packages = rootWorkspace.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Error = LuauPolyfill.Error
 local Promise = require(Packages.Promise)
-local PromiseModule = require(rootWorkspace.luaUtils.Promise)
-type Promise<T> = PromiseModule.Promise<T>
+type Promise<T> = LuauPolyfill.Promise<T>
 local PromiseOrValueModule = require(rootWorkspace.jsutils.PromiseOrValue)
 type PromiseOrValue<T> = PromiseOrValueModule.PromiseOrValue<T>
 
@@ -110,7 +110,7 @@ exports.graphqlSync = function(args: GraphQLArgs): ExecutionResult
 	return result
 end
 
-function graphqlImpl(args: GraphQLArgs):PromiseOrValue<ExecutionResult>
+function graphqlImpl(args: GraphQLArgs): PromiseOrValue<ExecutionResult>
 	local schema = args.schema
 	local source = args.source
 	local rootValue = args.rootValue

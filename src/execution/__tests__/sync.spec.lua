@@ -4,10 +4,10 @@ return function()
 	local executionWorkspace = script.Parent.Parent
 	local srcWorkspace = executionWorkspace.Parent
 
-	-- ROBLOX deviation: utils
-	local LuauPolyfillModule = require(srcWorkspace.Parent.LuauPolyfill)
-	local Object = LuauPolyfillModule.Object
-	local Array = LuauPolyfillModule.Array
+	local LuauPolyfill = require(srcWorkspace.Parent.LuauPolyfill)
+	local Array = LuauPolyfill.Array
+	local Object = LuauPolyfill.Object
+
 	local Promise = require(srcWorkspace.Parent.Promise)
 	local HttpService = game:GetService("HttpService")
 	local inspect = require(srcWorkspace.jsutils.inspect).inspect
@@ -70,14 +70,11 @@ return function()
 			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 			--]]
 			expect(Object.keys(result)).toEqual({ "errors" })
-			expect(result.errors).toHaveSameMembers(
+			expect(result.errors).toHaveSameMembers({
 				{
-					{
-						message = "Must provide an operation.",
-					},
+					message = "Must provide an operation.",
 				},
-				true
-			)
+			}, true)
 		end)
 
 		it("does not return a Promise if fields are all synchronous", function()
@@ -170,14 +167,11 @@ return function()
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toEqual({ "errors" })
-				expect(result.errors).toHaveSameMembers(
+				expect(result.errors).toHaveSameMembers({
 					{
-						{
-							message = "Query root type must be provided.",
-						},
+						message = "Query root type must be provided.",
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("does not return a Promise for syntax errors", function()
@@ -191,20 +185,17 @@ return function()
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toEqual({ "errors" })
-				expect(result.errors).toHaveSameMembers(
+				expect(result.errors).toHaveSameMembers({
 					{
-						{
-							message = "Syntax Error: Expected Name, found \"{\".",
-							locations = {
-								{
-									line = 1,
-									column = 29,
-								},
+						message = 'Syntax Error: Expected Name, found "{".',
+						locations = {
+							{
+								line = 1,
+								column = 29,
 							},
 						},
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("does not return a Promise for validation errors", function()
@@ -224,7 +215,10 @@ return function()
 					return HttpService:JSONDecode(inspect(err_))
 				end
 				-- ROBLOX deviation: upstream only compares enumerable properties
-				expect(Array.map(result.errors, enumerableOnly)).toEqual(Array.map(validationErrors, enumerableOnly), true)
+				expect(Array.map(result.errors, enumerableOnly)).toEqual(
+					Array.map(validationErrors, enumerableOnly),
+					true
+				)
 			end)
 
 			it("does not return a Promise for sync execution", function()

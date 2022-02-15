@@ -161,5 +161,5 @@ extend schema @onSchema {
 ]]
 
 return {
-  kitchenSinkSDL = kitchenSinkSDL
+	kitchenSinkSDL = kitchenSinkSDL,
 }

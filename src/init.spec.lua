@@ -8,6 +8,9 @@ return function()
 	local toBeOneOf = require(TestMatchers.toBeOneOf)
 	local toThrow = require(TestMatchers.toThrow)
 	local toBeNaN = require(TestMatchers.toBeNaN)
+	local Packages = script.Parent.Parent
+	local JestGlobals = require(Packages.Dev.JestGlobals)
+	local jestExpect = JestGlobals.expect
 
 	beforeAll(function()
 		-- ROBLOX FIXME: roblox-cli has special, hard-coded types for TestEZ that break when we
@@ -22,6 +25,9 @@ return function()
 			toBeOneOf = toBeOneOf,
 			toThrow = toThrow,
 			toBeNaN = toBeNaN,
+		})
+		jestExpect.extend({
+			toHaveSameMembers = toHaveSameMembers,
 		})
 	end)
 end

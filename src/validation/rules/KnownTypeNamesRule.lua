@@ -1,26 +1,25 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/validation/rules/KnownTypeNamesRule.js
 
-local root = script.Parent.Parent.Parent
-local jsutils = root.jsutils
+local srcWorkspace = script.Parent.Parent.Parent
+local rootWorkspace = srcWorkspace.Parent
+local jsutils = srcWorkspace.jsutils
 
--- ROBLOX deviation: use Map type
-local Map = require(root.luaUtils.Map).Map
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local Map = LuauPolyfill.Map
+local Object = LuauPolyfill.Object
 
 local didYouMean = require(jsutils.didYouMean).didYouMean
 local suggestionList = require(jsutils.suggestionList).suggestionList
-local GraphQLError = require(root.error.GraphQLError).GraphQLError
-local language = root.language
+local GraphQLError = require(srcWorkspace.error.GraphQLError).GraphQLError
+local language = srcWorkspace.language
 local predicates = require(language.predicates)
 local isTypeDefinitionNode = predicates.isTypeDefinitionNode
 local isTypeSystemDefinitionNode = predicates.isTypeSystemDefinitionNode
 local isTypeSystemExtensionNode = predicates.isTypeSystemExtensionNode
-local typeDirectory = root.type
+local typeDirectory = srcWorkspace.type
 local specifiedScalarTypes = require(typeDirectory.scalars).specifiedScalarTypes
 local introspectionTypes = require(typeDirectory.introspection).introspectionTypes
-local Array = require(root.luaUtils.Array)
-local PackagesWorkspace = root.Parent
-local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
-local Object = LuauPolyfill.Object
 
 local exports = {}
 
@@ -72,10 +71,9 @@ exports.KnownTypeNamesRule = function(context)
 					isSDL and Array.concat(standardTypeNames, typeNames) or typeNames
 				)
 
-				context:reportError(GraphQLError.new(
-					("Unknown type \"%s\"."):format(typeName) .. didYouMean(suggestedTypes),
-					node
-				))
+				context:reportError(
+					GraphQLError.new(('Unknown type "%s".'):format(typeName) .. didYouMean(suggestedTypes), node)
+				)
 			end
 		end,
 	}

@@ -1,8 +1,9 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/keyMap.js
-type Array<T> = { [number]: T }
-local MapModule = require(script.Parent.Parent.luaUtils.Map)
-local Map = MapModule.Map
-type Map<T, V> = MapModule.Map<T, V>
+local rootWorkspace = script.Parent.Parent.Parent
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+local Map = LuauPolyfill.Map
+type Array<T> = LuauPolyfill.Array<T>
+type Map<T, V> = LuauPolyfill.Map<T, V>
 
 --[[
  * Creates a keyed JS object from an array, given a function to produce the keys
@@ -27,10 +28,7 @@ type Map<T, V> = MapModule.Map<T, V>
  *     const jennyEntry = entriesByName['Jenny']
  *
  ]]
-local function keyMapOrdered(
-	list: Array<any>,
-	keyFn: (any) -> string
-): Map<string, any>
+local function keyMapOrdered(list: Array<any>, keyFn: (any) -> string): Map<string, any>
 	local map = Map.new()
 	for i = 1, #list do
 		local item = list[i]

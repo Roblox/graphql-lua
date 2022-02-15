@@ -2,22 +2,24 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local root = validationWorkspace.Parent
-	local jsutils = root.jsutils
+	local srcWorkspace = validationWorkspace.Parent
+	local Packages = srcWorkspace.Parent
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Error = LuauPolyfill.Error
+
+	local jsutils = srcWorkspace.jsutils
 	local inspect = require(jsutils.inspect).inspect
-	local typeWorkspace = root.type
+	local typeWorkspace = srcWorkspace.type
 	local GraphQLSchema = require(typeWorkspace.schema).GraphQLSchema
 	local scalars = require(typeWorkspace.scalars)
 	local GraphQLString = scalars.GraphQLString
 	local definition = require(typeWorkspace.definition)
 	local GraphQLScalarType = definition.GraphQLScalarType
 	local GraphQLObjectType = definition.GraphQLObjectType
-	local ValuesOfCorrectTypeRule = require(validationWorkspace.rules.ValuesOfCorrectTypeRule)
-		.ValuesOfCorrectTypeRule
+	local ValuesOfCorrectTypeRule = require(validationWorkspace.rules.ValuesOfCorrectTypeRule).ValuesOfCorrectTypeRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 	local expectValidationErrorsWithSchema = harness.expectValidationErrorsWithSchema
-	local Error = require(root.luaUtils.Error)
 
 	local function expectErrors(expect_, queryStr: string)
 		-- ROBLOX deviation: we append a new line at the begining of the
@@ -30,12 +32,7 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectValidationErrorsWithSchema(
-			expect_,
-			schema,
-			ValuesOfCorrectTypeRule,
-			queryStr
-		)
+		return expectValidationErrorsWithSchema(expect_, schema, ValuesOfCorrectTypeRule, queryStr)
 	end
 
 	local function expectValid(expect_, queryStr: string)
@@ -49,278 +46,346 @@ return function()
 	describe("Validate: Values of correct type", function()
 		describe("Valid values", function()
 			it("Good int value", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							intArgField(intArg: 2)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Good negative int value", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							intArgField(intArg: -2)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Good boolean value", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							booleanArgField(booleanArg: true)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Good string value", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							stringArgField(stringArg: "foo")
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Good float value", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							floatArgField(floatArg: 1.1)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Good negative float value", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							floatArgField(floatArg: -1.1)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Int into Float", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							floatArgField(floatArg: 1)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Int into ID", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							idArgField(idArg: 1)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("String into ID", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							idArgField(idArg: "someIdString")
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Good enum value", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						dog {
 							doesKnowCommand(dogCommand: SIT)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Enum with undefined value", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							enumArgField(enumArg: UNKNOWN)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Enum with null value", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							enumArgField(enumArg: NO_FUR)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("null into nullable type", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							intArgField(intArg: null)
 						}
 					}
-				]])
-				expectValid(expect, [[
+				]]
+				)
+				expectValid(
+					expect,
+					[[
 					{
 						dog(a: null, b: null, c:{ requiredField: true, intField: null }) {
 							name
 						}
 					}
-				]])
+				]]
+				)
 			end)
 		end)
 
 		describe("Invalid String values", function()
 			it("Int into String", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             stringArgField(stringArg: 1)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "String cannot represent a non string value: 1",
-						locations = {{ line = 4, column = 39 }},
+						locations = { { line = 4, column = 39 } },
 					},
 				})
 			end)
 
 			it("Float into String", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             stringArgField(stringArg: 1.0)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "String cannot represent a non string value: 1.0",
-						locations = {{ line = 4, column = 39 }},
+						locations = { { line = 4, column = 39 } },
 					},
 				})
 			end)
 
 			it("Boolean into String", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             stringArgField(stringArg: true)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "String cannot represent a non string value: true",
-						locations = {{ line = 4, column = 39 }},
+						locations = { { line = 4, column = 39 } },
 					},
 				})
 			end)
 
 			it("Unquoted String into String", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             stringArgField(stringArg: BAR)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "String cannot represent a non string value: BAR",
-						locations = {{ line = 4, column = 39 }},
+						locations = { { line = 4, column = 39 } },
 					},
 				})
 			end)
 		end)
 
 		describe("Invalid Int values", function()
-
 			it("String into Int", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             intArgField(intArg: "3")
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Int cannot represent non-integer value: "3"',
-						locations = {{ line = 4, column = 33 }},
+						locations = { { line = 4, column = 33 } },
 					},
 				})
 			end)
 
 			it("Big Int into Int", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             intArgField(intArg: 829384293849283498239482938)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "Int cannot represent non 32-bit signed integer value: 829384293849283498239482938",
-						locations = {{ line = 4, column = 33 }},
+						locations = { { line = 4, column = 33 } },
 					},
 				})
 			end)
 
 			it("Unquoted String into Int", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             intArgField(intArg: FOO)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "Int cannot represent non-integer value: FOO",
-						locations = {{ line = 4, column = 33 }},
+						locations = { { line = 4, column = 33 } },
 					},
 				})
 			end)
 
 			it("Simple Float into Int", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             intArgField(intArg: 3.0)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "Int cannot represent non-integer value: 3.0",
-						locations = {{ line = 4, column = 33 }},
+						locations = { { line = 4, column = 33 } },
 					},
 				})
 			end)
 
 			it("Float into Int", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             intArgField(intArg: 3.333)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "Int cannot represent non-integer value: 3.333",
-						locations = {{ line = 4, column = 33 }},
+						locations = { { line = 4, column = 33 } },
 					},
 				})
 			end)
@@ -328,46 +393,55 @@ return function()
 
 		describe("Invalid Float values", function()
 			it("String into Float", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             floatArgField(floatArg: "3.333")
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Float cannot represent non numeric value: "3.333"',
-						locations = {{ line = 4, column = 37 }},
+						locations = { { line = 4, column = 37 } },
 					},
 				})
 			end)
 
 			it("Boolean into Float", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             floatArgField(floatArg: true)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "Float cannot represent non numeric value: true",
-						locations = {{ line = 4, column = 37 }},
+						locations = { { line = 4, column = 37 } },
 					},
 				})
 			end)
 
 			it("Unquoted into Float", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             floatArgField(floatArg: FOO)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "Float cannot represent non numeric value: FOO",
-						locations = {{ line = 4, column = 37 }},
+						locations = { { line = 4, column = 37 } },
 					},
 				})
 			end)
@@ -375,61 +449,73 @@ return function()
 
 		describe("Invalid Boolean value", function()
 			it("Int into Boolean", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             booleanArgField(booleanArg: 2)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "Boolean cannot represent a non boolean value: 2",
-						locations = {{ line = 4, column = 41 }},
+						locations = { { line = 4, column = 41 } },
 					},
 				})
 			end)
 
 			it("Float into Boolean", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             booleanArgField(booleanArg: 1.0)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "Boolean cannot represent a non boolean value: 1.0",
-						locations = {{ line = 4, column = 41 }},
+						locations = { { line = 4, column = 41 } },
 					},
 				})
 			end)
 
 			it("String into Boolean", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             booleanArgField(booleanArg: "true")
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Boolean cannot represent a non boolean value: "true"',
-						locations = {{ line = 4, column = 41 }},
+						locations = { { line = 4, column = 41 } },
 					},
 				})
 			end)
 
 			it("Unquoted into Boolean", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             booleanArgField(booleanArg: TRUE)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "Boolean cannot represent a non boolean value: TRUE",
-						locations = {{ line = 4, column = 41 }},
+						locations = { { line = 4, column = 41 } },
 					},
 				})
 			end)
@@ -437,46 +523,55 @@ return function()
 
 		describe("Invalid ID value", function()
 			it("Float into ID", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             idArgField(idArg: 1.0)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "ID cannot represent a non-string and non-integer value: 1.0",
-						locations = {{ line = 4, column = 31 }},
+						locations = { { line = 4, column = 31 } },
 					},
 				})
 			end)
 
 			it("Boolean into ID", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             idArgField(idArg: true)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "ID cannot represent a non-string and non-integer value: true",
-						locations = {{ line = 4, column = 31 }},
+						locations = { { line = 4, column = 31 } },
 					},
 				})
 			end)
 
 			it("Unquoted into ID", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             idArgField(idArg: SOMETHING)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "ID cannot represent a non-string and non-integer value: SOMETHING",
-						locations = {{ line = 4, column = 31 }},
+						locations = { { line = 4, column = 31 } },
 					},
 				})
 			end)
@@ -484,91 +579,109 @@ return function()
 
 		describe("Invalid Enum value", function()
 			it("Int into Enum", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           dog {
             doesKnowCommand(dogCommand: 2)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Enum "DogCommand" cannot represent non-enum value: 2.',
-						locations = {{ line = 4, column = 41 }},
+						locations = { { line = 4, column = 41 } },
 					},
 				})
 			end)
 
 			it("Float into Enum", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           dog {
             doesKnowCommand(dogCommand: 1.0)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Enum "DogCommand" cannot represent non-enum value: 1.0.',
-						locations = {{ line = 4, column = 41 }},
+						locations = { { line = 4, column = 41 } },
 					},
 				})
 			end)
 
 			it("String into Enum", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           dog {
             doesKnowCommand(dogCommand: "SIT")
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Enum "DogCommand" cannot represent non-enum value: "SIT". Did you mean the enum value "SIT"?',
-						locations = {{ line = 4, column = 41 }},
+						locations = { { line = 4, column = 41 } },
 					},
 				})
 			end)
 
 			it("Boolean into Enum", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           dog {
             doesKnowCommand(dogCommand: true)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Enum "DogCommand" cannot represent non-enum value: true.',
-						locations = {{ line = 4, column = 41 }},
+						locations = { { line = 4, column = 41 } },
 					},
 				})
 			end)
 
 			it("Unknown Enum Value into Enum", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           dog {
             doesKnowCommand(dogCommand: JUGGLE)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Value "JUGGLE" does not exist in "DogCommand" enum.',
-						locations = {{ line = 4, column = 41 }},
+						locations = { { line = 4, column = 41 } },
 					},
 				})
 			end)
 
 			it("Different case Enum Value into Enum", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           dog {
             doesKnowCommand(dogCommand: sit)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Value "sit" does not exist in "DogCommand" enum. Did you mean the enum value "SIT"?',
-						locations = {{ line = 4, column = 41 }},
+						locations = { { line = 4, column = 41 } },
 					},
 				})
 			end)
@@ -576,73 +689,91 @@ return function()
 
 		describe("Valid List value", function()
 			it("Good list value", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 			{
 			  complicatedArgs {
 				stringListArgField(stringListArg: ["one", null, "two"])
 			  }
 			}
-				]])
+				]]
+				)
 			end)
 
 			it("Empty list value", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 			{
 			  complicatedArgs {
 				stringListArgField(stringListArg: [])
 			  }
 			}
-				]])
+				]]
+				)
 			end)
 
 			it("Null value", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 			{
 			  complicatedArgs {
 				stringListArgField(stringListArg: null)
 			  }
 			}
-				]])
+				]]
+				)
 			end)
 
 			it("Single value into List", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 			{
 			  complicatedArgs {
 				stringListArgField(stringListArg: "one")
 			  }
 			}
-				]])
+				]]
+				)
 			end)
 		end)
 
 		describe("Invalid List value", function()
 			it("Incorrect item type", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             stringListArgField(stringListArg: ["one", 2])
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "String cannot represent a non string value: 2",
-						locations = {{ line = 4, column = 55 }},
+						locations = { { line = 4, column = 55 } },
 					},
 				})
 			end)
 
 			it("Single value of incorrect type", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             stringListArgField(stringListArg: 1)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "String cannot represent a non string value: 1",
-						locations = {{ line = 4, column = 47 }},
+						locations = { { line = 4, column = 47 } },
 					},
 				})
 			end)
@@ -650,152 +781,191 @@ return function()
 
 		describe("Valid non-nullable value", function()
 			it("Arg on optional arg", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						dog {
 							isHouseTrained(atOtherHomes: true)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("No Arg on optional arg", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						dog {
 							isHouseTrained
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Multiple args", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleReqs(req1: 1, req2: 2)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Multiple args reverse order", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleReqs(req2: 2, req1: 1)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("No args on multiple optional", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleOpts
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("One arg on multiple optional", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleOpts(opt1: 1)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Second arg on multiple optional", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleOpts(opt2: 1)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Multiple required args on mixedList", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleOptAndReq(req1: 3, req2: 4)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Multiple required and one optional arg on mixedList", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleOptAndReq(req1: 3, req2: 4, opt1: 5)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("All required and optional args on mixedList", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleOptAndReq(req1: 3, req2: 4, opt1: 5, opt2: 6)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 		end)
 
 		describe("Invalid non-nullable value", function()
 			it("Incorrect value type", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             multipleReqs(req2: "two", req1: "one")
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Int cannot represent non-integer value: "two"',
-						locations = {{ line = 4, column = 32 }},
+						locations = { { line = 4, column = 32 } },
 					},
 					{
 						message = 'Int cannot represent non-integer value: "one"',
-						locations = {{ line = 4, column = 45 }},
+						locations = { { line = 4, column = 45 } },
 					},
 				})
 			end)
 
 			it("Incorrect value and missing argument (ProvidedRequiredArgumentsRule)", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             multipleReqs(req1: "one")
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Int cannot represent non-integer value: "one"',
-						locations = {{ line = 4, column = 32 }},
+						locations = { { line = 4, column = 32 } },
 					},
 				})
 			end)
 
 			it("Null value", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             multipleReqs(req1: null)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Expected value of type "Int!", found null.',
-						locations = {{ line = 4, column = 32 }},
+						locations = { { line = 4, column = 32 } },
 					},
 				})
 			end)
@@ -803,47 +973,61 @@ return function()
 
 		describe("Valid input object value", function()
 			it("Optional arg, despite required field in type", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							complexArgField
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Partial object, only required", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							complexArgField(complexArg: { requiredField: true })
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Partial object, required field can be falsy", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							complexArgField(complexArg: { requiredField: false })
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Partial object, including required", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							complexArgField(complexArg: { requiredField: true, intField: 4 })
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Full object", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							complexArgField(complexArg: {
@@ -855,11 +1039,14 @@ return function()
 							})
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Full object with fields in different order", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							complexArgField(complexArg: {
@@ -871,28 +1058,34 @@ return function()
 							})
 						}
 					}
-				]])
+				]]
+				)
 			end)
 		end)
 
 		describe("Invalid input object value", function()
 			it("Partial object, missing required", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             complexArgField(complexArg: { intField: 4 })
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Field "ComplexInput.requiredField" of required type "Boolean!" was not provided.',
-						locations = {{ line = 4, column = 41 }},
+						locations = { { line = 4, column = 41 } },
 					},
 				})
 			end)
 
 			it("Partial object, invalid field type", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             complexArgField(complexArg: {
@@ -901,16 +1094,19 @@ return function()
             })
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "String cannot represent a non string value: 2",
-						locations = {{ line = 5, column = 40 }},
+						locations = { { line = 5, column = 40 } },
 					},
 				})
 			end)
 
 			it("Partial object, null to non-null field", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             complexArgField(complexArg: {
@@ -919,16 +1115,19 @@ return function()
             })
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Expected value of type "Boolean!", found null.',
-						locations = {{ line = 6, column = 29 }},
+						locations = { { line = 6, column = 29 } },
 					},
 				})
 			end)
 
 			it("Partial object, unknown field arg", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             complexArgField(complexArg: {
@@ -937,10 +1136,11 @@ return function()
             })
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Field "invalidField" is not defined by type "ComplexInput". Did you mean "intField"?',
-						locations = {{ line = 6, column = 15 }},
+						locations = { { line = 6, column = 15 } },
 					},
 				})
 			end)
@@ -949,9 +1149,7 @@ return function()
 				local customScalar = GraphQLScalarType.new({
 					name = "Invalid",
 					parseValue = function(value)
-						error(Error.new(
-							("Invalid scalar is always invalid: %s"):format(inspect(value))
-						))
+						error(Error.new(("Invalid scalar is always invalid: %s"):format(inspect(value))))
 					end,
 				})
 				local schema = GraphQLSchema.new({
@@ -960,22 +1158,18 @@ return function()
 						fields = {
 							invalidArg = {
 								type = GraphQLString,
-								args = { arg = {type = customScalar} },
+								args = { arg = { type = customScalar } },
 							},
 						},
 					}),
 				})
 
-				local expectedErrors = expectErrorsWithSchema(
-					expect,
-					schema,
-					"{ invalidArg(arg: 123) }"
-				)
+				local expectedErrors = expectErrorsWithSchema(expect, schema, "{ invalidArg(arg: 123) }")
 
 				expectedErrors.toEqual({
 					{
 						message = 'Expected value of type "Invalid", found 123; Invalid scalar is always invalid: 123',
-						locations = {{ line = 1, column = 19 }},
+						locations = { { line = 1, column = 19 } },
 					},
 				})
 				-- ROBLOX deviation: TestEZ expectation does not let us to that and we
@@ -996,7 +1190,7 @@ return function()
 						fields = {
 							invalidArg = {
 								type = GraphQLString,
-								args = { arg = {type = customScalar} },
+								args = { arg = { type = customScalar } },
 							},
 						},
 					}),
@@ -1005,7 +1199,7 @@ return function()
 				expectErrorsWithSchema(expect, schema, "{ invalidArg(arg: 123) }").toEqual({
 					{
 						message = 'Expected value of type "CustomScalar", found 123.',
-						locations = {{ line = 1, column = 19 }},
+						locations = { { line = 1, column = 19 } },
 					},
 				})
 			end)
@@ -1021,27 +1215,33 @@ return function()
 							anyArg = {
 								type = GraphQLString,
 								args = {
-									arg = {type = customScalar},
+									arg = { type = customScalar },
 								},
 							},
 						},
 					}),
 				})
 
-				expectValidWithSchema(expect, schema, [[
+				expectValidWithSchema(
+					expect,
+					schema,
+					[[
 					{
 						test1: anyArg(arg: 123)
 						test2: anyArg(arg: "abc")
 						test3: anyArg(arg: [123, "abc"])
 						test4: anyArg(arg: {deep: [123, "abc"]})
 					}
-				]])
+				]]
+				)
 			end)
 		end)
 
 		describe("Directive arguments", function()
 			it("with directives of valid types", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						dog @include(if: true) {
 							name
@@ -1050,24 +1250,28 @@ return function()
 							name
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("with directive with incorrect types", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           dog @include(if: "yes") {
             name @skip(if: ENUM)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Boolean cannot represent a non boolean value: "yes"',
-						locations = {{ line = 3, column = 28 }},
+						locations = { { line = 3, column = 28 } },
 					},
 					{
 						message = "Boolean cannot represent a non boolean value: ENUM",
-						locations = {{ line = 4, column = 28 }},
+						locations = { { line = 4, column = 28 } },
 					},
 				})
 			end)
@@ -1075,7 +1279,9 @@ return function()
 
 		describe("Variable default values", function()
 			it("variables with valid default values", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					query WithDefaultValues(
 						$a: Int = 1,
 						$b: String = "ok",
@@ -1084,11 +1290,14 @@ return function()
 					) {
 						dog { name }
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("variables with valid default null values", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					query WithDefaultValues(
 						$a: Int = null,
 						$b: String = null,
@@ -1096,11 +1305,14 @@ return function()
 					) {
 						dog { name }
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("variables with invalid default null values", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         query WithDefaultValues(
           $a: Int! = null,
           $b: String! = null,
@@ -1108,24 +1320,27 @@ return function()
         ) {
           dog { name }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Expected value of type "Int!", found null.',
-						locations = {{ line = 3, column = 22 }},
+						locations = { { line = 3, column = 22 } },
 					},
 					{
 						message = 'Expected value of type "String!", found null.',
-						locations = {{ line = 4, column = 25 }},
+						locations = { { line = 4, column = 25 } },
 					},
 					{
 						message = 'Expected value of type "Boolean!", found null.',
-						locations = {{ line = 5, column = 47 }},
+						locations = { { line = 5, column = 47 } },
 					},
 				})
 			end)
 
 			it("variables with invalid default values", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         query InvalidDefaultValues(
           $a: Int = "one",
           $b: String = 4,
@@ -1133,63 +1348,73 @@ return function()
         ) {
           dog { name }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Int cannot represent non-integer value: "one"',
-						locations = {{ line = 3, column = 21 }},
+						locations = { { line = 3, column = 21 } },
 					},
 					{
 						message = "String cannot represent a non string value: 4",
-						locations = {{ line = 4, column = 24 }},
+						locations = { { line = 4, column = 24 } },
 					},
 					{
 						message = 'Expected value of type "ComplexInput", found "NotVeryComplex".',
-						locations = {{ line = 5, column = 30 }},
+						locations = { { line = 5, column = 30 } },
 					},
 				})
 			end)
 
 			it("variables with complex invalid default values", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         query WithDefaultValues(
           $a: ComplexInput = { requiredField: 123, intField: "abc" }
         ) {
           dog { name }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = "Boolean cannot represent a non boolean value: 123",
-						locations = {{ line = 3, column = 47 }},
+						locations = { { line = 3, column = 47 } },
 					},
 					{
 						message = 'Int cannot represent non-integer value: "abc"',
-						locations = {{ line = 3, column = 62 }},
+						locations = { { line = 3, column = 62 } },
 					},
 				})
 			end)
 
 			it("complex variables missing required field", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         query MissingRequiredField($a: ComplexInput = {intField: 3}) {
           dog { name }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Field "ComplexInput.requiredField" of required type "Boolean!" was not provided.',
-						locations = {{ line = 2, column = 55 }},
+						locations = { { line = 2, column = 55 } },
 					},
 				})
 			end)
 
 			it("list variables with invalid item", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         query InvalidItem($a: [String] = ["one", 2]) {
           dog { name }
         }
-							  ]]).toEqual({
+							  ]]
+				).toEqual({
 					{
-						message = 'String cannot represent a non string value: 2',
-						locations = {{ line = 2, column = 50 }},
+						message = "String cannot represent a non string value: 2",
+						locations = { { line = 2, column = 50 } },
 					},
 				})
 			end)

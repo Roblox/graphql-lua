@@ -1,32 +1,59 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/printer.js
-
-type Array<T> = { [number]: T }
+--!strict
 local srcWorkspace = script.Parent.Parent
-local root = srcWorkspace.Parent
+local Packages = srcWorkspace.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
+type Array<T> = LuauPolyfill.Array<T>
+local HttpService = game:GetService("HttpService")
+
+local astImport = require(script.Parent.ast)
+type ASTNode = astImport.ASTNode
+type ArgumentNode = astImport.ArgumentNode
+type ScalarTypeDefinitionNode = astImport.ScalarTypeDefinitionNode
+type ObjectTypeDefinitionNode = astImport.ObjectTypeDefinitionNode
+type FieldDefinitionNode = astImport.FieldDefinitionNode
+type InputValueDefinitionNode = astImport.InputValueDefinitionNode
+type InterfaceTypeDefinitionNode = astImport.InterfaceTypeDefinitionNode
+type UnionTypeDefinitionNode = astImport.UnionTypeDefinitionNode
+type EnumTypeDefinitionNode = astImport.EnumTypeDefinitionNode
+type EnumValueDefinitionNode = astImport.EnumValueDefinitionNode
+type InputObjectTypeDefinitionNode = astImport.InputObjectTypeDefinitionNode
+type ScalarTypeExtensionNode = astImport.ScalarTypeExtensionNode
+type ObjectTypeExtensionNode = astImport.ObjectTypeExtensionNode
+type InterfaceTypeExtensionNode = astImport.InterfaceTypeExtensionNode
+type UnionTypeExtensionNode = astImport.UnionTypeExtensionNode
+type EnumTypeExtensionNode = astImport.EnumTypeExtensionNode
+type InputObjectTypeExtensionNode = astImport.InputObjectTypeExtensionNode
+type OperationDefinitionNode = astImport.OperationDefinitionNode
+type OperationTypeDefinitionNode = astImport.OperationTypeDefinitionNode
+type VariableDefinitionNode = astImport.VariableDefinitionNode
+type FieldNode = astImport.FieldNode
+type InlineFragmentNode = astImport.InlineFragmentNode
+type FragmentDefinitionNode = astImport.FragmentDefinitionNode
+type FragmentSpreadNode = astImport.FragmentSpreadNode
+type ValueNode = astImport.ValueNode
+type EnumValueNode = astImport.EnumValueNode
+type SelectionSetNode = astImport.SelectionSetNode
 
 local visit = require(script.Parent.visitor).visit
 local printBlockString = require(script.Parent.blockString).printBlockString
 
-local Array = require(root.LuauPolyfill).Array
-local UtilArray = require(srcWorkspace.luaUtils.Array)
-
-local HttpService = game:GetService("HttpService")
-
--- deviation: pre-declare functions
+-- ROBLOX deviation: pre-declare functions, with repeat of types due to toposorting issue
 local printDocASTReducer
 local addDescription
-local join
+local join: (maybeArray: Array<any>?, separator: string?) -> string
 local block
-local wrap
-local indent
+local wrap: (start: string, maybeString: any?, end_: string?) -> string
+local indent: (str: string) -> string
 local isMultiline
-local hasMultilineItems
+local hasMultilineItems: (maybeArray: Array<any>?) -> boolean
 
 --[[**
 --  * Converts an AST into a string, using one set of reasonable
 --  * formatting rules.
 --  *]]
-local function print_(ast): string
+local function print_(ast: ASTNode): string
 	return visit(ast, { leave = printDocASTReducer })
 end
 
@@ -35,7 +62,8 @@ local MAX_LINE_LENGTH = 80
 -- ROBLOX deviation: addDescription needs to be declared above printDocASTReducer
 -- addDescription is called when declaring printDocASTReducer and Lua doesn't hoist functions
 function addDescription(cb)
-	return function(_self, node)
+	-- ROBLOX note: 15.x.x isn't typed here, 16.x.x ditches this approach, and it's tricky to reverse engineer the right thing
+	return function(_self, node: any)
 		return join({ node.description, cb(node) }, "\n")
 	end
 end
@@ -56,7 +84,7 @@ printDocASTReducer = {
 		return join(node.definitions, "\n\n") .. "\n"
 	end,
 
-	OperationDefinition = function(_self, node)
+	OperationDefinition = function(_self, node: OperationDefinitionNode): SelectionSetNode | string
 		local op = node.operation
 		local name = node.name
 		local varDefs = wrap("(", join(node.variableDefinitions, ", "), ")")
@@ -72,23 +100,24 @@ printDocASTReducer = {
 		then
 			return selectionSet
 		else
-			return join({ op, join({ name, varDefs }), directives, selectionSet }, " ")
+			-- ROBLOX FIXME Luau: Luau needs to understand mixed arrays
+			return join({ op, join({ name, varDefs }), directives, selectionSet } :: Array<any>, " ")
 		end
 	end,
 
-	VariableDefinition = function(_self, node)
+	VariableDefinition = function(_self, node: VariableDefinitionNode)
 		local variable = node.variable
 		local type_ = node.type
 		local defaultValue = node.defaultValue
 		local directives = node.directives
-		return variable .. ": " .. type_ .. wrap(" = ", defaultValue) .. wrap(" ", join(directives, " "))
+		return tostring(variable) .. ": " .. tostring(type_) .. wrap(" = ", defaultValue) .. wrap(" ", join(directives, " "))
 	end,
 
 	SelectionSet = function(_self, node)
 		return block(node.selections)
 	end,
 
-	Field = function(_self, node)
+	Field = function(_self, node: FieldNode)
 		local alias = node.alias
 		local name = node.name
 		local args = node.arguments
@@ -97,38 +126,41 @@ printDocASTReducer = {
 		local prefix = wrap("", alias, ": ") .. tostring(name)
 		local argsLine = prefix .. wrap("(", join(args, ", "), ")")
 
-		if utf8.len(argsLine) > MAX_LINE_LENGTH then
+		-- ROBLOX deviation: assert valid utf8 string, utf8.len can return nil
+		local argsLineLength = utf8.len(argsLine)
+		assert(argsLineLength ~= nil, "invalid utf8 string")
+
+		if argsLineLength > MAX_LINE_LENGTH then
 			argsLine = prefix .. wrap("(\n", indent(join(args, "\n")), "\n)")
 		end
 
-		return join({ argsLine, join(directives, " "), selectionSet }, " ")
+		-- ROBLOX FIXME Luau: Luau needs to understand mixed arrays
+		return join({ argsLine, join(directives, " "), selectionSet } :: Array<any>, " ")
 	end,
 
-	Argument = function(_self, node)
+	Argument = function(_self, node: ArgumentNode)
 		local name = node.name
 		local value = node.value
-		return name .. ": " .. value
+		return tostring(name) .. ": " .. tostring(value)
 	end,
 
 	-- Fragments
 
-	FragmentSpread = function(_self, node)
+	FragmentSpread = function(_self, node: FragmentSpreadNode)
 		local name = node.name
 		local directives = node.directives
-		return "..." .. name .. wrap(" ", join(directives, " "))
+		return "..." .. tostring(name) .. wrap(" ", join(directives, " "))
 	end,
 
-	InlineFragment = function(_self, node)
+	InlineFragment = function(_self, node: InlineFragmentNode)
 		local typeCondition = node.typeCondition
 		local directives = node.directives
 		local selectionSet = node.selectionSet
-		return join(
-			{ "...", wrap("on ", typeCondition), join(directives, " "), selectionSet },
-			" "
-		)
+		-- ROBLOX FIXME Luau: Luau needs to understand mixed arrays
+		return join({ "...", wrap("on ", typeCondition), join(directives, " "), selectionSet } :: Array<any>, " ")
 	end,
 
-	FragmentDefinition = function(_self, node)
+	FragmentDefinition = function(_self, node: FragmentDefinitionNode)
 		local name = node.name
 		local typeCondition = node.typeCondition
 		local variableDefinitions = node.variableDefinitions
@@ -138,14 +170,14 @@ printDocASTReducer = {
 		-- or removed in the future.
 		-- ROBLOX deviation: inlined output for formatting
 		local output = "fragment "
-			.. name
+			.. tostring(name)
 			.. wrap("(", join(variableDefinitions, ", "), ")")
 			.. " "
 			.. "on "
-			.. typeCondition
+			.. tostring(typeCondition)
 			.. " "
 			.. wrap("", join(directives, " "), " ")
-			.. selectionSet
+			.. tostring(selectionSet)
 		return output
 	end,
 
@@ -162,20 +194,12 @@ printDocASTReducer = {
 	StringValue = function(_self, node, key)
 		local value = node.value
 		local isBlockingString = node.block
-		if isBlockingString then
-			return printBlockString(
+		return if isBlockingString
+			then printBlockString(
 				value,
-				(function()
-					if key == "description" then
-						return ""
-					else
-						return "  "
-					end
-				end)()
+				if key == "description" then "" else "  "
 			)
-		else
-			return HttpService:JSONEncode(value)
-		end
+			else HttpService:JSONEncode(value)
 	end,
 	BooleanValue = function(_self, node)
 		local value = node.value
@@ -192,15 +216,15 @@ printDocASTReducer = {
 		local value = node.value
 		return value
 	end,
-	ListValue = function(_self, node)
+	ListValue = function(_self, node: { values: Array<string> })
 		local values = node.values
 		return "[" .. join(values, ", ") .. "]"
 	end,
-	ObjectValue = function(_self, node)
+	ObjectValue = function(_self, node: { fields: Array<string> })
 		local fields = node.fields
 		return "{" .. join(fields, ", ") .. "}"
 	end,
-	ObjectField = function(_self, node)
+	ObjectField = function(_self, node: { name: string, value: string })
 		local name = node.name
 		local value = node.value
 		return name .. ": " .. value
@@ -211,7 +235,7 @@ printDocASTReducer = {
 	Directive = function(_self, node)
 		local name = node.name
 		local args = node.arguments
-		return "@" .. name .. wrap("(", join(args, ", "), ")")
+		return "@" .. tostring(name) .. wrap("(", join(args, ", "), ")")
 	end,
 
 	-- Type
@@ -222,73 +246,70 @@ printDocASTReducer = {
 	end,
 	ListType = function(_self, node)
 		local type_ = node.type
-		return "[" .. type_ .. "]"
+		return "[" .. tostring(type_) .. "]"
 	end,
 	NonNullType = function(_self, node)
 		local type_ = node.type
-		return type_ .. "!"
+		return tostring(type_) .. "!"
 	end,
 
 	-- Type System Definitions
 
-	SchemaDefinition = addDescription(function(node)
+	-- ROBLOX note: 15.x.x isn't typed here, 16.x.x ditches this approach, and it's tricky to reverse engineer the right thing
+	SchemaDefinition = addDescription(function(node: any)
 		local directives = node.directives
 		local operationTypes = node.operationTypes
-		return join({ "schema", join(directives, " "), block(operationTypes) }, " ")
+			-- ROBLOX FIXME Luau: Luau needs to understand mixed arrays
+			return join({ "schema", join(directives, " "), block(operationTypes) } :: Array<any>, " ")
 	end),
 
-	OperationTypeDefinition = function(_self, node)
+	OperationTypeDefinition = function(_self, node: OperationTypeDefinitionNode)
 		local operation = node.operation
 		local type_ = node.type
-		return operation .. ": " .. type_
+		return tostring(operation) .. ": " .. tostring(type_)
 	end,
 
-	ScalarTypeDefinition = addDescription(function(node)
+	ScalarTypeDefinition = addDescription(function(node: ScalarTypeDefinitionNode)
 		local name = node.name
 		local directives = node.directives
-		return join({ "scalar", name, join(directives, " ") }, " ")
+			-- ROBLOX FIXME Luau: Luau needs to understand mixed arrays
+			return join({ "scalar", name, join(directives, " ") } :: Array<any>, " ")
 	end),
 
-	ObjectTypeDefinition = addDescription(function(node)
+	ObjectTypeDefinition = addDescription(function(node: ObjectTypeDefinitionNode)
 		local name = node.name
 		local interfaces = node.interfaces
 		local directives = node.directives
 		local fields = node.fields
-		return join(
-			{
-				"type",
-				name,
-				wrap("implements ", join(interfaces, " & ")),
-				join(directives, " "),
-				block(fields),
-			},
-			" "
-		)
+		return join({
+			"type",
+			name,
+			wrap("implements ", join(interfaces, " & ")),
+			join(directives, " "),
+			block(fields),
+		} :: Array<any>, " ")
 	end),
 
-	FieldDefinition = addDescription(function(node)
+	FieldDefinition = addDescription(function(node: FieldDefinitionNode)
 		local name = node.name
 		local args = node.arguments
 		local type_ = node.type
 		local directives = node.directives
-		return name .. (function()
-			if hasMultilineItems(args) then
-				return wrap("(\n", indent(join(args, "\n")), "\n)")
-			else
-				return wrap("(", join(args, ", "), ")")
-			end
-		end)() .. ": " .. type_ .. wrap(" ", join(directives, " "))
+		return tostring(name)
+			.. (if hasMultilineItems(args)
+				then wrap("(\n", indent(join(args, "\n")), "\n)")
+				else wrap("(", join(args, ", "), ")"))
+			.. ": "
+			.. tostring(type_)
+			.. wrap(" ", join(directives, " "))
 	end),
 
-	InputValueDefinition = addDescription(function(node)
+	InputValueDefinition = addDescription(function(node: InputValueDefinitionNode)
 		local name = node.name
 		local type_ = node.type
 		local defaultValue = node.defaultValue
 		local directives = node.directives
-		return join(
-			{ name .. ": " .. type_, wrap("= ", defaultValue), join(directives, " ") },
-			" "
-		)
+		return join({ tostring(name) .. ": " .. tostring(type_), wrap("= ", defaultValue), join(directives, " ") }, " ")
 	end),
 
 	InterfaceTypeDefinition = addDescription(function(node)
@@ -296,37 +317,31 @@ printDocASTReducer = {
 		local interfaces = node.interfaces
 		local directives = node.directives
 		local fields = node.fields
-		return join(
-			{
-				"interface",
-				name,
-				wrap("implements ", join(interfaces, " & ")),
-				join(directives, " "),
-				block(fields),
-			},
-			" "
-		)
+		return join({
+			"interface",
+			name,
+			wrap("implements ", join(interfaces, " & ")),
+			join(directives, " "),
+			block(fields),
+		}, " ")
 	end),
 
 	UnionTypeDefinition = addDescription(function(node)
 		local name = node.name
 		local directives = node.directives
 		local types = node.types
-		return join(
-			{
-				"union",
-				name,
-				join(directives, " "),
-				(function()
-					if types and #types ~= 0 then
-						return "= " .. join(types, " | ")
-					else
-						return ""
-					end
-				end)(),
-			},
-			" "
-		)
+		return join({
+			"union",
+			name,
+			join(directives, " "),
+			(function()
+				if types and #types ~= 0 then
+					return "= " .. join(types, " | ")
+				else
+					return ""
+				end
+			end)(),
+		}, " ")
 	end),
 
 	EnumTypeDefinition = addDescription(function(node)
@@ -354,19 +369,24 @@ printDocASTReducer = {
 		local args = node.arguments
 		local repeatable = node.repeatable
 		local locations = node.locations
-		return "directive @" .. name .. (function()
-			if hasMultilineItems(args) then
-				return wrap("(\n", indent(join(args, "\n")), "\n)")
-			else
-				return wrap("(", join(args, ", "), ")")
-			end
-		end)() .. (function()
-			if repeatable then
-				return " repeatable"
-			else
-				return ""
-			end
-		end)() .. " on " .. join(locations, " | ")
+		return "directive @"
+			.. name
+			.. (function()
+				if hasMultilineItems(args) then
+					return wrap("(\n", indent(join(args, "\n")), "\n)")
+				else
+					return wrap("(", join(args, ", "), ")")
+				end
+			end)()
+			.. (function()
+				if repeatable then
+					return " repeatable"
+				else
+					return ""
+				end
+			end)()
+			.. " on "
+			.. join(locations, " | ")
 	end),
 
 	SchemaExtension = function(_self, node)
@@ -386,16 +406,13 @@ printDocASTReducer = {
 		local interfaces = node.interfaces
 		local directives = node.directives
 		local fields = node.fields
-		return join(
-			{
-				"extend type",
-				name,
-				wrap("implements ", join(interfaces, " & ")),
-				join(directives, " "),
-				block(fields),
-			},
-			" "
-		)
+		return join({
+			"extend type",
+			name,
+			wrap("implements ", join(interfaces, " & ")),
+			join(directives, " "),
+			block(fields),
+		}, " ")
 	end,
 
 	InterfaceTypeExtension = function(_self, node)
@@ -403,37 +420,31 @@ printDocASTReducer = {
 		local interfaces = node.interfaces
 		local directives = node.directives
 		local fields = node.fields
-		return join(
-			{
-				"extend interface",
-				name,
-				wrap("implements ", join(interfaces, " & ")),
-				join(directives, " "),
-				block(fields),
-			},
-			" "
-		)
+		return join({
+			"extend interface",
+			name,
+			wrap("implements ", join(interfaces, " & ")),
+			join(directives, " "),
+			block(fields),
+		}, " ")
 	end,
 
 	UnionTypeExtension = function(_self, node)
 		local name = node.name
 		local directives = node.directives
 		local types = node.types
-		return join(
-			{
-				"extend union",
-				name,
-				join(directives, " "),
-				(function()
-					if types and #types ~= 0 then
-						return "= " .. join(types, " | ")
-					else
-						return ""
-					end
-				end)(),
-			},
-			" "
-		)
+		return join({
+			"extend union",
+			name,
+			join(directives, " "),
+			(function()
+				if types and #types ~= 0 then
+					return "= " .. join(types, " | ")
+				else
+					return ""
+				end
+			end)(),
+		}, " ")
 	end,
 
 	EnumTypeExtension = function(_self, node)
@@ -455,12 +466,12 @@ printDocASTReducer = {
 --  * Given maybeArray, print an empty string if it is null or empty, otherwise
 --  * print all items together separated by separator if provided
 --  *]]
-function join(maybeArray: Array<string>?, separator: string?): string
+function join(maybeArray: Array<any>?, separator: string?): string
 	separator = separator or ""
 	if maybeArray then
-		return UtilArray.join(
+		return Array.join(
 			Array.filter(maybeArray, function(x)
-				return x and x ~= ""
+				return tostring(x) and x ~= ""
 			end),
 			separator
 		)
@@ -480,7 +491,7 @@ end
 --[[**
 --  * If maybeString is not nil or empty, then wrap with start and end, otherwise print an empty string.
 --  *]]
-function wrap(start: string, maybeString: string?, end_: string?): string
+function wrap(start: string, maybeString: any?, end_: string?): string
 	end_ = end_ or ""
 	if maybeString ~= nil and maybeString ~= "" then
 		-- ROBLOX FIXME: Luau nil refinement improvements needed to remove tostring(maybeString)
@@ -498,10 +509,10 @@ function indent(str: string): string
 end
 
 function isMultiline(str: string): boolean
-	return str:find("\n") ~= nil
+	return string.find(tostring(str), "\n") ~= nil
 end
 
-function hasMultilineItems(maybeArray: Array<string>?): boolean
+function hasMultilineItems(maybeArray: Array<any>?): boolean
 	return maybeArray ~= nil and Array.some(maybeArray, isMultiline)
 end
 
