@@ -1,16 +1,20 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/056fac955b7172e55b33e0a1b35b4ddb8951a99c/src/utilities/__tests__/extendSchema-test.js
 
 return function()
-	local root = script.Parent.Parent.Parent
-	local dedent = require(root.__testUtils__.dedent).dedent
-	local invariant = require(root.jsutils.invariant).invariant
-	local language = root.language
+	local srcWorkspace = script.Parent.Parent.Parent
+	local Packages = srcWorkspace.Parent
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Array = LuauPolyfill.Array
+
+	local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
+	local invariant = require(srcWorkspace.jsutils.invariant).invariant
+	local language = srcWorkspace.language
 	local Kind = require(language.kinds).Kind
 	local parse = require(language.parser).parse
 	local print_ = require(language.printer).print
-	local graphqlSync = require(root.graphql).graphqlSync
+	local graphqlSync = require(srcWorkspace.graphql).graphqlSync
 
-	local typeWorkspace = root.type
+	local typeWorkspace = srcWorkspace.type
 	local GraphQLSchema = require(typeWorkspace.schema).GraphQLSchema
 	local validateSchema = require(typeWorkspace.validate).validateSchema
 	local directives = require(typeWorkspace.directives)
@@ -30,13 +34,11 @@ return function()
 	local assertUnionType = definition.assertUnionType
 	local assertInterfaceType = definition.assertInterfaceType
 	local assertScalarType = definition.assertScalarType
-	local utilities = root.utilities
+	local utilities = srcWorkspace.utilities
 	local concatAST = require(utilities.concatAST).concatAST
 	local printSchema = require(utilities.printSchema).printSchema
 	local extendSchema = require(utilities.extendSchema).extendSchema
 	local buildSchema = require(utilities.buildASTSchema).buildSchema
-
-	local Array = require(root.luaUtils.Array)
 
 	local function printExtensionNodes(obj): string
 		invariant((obj and obj.extensionASTNodes) ~= nil)
@@ -47,10 +49,7 @@ return function()
 	end
 
 	local function printSchemaChanges(schema, extendedSchema): string
-		local schemaDefinitions = Array.map(
-			parse(printSchema(schema)).definitions,
-			print_
-		)
+		local schemaDefinitions = Array.map(parse(printSchema(schema)).definitions, print_)
 		local ast = parse(printSchema(extendedSchema))
 		return print_({
 			kind = Kind.DOCUMENT,
@@ -426,50 +425,30 @@ return function()
 
       directive @test(arg: Int) repeatable on FIELD | SCALAR
     ]])
-			local extendedTwiceSchema = extendSchema(
-				extendedSchema,
-				secondExtensionAST
-			)
+			local extendedTwiceSchema = extendSchema(extendedSchema, secondExtensionAST)
 
-			local extendedInOneGoSchema = extendSchema(
-				schema,
-				concatAST({firstExtensionAST, secondExtensionAST})
-			)
-			expect(printSchema(extendedInOneGoSchema)).to.equal(
-				printSchema(extendedTwiceSchema)
-			)
+			local extendedInOneGoSchema = extendSchema(schema, concatAST({ firstExtensionAST, secondExtensionAST }))
+			expect(printSchema(extendedInOneGoSchema)).to.equal(printSchema(extendedTwiceSchema))
 
 			local query = assertObjectType(extendedTwiceSchema:getType("Query"))
 			local someEnum = assertEnumType(extendedTwiceSchema:getType("SomeEnum"))
 			local someUnion = assertUnionType(extendedTwiceSchema:getType("SomeUnion"))
-			local someScalar = assertScalarType(
-				extendedTwiceSchema:getType("SomeScalar")
-			)
-			local someInput = assertInputObjectType(
-				extendedTwiceSchema:getType("SomeInput")
-			)
-			local someInterface = assertInterfaceType(
-				extendedTwiceSchema:getType("SomeInterface")
-			)
+			local someScalar = assertScalarType(extendedTwiceSchema:getType("SomeScalar"))
+			local someInput = assertInputObjectType(extendedTwiceSchema:getType("SomeInput"))
+			local someInterface = assertInterfaceType(extendedTwiceSchema:getType("SomeInterface"))
 
-			local testInput = assertInputObjectType(
-				extendedTwiceSchema:getType("TestInput")
-			)
+			local testInput = assertInputObjectType(extendedTwiceSchema:getType("TestInput"))
 			local testEnum = assertEnumType(extendedTwiceSchema:getType("TestEnum"))
 			local testUnion = assertUnionType(extendedTwiceSchema:getType("TestUnion"))
 			local testType = assertObjectType(extendedTwiceSchema:getType("TestType"))
-			local testInterface = assertInterfaceType(
-				extendedTwiceSchema:getType("TestInterface")
-			)
-			local testDirective = assertDirective(
-				extendedTwiceSchema:getDirective("test")
-			)
+			local testInterface = assertInterfaceType(extendedTwiceSchema:getType("TestInterface"))
+			local testDirective = assertDirective(extendedTwiceSchema:getDirective("test"))
 
-			expect(testType).toObjectContain({extensionASTNodes = nil})
-			expect(testEnum).toObjectContain({extensionASTNodes = nil})
-			expect(testUnion).toObjectContain({extensionASTNodes = nil})
-			expect(testInput).toObjectContain({extensionASTNodes = nil})
-			expect(testInterface).toObjectContain({extensionASTNodes = nil})
+			expect(testType).toObjectContain({ extensionASTNodes = nil })
+			expect(testEnum).toObjectContain({ extensionASTNodes = nil })
+			expect(testUnion).toObjectContain({ extensionASTNodes = nil })
+			expect(testInput).toObjectContain({ extensionASTNodes = nil })
+			expect(testInterface).toObjectContain({ extensionASTNodes = nil })
 
 			invariant(query.extensionASTNodes)
 			invariant(someScalar.extensionASTNodes)
@@ -478,67 +457,44 @@ return function()
 			invariant(someInput.extensionASTNodes)
 			invariant(someInterface.extensionASTNodes)
 
-			expect(Array.concat(
-				{
-					testInput.astNode,
-					testEnum.astNode,
-					testUnion.astNode,
-					testInterface.astNode,
-					testType.astNode,
-					testDirective.astNode,
-				},
-				query.extensionASTNodes,
-				someScalar.extensionASTNodes,
-				someEnum.extensionASTNodes,
-				someUnion.extensionASTNodes,
-				someInput.extensionASTNodes,
-				someInterface.extensionASTNodes
-			)).toHaveSameMembers(Array.concat(
-				firstExtensionAST.definitions,
-				secondExtensionAST.definitions
-			))
+			expect(
+				Array.concat(
+					{
+						testInput.astNode,
+						testEnum.astNode,
+						testUnion.astNode,
+						testInterface.astNode,
+						testType.astNode,
+						testDirective.astNode,
+					},
+					query.extensionASTNodes,
+					someScalar.extensionASTNodes,
+					someEnum.extensionASTNodes,
+					someUnion.extensionASTNodes,
+					someInput.extensionASTNodes,
+					someInterface.extensionASTNodes
+				)
+			).toHaveSameMembers(Array.concat(firstExtensionAST.definitions, secondExtensionAST.definitions))
 
 			local newField = query:getFields().newField
-			expect(printASTNode(newField)).to.equal(
-				"newField(testArg: TestInput): TestEnum"
-			)
+			expect(printASTNode(newField)).to.equal("newField(testArg: TestInput): TestEnum")
 			expect(printASTNode(newField.args[1])).to.equal("testArg: TestInput")
-			expect(printASTNode(query:getFields().oneMoreNewField)).to.equal(
-				"oneMoreNewField: TestUnion"
-			)
+			expect(printASTNode(query:getFields().oneMoreNewField)).to.equal("oneMoreNewField: TestUnion")
 
 			expect(printASTNode(someEnum:getValue("NEW_VALUE"))).to.equal("NEW_VALUE")
-			expect(printASTNode(someEnum:getValue("ONE_MORE_NEW_VALUE"))).to.equal(
-				"ONE_MORE_NEW_VALUE"
-			)
+			expect(printASTNode(someEnum:getValue("ONE_MORE_NEW_VALUE"))).to.equal("ONE_MORE_NEW_VALUE")
 
-			expect(printASTNode(someInput:getFields().newField)).to.equal(
-				"newField: String"
-			)
-			expect(printASTNode(someInput:getFields().oneMoreNewField)).to.equal(
-				"oneMoreNewField: String"
-			)
-			expect(printASTNode(someInterface:getFields().newField)).to.equal(
-				"newField: String"
-			)
-			expect(printASTNode(someInterface:getFields().oneMoreNewField)).to.equal(
-				"oneMoreNewField: String"
-			)
+			expect(printASTNode(someInput:getFields().newField)).to.equal("newField: String")
+			expect(printASTNode(someInput:getFields().oneMoreNewField)).to.equal("oneMoreNewField: String")
+			expect(printASTNode(someInterface:getFields().newField)).to.equal("newField: String")
+			expect(printASTNode(someInterface:getFields().oneMoreNewField)).to.equal("oneMoreNewField: String")
 
-			expect(printASTNode(testInput:getFields().testInputField)).to.equal(
-				"testInputField: TestEnum"
-			)
+			expect(printASTNode(testInput:getFields().testInputField)).to.equal("testInputField: TestEnum")
 
-			expect(printASTNode(testEnum:getValue("TEST_VALUE"))).to.equal(
-				"TEST_VALUE"
-			)
+			expect(printASTNode(testEnum:getValue("TEST_VALUE"))).to.equal("TEST_VALUE")
 
-			expect(printASTNode(testInterface:getFields().interfaceField)).to.equal(
-				"interfaceField: String"
-			)
-			expect(printASTNode(testType:getFields().interfaceField)).to.equal(
-				"interfaceField: String"
-			)
+			expect(printASTNode(testInterface:getFields().interfaceField)).to.equal("interfaceField: String")
+			expect(printASTNode(testType:getFields().interfaceField)).to.equal("interfaceField: String")
 			expect(printASTNode(testDirective.args[1])).to.equal("arg: Int")
 		end)
 
@@ -645,7 +601,7 @@ return function()
         someObject: SomeObject
       }
     ]])
-					local extendAST = parse([[
+			local extendAST = parse([[
 
       input NewInputObj {
         field1: Int
@@ -770,8 +726,7 @@ return function()
         newEnum: NewEnum
         newTree: [SomeObject]!
       }
-    ]]):format(newTypesSDL)
-			)
+    ]]):format(newTypesSDL))
 			local extendedSchema = extendSchema(schema, extendAST)
 
 			expect(validateSchema(extendedSchema)).toEqual({})
@@ -788,8 +743,7 @@ return function()
       }
 
       %s
-    ]]):format(newTypesSDL))
-			)
+    ]]):format(newTypesSDL)))
 		end)
 
 		it("extends objects by adding implemented new interfaces", function()
@@ -886,9 +840,7 @@ return function()
         anotherNewField: String
       }]])
 			local schemaWithNewTypes = extendSchema(schema, parse(newTypesSDL))
-			expect(printSchemaChanges(schema, schemaWithNewTypes)).to.equal(
-				newTypesSDL .. "\n"
-			)
+			expect(printSchemaChanges(schema, schemaWithNewTypes)).to.equal(newTypesSDL .. "\n")
 
 			local extendAST = parse([[
 
@@ -950,8 +902,7 @@ return function()
       }
 
       %s
-    ]]):format(newTypesSDL))
-			)
+    ]]):format(newTypesSDL)))
 		end)
 
 		it("extends interfaces by adding new fields", function()
@@ -973,7 +924,7 @@ return function()
         someInterface: SomeInterface
       }
     ]])
-					local extendAST = parse([[
+			local extendAST = parse([[
 
       extend interface SomeInterface {
         newField: String
@@ -1268,7 +1219,9 @@ return function()
 
 			expect(function()
 				return extendSchema(schema, extendAST)
-			end).toThrow('Enum value "SomeEnum.ONE" already exists in the schema. It cannot also be defined in this type extension.')
+			end).toThrow(
+				'Enum value "SomeEnum.ONE" already exists in the schema. It cannot also be defined in this type extension.'
+			)
 		end)
 
 		describe("can add additional root operation types", function()

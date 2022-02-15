@@ -10,9 +10,9 @@ local parseFloat = parseInt
 local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
 local Number = LuauPolyfill.Number
 local Object = LuauPolyfill.Object
-local Array = LuauPolyfill.Array
 
 local inspect = require(script.Parent.Parent.jsutils.inspect).inspect
 local isObjectLike = require(script.Parent.Parent.jsutils.isObjectLike).isObjectLike
@@ -80,19 +80,18 @@ local GraphQLInt = GraphQLScalarType.new({
 	parseValue = coerceInt,
 	parseLiteral = function(valueNode)
 		if valueNode.kind ~= Kind.INT then
-			error(GraphQLError.new(
-				("Int cannot represent non-integer value: %s"):format(print_(valueNode)),
-				valueNode
-			))
+			error(GraphQLError.new(("Int cannot represent non-integer value: %s"):format(print_(valueNode)), valueNode))
 		end
 
 		local num = parseInt(valueNode.value, 10)
 
 		if num > MAX_INT or num < MIN_INT then
-			error(GraphQLError.new(
-				("Int cannot represent non 32-bit signed integer value: %s"):format(valueNode.value),
-				valueNode
-			))
+			error(
+				GraphQLError.new(
+					("Int cannot represent non 32-bit signed integer value: %s"):format(valueNode.value),
+					valueNode
+				)
+			)
 		end
 
 		return num
@@ -138,10 +137,9 @@ local GraphQLFloat = GraphQLScalarType.new({
 	parseValue = coerceFloat,
 	parseLiteral = function(valueNode)
 		if valueNode.kind ~= Kind.FLOAT and valueNode.kind ~= Kind.INT then
-			error(GraphQLError.new(
-				("Float cannot represent non numeric value: %s"):format(print_(valueNode)),
-				valueNode
-			))
+			error(
+				GraphQLError.new(("Float cannot represent non numeric value: %s"):format(print_(valueNode)), valueNode)
+			)
 		end
 
 		return parseFloat(valueNode.value)
@@ -206,10 +204,12 @@ local GraphQLString = GraphQLScalarType.new({
 	parseValue = coerceString,
 	parseLiteral = function(valueNode)
 		if valueNode.kind ~= Kind.STRING then
-			error(GraphQLError.new(
-				("String cannot represent a non string value: %s"):format(print_(valueNode)),
-				valueNode
-			))
+			error(
+				GraphQLError.new(
+					("String cannot represent a non string value: %s"):format(print_(valueNode)),
+					valueNode
+				)
+			)
 		end
 
 		return valueNode.value
@@ -245,10 +245,12 @@ local GraphQLBoolean = GraphQLScalarType.new({
 	parseValue = coerceBoolean,
 	parseLiteral = function(valueNode)
 		if valueNode.kind ~= Kind.BOOLEAN then
-			error(GraphQLError.new(
-				("Boolean cannot represent a non boolean value: %s"):format(print_(valueNode)),
-				valueNode
-			))
+			error(
+				GraphQLError.new(
+					("Boolean cannot represent a non boolean value: %s"):format(print_(valueNode)),
+					valueNode
+				)
+			)
 		end
 
 		return valueNode.value
@@ -281,15 +283,17 @@ end
 
 local GraphQLID = GraphQLScalarType.new({
 	name = "ID",
-	description = "The `ID` scalar type represents a unique identifier, often used to refetch an object or as key for a cache. The ID type appears in a JSON response as a String; however, it is not intended to be human-readable. When expected as an input type, any string (such as `\"4\"`) or integer (such as `4`) input value will be accepted as an ID.",
+	description = 'The `ID` scalar type represents a unique identifier, often used to refetch an object or as key for a cache. The ID type appears in a JSON response as a String; however, it is not intended to be human-readable. When expected as an input type, any string (such as `"4"`) or integer (such as `4`) input value will be accepted as an ID.',
 	serialize = serializeID,
 	parseValue = coerceID,
 	parseLiteral = function(valueNode)
 		if valueNode.kind ~= Kind.STRING and valueNode.kind ~= Kind.INT then
-			error(GraphQLError.new(
-				"ID cannot represent a non-string and non-integer value: " .. print_(valueNode),
-				valueNode
-			))
+			error(
+				GraphQLError.new(
+					"ID cannot represent a non-string and non-integer value: " .. print_(valueNode),
+					valueNode
+				)
+			)
 		end
 
 		return valueNode.value

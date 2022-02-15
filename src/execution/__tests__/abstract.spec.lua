@@ -2,7 +2,19 @@
 
 return function()
 	local srcWorkspace = script.Parent.Parent.Parent
-	local PackagesWorkspace = srcWorkspace.Parent
+	local Packages = srcWorkspace.Parent
+
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Array = LuauPolyfill.Array
+	local Error = LuauPolyfill.Error
+	local Object = LuauPolyfill.Object
+	local instanceof = LuauPolyfill.instanceof
+
+	local inspect = require(srcWorkspace.jsutils.inspect).inspect
+	local NULL = require(srcWorkspace.luaUtils.null)
+	local coerceToPromise = require(srcWorkspace.luaUtils.coerceToPromise).coerceToPromise
+	local Promise = require(Packages.Promise)
+	local HttpService = game:GetService("HttpService")
 
 	local parse = require(srcWorkspace.language.parser).parse
 
@@ -21,17 +33,6 @@ return function()
 	local executeModule = require(srcWorkspace.execution.execute)
 	local executeSync = executeModule.executeSync
 	local execute = executeModule.execute
-
-	-- ROBLOX deviation: utils
-	local Promise = require(PackagesWorkspace.Promise)
-	local Object = require(PackagesWorkspace.LuauPolyfill).Object
-	local instanceOf = require(srcWorkspace.jsutils.instanceOf)
-	local inspect = require(srcWorkspace.jsutils.inspect).inspect
-	local Array = require(srcWorkspace.luaUtils.Array)
-	local NULL = require(srcWorkspace.luaUtils.null)
-	local Error = require(srcWorkspace.luaUtils.Error)
-	local coerceToPromise = require(srcWorkspace.luaUtils.coerceToPromise).coerceToPromise
-	local HttpService = game:GetService("HttpService")
 
 	-- ROBLOX deviation: expect passed as argument because it only exists in describe block
 	local executeQuery = function(expect_, args)
@@ -57,7 +58,9 @@ return function()
 			-- ROBLOX deviation: create a copy of result as to remove result.errors for comparison sake below
 			local syncResult = Object.assign({}, result)
 			-- ROBLOX deviation: upstream only compares enumerable properties
-			expect_(asyncResult.errors and Array.map(asyncResult.errors, enumerableOnly)).toEqual(syncResult.errors and Array.map(syncResult.errors, enumerableOnly))
+			expect_(asyncResult.errors and Array.map(asyncResult.errors, enumerableOnly)).toEqual(
+				syncResult.errors and Array.map(syncResult.errors, enumerableOnly)
+			)
 			-- ROBLOX deviation: errors have been already verified
 			asyncResult.errors = nil
 			syncResult.errors = nil
@@ -101,7 +104,7 @@ return function()
 				name = "Dog",
 				interfaces = { PetType },
 				isTypeOf = function(_self, obj, context)
-					local isDog = instanceOf(obj, Dog)
+					local isDog = instanceof(obj, Dog)
 
 					return (function()
 						if context.async then
@@ -120,7 +123,7 @@ return function()
 				name = "Cat",
 				interfaces = { PetType },
 				isTypeOf = function(_self, obj, context)
-					local isCat = instanceOf(obj, Cat)
+					local isCat = instanceof(obj, Cat)
 
 					return (function()
 						if context.async then
@@ -263,44 +266,41 @@ return function()
 			expect(result.data).toEqual({
 				pets = { NULL, NULL },
 			})
-			expect(result.errors).toArrayEqual(
+			expect(result.errors).toArrayEqual({
 				{
-					{
-						message = "We are testing this error",
-						locations = {
-							{
-								line = 3,
-								column = 9,
-							},
-						},
-						path = {
-							"pets",
-							1,
+					message = "We are testing this error",
+					locations = {
+						{
+							line = 3,
+							column = 9,
 						},
 					},
-					{
-						message = "We are testing this error",
-						locations = {
-							{
-								line = 3,
-								column = 9,
-							},
-						},
-						path = {
-							"pets",
-							2,
-						},
+					path = {
+						"pets",
+						1,
 					},
 				},
-				true
-			)
+				{
+					message = "We are testing this error",
+					locations = {
+						{
+							line = 3,
+							column = 9,
+						},
+					},
+					path = {
+						"pets",
+						2,
+					},
+				},
+			}, true)
 		end)
 
 		it("isTypeOf used to resolve runtime type for Union", function()
 			local DogType = GraphQLObjectType.new({
 				name = "Dog",
 				isTypeOf = function(_self, obj, context)
-					local isDog = instanceOf(obj, Dog)
+					local isDog = instanceof(obj, Dog)
 
 					return (function()
 						if context.async then
@@ -318,7 +318,7 @@ return function()
 			local CatType = GraphQLObjectType.new({
 				name = "Cat",
 				isTypeOf = function(_self, obj, context)
-					local isCat = instanceOf(obj, Cat)
+					local isCat = instanceof(obj, Cat)
 
 					return (function()
 						if context.async then
@@ -464,37 +464,34 @@ return function()
 			expect(result.data).toEqual({
 				pets = { NULL, NULL },
 			})
-			expect(result.errors).toArrayEqual(
+			expect(result.errors).toArrayEqual({
 				{
-					{
-						message = "We are testing this error",
-						locations = {
-							{
-								line = 3,
-								column = 9,
-							},
-						},
-						path = {
-							"pets",
-							1,
+					message = "We are testing this error",
+					locations = {
+						{
+							line = 3,
+							column = 9,
 						},
 					},
-					{
-						message = "We are testing this error",
-						locations = {
-							{
-								line = 3,
-								column = 9,
-							},
-						},
-						path = {
-							"pets",
-							2,
-						},
+					path = {
+						"pets",
+						1,
 					},
 				},
-				true
-			)
+				{
+					message = "We are testing this error",
+					locations = {
+						{
+							line = 3,
+							column = 9,
+						},
+					},
+					path = {
+						"pets",
+						2,
+					},
+				},
+			}, true)
 		end)
 
 		it("resolve Union type using __typename on source object", function() -- Show Kyle
@@ -682,37 +679,36 @@ return function()
 				return {
 					toEqual = function(message)
 						expect(result.data).toEqual({ pet = NULL })
-						expect(result.errors).toArrayEqual(
+						expect(result.errors).toArrayEqual({
 							{
-								{
-									message = message,
-									locations = {
-										{
-											line = 3,
-											column = 9,
-										},
-									},
-									path = {
-										"pet",
+								message = message,
+								locations = {
+									{
+										line = 3,
+										column = 9,
 									},
 								},
+								path = {
+									"pet",
+								},
 							},
-							true
-						)
+						}, true)
 					end,
 				}
 			end
 
-			expectError({ forTypeName = nil }).toEqual("Abstract type \"Pet\" must resolve to an Object type at runtime for field \"Query.pet\". Either the \"Pet\" type should provide a \"resolveType\" function or each possible type should provide an \"isTypeOf\" function.")
+			expectError({ forTypeName = nil }).toEqual(
+				'Abstract type "Pet" must resolve to an Object type at runtime for field "Query.pet". Either the "Pet" type should provide a "resolveType" function or each possible type should provide an "isTypeOf" function.'
+			)
 			expectError({
 				forTypeName = "Human",
-			}).toEqual("Abstract type \"Pet\" was resolve to a type \"Human\" that does not exist inside schema.")
+			}).toEqual('Abstract type "Pet" was resolve to a type "Human" that does not exist inside schema.')
 			expectError({
 				forTypeName = "String",
-			}).toEqual("Abstract type \"Pet\" was resolve to a non-object type \"String\".")
+			}).toEqual('Abstract type "Pet" was resolve to a non-object type "String".')
 			expectError({
 				forTypeName = "__Schema",
-			}).toEqual("Runtime Object type \"__Schema\" is not a possible type for \"Pet\".")
+			}).toEqual('Runtime Object type "__Schema" is not a possible type for "Pet".')
 
 			-- FIXME: workaround since we can't inject resolveType into SDL
 			schema:getType("Pet").resolveType = function()
@@ -724,13 +720,17 @@ return function()
 				This is because the result that gets produced is empty which cannot be pretty printed inside of ensureValidRuntimeType
 				This isn't problematic, because lua consumers would have no need to actually pass { __typename= nil }
 			]]
-			expectError({ forTypeName = nil }).toEqual("Abstract type \"Pet\" must resolve to an Object type at runtime for field \"Query.pet\" with value [], received \"[]\".")
+			expectError({ forTypeName = nil }).toEqual(
+				'Abstract type "Pet" must resolve to an Object type at runtime for field "Query.pet" with value [], received "[]".'
+			)
 
 			-- FIXME: workaround since we can't inject resolveType into SDL
 			schema:getType("Pet").resolveType = function()
 				return schema:getType("Cat")
 			end
-			expectError({ forTypeName = nil }).toEqual("Support for returning GraphQLObjectType from resolveType was removed in graphql-js@16.0.0 please return type name instead.")
+			expectError({ forTypeName = nil }).toEqual(
+				"Support for returning GraphQLObjectType from resolveType was removed in graphql-js@16.0.0 please return type name instead."
+			)
 		end)
 	end)
 end

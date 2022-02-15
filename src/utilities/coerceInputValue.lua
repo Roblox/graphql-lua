@@ -6,9 +6,9 @@ local jsutilsWorkspace = srcWorkspace.jsutils
 local luaUtilsWorkspace = srcWorkspace.luaUtils
 
 local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
-
-local Object = LuauPolyfill.Object
 local Array = LuauPolyfill.Array
+local Object = LuauPolyfill.Object
+
 local inspect = require(jsutilsWorkspace.inspect).inspect
 local invariant = require(jsutilsWorkspace.invariant).invariant
 local didYouMean = require(jsutilsWorkspace.didYouMean).didYouMean
@@ -46,7 +46,7 @@ end
 function defaultOnError(path, invalidValue, error_)
 	local errorPrefix = "Invalid value " .. inspect(invalidValue)
 	if #path > 0 then
-		errorPrefix = errorPrefix .. " at \"value" .. printPathArray(path) .. "\""
+		errorPrefix = errorPrefix .. ' at "value' .. printPathArray(path) .. '"'
 	end
 	error_.message = errorPrefix .. ": " .. error_.message
 	error(error_)
@@ -60,7 +60,7 @@ function coerceInputValueImpl(inputValue, type_, onError, path)
 		onError(
 			pathToArray(path),
 			inputValue,
-			GraphQLError.new("Expected non-nullable type \"" .. inspect(type_) .. "\" not to be null.")
+			GraphQLError.new('Expected non-nullable type "' .. inspect(type_) .. '" not to be null.')
 		)
 		return
 	end
@@ -88,7 +88,7 @@ function coerceInputValueImpl(inputValue, type_, onError, path)
 			onError(
 				pathToArray(path),
 				inputValue,
-				GraphQLError.new("Expected type \"" .. type_.name .. "\" to be an object.")
+				GraphQLError.new('Expected type "' .. type_.name .. '" to be an object.')
 			)
 			return
 		end
@@ -107,7 +107,9 @@ function coerceInputValueImpl(inputValue, type_, onError, path)
 					onError(
 						pathToArray(path),
 						inputValue,
-						GraphQLError.new("Field \"" .. field.name .. "\" of required type \"" .. typeStr .. "\" was not provided.")
+						GraphQLError.new(
+							'Field "' .. field.name .. '" of required type "' .. typeStr .. '" was not provided.'
+						)
 					)
 				end
 				continue
@@ -119,7 +121,6 @@ function coerceInputValueImpl(inputValue, type_, onError, path)
 				onError,
 				addPath(path, field.name, type_.name)
 			)
-
 		end
 
 		-- Ensure every provided field is defined
@@ -130,12 +131,17 @@ function coerceInputValueImpl(inputValue, type_, onError, path)
 				onError(
 					pathToArray(path),
 					inputValue,
-					GraphQLError.new(("Field \"%s\" is not defined by type \"%s\".%s"):format(fieldName, type_.name, didYouMean(suggestions)))
+					GraphQLError.new(
+						('Field "%s" is not defined by type "%s".%s'):format(
+							fieldName,
+							type_.name,
+							didYouMean(suggestions)
+						)
+					)
 				)
 			end
 		end
 		return coercedValue
-
 	end
 
 	-- istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
@@ -157,7 +163,7 @@ function coerceInputValueImpl(inputValue, type_, onError, path)
 					pathToArray(path),
 					inputValue,
 					GraphQLError.new(
-						"Expected type \"" .. type_.name .. "\". " .. thrownError.message,
+						'Expected type "' .. type_.name .. '". ' .. thrownError.message,
 						nil,
 						nil,
 						nil,
@@ -170,11 +176,7 @@ function coerceInputValueImpl(inputValue, type_, onError, path)
 		end
 
 		if parseResult == nil then
-			onError(
-				pathToArray(path),
-				inputValue,
-				GraphQLError.new(("Expected type \"%s\"."):format(type_.name))
-			)
+			onError(pathToArray(path), inputValue, GraphQLError.new(('Expected type "%s".'):format(type_.name)))
 		end
 		return parseResult
 	end

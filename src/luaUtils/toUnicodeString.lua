@@ -1,4 +1,6 @@
-local String = require(script.Parent.String)
+local Packages = script.Parent.Parent.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local String = LuauPolyfill.String
 
 -- used in lexer.printCharCode
 return function(code)
@@ -9,6 +11,6 @@ return function(code)
 	-- take rightmost 4 characters
 	local val = String.slice(pre, -4):upper()
 	-- then combine with "\\u${}"
-	local out = "\"\\u" .. val .. "\""
+	local out = '"\\u' .. val .. '"'
 	return out
 end

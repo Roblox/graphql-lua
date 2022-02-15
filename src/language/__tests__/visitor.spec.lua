@@ -2,9 +2,8 @@
 
 return function()
 	local srcWorkspace = script.Parent.Parent.Parent
-	local root = srcWorkspace.Parent
-	local LuauPolyfill = require(root.LuauPolyfill)
-	local UtilArray = require(srcWorkspace.luaUtils.Array)
+	local Packages = srcWorkspace.Parent
+	local LuauPolyfill = require(Packages.LuauPolyfill)
 	local Array = LuauPolyfill.Array
 	local Object = LuauPolyfill.Object
 
@@ -320,7 +319,7 @@ return function()
 					if node.kind == "Field" and node.name.value == "a" then
 						return {
 							kind = "Field",
-							selectionSet = UtilArray.concat({ addedField }, node.selectionSet),
+							selectionSet = Array.concat({ addedField }, node.selectionSet),
 						}
 					end
 					if node == addedField then
@@ -1186,41 +1185,39 @@ return function()
 				local ast = parse("{ a { y }, b { x } }")
 				visit(
 					ast,
-					visitInParallel(
+					visitInParallel({
 						{
-							{
-								enter = function(self, ...)
-									local node = ...
-									checkVisitorFnArgs(expect, ast, { ... })
-									table.insert(visited, { "break-a", "enter", node.kind, getValue(node) })
-									if node.kind == "Name" and node.value == "a" then
-										return BREAK
-									end
-									return -- ROBLOX deviation: no implicit returns
-								end,
-								-- istanbul ignore next (Never called and used as a placeholder)
-								leave = function()
-									invariant(false)
-								end,
-							},
-							{
-								enter = function(self, ...)
-									local node = ...
-									checkVisitorFnArgs(expect, ast, { ... })
-									table.insert(visited, { "break-b", "enter", node.kind, getValue(node) })
-									if node.kind == "Name" and node.value == "b" then
-										return BREAK
-									end
-									return -- ROBLOX deviation: no implicit returns
-								end,
-								leave = function(self, ...)
-									local node = ...
-									checkVisitorFnArgs(expect, ast, { ... })
-									table.insert(visited, { "break-b", "leave", node.kind, getValue(node) })
-								end,
-							},
-						}
-					)
+							enter = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "break-a", "enter", node.kind, getValue(node) })
+								if node.kind == "Name" and node.value == "a" then
+									return BREAK
+								end
+								return -- ROBLOX deviation: no implicit returns
+							end,
+							-- istanbul ignore next (Never called and used as a placeholder)
+							leave = function()
+								invariant(false)
+							end,
+						},
+						{
+							enter = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "break-b", "enter", node.kind, getValue(node) })
+								if node.kind == "Name" and node.value == "b" then
+									return BREAK
+								end
+								return -- ROBLOX deviation: no implicit returns
+							end,
+							leave = function(self, ...)
+								local node = ...
+								checkVisitorFnArgs(expect, ast, { ... })
+								table.insert(visited, { "break-b", "leave", node.kind, getValue(node) })
+							end,
+						},
+					})
 				)
 
 				expect(visited).toEqual({
@@ -1523,6 +1520,6 @@ return function()
 					{ "leave", "Document" },
 				})
 			end)
-        end)
+		end)
 	end)
 end

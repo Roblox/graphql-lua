@@ -322,7 +322,7 @@ local inspect = {
 
   -------------------------------------------------------------------
 
-  function inspect.inspect(root, options)
+  function inspect.inspect(root, options: any?)
     options       = options or {}
 
     local depth   = options.depth   or math.huge

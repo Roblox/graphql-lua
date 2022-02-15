@@ -2,17 +2,17 @@
 
 return function()
 	local srcWorkspace = script.Parent.Parent.Parent
-	local root = srcWorkspace.Parent
+	local rootWorkspace = srcWorkspace.Parent
+	local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+	local Number = LuauPolyfill.Number
+	local NaN = Number.NaN
 
 	local parseValue = require(srcWorkspace.language.parser).parseValue
 	local valueFromASTUntyped = require(script.Parent.Parent.valueFromASTUntyped).valueFromASTUntyped
-	local Number = require(root.LuauPolyfill).Number
 
-	local NaN = 0 / 0
 	local NULL = require(srcWorkspace.luaUtils.null)
 
 	describe("valueFromASTUntyped", function()
-
 		local function expectValueFrom(expect_, valueText: string, variables)
 			local ast = parseValue(valueText)
 			local value = valueFromASTUntyped(ast, variables)
@@ -25,14 +25,14 @@ return function()
 			expectValueFrom(expect, "false").to.equal(false)
 			expectValueFrom(expect, "123").to.equal(123)
 			expectValueFrom(expect, "123.456").to.equal(123.456)
-			expectValueFrom(expect, "\"abc123\"").to.equal("abc123")
+			expectValueFrom(expect, '"abc123"').to.equal("abc123")
 		end)
 
 		it("parses lists of values", function()
 			expectValueFrom(expect, "[true, false]").toEqual({ true, false })
 			expectValueFrom(expect, "[true, 123.45]").toEqual({ true, 123.45 })
 			expectValueFrom(expect, "[true, null]").toEqual({ true, NULL })
-			expectValueFrom(expect, "[true, [\"foo\", 1.2]]").toEqual({ true, { "foo", 1.2 } })
+			expectValueFrom(expect, '[true, ["foo", 1.2]]').toEqual({ true, { "foo", 1.2 } })
 		end)
 
 		it("parses input objects", function()
@@ -40,7 +40,7 @@ return function()
 				int = 123,
 				bool = false,
 			})
-			expectValueFrom(expect, "{ foo: [ { bar: \"baz\"} ] }").toEqual({
+			expectValueFrom(expect, '{ foo: [ { bar: "baz"} ] }').toEqual({
 				foo = { { bar = "baz" } },
 			})
 		end)

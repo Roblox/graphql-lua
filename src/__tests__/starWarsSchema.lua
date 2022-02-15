@@ -1,11 +1,11 @@
 -- upstream: -- upstream: https://github.com/graphql/graphql-js/blob/1611bbb08a88f734e9490b14cfe6afea11a838e0/src/__tests__/starWarsSchema.js
 local rootWorkspace = script.Parent.Parent
-
--- ROBLOX deviation: add polyfills
 local Packages = rootWorkspace.Parent
-local LuauPolyfillModule = require(Packages.LuauPolyfill)
-local Error = LuauPolyfillModule.Error
-type Array<T> = { [number]: T }
+
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Error = LuauPolyfill.Error
+type Array<T> = LuauPolyfill.Array<T>
+
 local invariant = require(rootWorkspace.jsutils.invariant).invariant
 
 local GraphQLSchema = require(rootWorkspace.type.schema).GraphQLSchema

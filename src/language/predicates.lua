@@ -1,5 +1,4 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/predicates.js
-
 local Kind = require(script.Parent.kinds).Kind
 
 -- deviation: pre-declare functions

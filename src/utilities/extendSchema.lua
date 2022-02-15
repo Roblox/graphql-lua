@@ -1,19 +1,21 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/4931f93f297511c6f8465d0c8104b20388a517e8/src/utilities/extendSchema.js
 
 local srcWorkspace = script.Parent.Parent
-local root = srcWorkspace.Parent
+local Packages = srcWorkspace.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local Error = LuauPolyfill.Error
+local Map = LuauPolyfill.Map
+local Object = LuauPolyfill.Object
+local coerceToMap = LuauPolyfill.coerceToMap
+type Array<T> = LuauPolyfill.Array<T>
+type Map<T, V> = LuauPolyfill.Map<T, V>
 
--- ROBLOX deviation: use Map type
-local MapModule = require(srcWorkspace.luaUtils.Map)
-local Map = MapModule.Map
-type Map<T, V> = MapModule.Map<T, V>
-local coerceToMap = MapModule.coerceToMap
 local mapValueOrdered = require(srcWorkspace.luaUtils.mapValueOrdered).mapValueOrdered
 
 local jsutils = srcWorkspace.jsutils
 local keyMap = require(jsutils.keyMap).keyMap
 local inspect = require(jsutils.inspect).inspect
-local invariant = require(jsutils.invariant).invariant
 local devAssert = require(jsutils.devAssert).devAssert
 
 local _astImport = require(srcWorkspace.language.ast)
@@ -102,17 +104,11 @@ type GraphQLInputObjectType = definitionImport.GraphQLInputObjectType
 
 local valueFromAST = require(script.Parent.valueFromAST).valueFromAST
 
-local LuauPolyfillImport = require(root.LuauPolyfill)
-local Object = LuauPolyfillImport.Object
-local Error = require(srcWorkspace.luaUtils.Error)
-local Array = require(srcWorkspace.luaUtils.Array)
-
 -- ROBLOX deviation: pre-declare variables
 local stdTypeMap
 local getDeprecationReason
 local getSpecifiedByUrl
 
-type Array<T> = { [number]: T }
 type Options = GraphQLSchemaValidationOptions & {
 	-- /**
 	--  * Set to true to assume the SDL is valid.
@@ -134,17 +130,10 @@ type Options = GraphQLSchemaValidationOptions & {
 --  * This algorithm copies the provided schema, applying extensions while
 --  * producing the copy. The original schema remains unaltered.
 --  */
-local function extendSchema(
-	schema,
-	documentAST,
-	options: Options
-)
+local function extendSchema(schema, documentAST, options: Options)
 	assertSchema(schema)
 
-	devAssert(
-		documentAST ~= nil and documentAST.kind == Kind.DOCUMENT,
-		"Must provide valid Document AST."
-	)
+	devAssert(documentAST ~= nil and documentAST.kind == Kind.DOCUMENT, "Must provide valid Document AST.")
 
 	if (options and options.assumeValid) ~= true and (options and options.assumeValidSDL) ~= true then
 		assertValidSDLExtension(documentAST, schema)
@@ -164,11 +153,7 @@ end
 -- /**
 --  * @internal
 --  */
-function extendSchemaImpl(
-	schemaConfig,
-	documentAST,
-	options: Options
-)
+function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 	-- // Collect the type definitions and extensions found in the document.
 	local typeDefs: Array<any> = {} -- ROBLOX FIXME: use `TypeDefinitionNode` type
 	-- ROBLOX deviation: use Map type
@@ -271,11 +256,9 @@ function extendSchemaImpl(
 
 	local function replaceDirective(directive: GraphQLDirective): GraphQLDirective
 		local config = directive:toConfig()
-		return GraphQLDirective.new(Object.assign(
-			{},
-			config,
-			{ args = mapValueOrdered(coerceToMap(config.args), extendArg) }
-		))
+		return GraphQLDirective.new(
+			Object.assign({}, config, { args = mapValueOrdered(coerceToMap(config.args), extendArg) })
+		)
 	end
 
 	local function extendNamedType(type_: GraphQLNamedType): GraphQLNamedType
@@ -304,39 +287,26 @@ function extendSchemaImpl(
 		end
 
 		-- // istanbul ignore next (Not reachable. All possible types have been considered)
-		invariant(false, "Unexpected type: " .. inspect(type_))
-		-- ROBLOX deviation: Luau doesn't understand invariant is no-return
-		return nil
+		-- ROBLOX deviation: use assert so Luau understands it doesn't return
+		assert(false, "Unexpected type: " .. inspect(type_))
 	end
 
-	function extendInputObjectType(
-		type_: GraphQLInputObjectType
-	): GraphQLInputObjectType
+	function extendInputObjectType(type_: GraphQLInputObjectType): GraphQLInputObjectType
 		local config = type_:toConfig()
 		-- ROBLOX deviation: use Map type
 		local extensions = typeExtensionsMap:get(config.name) or {}
 
-		return GraphQLInputObjectType.new(Object.assign(
-			{},
-			config,
-			{
-				fields = function()
-					return Map.new(
-						Array.concat(
-							mapValueOrdered(coerceToMap(config.fields), function(field)
-								return Object.assign(
-									{},
-									field,
-									{ type = replaceType(field.type) }
-								)
-							end):entries(),
-							buildInputFieldMap(extensions):entries()
-						)
-					)
-				end,
-				extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
-			}
-		))
+		return GraphQLInputObjectType.new(Object.assign({}, config, {
+			fields = function()
+				return Map.new(Array.concat(
+					mapValueOrdered(coerceToMap(config.fields), function(field)
+						return Object.assign({}, field, { type = replaceType(field.type) })
+					end):entries(),
+					buildInputFieldMap(extensions):entries()
+				))
+			end,
+			extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
+		}))
 	end
 
 	function extendEnumType(type_: GraphQLEnumType): GraphQLEnumType
@@ -344,17 +314,11 @@ function extendSchemaImpl(
 		-- ROBLOX deviation: use Map type
 		local extensions = typeExtensionsMap:get(type_.name) or {}
 
-		return GraphQLEnumType.new(
-			Object.assign(
-				{},
-				config,
-				{
-					-- ROBLOX deviation: concat Maps instead of regular tables
-					values = Map.new(Array.concat(config.values:entries(), buildEnumValueMap(extensions):entries())),
-					extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
-				}
-			)
-		)
+		return GraphQLEnumType.new(Object.assign({}, config, {
+			-- ROBLOX deviation: concat Maps instead of regular tables
+			values = Map.new(Array.concat(config.values:entries(), buildEnumValueMap(extensions):entries())),
+			extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
+		}))
 	end
 
 	function extendScalarType(type_: GraphQLScalarType): GraphQLScalarType
@@ -367,118 +331,77 @@ function extendSchemaImpl(
 			specifiedByUrl = getSpecifiedByUrl(extensionNode) or specifiedByUrl
 		end
 
-		return GraphQLScalarType.new(Object.assign(
-			{},
-			config,
-			{
-				specifiedByUrl = specifiedByUrl,
-				extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
-			}
-		))
+		return GraphQLScalarType.new(Object.assign({}, config, {
+			specifiedByUrl = specifiedByUrl,
+			extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
+		}))
 	end
 
-	function extendObjectType(
-		type_: GraphQLObjectType
-	): GraphQLObjectType
+	function extendObjectType(type_: GraphQLObjectType): GraphQLObjectType
 		local config = type_:toConfig()
 		-- ROBLOX deviation: use Map type
 		local extensions = typeExtensionsMap:get(config.name) or {}
 
-		return GraphQLObjectType.new(Object.assign(
-			{},
-			config,
-			{
-				interfaces = function()
-					return Array.concat(
-					Array.map(type_:getInterfaces(), replaceNamedType),
-					buildInterfaces(extensions)
-				   )
-				end,
-				fields = function()
-					return Map.new(
-						Array.concat(
-							mapValueOrdered(coerceToMap(config.fields), extendField):entries(),
-							buildFieldMap(extensions):entries()
-						)
+		return GraphQLObjectType.new(Object.assign({}, config, {
+			interfaces = function()
+				return Array.concat(Array.map(type_:getInterfaces(), replaceNamedType), buildInterfaces(extensions))
+			end,
+			fields = function()
+				return Map.new(
+					Array.concat(
+						mapValueOrdered(coerceToMap(config.fields), extendField):entries(),
+						buildFieldMap(extensions):entries()
 					)
-				end,
-				extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
-			}
-		))
+				)
+			end,
+			extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
+		}))
 	end
 
-	function extendInterfaceType(
-		type_: GraphQLInterfaceType
-	): GraphQLInterfaceType
+	function extendInterfaceType(type_: GraphQLInterfaceType): GraphQLInterfaceType
 		local config = type_:toConfig()
 		-- ROBLOX deviation: use Map type
 		local extensions = typeExtensionsMap:get(config.name) or {}
 
-		return GraphQLInterfaceType.new(Object.assign(
-			{},
-			config,
-			{
-				interfaces = function()
-					return Array.concat(
-						Array.map(type_:getInterfaces(), replaceNamedType),
-						buildInterfaces(extensions)
+		return GraphQLInterfaceType.new(Object.assign({}, config, {
+			interfaces = function()
+				return Array.concat(Array.map(type_:getInterfaces(), replaceNamedType), buildInterfaces(extensions))
+			end,
+			fields = function()
+				return Map.new(
+					Array.concat(
+						mapValueOrdered(coerceToMap(config.fields), extendField):entries(),
+						buildFieldMap(extensions):entries()
 					)
-				end,
-				fields = function()
-					return Map.new(
-						Array.concat(
-							mapValueOrdered(coerceToMap(config.fields), extendField):entries(),
-							buildFieldMap(extensions):entries()
-						)
-					)
-				end,
-				extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
-			}
-		))
+				)
+			end,
+			extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
+		}))
 	end
 
-	function extendUnionType(
-		type_: GraphQLUnionType
-	): GraphQLUnionType
+	function extendUnionType(type_: GraphQLUnionType): GraphQLUnionType
 		local config = type_:toConfig()
 		-- ROBLOX deviation: use Map type
 		local extensions = typeExtensionsMap:get(config.name) or {}
 
-		return GraphQLUnionType.new(Object.assign(
-			{},
-			config,
-			{
-				types = function()
-					return Array.concat(
-						Array.map(type_:getTypes(), replaceNamedType),
-						buildUnionTypes(extensions)
-					)
-				end,
-				extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
-			}
-		))
+		return GraphQLUnionType.new(Object.assign({}, config, {
+			types = function()
+				return Array.concat(Array.map(type_:getTypes(), replaceNamedType), buildUnionTypes(extensions))
+			end,
+			extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
+		}))
 	end
 
-	function extendField(
-		field: GraphQLFieldConfig<any, any>
-	): GraphQLFieldConfig<any, any>
-		return Object.assign(
-			{},
-			field,
-			{
-				type = replaceType(field.type),
-				-- // $FlowFixMe[incompatible-call]
-				args = mapValueOrdered(coerceToMap(field.args), extendArg),
-			}
-		)
+	function extendField(field: GraphQLFieldConfig<any, any>): GraphQLFieldConfig<any, any>
+		return Object.assign({}, field, {
+			type = replaceType(field.type),
+			-- // $FlowFixMe[incompatible-call]
+			args = mapValueOrdered(coerceToMap(field.args), extendArg),
+		})
 	end
 
 	function extendArg(arg: GraphQLArgumentConfig)
-		return Object.assign(
-			{},
-			arg,
-			{ type = replaceType(arg.type) }
-		)
+		return Object.assign({}, arg, { type = replaceType(arg.type) })
 	end
 
 	local function getOperationTypes(
@@ -510,7 +433,7 @@ function extendSchemaImpl(
 		local type_ = stdTypeMap[name] or typeMap:get(name)
 
 		if type_ == nil then
-			error(Error.new(("Unknown type: \"%s\"."):format(name)))
+			error(Error.new(('Unknown type: "%s".'):format(name)))
 		end
 		return type_
 	end
@@ -548,12 +471,7 @@ function extendSchemaImpl(
 	end
 
 	function buildFieldMap(
-		nodes: Array<
-			InterfaceTypeDefinitionNode
-			| InterfaceTypeExtensionNode
-			| ObjectTypeDefinitionNode
-			| ObjectTypeExtensionNode
-		>
+		nodes: Array<InterfaceTypeDefinitionNode | InterfaceTypeExtensionNode | ObjectTypeDefinitionNode | ObjectTypeExtensionNode>
 	): GraphQLFieldConfigMap<any, any>
 		-- ROBLOX deviation: use Map
 		local fieldConfigMap = Map.new()
@@ -574,9 +492,7 @@ function extendSchemaImpl(
 		return fieldConfigMap
 	end
 
-	function buildArgumentMap(
-		args: Array<InputValueDefinitionNode>?
-	): GraphQLFieldConfigArgumentMap
+	function buildArgumentMap(args: Array<InputValueDefinitionNode>?): GraphQLFieldConfigArgumentMap
 		-- // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
 		local argsNodes = args or {}
 
@@ -626,9 +542,7 @@ function extendSchemaImpl(
 		return inputFieldMap
 	end
 
-	function buildEnumValueMap(
-		nodes: Array<EnumTypeDefinitionNode | EnumTypeExtensionNode>
-	): GraphQLEnumValueConfigMap
+	function buildEnumValueMap(nodes: Array<EnumTypeDefinitionNode | EnumTypeExtensionNode>): GraphQLEnumValueConfigMap
 		-- ROBLOX deviation: use Map to guarantee order
 		local enumValueMap = Map.new()
 		for _, node in ipairs(nodes) do
@@ -647,12 +561,7 @@ function extendSchemaImpl(
 	end
 
 	function buildInterfaces(
-		nodes: Array<
-			InterfaceTypeDefinitionNode
-			| InterfaceTypeExtensionNode
-			| ObjectTypeDefinitionNode
-			| ObjectTypeExtensionNode
-		>
+		nodes: Array<InterfaceTypeDefinitionNode | InterfaceTypeExtensionNode | ObjectTypeDefinitionNode | ObjectTypeExtensionNode>
 	): Array<GraphQLInterfaceType>
 		local interfaces = {}
 		for _, node in ipairs(nodes) do
@@ -670,9 +579,7 @@ function extendSchemaImpl(
 		return interfaces
 	end
 
-	function buildUnionTypes(
-		nodes: Array<UnionTypeDefinitionNode | UnionTypeExtensionNode>
-	): Array<GraphQLObjectType>
+	function buildUnionTypes(nodes: Array<UnionTypeDefinitionNode | UnionTypeExtensionNode>): Array<GraphQLObjectType>
 		local types = {}
 		for _, node in ipairs(nodes) do
 			-- istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
@@ -779,9 +686,8 @@ function extendSchemaImpl(
 		end
 
 		-- // istanbul ignore next (Not reachable. All possible type definition nodes have been considered)
-		invariant(false, "Unexpected type definition node: " .. inspect(astNode))
-		-- ROBLOX deviation: no implicit return
-		return nil
+		-- ROBLOX deviation: use assert so Luau understands it doesn't return
+		assert(false, "Unexpected type definition node: " .. inspect(astNode))
 	end
 
 	for _, existingType in ipairs(schemaConfig.types) do
@@ -820,7 +726,7 @@ function extendSchemaImpl(
 	local schemaExtension = Object.assign(
 		{},
 		{
-			description = description
+			description = description,
 		},
 		operationTypes,
 		{
@@ -850,12 +756,7 @@ end)
 --  * Given a field or enum value node, returns the string value for the
 --  * deprecation reason.
 --  */
-function getDeprecationReason(
-	node:
-	EnumValueDefinitionNode
-    | FieldDefinitionNode
-    | InputValueDefinitionNode
-): string?
+function getDeprecationReason(node: EnumValueDefinitionNode | FieldDefinitionNode | InputValueDefinitionNode): string?
 	local deprecated = getDirectiveValues(GraphQLDeprecatedDirective, node)
 	return deprecated and deprecated.reason
 end
@@ -863,9 +764,7 @@ end
 -- /**
 --  * Given a scalar node, returns the string value for the specifiedByUrl.
 --  */
-function getSpecifiedByUrl(
-	node: ScalarTypeDefinitionNode | ScalarTypeExtensionNode
-): string?
+function getSpecifiedByUrl(node: ScalarTypeDefinitionNode | ScalarTypeExtensionNode): string?
 	local specifiedBy = getDirectiveValues(GraphQLSpecifiedByDirective, node)
 	return specifiedBy and specifiedBy.url
 end

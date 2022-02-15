@@ -13,7 +13,7 @@ type ObjMap<T> = ObjMapModule.ObjMap<T>
 local function promiseForObject(object: ObjMap<any>)
 	local keys = Object.keys(object)
 	local valuesAndPromises = Array.map(keys, function(name)
-		-- deviation: Promise.all accepts only promises, so wrap
+		-- ROBLOX deviation: Promise.all accepts only promises, so wrap
 		-- each value in a resolved promise
 		local value = object[name]
 		if Promise.is(value) then
@@ -23,9 +23,7 @@ local function promiseForObject(object: ObjMap<any>)
 	end)
 
 	return Promise.all(valuesAndPromises):andThen(function(values)
-		return Array.reduce(values, function(resolvedObject, value, i_)
-			-- ROBLOX FIXME: i_ is currently 0-based so we add 1 to account for that
-			local i = i_ + 1
+		return Array.reduce(values, function(resolvedObject, value, i)
 			resolvedObject[keys[i]] = value
 			return resolvedObject
 		end, {})

@@ -1,5 +1,4 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/language/source.js
-
 local language = script.Parent
 local src = language.Parent
 
@@ -30,11 +29,11 @@ Source.__index = Source
 
 function Source.new(
 	body: string,
-	_name: string,
-	_locationOffset: Location
-)
-	local name: string = _name or "GraphQL request"
-	local locationOffset: Location = _locationOffset or { line = 1, column = 1 }
+	_name: string?,
+	_locationOffset: Location?
+): Source
+	local name = _name or "GraphQL request"
+	local locationOffset = _locationOffset or { line = 1, column = 1 }
 
 	devAssert(
 		typeof(body) == "string",
@@ -54,7 +53,7 @@ function Source.new(
 		"column in locationOffset is 1-indexed and must be positive."
 	)
 
-	return setmetatable(self, Source)
+	return (setmetatable(self, Source) :: any) :: Source
 end
 
 function Source:__tostring()

@@ -1,5 +1,9 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/__tests__/inspect-test.js
 return function()
+	local rootWorkspace = script.Parent.Parent.Parent.Parent
+	local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+	local NaN = LuauPolyfill.Number.NaN
+
 	local jsutils = script.Parent.Parent
 	local inspect = require(jsutils.inspect).inspect
 	local invariant = require(jsutils.invariant).invariant
@@ -27,7 +31,7 @@ return function()
 		it("number", function()
 			expect(inspect(0)).to.equal("0")
 			expect(inspect(3.14)).to.equal("3.14")
-			expect(inspect(0/0)).to.equal("NaN")
+			expect(inspect(NaN)).to.equal("NaN")
 			expect(inspect(math.huge)).to.equal("Infinity")
 			expect(inspect(-math.huge)).to.equal("-Infinity")
 		end)
@@ -50,21 +54,19 @@ return function()
 		it("array", function()
 			expect(inspect({})).to.equal("[]")
 			-- deviation: Lua does not handle nil elements
-			expect(inspect({true})).to.equal("[true]")
-			expect(inspect({1, 0/0})).to.equal("[1, NaN]")
-			expect(inspect({{"a", "b"}, "c"})).to.equal('[["a", "b"], "c"]')
+			expect(inspect({ true })).to.equal("[true]")
+			expect(inspect({ 1, NaN })).to.equal("[1, NaN]")
+			expect(inspect({ { "a", "b" }, "c" })).to.equal('[["a", "b"], "c"]')
 
-			expect(inspect({{{}}})).to.equal("[[[]]]")
-			expect(inspect({{{"a"}}})).to.equal("[[[Array]]]")
-			expect(inspect({0, 1, 2, 3, 4, 5, 6, 7, 8, 9})).to.equal(
-				"[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]"
-			)
+			expect(inspect({ { {} } })).to.equal("[[[]]]")
+			expect(inspect({ { { "a" } } })).to.equal("[[[Array]]]")
+			expect(inspect({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 })).to.equal("[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]")
 
-			expect(inspect({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10})).to.equal(
+			expect(inspect({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 })).to.equal(
 				"[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ... 1 more item]"
 			)
 
-			expect(inspect({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,})).to.equal(
+			expect(inspect({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 })).to.equal(
 				"[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ... 2 more items]"
 			)
 		end)
@@ -75,7 +77,7 @@ return function()
 			expect(inspect({ a = 1 })).to.equal("{ a: 1 }")
 			expect(inspect({ a = 1, b = 2 })).to.equal("{ a: 1, b: 2 }")
 			-- deviation: avoid sparse array
-			expect(inspect({ array = {false, 0} })).to.equal("{ array: [false, 0] }")
+			expect(inspect({ array = { false, 0 } })).to.equal("{ array: [false, 0] }")
 
 			expect(inspect({ a = { b = {} } })).to.equal("{ a: { b: [] } }")
 			expect(inspect({ a = { b = { c = 1 } } })).to.equal("{ a: { b: [Object] } }")
@@ -110,7 +112,7 @@ return function()
 			local object = {
 				toJSON = function()
 					return { json = "value" }
-				end
+				end,
 			}
 
 			expect(inspect(object)).to.equal('{ json: "value" }')
@@ -131,18 +133,18 @@ return function()
 			local obj = {}
 
 			obj.self = obj
-			obj.deepSelf = {self = obj}
+			obj.deepSelf = { self = obj }
 
 			expect(inspect(obj)).to.equal("{ self: [Circular], deepSelf: { self: [Circular] } }")
 
 			local array = {}
 
 			array[1] = array
-			array[2] = {array}
+			array[2] = { array }
 
 			expect(inspect(array)).to.equal("[[Circular], [[Circular]]]")
 
-			local mixed = {array = {}}
+			local mixed = { array = {} }
 
 			mixed.array[1] = mixed
 

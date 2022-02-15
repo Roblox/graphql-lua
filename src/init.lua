@@ -1,6 +1,5 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/index.js
-
-
+--!strict
 
 --[[
  * GraphQL.js provides a reference implementation for the GraphQL specification
@@ -33,14 +32,12 @@ local versionModule = require(script.version)
 exports.version = versionModule.version
 exports.versionInfo = versionModule.versionInfo
 
-
 -- The primary entry point into fulfilling a GraphQL request.
 local graphQlModule = require(script.graphql)
 exports.graphql = graphQlModule.graphql
 exports.graphqlSync = graphQlModule.graphqlSync
 
 export type GraphQLArgs = graphQlModule.GraphQLArgs
-
 
 -- Create and operate on GraphQL type definitions and schema.
 local typeModule = require(script.type)
@@ -139,8 +136,6 @@ exports.getNamedType = typeModule.getNamedType
 exports.validateSchema = typeModule.validateSchema
 exports.assertValidSchema = typeModule.assertValidSchema
 
-
-
 export type GraphQLType = typeModule.GraphQLType
 export type GraphQLInputType = typeModule.GraphQLInputType
 export type GraphQLOutputType = typeModule.GraphQLOutputType
@@ -190,7 +185,6 @@ export type GraphQLInputObjectType = typeModule.GraphQLInputObjectType
 export type GraphQLDirective = typeModule.GraphQLDirective
 export type GraphQLSchema = typeModule.GraphQLSchema
 
-
 local languageModule = require(script.language)
 
 -- Parse and operate on GraphQL language source files.
@@ -230,8 +224,6 @@ exports.isTypeDefinitionNode = languageModule.isTypeDefinitionNode
 exports.isTypeSystemExtensionNode = languageModule.isTypeSystemExtensionNode
 exports.isTypeExtensionNode = languageModule.isTypeExtensionNode
 
-
-
 export type ParseOptions = languageModule.ParseOptions
 export type SourceLocation = languageModule.SourceLocation
 export type TokenKindEnum = languageModule.TokenKindEnum
@@ -246,7 +238,7 @@ export type ASTVisitor = languageModule.ASTVisitor
 -- ROBLOX TODO: Luau doesn't current support default type arguments
 export type Visitor<KindToNode, Nodes> = languageModule.Visitor<KindToNode, Nodes>
 -- ROBLOX TODO: Luau doesn't current support default type arguments
-export type VisitFn = languageModule.VisitFn
+export type VisitFn<TAnyNode, TVisitedNode = TAnyNode> = languageModule.VisitFn<TAnyNode, TVisitedNode>
 export type VisitorKeyMap<KindToNode> = languageModule.VisitorKeyMap<KindToNode>
 
 -- AST nodes
@@ -317,12 +309,9 @@ exports.defaultTypeResolver = executionModule.defaultTypeResolver
 exports.responsePathAsArray = executionModule.responsePathAsArray
 exports.getDirectiveValues = executionModule.getDirectiveValues
 
-
-
 export type ExecutionArgs = executionModule.ExecutionArgs
 export type ExecutionResult = executionModule.ExecutionResult
 export type FormattedExecutionResult = executionModule.FormattedExecutionResult
-
 
 local subscriptionModule = require(script.subscription)
 exports.subscribe = subscriptionModule.subscribe
@@ -455,8 +444,6 @@ exports.BreakingChangeType = utilitiesModule.BreakingChangeType
 exports.DangerousChangeType = utilitiesModule.DangerousChangeType
 exports.findBreakingChanges = utilitiesModule.findBreakingChanges
 exports.findDangerousChanges = utilitiesModule.findDangerousChanges
-
-
 
 export type IntrospectionOptions = utilitiesModule.IntrospectionOptions
 export type IntrospectionQuery = utilitiesModule.IntrospectionQuery

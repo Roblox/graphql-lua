@@ -11,7 +11,6 @@ return function()
 	local graphqlSync = graphql.graphqlSync
 
 	describe("Introspection", function()
-
 		it("executes an introspection query", function()
 			local schema = buildSchema([[
       type SomeObject {
@@ -961,7 +960,7 @@ return function()
 								},
 								args = {
 									{
-										defaultValue = "\"No longer supported\"",
+										defaultValue = '"No longer supported"',
 										name = "reason",
 										type = {
 											kind = "SCALAR",
@@ -1056,7 +1055,7 @@ return function()
 									name = "String",
 									ofType = nil,
 								},
-								defaultValue = "\"tes\\t de\\fault\"",
+								defaultValue = '"tes\\t de\\fault"',
 							},
 							{
 								name = "b",
@@ -1490,7 +1489,7 @@ return function()
 			expect(graphqlSync({ schema = schema, source = source })).toObjectContain({
 				errors = {
 					{
-						message = "Field \"__type\" argument \"name\" of type \"String!\" is required, but it was not provided.",
+						message = 'Field "__type" argument "name" of type "String!" is required, but it was not provided.',
 						locations = { { line = 3, column = 9 } },
 					},
 				},

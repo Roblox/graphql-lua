@@ -1,15 +1,17 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/type/validate.js
 -- ROBLOX deviation: selene suppression
 --# selene: allow(if_same_then_else)
-
-type Array<T> = { [number]: T }
-type Set<T> = { [T]: boolean }
 local srcWorkspace = script.Parent.Parent
 local root = srcWorkspace.Parent
+
 local LuauPolyfill = require(root.LuauPolyfill)
-local Array = require(srcWorkspace.luaUtils.Array)
-local Error = LuauPolyfill.Error
+local Array = LuauPolyfill.Array
 local Boolean = LuauPolyfill.Boolean
+local Error = LuauPolyfill.Error
+type Array<T> = LuauPolyfill.Array<T>
+type Map<T, U> = LuauPolyfill.Map<T, U>
+type Set<T> = LuauPolyfill.Set<T>
+
 local isNotNillish = require(srcWorkspace.luaUtils.isNillish).isNotNillish
 
 local inspect = require(script.Parent.Parent.jsutils.inspect).inspect
@@ -63,9 +65,7 @@ local SchemaValidationContext, validateRootTypes, validateDirectives, getOperati
  * Validation runs synchronously, returning an array of encountered errors, or
  * an empty array if no errors were encountered and the Schema is valid.
  ]]
-local validateSchema = function(
-	schema: GraphQLSchema
-): Array<GraphQLError>?
+local validateSchema = function(schema: GraphQLSchema): Array<GraphQLError>?
 	-- First check to ensure the provided value is in fact a GraphQLSchema.
 	assertSchema(schema)
 
@@ -113,7 +113,7 @@ type SchemaValidationContext = {
 	-- method definitions
 	reportError: (SchemaValidationContext, string, Array<ASTNode?> | ASTNode?) -> (),
 	addError: (SchemaValidationContext, GraphQLError) -> (),
-	getErrors: (SchemaValidationContext) -> Array<GraphQLError>
+	getErrors: (SchemaValidationContext) -> Array<GraphQLError>,
 }
 SchemaValidationContext = {}
 SchemaValidationContext.__index = SchemaValidationContext
@@ -127,10 +127,7 @@ function SchemaValidationContext.new(schema: GraphQLSchema): SchemaValidationCon
 	return self
 end
 
-function SchemaValidationContext:reportError(
-	message: string,
-	nodes: Array<ASTNode?> | ASTNode?
-): ()
+function SchemaValidationContext:reportError(message: string, nodes: Array<ASTNode?> | ASTNode?): ()
 	local _nodes
 	if Array.isArray(nodes) then
 		_nodes = Array.filter(nodes, Boolean.toJSBoolean)
@@ -191,7 +188,8 @@ function validateRootTypes(context: SchemaValidationContext): ()
 
 	if isNotNillish(subscriptionType) and not isObjectType(subscriptionType) then
 		context:reportError(
-			"Subscription root type must be Object type if provided, it cannot be " .. ("%s."):format(inspect(subscriptionType)),
+			"Subscription root type must be Object type if provided, it cannot be "
+				.. ("%s."):format(inspect(subscriptionType)),
 			(function()
 				local _ref = getOperationTypeNode(schema, "subscription")
 
@@ -204,10 +202,7 @@ function validateRootTypes(context: SchemaValidationContext): ()
 		)
 	end
 end
-function getOperationTypeNode(
-	schema: SchemaValidationContext,
-	operation: OperationTypeNode
-):ASTNode?
+function getOperationTypeNode(schema: SchemaValidationContext, operation: OperationTypeNode): ASTNode?
 	local operationNodes = getAllSubNodes(schema, function(node)
 		return node.operationTypes
 	end)
@@ -249,13 +244,13 @@ function validateDirectives(context: SchemaValidationContext): ()
 			-- Ensure the type is an input type.
 			if not isInputType(arg.type) then
 				context:reportError(
-					("The type of @%s(%s:) must be Input Type "):format(directive.name, arg.name) .. ("but got: %s."):format(inspect(arg.type)),
+					("The type of @%s(%s:) must be Input Type "):format(directive.name, arg.name)
+						.. ("but got: %s."):format(inspect(arg.type)),
 					arg.astNode
 				)
 			end
 
 			if isRequiredArgument(arg) and isNotNillish(arg.deprecationReason) then
-
 				context:reportError(
 					("Required argument @%s(%s:) cannot be deprecated."):format(directive.name, arg.name),
 					{
@@ -342,19 +337,13 @@ function validateTypes(context: SchemaValidationContext): ()
 	end
 end
 
-function validateFields(
-	context: SchemaValidationContext,
-	type_: GraphQLObjectType | GraphQLInterfaceType
-): ()
-	-- ROBLOX deviation: use Map
-	local fields = type_:getFields():values()
+function validateFields(context: SchemaValidationContext, type_: GraphQLObjectType | GraphQLInterfaceType): ()
+	-- ROBLOX FIXME Luau: does complaints of function union not being callable
+	local fields = (type_ :: any):getFields():values()
 
 	-- Objects and Interfaces both must define one or more fields.
 	if #fields == 0 then
-		context:reportError(
-			("Type %s must define one or more fields."):format(type_.name),
-			getAllNodes(type_)
-		)
+		context:reportError(("Type %s must define one or more fields."):format(type_.name), getAllNodes(type_))
 	end
 
 	for _, field in ipairs(fields) do
@@ -364,7 +353,8 @@ function validateFields(
 		-- Ensure the type is an output type
 		if not isOutputType(field.type) then
 			context:reportError(
-				("The type of %s.%s must be Output Type "):format(type_.name, field.name) .. ("but got: %s."):format(inspect(field.type)),
+				("The type of %s.%s must be Output Type "):format(type_.name, field.name)
+					.. ("but got: %s."):format(inspect(field.type)),
 				(function()
 					if field.astNode ~= nil then
 						-- istanbul ignore next (TODO need to write coverage tests)
@@ -385,7 +375,8 @@ function validateFields(
 			-- Ensure the type is an input type
 			if not isInputType(arg.type) then
 				context:reportError(
-					("The type of %s.%s(%s:) must be Input "):format(type_.name, field.name, argName) .. ("Type but got: %s."):format(inspect(arg.type)),
+					("The type of %s.%s(%s:) must be Input "):format(type_.name, field.name, argName)
+						.. ("Type but got: %s."):format(inspect(arg.type)),
 					(function()
 						if arg.astNode ~= nil then
 							-- istanbul ignore next (TODO need to write coverage tests)
@@ -413,16 +404,15 @@ function validateFields(
 		end
 	end
 end
-function validateInterfaces(
-	context: SchemaValidationContext,
-	type_: GraphQLObjectType | GraphQLInterfaceType
-): ()
+function validateInterfaces(context: SchemaValidationContext, type_: GraphQLObjectType | GraphQLInterfaceType): ()
 	local ifaceTypeNames = {}
 
-	for _, iface in ipairs(type_:getInterfaces()) do
+	-- ROBLOX FIXME Luau: does not recognize union of functions as callable
+	for _, iface in ipairs((type_ :: any):getInterfaces()) do
 		if not isInterfaceType(iface) then
 			context:reportError(
-				("Type %s must only implement Interface types, "):format(inspect(type_)) .. ("it cannot implement %s."):format(inspect(iface)),
+				("Type %s must only implement Interface types, "):format(inspect(type_))
+					.. ("it cannot implement %s."):format(inspect(iface)),
 				getAllImplementsInterfaceNodes(type_, iface)
 			)
 			continue
@@ -464,10 +454,12 @@ function validateTypeImplementsInterface(
 	type_: GraphQLObjectType | GraphQLInterfaceType,
 	iface: GraphQLInterfaceType
 ): ()
-	local typeFieldMap = type_:getFields()
+	-- ROBLOX deviation: getFields returns a Map
+	-- ROBLOX TODO: fix types to avoid casting
+	local typeFieldMap = (type_ :: any):getFields()
 
 	-- Assert each interface field is implemented.
-	-- ROBLOX deviation: use Map
+	-- ROBLOX deviation: getFields returns a Map
 	for _, ifaceField in ipairs(iface:getFields():values()) do
 		local fieldName = ifaceField.name
 		-- ROBLOX deviation: use Map
@@ -487,9 +479,10 @@ function validateTypeImplementsInterface(
 		-- Assert interface field type is satisfied by type field type, by being
 		-- a valid subtype. (covariant)
 		if not isTypeSubTypeOf(context.schema, typeField.type, ifaceField.type) then
-
 			context:reportError(
-				("Interface field %s.%s expects type "):format(iface.name, fieldName) .. ("%s but %s.%s "):format(inspect(ifaceField.type), type_.name, fieldName) .. ("is type %s."):format(inspect(typeField.type)),
+				("Interface field %s.%s expects type "):format(iface.name, fieldName)
+					.. ("%s but %s.%s "):format(inspect(ifaceField.type), type_.name, fieldName)
+					.. ("is type %s."):format(inspect(typeField.type)),
 				{
 					(function()
 						if ifaceField.astNode ~= nil then
@@ -519,7 +512,13 @@ function validateTypeImplementsInterface(
 			-- Assert interface field arg exists on object field.
 			if not typeArg then
 				context:reportError(
-					("Interface field argument %s.%s(%s:) expected but %s.%s does not provide it."):format(iface.name, fieldName, argName, type_.name, fieldName),
+					("Interface field argument %s.%s(%s:) expected but %s.%s does not provide it."):format(
+						iface.name,
+						fieldName,
+						argName,
+						type_.name,
+						fieldName
+					),
 					{
 						ifaceArg.astNode,
 						typeField.astNode,
@@ -532,9 +531,11 @@ function validateTypeImplementsInterface(
 			-- (invariant)
 			-- TODO: change to contravariant?
 			if not isEqualType(ifaceArg.type, typeArg.type) then
-
 				context:reportError(
-					("Interface field argument %s.%s(%s:) "):format(iface.name, fieldName, argName) .. ("expects type %s but "):format(inspect(ifaceArg.type)) .. ("%s.%s(%s:) is type "):format(type_.name, fieldName, argName) .. ("%s."):format(inspect(typeArg.type)),
+					("Interface field argument %s.%s(%s:) "):format(iface.name, fieldName, argName)
+						.. ("expects type %s but "):format(inspect(ifaceArg.type))
+						.. ("%s.%s(%s:) is type "):format(type_.name, fieldName, argName)
+						.. ("%s."):format(inspect(typeArg.type)),
 					{
 						(function()
 							if ifaceArg.astNode ~= nil then
@@ -565,7 +566,13 @@ function validateTypeImplementsInterface(
 
 			if not ifaceArg and isRequiredArgument(typeArg) then
 				context:reportError(
-					("Object field %s.%s includes required argument %s that is missing from the Interface field %s.%s."):format(type_.name, fieldName, argName, iface.name, fieldName),
+					("Object field %s.%s includes required argument %s that is missing from the Interface field %s.%s."):format(
+						type_.name,
+						fieldName,
+						argName,
+						iface.name,
+						fieldName
+					),
 					{
 						typeArg.astNode,
 						ifaceField.astNode,
@@ -581,17 +588,25 @@ function validateTypeImplementsAncestors(
 	type_: GraphQLObjectType | GraphQLInterfaceType,
 	iface: GraphQLInterfaceType
 ): ()
-	local ifaceInterfaces = type_:getInterfaces()
+	-- ROBLOX FIXME Luau: does not recognize union of functions as callable
+	local ifaceInterfaces = (type_ :: any):getInterfaces()
 
 	for _, transitive in ipairs(iface:getInterfaces()) do
 		if Array.indexOf(ifaceInterfaces, transitive) == -1 then
 			context:reportError(
 				(function()
 					if transitive == type_ then
-						return ("Type %s cannot implement %s because it would create a circular reference."):format(type_.name, iface.name)
+						return ("Type %s cannot implement %s because it would create a circular reference."):format(
+							type_.name,
+							iface.name
+						)
 					end
 
-					return ("Type %s must implement %s because it is implemented by %s."):format(type_.name, transitive.name, iface.name)
+					return ("Type %s must implement %s because it is implemented by %s."):format(
+						type_.name,
+						transitive.name,
+						iface.name
+					)
 				end)(),
 				Array.concat(
 					getAllImplementsInterfaceNodes(iface, transitive),
@@ -602,10 +617,7 @@ function validateTypeImplementsAncestors(
 	end
 end
 
-function validateUnionMembers(
-	context: SchemaValidationContext,
-	union: GraphQLUnionType
-): ()
+function validateUnionMembers(context: SchemaValidationContext, union: GraphQLUnionType): ()
 	local memberTypes = union:getTypes()
 
 	if #memberTypes == 0 then
@@ -632,16 +644,14 @@ function validateUnionMembers(
 
 		if not isObjectType(memberType) then
 			context:reportError(
-				("Union type %s can only include Object types, "):format(union.name) .. ("it cannot include %s."):format(inspect(memberType)),
+				("Union type %s can only include Object types, "):format(union.name)
+					.. ("it cannot include %s."):format(inspect(memberType)),
 				getUnionMemberTypeNodes(union, tostring(memberType))
 			)
 		end
 	end
 end
-function validateEnumValues(
-	context: SchemaValidationContext,
-	enumType: GraphQLEnumType
-): ()
+function validateEnumValues(context: SchemaValidationContext, enumType: GraphQLEnumType): ()
 	local enumValues = enumType:getValues()
 
 	if #enumValues == 0 then
@@ -666,11 +676,8 @@ function validateEnumValues(
 	end
 end
 
-function validateInputFields(
-	context: SchemaValidationContext,
-	inputObj: GraphQLInputObjectType
-): ()
-	-- ROBLOX deviation: use Map
+function validateInputFields(context: SchemaValidationContext, inputObj: GraphQLInputObjectType): ()
+	-- ROBLOX deviation: getFields returns a Map
 	local fields = inputObj:getFields():values()
 
 	if #fields == 0 then
@@ -687,7 +694,8 @@ function validateInputFields(
 		-- Ensure the type is an input type
 		if not isInputType(field.type) then
 			context:reportError(
-				("The type of %s.%s must be Input Type "):format(inputObj.name, field.name) .. ("but got: %s."):format(inspect(field.type)),
+				("The type of %s.%s must be Input Type "):format(inputObj.name, field.name)
+					.. ("but got: %s."):format(inspect(field.type)),
 				(function()
 					if field.astNode ~= nil then
 						-- istanbul ignore next (TODO need to write coverage tests)
@@ -698,26 +706,21 @@ function validateInputFields(
 			)
 		end
 		if isRequiredInputField(field) and isNotNillish(field.deprecationReason) then
-			context:reportError(
-				("Required input field %s.%s cannot be deprecated."):format(inputObj.name, field.name),
-				{
-					getDeprecatedDirectiveNode(field.astNode),
-					(function()
-						if field.astNode ~= nil then
-							-- istanbul ignore next (TODO need to write coverage tests)
-							return field.astNode.type
-						end
-						return
-					end)(),
-				}
-			)
+			context:reportError(("Required input field %s.%s cannot be deprecated."):format(inputObj.name, field.name), {
+				getDeprecatedDirectiveNode(field.astNode),
+				(function()
+					if field.astNode ~= nil then
+						-- istanbul ignore next (TODO need to write coverage tests)
+						return field.astNode.type
+					end
+					return
+				end)(),
+			})
 		end
 	end
 end
 
-function createInputObjectCircularRefsValidator(
-	context: SchemaValidationContext
-): (GraphQLInputObjectType) -> ()
+function createInputObjectCircularRefsValidator(context: SchemaValidationContext): (GraphQLInputObjectType) -> ()
 	-- Modified copy of algorithm from 'src/validation/rules/NoFragmentCycles.lua'.
 	-- Tracks already visited types to maintain O(N) and to ensure that cycles
 	-- are not redundantly reported.
@@ -744,7 +747,6 @@ function createInputObjectCircularRefsValidator(
 		-- ROBLOX deviation: we add 1 to fieldPath length, since Lua array indices start at 1 and length can be zero
 		fieldPathIndexByTypeName[tostring(inputObj.name)] = #fieldPath + 1
 
-		-- ROBLOX deviation: use Map
 		local fields = inputObj:getFields():values()
 
 		for _, field in ipairs(fields) do
@@ -768,7 +770,10 @@ function createInputObjectCircularRefsValidator(
 					)
 
 					context:reportError(
-						("Cannot reference Input Object \"%s\" within itself through a series of non-null fields: \"%s\"."):format(fieldType.name, pathStr),
+						('Cannot reference Input Object "%s" within itself through a series of non-null fields: "%s".'):format(
+							fieldType.name,
+							pathStr
+						),
 						Array.map(cyclePath, function(fieldObj)
 							return fieldObj.astNode
 						end)
@@ -795,9 +800,7 @@ type SDLDefinedObject<T, K> = {
 -- function getAllNodes<T: ASTNode, K: ASTNode>(
 -- 	object: SDLDefinedObject<T, K>,
 --   ): $ReadOnlyArray<T | K> {
-function getAllNodes(
-	object: SDLDefinedObject<ASTNode, ASTNode>
-): Array<ASTNode | ASTNode>
+function getAllNodes(object: SDLDefinedObject<ASTNode, ASTNode>): Array<ASTNode | ASTNode>
 	local astNode, extensionASTNodes = object.astNode, object.extensionASTNodes
 
 	return (function()
@@ -867,17 +870,15 @@ function getAllImplementsInterfaceNodes(
 	)
 end
 
-function getUnionMemberTypeNodes(
-	union: GraphQLUnionType,
-	typeName: string
-): Array<NamedTypeNode>
+function getUnionMemberTypeNodes(union: GraphQLUnionType, typeName: string): Array<NamedTypeNode>
 	return Array.filter(
 		getAllSubNodes(union, function(unionNode)
 			return unionNode.types
 		end),
 		function(typeNode)
 			return typeNode.name.value == typeName
-	end)
+		end
+	)
 end
 
 function getDeprecatedDirectiveNode(definitionNode): DirectiveNode?

@@ -1,10 +1,10 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/promiseReduce.js
-type Array<T> = { [number]: T }
 local jsutils = script.Parent
 local graphql = jsutils.Parent
 local Packages = graphql.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
+type Array<T> = LuauPolyfill.Array<T>
 local PromiseOrValueModule = require(jsutils.PromiseOrValue)
 type PromiseOrValue<T> = PromiseOrValueModule.PromiseOrValue<T>
 local isPromise = require(jsutils.isPromise).isPromise
@@ -21,18 +21,14 @@ local function promiseReduce(
 	callback: (any, any) -> PromiseOrValue<any>,
 	initialValue: PromiseOrValue<any>
 ): PromiseOrValue<any>
-	return Array.reduce(
-		values,
-		function(previous, value)
-			if isPromise(previous) then
-				return previous:andThen(function(resolved)
-					return callback(resolved, value)
-				end)
-			end
-			return callback(previous, value)
-		end,
-		initialValue
-	)
+	return Array.reduce(values, function(previous, value)
+		if isPromise(previous) then
+			return previous:andThen(function(resolved)
+				return callback(resolved, value)
+			end)
+		end
+		return callback(previous, value)
+	end, initialValue)
 end
 
 return {

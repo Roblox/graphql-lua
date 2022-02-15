@@ -3,6 +3,9 @@
 return function()
 	local utilitiesWorkspace = script.Parent.Parent
 	local srcWorkspace = utilitiesWorkspace.Parent
+	local Packages = srcWorkspace.Parent
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Array = LuauPolyfill.Array
 
 	local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
 
@@ -46,8 +49,6 @@ return function()
 	local buildASTSchema = buildASTSchemaImport.buildASTSchema
 	local buildSchema = buildASTSchemaImport.buildSchema
 
-	local UtilArray = require(srcWorkspace.luaUtils.Array)
-
 	--[[*
 	--  * This function does a full cycle of going from a string with the contents of
 	--  * the SDL, parsed in a schema AST, materializing that schema AST into an
@@ -70,12 +71,11 @@ return function()
 
 		return print_({
 			kind = Kind.DOCUMENT,
-			definitions = UtilArray.concat({ obj.astNode }, obj.extensionASTNodes),
+			definitions = Array.concat({ obj.astNode }, obj.extensionASTNodes),
 		})
 	end
 
 	describe("Schema Builder", function()
-
 		it("can use built schema for limited execution", function()
 			local schema = buildASTSchema(parse([[
 
@@ -367,7 +367,10 @@ return function()
 			local parsed = parse(sdl)
 			local definition = parsed.definitions[1]
 
-			expect(definition.kind == "InterfaceTypeDefinition" and definition.interfaces).toEqual({}, "The interfaces property must be an empty array.")
+			expect(definition.kind == "InterfaceTypeDefinition" and definition.interfaces).toEqual(
+				{},
+				"The interfaces property must be an empty array."
+			)
 			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
@@ -461,7 +464,7 @@ return function()
       }
     ]])
 
-      expect(cycleSDL(sdl)).to.equal(sdl)
+			expect(cycleSDL(sdl)).to.equal(sdl)
 		end)
 
 		it("Empty union", function()
@@ -1120,7 +1123,7 @@ return function()
 
 			expect(function()
 				return buildSchema(sdl)
-			end).toThrow("Unknown directive \"@unknown\".")
+			end).toThrow('Unknown directive "@unknown".')
 		end)
 
 		it("Allows to disable SDL validation", function()
@@ -1145,7 +1148,7 @@ return function()
 
 			expect(function()
 				return buildSchema(sdl, { assumeValidSDL = true })
-			end).toThrow("Unknown type: \"UnknownType\".")
+			end).toThrow('Unknown type: "UnknownType".')
 		end)
 
 		it("Rejects invalid AST", function()

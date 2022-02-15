@@ -3,6 +3,14 @@
 return function()
 	local utilitiesWorkspace = script.Parent.Parent
 	local srcWorkspace = utilitiesWorkspace.Parent
+	local rootWorkspace = srcWorkspace.Parent
+
+	local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+	local Map = LuauPolyfill.Map
+	local NaN = LuauPolyfill.Number.NaN
+
+	-- ROBLOX deviation: bring in NULL type
+	local NULL = require(utilitiesWorkspace.astFromValue).NULL
 
 	local scalarsImport = require(srcWorkspace.type.scalars)
 	local GraphQLID = scalarsImport.GraphQLID
@@ -18,12 +26,6 @@ return function()
 	local GraphQLInputObjectType = definitionImport.GraphQLInputObjectType
 
 	local astFromValue = require(utilitiesWorkspace.astFromValue).astFromValue
-
-	-- ROBLOX deviation: bring in NULL type
-	local NULL = require(utilitiesWorkspace.astFromValue).NULL
-	local Map = require(srcWorkspace.luaUtils.Map).Map
-	-- ROBLOX deviation: JS primitives
-	local NaN = 0 / 0
 
 	describe("astFromValue", function()
 		it("converts boolean values to ASTs", function()
@@ -86,7 +88,8 @@ return function()
 			-- Note: outside the bounds of 32bit signed int.
 			expect(function()
 				return astFromValue(1e40, GraphQLInt)
-			end).toThrow("Int cannot represent non 32-bit signed integer value: 1e+40")
+				-- ROBLOX deviation: value is represented as 1.e+40 instead of 1e+40
+			end).toThrow("Int cannot represent non 32-bit signed integer value: 1.e+40")
 
 			expect(function()
 				return astFromValue(NaN, GraphQLInt)
@@ -116,7 +119,8 @@ return function()
 
 			expect(astFromValue(1e40, GraphQLFloat)).toEqual({
 				kind = "FloatValue",
-				value = "1e+40",
+				-- ROBLOX deviation: value is represented as 1.e+40 instead of 1e+40
+				value = "1.e+40",
 			})
 		end)
 
@@ -286,12 +290,12 @@ return function()
 			-- Note: case sensitive
 			expect(function()
 				return astFromValue("hello", myEnum)
-			end).toThrow("Enum \"MyEnum\" cannot represent value: \"hello\"")
+			end).toThrow('Enum "MyEnum" cannot represent value: "hello"')
 
 			-- Note: Not a valid enum value
 			expect(function()
 				return astFromValue("UNKNOWN_VALUE", myEnum)
-			end).toThrow("Enum \"MyEnum\" cannot represent value: \"UNKNOWN_VALUE\"")
+			end).toThrow('Enum "MyEnum" cannot represent value: "UNKNOWN_VALUE"')
 		end)
 
 		it("converts array values to List ASTs", function()
@@ -364,14 +368,11 @@ return function()
 		end)
 
 		it("skip invalid list items", function()
-			local ast = astFromValue(
-				{
-					"FOO",
-					nil,
-					"BAR",
-				},
-				GraphQLList.new(GraphQLNonNull.new(GraphQLString))
-			)
+			local ast = astFromValue({
+				"FOO",
+				nil,
+				"BAR",
+			}, GraphQLList.new(GraphQLNonNull.new(GraphQLString)))
 
 			expect(ast).toEqual({
 				kind = "ListValue",
@@ -391,8 +392,8 @@ return function()
 		local inputObj = GraphQLInputObjectType.new({
 			name = "MyInputObj",
 			fields = Map.new({
-				{ "foo" , { type = GraphQLFloat }},
-				{ "bar" , { type = myEnum }},
+				{ "foo", { type = GraphQLFloat } },
+				{ "bar", { type = myEnum } },
 			}),
 		})
 

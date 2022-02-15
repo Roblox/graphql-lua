@@ -3,6 +3,14 @@
 return function()
 	local utilitiesWorkspace = script.Parent.Parent
 	local srcWorkspace = utilitiesWorkspace.Parent
+	local Packages = srcWorkspace.Parent
+
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Error = LuauPolyfill.Error
+	local Number = LuauPolyfill.Number
+
+	-- ROBLOX deviation: no distinction between undefined and null in Lua so we need to go around this with custom NULL like constant
+	local NULL = require(srcWorkspace.luaUtils.null)
 
 	local invariant = require(srcWorkspace.jsutils.invariant).invariant
 	local identityFunc = require(srcWorkspace.jsutils.identityFunc).identityFunc
@@ -14,10 +22,6 @@ return function()
 	local GraphQLScalarType = definitionImport.GraphQLScalarType
 	local GraphQLEnumType = definitionImport.GraphQLEnumType
 	local GraphQLInputObjectType = definitionImport.GraphQLInputObjectType
-	-- ROBLOX deviation: no distinction between undefined and null in Lua so we need to go around this with custom NULL like constant
-	local NULL = require(srcWorkspace.luaUtils.null)
-	-- ROBLOX deviation: JS primitives
-	local NaN = 0 / 0
 
 	local valueFromAST = require(utilitiesWorkspace.valueFromAST).valueFromAST
 
@@ -27,8 +31,6 @@ return function()
 	local GraphQLString = scalars.GraphQLString
 	local GraphQLBoolean = scalars.GraphQLBoolean
 	local GraphQLID = scalars.GraphQLID
-
-	local Error = require(srcWorkspace.luaUtils.Error)
 
 	describe("valueFromAST", function()
 		local function expectValueFrom(expect_, valueText, type_, variables)
@@ -48,17 +50,17 @@ return function()
 			expectValueFrom(expect, "123", GraphQLInt).to.equal(123)
 			expectValueFrom(expect, "123", GraphQLFloat).to.equal(123)
 			expectValueFrom(expect, "123.456", GraphQLFloat).to.equal(123.456)
-			expectValueFrom(expect, "\"abc123\"", GraphQLString).to.equal("abc123")
+			expectValueFrom(expect, '"abc123"', GraphQLString).to.equal("abc123")
 			expectValueFrom(expect, "123456", GraphQLID).to.equal("123456")
-			expectValueFrom(expect, "\"123456\"", GraphQLID).to.equal("123456")
+			expectValueFrom(expect, '"123456"', GraphQLID).to.equal("123456")
 		end)
 
 		it("does not convert when input coercion rules reject a value", function()
 			expectValueFrom(expect, "123", GraphQLBoolean).to.equal(nil)
 			expectValueFrom(expect, "123.456", GraphQLInt).to.equal(nil)
 			expectValueFrom(expect, "true", GraphQLInt).to.equal(nil)
-			expectValueFrom(expect, "\"123\"", GraphQLInt).to.equal(nil)
-			expectValueFrom(expect, "\"123\"", GraphQLFloat).to.equal(nil)
+			expectValueFrom(expect, '"123"', GraphQLInt).to.equal(nil)
+			expectValueFrom(expect, '"123"', GraphQLFloat).to.equal(nil)
 			expectValueFrom(expect, "123", GraphQLString).to.equal(nil)
 			expectValueFrom(expect, "true", GraphQLString).to.equal(nil)
 			expectValueFrom(expect, "123.456", GraphQLString).to.equal(nil)
@@ -74,7 +76,7 @@ return function()
 				parseValue = identityFunc,
 			})
 
-			expectValueFrom(expect, "\"value\"", passthroughScalar).to.equal("value")
+			expectValueFrom(expect, '"value"', passthroughScalar).to.equal("value")
 
 			local throwScalar = GraphQLScalarType.new({
 				name = "ThrowScalar",
@@ -105,7 +107,7 @@ return function()
 					GREEN = { value = 2 },
 					BLUE = { value = 3 },
 					NULL = { value = NULL },
-					NAN = { value = NaN },
+					NAN = { value = Number.NaN },
 					NO_CUSTOM_VALUE = { value = nil },
 				},
 			})
@@ -113,7 +115,7 @@ return function()
 			expectValueFrom(expect, "RED", testEnum).to.equal(1)
 			expectValueFrom(expect, "BLUE", testEnum).to.equal(3)
 			expectValueFrom(expect, "3", testEnum).to.equal(nil)
-			expectValueFrom(expect, "\"BLUE\"", testEnum).to.equal(nil)
+			expectValueFrom(expect, '"BLUE"', testEnum).to.equal(nil)
 			expectValueFrom(expect, "null", testEnum).to.equal(NULL)
 			expectValueFrom(expect, "NULL", testEnum).to.equal(NULL)
 			expectValueFrom(expect, "NULL", GraphQLNonNull.new(testEnum)).to.equal(NULL)

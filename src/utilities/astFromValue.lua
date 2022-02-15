@@ -1,11 +1,13 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/astFromValue.js
 
-local function NumberisFinite(value)
-	return typeof(value) == "number" and value ~= math.huge and value == value
-end
-
 local srcWorkspace = script.Parent.Parent
+local Packages = srcWorkspace.Parent
 local luaUtilsWorkspace = srcWorkspace.luaUtils
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Error = LuauPolyfill.Error
+local Number = LuauPolyfill.Number
+local RegExp = require(Packages.RegExp)
+type RegExp = RegExp.RegExp
 
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
 local invariant = require(srcWorkspace.jsutils.invariant).invariant
@@ -23,16 +25,13 @@ local isInputObjectType = definitionImport.isInputObjectType
 local isListType = definitionImport.isListType
 local isNonNullType = definitionImport.isNonNullType
 
-local _Number = require(srcWorkspace.Parent.LuauPolyfill).Number
-local RegExp = require(srcWorkspace.Parent.LuauPolyfill).RegExp
-local Error = require(luaUtilsWorkspace.Error)
 local NULL = require(luaUtilsWorkspace.null)
 local isNillishModule = require(luaUtilsWorkspace.isNillish)
 local isNillish = isNillishModule.isNillish
 local isNotNillish = isNillishModule.isNotNillish
 
 -- ROBLOX deviation: predeclare local variables
-local integerStringRegExp
+local integerStringRegExp: RegExp
 
 --[[
  * Produces a GraphQL Value AST given a JavaScript object.
@@ -156,7 +155,7 @@ local function astFromValue(value, type_)
 		end
 
 		-- JavaScript numbers can be Int or Float values.
-		if typeof(serialized) == "number" and NumberisFinite(serialized) then
+		if typeof(serialized) == "number" and Number.isFinite(serialized) then
 			local stringNum = tostring(serialized)
 
 			return (function()
@@ -214,5 +213,5 @@ integerStringRegExp = RegExp("^-?(?:0|[1-9][0-9]*)$")
 
 return {
 	astFromValue = astFromValue,
-	NULL = NULL
+	NULL = NULL,
 }

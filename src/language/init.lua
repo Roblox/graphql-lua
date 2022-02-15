@@ -1,4 +1,5 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/language/index.js
+--!strict
 
 local locationModule = require(script.location)
 local printLocationModule = require(script.printLocation)
@@ -23,7 +24,7 @@ export type ASTVisitor = visitorModule.ASTVisitor
 -- ROBLOX TODO: Luau doesn't current support default type arguments
 export type Visitor<KindToNode, Nodes> = visitorModule.Visitor<KindToNode, Nodes>
 -- ROBLOX TODO: Luau doesn't current support default type arguments
-export type VisitFn = visitorModule.VisitFn
+export type VisitFn<TAnyNode, TVisitedNode = TAnyNode> = visitorModule.VisitFn<TAnyNode, TVisitedNode>
 export type VisitorKeyMap<KindToNode> = visitorModule.VisitorKeyMap<KindToNode>
 
 

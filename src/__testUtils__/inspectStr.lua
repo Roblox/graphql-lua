@@ -3,16 +3,16 @@
 local HttpService = game:GetService("HttpService")
 
 local function replaceLeadingQuote(str)
-	str = string.gsub(str, "\n\"", "\n`")
-	if str.sub(str, 1, 1) == "\"" then
+	str = string.gsub(str, '\n"', "\n`")
+	if str.sub(str, 1, 1) == '"' then
 		return "`" .. string.sub(str, 2)
 	end
 	return str
 end
 
 local function replaceTrailingQuote(str)
-	str = string.gsub(str, "\"\n", "`\n")
-	if str.sub(str, -1) == "\"" then
+	str = string.gsub(str, '"\n', "`\n")
+	if str.sub(str, -1) == '"' then
 		return string.sub(str, 1, -2) .. "`"
 	end
 	return str
@@ -27,7 +27,7 @@ local function inspectStr(str: string): string
 	end
 	str = HttpService:JSONEncode(str)
 	str = replaceTrailingQuote(replaceLeadingQuote(str))
-	str = string.gsub(str, "\\\"", "\"")
+	str = string.gsub(str, '\\"', '"')
 	str = string.gsub(str, "\\\\", "\\")
 	return str
 end

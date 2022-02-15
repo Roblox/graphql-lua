@@ -3,16 +3,18 @@
 -- ROBLOX deviation: utils
 local srcWorkspace = script.Parent.Parent
 local luaUtilsWorkspace = srcWorkspace.luaUtils
-local Error = require(luaUtilsWorkspace.Error)
-local Array = require(luaUtilsWorkspace.Array)
+local Packages = srcWorkspace.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local Error = LuauPolyfill.Error
+type Array<T> = LuauPolyfill.Array<T>
 local NULL = require(luaUtilsWorkspace.null)
 local isNillishModule = require(luaUtilsWorkspace.isNillish)
 local isNillish = isNillishModule.isNillish
 local isNotNillish = isNillishModule.isNotNillish
-local keyValMapOrdered = require(luaUtilsWorkspace.keyValMapOrdered).keyValMapOrdered
-type Array<T> = { [number]: T }
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
 local devAssert = require(srcWorkspace.jsutils.devAssert).devAssert
+local keyValMap = require(srcWorkspace.jsutils.keyValMap).keyValMap
 local isObjectLike = require(srcWorkspace.jsutils.isObjectLike).isObjectLike
 
 local parseValue = require(srcWorkspace.language.parser).parseValue
@@ -135,9 +137,7 @@ local function buildClientSchema(
 		return getNamedType(typeRef)
 	end
 
-	function getNamedType(
-		typeRef: IntrospectionNamedTypeRef<any>
-	): GraphQLNamedType
+	function getNamedType(typeRef: IntrospectionNamedTypeRef<any>): GraphQLNamedType
 		local typeName = typeRef.name
 		if isNillish(typeName) then
 			error(Error.new(("Unknown type reference: %s."):format(inspect(typeRef))))
@@ -146,21 +146,23 @@ local function buildClientSchema(
 		-- ROBLOX deviation: use Map
 		local type_ = typeMap:get(typeName)
 		if isNillish(type_) then
-			error(Error.new(("Invalid or incomplete schema, unknown type: %s. Ensure that a full introspection query is used in order to build a client schema."):format(typeName)))
+			error(
+				Error.new(
+					(
+						"Invalid or incomplete schema, unknown type: %s. Ensure that a full introspection query is used in order to build a client schema."
+					):format(typeName)
+				)
+			)
 		end
 
 		return type_
 	end
 
-	function getObjectType(
-		typeRef: IntrospectionNamedTypeRef<IntrospectionObjectType>
-	): GraphQLObjectType
+	function getObjectType(typeRef: IntrospectionNamedTypeRef<IntrospectionObjectType>): GraphQLObjectType
 		return assertObjectType(getNamedType(typeRef))
 	end
 
-	function getInterfaceType(
-		typeRef: IntrospectionNamedTypeRef<IntrospectionInterfaceType>
-	): GraphQLInterfaceType
+	function getInterfaceType(typeRef: IntrospectionNamedTypeRef<IntrospectionInterfaceType>): GraphQLInterfaceType
 		return assertInterfaceType(getNamedType(typeRef))
 	end
 
@@ -183,12 +185,16 @@ local function buildClientSchema(
 			end
 		end
 		local typeStr = inspect(type_)
-		error(Error.new(("Invalid or incomplete introspection result. Ensure that a full introspection query is used in order to build a client schema: %s."):format(typeStr)))
+		error(
+			Error.new(
+				(
+					"Invalid or incomplete introspection result. Ensure that a full introspection query is used in order to build a client schema: %s."
+				):format(typeStr)
+			)
+		)
 	end
 
-	function buildScalarDef(
-		scalarIntrospection: IntrospectionScalarType
-	): GraphQLScalarType
+	function buildScalarDef(scalarIntrospection: IntrospectionScalarType): GraphQLScalarType
 		return GraphQLScalarType.new({
 			name = scalarIntrospection.name,
 			description = scalarIntrospection.description,
@@ -197,9 +203,7 @@ local function buildClientSchema(
 	end
 
 	function buildImplementationsList(
-		implementingIntrospection:
-		  IntrospectionObjectType
-		  | IntrospectionInterfaceType
+		implementingIntrospection: IntrospectionObjectType | IntrospectionInterfaceType
 	): Array<GraphQLInterfaceType>
 		-- TODO: Temporary workaround until GraphQL ecosystem will fully support
 		-- 'interfaces' on interface types.
@@ -215,9 +219,7 @@ local function buildClientSchema(
 		return Array.map(implementingIntrospection.interfaces, getInterfaceType)
 	end
 
-	function buildObjectDef(
-		objectIntrospection: IntrospectionObjectType
-	): GraphQLObjectType
+	function buildObjectDef(objectIntrospection: IntrospectionObjectType): GraphQLObjectType
 		return GraphQLObjectType.new({
 			name = objectIntrospection.name,
 			description = objectIntrospection.description,
@@ -230,9 +232,7 @@ local function buildClientSchema(
 		})
 	end
 
-	function buildInterfaceDef(
-		interfaceIntrospection: IntrospectionInterfaceType
-	): GraphQLInterfaceType
+	function buildInterfaceDef(interfaceIntrospection: IntrospectionInterfaceType): GraphQLInterfaceType
 		return GraphQLInterfaceType.new({
 			name = interfaceIntrospection.name,
 			description = interfaceIntrospection.description,
@@ -245,9 +245,7 @@ local function buildClientSchema(
 		})
 	end
 
-	function buildUnionDef(
-		unionIntrospection: IntrospectionUnionType
-	): GraphQLUnionType
+	function buildUnionDef(unionIntrospection: IntrospectionUnionType): GraphQLUnionType
 		if not unionIntrospection.possibleTypes then
 			local unionIntrospectionStr = inspect(unionIntrospection)
 			error(Error.new(("Introspection result missing possibleTypes: %s."):format(unionIntrospectionStr)))
@@ -262,9 +260,7 @@ local function buildClientSchema(
 		})
 	end
 
-	function buildEnumDef(
-		enumIntrospection: IntrospectionEnumType
-	): GraphQLEnumType
+	function buildEnumDef(enumIntrospection: IntrospectionEnumType): GraphQLEnumType
 		if not enumIntrospection.enumValues then
 			local enumIntrospectionStr = inspect(enumIntrospection)
 			error(Error.new(("Introspection result missing enumValues: %s."):format(enumIntrospectionStr)))
@@ -272,7 +268,7 @@ local function buildClientSchema(
 		return GraphQLEnumType.new({
 			name = enumIntrospection.name,
 			description = enumIntrospection.description,
-			values = keyValMapOrdered(enumIntrospection.enumValues, function(valueIntrospection)
+			values = keyValMap(enumIntrospection.enumValues, function(valueIntrospection)
 				return valueIntrospection.name
 			end, function(valueIntrospection)
 				return {
@@ -283,9 +279,7 @@ local function buildClientSchema(
 		})
 	end
 
-	function buildInputObjectDef(
-		inputObjectIntrospection: IntrospectionInputObjectType
-	): GraphQLInputObjectType
+	function buildInputObjectDef(inputObjectIntrospection: IntrospectionInputObjectType): GraphQLInputObjectType
 		if not inputObjectIntrospection.inputFields then
 			local inputObjectIntrospectionStr = inspect(inputObjectIntrospection)
 			error(Error.new(("Introspection result missing inputFields: %s."):format(inputObjectIntrospectionStr)))
@@ -306,18 +300,12 @@ local function buildClientSchema(
 			error(Error.new(("Introspection result missing fields: %s."):format(inspect(typeIntrospection))))
 		end
 
-		return keyValMapOrdered(
-			typeIntrospection.fields,
-			function(fieldIntrospection)
-				return fieldIntrospection.name
-			end,
-			buildField
-		)
+		return keyValMap(typeIntrospection.fields, function(fieldIntrospection)
+			return fieldIntrospection.name
+		end, buildField)
 	end
 
-	function buildField(
-		fieldIntrospection: IntrospectionField
-	): GraphQLFieldConfig<any, any>
+	function buildField(fieldIntrospection: IntrospectionField): GraphQLFieldConfig<any, any>
 		local type_ = getType(fieldIntrospection.type)
 		if not isOutputType(type_) then
 			local typeStr = inspect(type_)
@@ -338,21 +326,13 @@ local function buildClientSchema(
 		}
 	end
 
-	function buildInputValueDefMap(
-		inputValueIntrospections: Array<IntrospectionInputValue>
-	)
-		return keyValMapOrdered(
-			inputValueIntrospections,
-			function(inputValue)
-				return inputValue.name
-			end,
-			buildInputValue
-		)
+	function buildInputValueDefMap(inputValueIntrospections: Array<IntrospectionInputValue>)
+		return keyValMap(inputValueIntrospections, function(inputValue)
+			return inputValue.name
+		end, buildInputValue)
 	end
 
-	function buildInputValue(
-		inputValueIntrospection: IntrospectionInputValue
-	)
+	function buildInputValue(inputValueIntrospection: IntrospectionInputValue)
 		local type_ = getType(inputValueIntrospection.type)
 		if not isInputType(type_) then
 			local typeStr = inspect(type_)
@@ -373,9 +353,7 @@ local function buildClientSchema(
 		}
 	end
 
-	function buildDirective(
-		directiveIntrospection: IntrospectionDirective
-	)
+	function buildDirective(directiveIntrospection: IntrospectionDirective)
 		if not directiveIntrospection.args then
 			local directiveIntrospectionStr = inspect(directiveIntrospection)
 
@@ -383,7 +361,9 @@ local function buildClientSchema(
 		end
 		if not directiveIntrospection.locations then
 			local directiveIntrospectionStr = inspect(directiveIntrospection)
-			error(Error.new(("Introspection result missing directive locations: %s."):format(directiveIntrospectionStr)))
+			error(
+				Error.new(("Introspection result missing directive locations: %s."):format(directiveIntrospectionStr))
+			)
 		end
 		return GraphQLDirective.new({
 			name = directiveIntrospection.name,
@@ -396,15 +376,16 @@ local function buildClientSchema(
 
 	devAssert(
 		isObjectLike(introspection) and isObjectLike(introspection.__schema),
-		("Invalid or incomplete introspection result. Ensure that you are passing \"data\" property of introspection response and no \"errors\" was returned alongside: %s."):format(inspect(introspection))
+		(
+			'Invalid or incomplete introspection result. Ensure that you are passing "data" property of introspection response and no "errors" was returned alongside: %s.'
+		):format(inspect(introspection))
 	)
 
 	-- Get the schema from the introspection result.
 	schemaIntrospection = introspection.__schema
 
 	-- Iterate through all types, getting the type definition for each.
-	-- ROBLOX deviation: use Map
-	typeMap = keyValMapOrdered(schemaIntrospection.types, function(typeIntrospection)
+	typeMap = keyValMap(schemaIntrospection.types, function(typeIntrospection)
 		return typeIntrospection.name
 	end, function(typeIntrospection)
 		return buildType(typeIntrospection)
@@ -412,10 +393,11 @@ local function buildClientSchema(
 
 	-- Include standard types only if they are used.
 	for _, stdType in ipairs(Array.concat(specifiedScalarTypes, introspectionTypes)) do
-		-- ROBLOX deviation: use Map
+		-- ROBLOX deviation START: keyValMap returns a Map instead of ObjMap
 		if typeMap:get(stdType.name) then
 			typeMap:set(stdType.name, stdType)
 		end
+		-- ROBLOX deviation END
 	end
 
 	-- Get the root Query, Mutation, and Subscription types.
@@ -455,7 +437,7 @@ local function buildClientSchema(
 		query = queryType,
 		mutation = mutationType,
 		subscription = subscriptionType,
-		-- ROBLOX deviation: use Map
+		-- ROBLOX deviation: keyValMap returns a Map instead of ObjMap
 		types = typeMap:values(),
 		directives = directives,
 		assumeValid = options and options.assumeValid,

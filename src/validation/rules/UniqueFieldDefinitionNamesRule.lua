@@ -1,9 +1,10 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/validation/rules/UniqueFieldDefinitionNamesRule.js
 
 local srcWorkspace = script.Parent.Parent.Parent
+local rootWorkspace = srcWorkspace.Parent
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+local Map = LuauPolyfill.Map
 
--- ROBLOX deviation: use Map type
-local Map = require(srcWorkspace.luaUtils.Map).Map
 local isNotNillish = require(srcWorkspace.luaUtils.isNillish).isNotNillish
 
 local GraphQLError = require(srcWorkspace.error.GraphQLError).GraphQLError
@@ -41,25 +42,23 @@ exports.UniqueFieldDefinitionNamesRule = function(context)
 		local fieldNodes = node.fields or {}
 		local fieldNames = knownFieldNames[typeName]
 
-		for _, fieldDef in ipairs(fieldNodes)do
+		for _, fieldDef in ipairs(fieldNodes) do
 			local fieldName = fieldDef.name.value
 
 			if hasField(existingTypeMap:get(typeName), fieldName) then
 				context:reportError(
 					GraphQLError.new(
-						('Field "%s.%s" already exists in the schema. It cannot also be defined in this type extension.')
-							:format(typeName, fieldName),
+						(
+							'Field "%s.%s" already exists in the schema. It cannot also be defined in this type extension.'
+						):format(typeName, fieldName),
 						fieldDef.name
 					)
 				)
 			elseif fieldNames[fieldName] then
 				context:reportError(
 					GraphQLError.new(
-						('Field "%s.%s" can only be defined once.'):format(
-							typeName,
-							fieldName
-						),
-						{fieldNames[fieldName], fieldDef.name}
+						('Field "%s.%s" can only be defined once.'):format(typeName, fieldName),
+						{ fieldNames[fieldName], fieldDef.name }
 					)
 				)
 			else

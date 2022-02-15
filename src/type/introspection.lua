@@ -5,12 +5,12 @@ local jsutilsWorkspace = srcWorkspace.jsutils
 local languageWorkspace = srcWorkspace.language
 local Packages = srcWorkspace.Parent
 
--- ROBLOX deviation: utils
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
+local Map = LuauPolyfill.Map
 local Object = LuauPolyfill.Object
+
 local isNotNillish = require(srcWorkspace.luaUtils.isNillish).isNotNillish
-local Map = require(srcWorkspace.luaUtils.Map).Map
 
 local inspect = require(jsutilsWorkspace.inspect).inspect
 local invariant = require(jsutilsWorkspace.invariant).invariant

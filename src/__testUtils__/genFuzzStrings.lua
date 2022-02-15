@@ -2,13 +2,9 @@
 
 -- /**
 --  * Generator that produces all possible combinations of allowed characters.
---  * options: {
---  * 	allowedChars: { string },
---  * 	maxLength: number,
---  * }
 --  */
 return {
-	genFuzzStrings = function(options)
+	genFuzzStrings = function(options: { allowedChars: { string }, maxLength: number })
 		local function getFuzzStrings()
 			local allowedChars = options.allowedChars
 			local maxLength = options.maxLength

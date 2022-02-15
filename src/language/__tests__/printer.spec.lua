@@ -1,4 +1,11 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/__tests__/printer-test.js
+--!strict
+local languageWorkspace = script.Parent.Parent
+local srcWorkspace = languageWorkspace.Parent
+local Packages = srcWorkspace.Parent
+-- ROBLOX deviation: use jestExpect here so that we get reasonably text diffing on failures
+local JestGlobals = require(Packages.Dev.JestGlobals)
+local jestExpect = JestGlobals.expect
 
 return function()
 	local dedent = require(script.Parent.Parent.Parent.__testUtils__.dedent).dedent
@@ -14,26 +21,27 @@ return function()
 			local ast = parse(kitchenSinkQuery)
 			local astBefore = inspect(ast)
 			print_(ast)
-			expect(inspect(ast)).toEqual(astBefore)
+			jestExpect(inspect(ast)).toEqual(astBefore)
 		end)
 
 		it("prints minimal ast", function()
 			local ast = { kind = "Field", name = { kind = "Name", value = "foo" } }
-			expect(print_(ast)).to.equal("foo")
+			jestExpect(print_(ast)).toEqual("foo")
 		end)
 
 		it("produces helpful error messages", function()
 			local badAST = { random = "Data" }
 
 			-- $FlowExpectedError[incompatible-call]
-			expect(function()
-				print_(badAST)
-			end).to.throw("Invalid AST Node: { random: \"Data\" }.")
+			-- ROBLOX deviation: strong typing prevents this from analyzing (yay!), so cast away safety
+			jestExpect(function()
+				print_(badAST :: any)
+			end).toThrow("Invalid AST Node: { random: \"Data\" }.")
 		end)
 
 		it("correctly prints non-query operations without name", function()
 			local queryASTShorthanded = parse("query { id, name }")
-			expect(print_(queryASTShorthanded)).to.equal(dedent([[
+			jestExpect(print_(queryASTShorthanded)).toEqual(dedent([[
               {
                 id
                 name
@@ -41,7 +49,7 @@ return function()
 			]]))
 
 			local mutationAST = parse("mutation { id, name }")
-			expect(print_(mutationAST)).to.equal(dedent([[
+			jestExpect(print_(mutationAST)).toEqual(dedent([[
 				mutation {
 				  id
 				  name
@@ -49,7 +57,7 @@ return function()
 			]]))
 
 			local queryASTWithArtifacts = parse("query ($foo: TestType) @testDirective { id, name }")
-			expect(print_(queryASTWithArtifacts)).to.equal(dedent([[
+			jestExpect(print_(queryASTWithArtifacts)).toEqual(dedent([[
 				query ($foo: TestType) @testDirective {
 				  id
 				  name
@@ -57,7 +65,7 @@ return function()
 			]]))
 
 			local mutationASTWithArtifacts = parse("mutation ($foo: TestType) @testDirective { id, name }")
-			expect(print_(mutationASTWithArtifacts)).to.equal(dedent([[
+			jestExpect(print_(mutationASTWithArtifacts)).toEqual(dedent([[
 				mutation ($foo: TestType) @testDirective {
 				  id
 				  name
@@ -67,7 +75,7 @@ return function()
 
 		it("prints query with variable directives", function()
 			local queryASTWithVariableDirective = parse("query ($foo: TestType = {a: 123} @testDirective(if: true) @test) { id }")
-			expect(print_(queryASTWithVariableDirective)).to.equal(dedent([[
+			jestExpect(print_(queryASTWithVariableDirective)).toEqual(dedent([[
 				query ($foo: TestType = {a: 123} @testDirective(if: true) @test) {
 				  id
 				}
@@ -77,7 +85,7 @@ return function()
 		it("keeps arguments on one line if line is short (<= 80 chars)", function()
 			local printed = print_(parse("{trip(wheelchair:false arriveBy:false){dateTime}}"))
 
-			expect(printed).to.equal(dedent([[
+			jestExpect(printed).toEqual(dedent([[
 				{
 				  trip(wheelchair: false, arriveBy: false) {
 				    dateTime
@@ -89,7 +97,7 @@ return function()
 		it("puts arguments on multiple lines if line is long (> 80 chars)", function()
 			local printed = print_(parse("{trip(wheelchair:false arriveBy:false includePlannedCancellations:true transitDistanceReluctance:2000){dateTime}}"))
 
-			expect(printed).to.equal(dedent([[
+			jestExpect(printed).toEqual(dedent([[
 				{
 				  trip(
 				    wheelchair: false
@@ -110,7 +118,7 @@ return function()
 					experimentalFragmentVariables = true,
 				}
 			)
-			expect(print_(queryASTWithVariableDirective)).to.equal(dedent([[
+			jestExpect(print_(queryASTWithVariableDirective)).toEqual(dedent([[
 				fragment Foo($foo: TestType @test) on TestType @testDirective {
 				  id
 				}
@@ -126,7 +134,7 @@ return function()
 			]],
 				{ experimentalFragmentVariables = true }
 			)
-			expect(print_(fragmentWithVariable)).to.equal(dedent([[
+			jestExpect(print_(fragmentWithVariable)).toEqual(dedent([[
 				fragment Foo($a: ComplexType, $b: Boolean = false) on TestType {
 				  id
 				}
@@ -136,7 +144,7 @@ return function()
 		it("prints kitchen sink", function()
 			local printed = print_(parse(kitchenSinkQuery))
 
-			expect(printed).to.equal(
+			jestExpect(printed).toEqual(
 				-- $FlowFixMe[incompatible-call]
 				dedent([[
 					query queryName($foo: ComplexType, $site: Site = MOBILE) @onQuery {

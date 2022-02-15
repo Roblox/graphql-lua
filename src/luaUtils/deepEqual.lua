@@ -10,7 +10,7 @@
 local Number = require(script.Parent.Parent.Parent.LuauPolyfill).Number
 local NULL = require(script.Parent.null)
 
-local function deepEqual(a: any, b: any)
+local function deepEqual(a: any, b: any): (boolean, string?)
 	if typeof(a) ~= typeof(b) then
 		local message = ("{1}: value of type '%s'\n{2}: value of type '%s'"):format(typeof(a), typeof(b))
 		return false, message
@@ -35,7 +35,8 @@ local function deepEqual(a: any, b: any)
 
 		local success, innerMessage = deepEqual(value, b[key])
 		if not success then
-			local message = innerMessage
+			-- ROBLOX FIXME Luau: Luau should infer the return as (false, string) | (true, nil), and then know `not success` means innerMessage is string
+			local message = (innerMessage :: string)
 				:gsub("{1}", ("{1}[%s]"):format(tostring(key)))
 				:gsub("{2}", ("{2}[%s]"):format(tostring(key)))
 
@@ -48,7 +49,8 @@ local function deepEqual(a: any, b: any)
 			local success, innerMessage = deepEqual(a[key], value)
 
 			if not success then
-				local message = innerMessage
+				-- ROBLOX FIXME Luau: Luau should infer the return as (false, string) | (true, nil), and then know `not success` means innerMessage is string
+				local message = (innerMessage :: string)
 					:gsub("{1}", ("{1}[%s]"):format(tostring(key)))
 					:gsub("{2}", ("{2}[%s]"):format(tostring(key)))
 

@@ -1,12 +1,23 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/valueFromAST.js
 
+-- ROBLOX TODO: change this to `()` once Luau supports type packs
+type void = nil
 local srcWorkspace = script.Parent.Parent
-
+local objMapImport = require(srcWorkspace.jsutils.ObjMap)
+type ObjMap<T> = objMapImport.ObjMap<T>
 local keyMap = require(srcWorkspace.jsutils.keyMap).keyMap
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
 local invariant = require(srcWorkspace.jsutils.invariant).invariant
+
+local astImport = require(srcWorkspace.language.ast)
+type ListValueNode = astImport.ListValueNode
+type ObjectValueNode = astImport.ObjectValueNode
+type ValueNode = astImport.ValueNode
+type VariableNode = astImport.VariableNode
 local Kind = require(srcWorkspace.language.kinds).Kind
+
 local definitionImport = require(srcWorkspace.type.definition)
+type GraphQLInputType = definitionImport.GraphQLInputType
 local isLeafType = definitionImport.isLeafType
 local isInputObjectType = definitionImport.isInputObjectType
 local isListType = definitionImport.isListType
@@ -17,20 +28,27 @@ local NULL = require(srcWorkspace.luaUtils.null)
 -- ROBLOX deviation: predeclare functions
 local isMissingVariable
 
-local function valueFromAST(valueNode, type_, variables)
+local function valueFromAST(
+	-- ROBLOX FIXME Luau: should be optional, but narrowing isn't working with guard below
+	valueNode: ValueNode,
+	type_: GraphQLInputType,
+	variables: ObjMap<any>?
+): any | void
 	if not valueNode then
 		-- When there is no node, then there is also no value.
 		-- Importantly, this is different from returning the value null.
 		return
 	end
 	if valueNode.kind == Kind.VARIABLE then
-		local variableName = valueNode.name.value
+		-- ROBLOX TODO: add singleton type to Node 'kind', which should then narrow this properly
+		local variableName = (valueNode :: VariableNode).name.value
 		if variables == nil or variables[variableName] == nil then
 			-- No valid return value.
 			return
 		end
 
-		local variableValue = variables[variableName]
+		-- ROBLOX FIXME Luau: Luau doesn't understand the guard above
+		local variableValue = (variables :: ObjMap<any>)[variableName]
 
 		if variableValue == NULL and isNonNullType(type_) then
 			return -- Invalid: intentionally return no value.
@@ -57,7 +75,8 @@ local function valueFromAST(valueNode, type_, variables)
 		local itemType = type_.ofType
 		if valueNode.kind == Kind.LIST then
 			local coercedValues = {}
-			for _, itemNode in ipairs(valueNode.values) do
+			-- ROBLOX TODO: add singleton type to Node 'kind', which should then narrow this properly
+			for _, itemNode in ipairs((valueNode :: ListValueNode).values) do
 				-- If an array contains a missing variable, it is either coerced to
 				-- null or if the item type is non-null, it considered invalid.
 				if isMissingVariable(itemNode, variables) then
@@ -89,7 +108,8 @@ local function valueFromAST(valueNode, type_, variables)
 		end
 		-- ROBLOX deviation: no Object.create in Lua but not needed in this use case
 		local coercedObj = {}
-		local fieldNodes = keyMap(valueNode.fields, function(field)
+		-- ROBLOX TODO: add singleton type to Node 'kind', which should then narrow this properly
+		local fieldNodes = keyMap((valueNode :: ObjectValueNode).fields, function(field)
 			return field.name.value
 		end)
 		-- ROBLOX deviation: use Map

@@ -1,20 +1,18 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/lexicographicSortSchema.js
 
--- ROBLOX deviation: add polyfills
 local srcWorkspace = script.Parent.Parent
 local rootWorkspace = srcWorkspace.Parent
+
 local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
 local Array = LuauPolyfill.Array
+local Map = LuauPolyfill.Map
 local Object = LuauPolyfill.Object
-local MapModule = require(srcWorkspace.luaUtils.Map)
-local Map = MapModule.Map
-type Map<T, V> = MapModule.Map<T, V>
-type Array<T> = { [number]: T }
+type Array<T> = LuauPolyfill.Array<T>
+type Map<T, V> = LuauPolyfill.Map<T, V>
 
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
 local invariant = require(srcWorkspace.jsutils.invariant).invariant
--- ROBLOX deviation: use Map Type
-local keyValMapOrdered = require(srcWorkspace.luaUtils.keyValMapOrdered).keyValMapOrdered
+local keyValMap = require(srcWorkspace.jsutils.keyValMap).keyValMap
 local naturalCompare = require(srcWorkspace.jsutils.naturalCompare).naturalCompare
 
 local SchemaModule = require(srcWorkspace.type.schema)
@@ -29,6 +27,13 @@ type GraphQLNamedType = DefinitionModule.GraphQLNamedType
 type GraphQLFieldConfigMap<T, V> = DefinitionModule.GraphQLFieldConfigMap<T, V>
 type GraphQLFieldConfigArgumentMap = DefinitionModule.GraphQLFieldConfigArgumentMap
 type GraphQLInputFieldConfigMap = DefinitionModule.GraphQLInputFieldConfigMap
+-- ROBLOX deviation START: types added for explicit casting
+type GraphQLObjectType = DefinitionModule.GraphQLObjectType
+type GraphQLInterfaceType = DefinitionModule.GraphQLInterfaceType
+type GraphQLUnionType = DefinitionModule.GraphQLUnionType
+type GraphQLEnumType = DefinitionModule.GraphQLEnumType
+type GraphQLInputObjectType = DefinitionModule.GraphQLInputObjectType
+-- ROBLOX deviation END
 
 local isIntrospectionType = require(srcWorkspace.type.introspection).isIntrospectionType
 local GraphQLList = DefinitionModule.GraphQLList
@@ -55,9 +60,7 @@ local sortObjMap, sortByName, sortBy
  *
  * This function returns a sorted copy of the given GraphQLSchema.
  *]]
-local function lexicographicSortSchema(
-	schema: GraphQLSchema
-): GraphQLSchema
+local function lexicographicSortSchema(schema: GraphQLSchema): GraphQLSchema
 	-- ROBLOX deviation: predeclare variables
 	local typeMap
 
@@ -121,7 +124,7 @@ local function lexicographicSortSchema(
 		end)
 	end
 
-	function sortTypes(arr: Array<any>) : Array<any>
+	function sortTypes(arr: Array<any>): Array<any>
 		return Array.map(sortByName(arr), replaceNamedType)
 	end
 
@@ -130,7 +133,8 @@ local function lexicographicSortSchema(
 			return type_
 		end
 		if isObjectType(type_) then
-			local config = type_:toConfig()
+			-- ROBLOX deviation: explicit cast
+			local config = (type_ :: GraphQLObjectType):toConfig()
 
 			return GraphQLObjectType.new(Object.assign({}, config, {
 				interfaces = function()
@@ -142,7 +146,8 @@ local function lexicographicSortSchema(
 			}))
 		end
 		if isInterfaceType(type_) then
-			local config = type_:toConfig()
+			-- ROBLOX deviation: explicit cast
+			local config = (type_ :: GraphQLInterfaceType):toConfig()
 
 			return GraphQLInterfaceType.new(Object.assign({}, config, {
 				interfaces = function()
@@ -154,7 +159,8 @@ local function lexicographicSortSchema(
 			}))
 		end
 		if isUnionType(type_) then
-			local config = type_:toConfig()
+			-- ROBLOX deviation: explicit cast
+			local config = (type_ :: GraphQLUnionType):toConfig()
 
 			return GraphQLUnionType.new(Object.assign({}, config, {
 				types = function()
@@ -163,7 +169,8 @@ local function lexicographicSortSchema(
 			}))
 		end
 		if isEnumType(type_) then
-			local config = type_:toConfig()
+			-- ROBLOX deviation: explicit cast
+			local config = (type_ :: GraphQLEnumType):toConfig()
 
 			return GraphQLEnumType.new(Object.assign({}, config, {
 				values = sortObjMap(config.values),
@@ -171,7 +178,8 @@ local function lexicographicSortSchema(
 		end
 		-- istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
 		if isInputObjectType(type_) then
-			local config = type_:toConfig()
+			-- ROBLOX deviation: explicit cast
+			local config = (type_ :: GraphQLInputObjectType):toConfig()
 
 			return GraphQLInputObjectType.new(Object.assign({}, config, {
 				fields = function()
@@ -186,15 +194,12 @@ local function lexicographicSortSchema(
 	end
 
 	local schemaConfig = schema:toConfig()
-	typeMap = keyValMapOrdered(
-		sortByName(schemaConfig.types),
-		function(type_)
-			return type_.name
-		end,
-		sortNamedType
-	)
+	typeMap = keyValMap(sortByName(schemaConfig.types), function(type_)
+		return type_.name
+	end, sortNamedType)
 
 	return GraphQLSchema.new(Object.assign({}, schemaConfig, {
+		-- ROBLOX deviation: keyValMap returns a Map instead of an object to preserve key order
 		types = typeMap:values(),
 		directives = Array.map(sortByName(schemaConfig.directives), sortDirective),
 		query = replaceMaybeType(schemaConfig.query),
@@ -203,10 +208,7 @@ local function lexicographicSortSchema(
 	}))
 end
 
-function sortObjMap(
-	map: Map<string, any>,
-	sortValueFn: (any) -> any
-): Map<string, any>
+function sortObjMap(map: Map<string, any>, sortValueFn: (any) -> any): Map<string, any>
 	local sortedMap = Map.new()
 	local sortedKeys = sortBy(map:keys(), function(x)
 		return x
@@ -235,10 +237,7 @@ function sortByName(array: Array<any>): Array<any>
 	end)
 end
 
-function sortBy(
-	array: Array<any>,
-	mapToKey: (any) -> string
-): Array<any>
+function sortBy(array: Array<any>, mapToKey: (any) -> string): Array<any>
 	return Array.sort(Array.slice(array), function(obj1, obj2)
 		local key1 = mapToKey(obj1)
 		local key2 = mapToKey(obj2)

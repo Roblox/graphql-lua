@@ -1,6 +1,8 @@
 local srcWorkspace = script.Parent.Parent
-local PromiseModule = require(srcWorkspace.luaUtils.Promise)
-type Promise<T> = PromiseModule.Promise<T>
+local rootWorkspace = srcWorkspace.Parent
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+type Promise<T> = LuauPolyfill.Promise<T>
+
 local astModule = require(srcWorkspace.language.ast)
 type DocumentNode = astModule.DocumentNode
 local executeModule = require(srcWorkspace.execution.execute)
@@ -13,20 +15,18 @@ local definitionModule = require(srcWorkspace.type.definition)
 type GraphQLFieldResolver<T, V> = definitionModule.GraphQLFieldResolver<T, V, any>
 
 export type SubscriptionArgs = {
-    schema: GraphQLSchema,
-    document: DocumentNode,
-    rootValue: any?,
-    contextValue: any?,
-    variableValues: { [string]: any },
-    operationName: string?,
-    fieldResolver: GraphQLFieldResolver<any, any>?,
-    subscribeFieldResolver: GraphQLFieldResolver<any, any>?
+	schema: GraphQLSchema,
+	document: DocumentNode,
+	rootValue: any?,
+	contextValue: any?,
+	variableValues: { [string]: any },
+	operationName: string?,
+	fieldResolver: GraphQLFieldResolver<any, any>?,
+	subscribeFieldResolver: GraphQLFieldResolver<any, any>?,
 }
 
-local function subscribe(
-	args: SubscriptionArgs
-  ): Promise<ExecutionResult>
-  error("graphql-lua does not currently implement subscriptions")
+local function subscribe(args: SubscriptionArgs): Promise<ExecutionResult>
+	error("graphql-lua does not currently implement subscriptions")
 end
 
 local function createSourceEventStream(
@@ -37,11 +37,11 @@ local function createSourceEventStream(
 	variableValues: { [string]: any }?,
 	operationName: string?,
 	fieldResolver: GraphQLFieldResolver<any, any>?
-  ): Promise<ExecutionResult>
-  error("graphql-lua does not currently implement subscriptions")
+): Promise<ExecutionResult>
+	error("graphql-lua does not currently implement subscriptions")
 end
 
 return {
 	subscribe = subscribe,
-	createSourceEventStream = createSourceEventStream
+	createSourceEventStream = createSourceEventStream,
 }

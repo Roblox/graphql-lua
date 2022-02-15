@@ -1,7 +1,9 @@
--- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/jsutils/keyValMap.js
-type Array<T> = { [number]: T }
-local ObjMapModule = require(script.Parent.ObjMap)
-type ObjMap<T> = ObjMapModule.ObjMap<T>
+-- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/jsutils/keyValMap.js
+local rootWorkspace = script.Parent.Parent.Parent
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+local Map = LuauPolyfill.Map
+type Array<T> = LuauPolyfill.Array<T>
+type Map<T, V> = LuauPolyfill.Map<T, V>
 
 --[[
  * Creates a keyed JS object from an array, given a function to produce the keys
@@ -20,16 +22,12 @@ type ObjMap<T> = ObjMapModule.ObjMap<T>
  *     )
  *
  ]]
-
-local function keyValMap(
-	list: Array<any>,
-	keyFn: (any) -> string,
-	valFn: (any) -> any
-): ObjMap<any>
-	local map = {}
+-- ROBLOX deviation: Returning a Map instead of ObjMap
+local function keyValMap<T, V>(list: Array<T>, keyFn: (T) -> string, valFn: (T) -> V): Map<string, V>
+	local map = Map.new() :: Map<string, V>
 	for i = 1, #list do
 		local item = list[i]
-		map[keyFn(item)] = valFn(item)
+		map:set(keyFn(item), valFn(item))
 	end
 	return map
 end

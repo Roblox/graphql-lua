@@ -1,6 +1,11 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/fe27912e56dc257eca720e07fc84a4370236dd9d/src/validation/rules/KnownArgumentNamesRule.js
 
 local root = script.Parent.Parent.Parent
+local PackagesWorkspace = root.Parent
+local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local Object = LuauPolyfill.Object
+
 local GraphQLError = require(root.error.GraphQLError).GraphQLError
 local language = root.language
 local jsutils = root.jsutils
@@ -8,10 +13,6 @@ local didYouMean = require(jsutils.didYouMean).didYouMean
 local suggestionList = require(jsutils.suggestionList).suggestionList
 local Kind = require(language.kinds).Kind
 local specifiedDirectives = require(root.type.directives).specifiedDirectives
-local PackagesWorkspace = root.Parent
-local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
-local Array = LuauPolyfill.Array
-local Object = LuauPolyfill.Object
 
 local exports = {}
 
@@ -22,35 +23,28 @@ local exports = {}
 --  * that field.
 --  */
 function exports.KnownArgumentNamesRule(context)
-	return Object.assign(
-		{},
-		exports.KnownArgumentNamesOnDirectivesRule(context),
-		{
-			Argument = function(_self, argNode)
-				local argDef = context:getArgument()
-				local fieldDef = context:getFieldDef()
-				local parentType = context:getParentType()
+	return Object.assign({}, exports.KnownArgumentNamesOnDirectivesRule(context), {
+		Argument = function(_self, argNode)
+			local argDef = context:getArgument()
+			local fieldDef = context:getFieldDef()
+			local parentType = context:getParentType()
 
-				if not argDef and fieldDef and parentType then
-					local argName = argNode.name.value
-					local knownArgsNames = Array.map(fieldDef.args, function(arg)
-						return arg.name
-					end)
-					local suggestions = suggestionList(argName, knownArgsNames)
-					context:reportError(
-						GraphQLError.new(
-							('Unknown argument "%s" on field "%s.%s".'):format(
-								argName,
-								parentType.name,
-								fieldDef.name
-							) .. didYouMean(suggestions),
-							argNode
-						)
+			if not argDef and fieldDef and parentType then
+				local argName = argNode.name.value
+				local knownArgsNames = Array.map(fieldDef.args, function(arg)
+					return arg.name
+				end)
+				local suggestions = suggestionList(argName, knownArgsNames)
+				context:reportError(
+					GraphQLError.new(
+						('Unknown argument "%s" on field "%s.%s".'):format(argName, parentType.name, fieldDef.name)
+							.. didYouMean(suggestions),
+						argNode
 					)
-				end
-			end,
-		}
-	)
+				)
+			end
+		end,
+	})
 end
 
 -- /**
@@ -94,10 +88,8 @@ function exports.KnownArgumentNamesOnDirectivesRule(context)
 						local suggestions = suggestionList(argName, knownArgs)
 						context:reportError(
 							GraphQLError.new(
-								('Unknown argument "%s" on directive "@%s".'):format(
-									argName,
-									directiveName
-								) .. didYouMean(suggestions),
+								('Unknown argument "%s" on directive "@%s".'):format(argName, directiveName)
+									.. didYouMean(suggestions),
 								argNode
 							)
 						)

@@ -1,10 +1,14 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/valueFromASTUntyped.js
 local srcWorkspace = script.Parent.Parent
+local rootWorkspace = srcWorkspace.Parent
 local jsUtilsWorkspace = srcWorkspace.jsutils
 local languageWorkspace = srcWorkspace.language
 -- ROBLOX deviation: bring in polyfills
-local Array = require(srcWorkspace.Parent.LuauPolyfill).Array
-type Array<T> = { [number]: T }
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local coerceToTable = LuauPolyfill.coerceToTable
+type Array<T> = LuauPolyfill.Array<T>
+
 local NULL = require(srcWorkspace.luaUtils.null)
 
 local ObjMapModule = require(jsUtilsWorkspace.ObjMap)
@@ -46,21 +50,19 @@ local function valueFromASTUntyped(
 		return tonumber(valueNode.value, 10)
 	elseif valueNode.kind == Kind.FLOAT then
 		return tonumber(valueNode.value)
-
 	elseif valueNode.kind == Kind.STRING or valueNode.kind == Kind.ENUM or valueNode.kind == Kind.BOOLEAN then
 		return valueNode.value
-
 	elseif valueNode.kind == Kind.LIST then
-
 		return Array.map(valueNode.values, function(node)
 			return valueFromASTUntyped(node, variables)
 		end)
 	elseif valueNode.kind == Kind.OBJECT then
-		return keyValMap(valueNode.fields, function(field)
+		-- ROBLOX deviation START: keyValMap returns a Map, convert back to object
+		return coerceToTable(keyValMap(valueNode.fields, function(field)
 			return field.name.value
 		end, function(field)
 			return valueFromASTUntyped(field.value, variables)
-		end)
+		end))
 	elseif valueNode.kind == Kind.VARIABLE then
 		return variables and variables[valueNode.name.value]
 	end

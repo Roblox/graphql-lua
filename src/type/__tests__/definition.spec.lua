@@ -2,13 +2,14 @@
 
 return function()
 	local srcWorkspace = script.Parent.Parent.Parent
+	local rootWorkspace = srcWorkspace.Parent
+	local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+	local Map = LuauPolyfill.Map
+	local Number = LuauPolyfill.Number
+	local coerceToTable = LuauPolyfill.coerceToTable
 
-	-- ROBLOX deviation: utils
 	local NULL = require(srcWorkspace.luaUtils.null)
-	local NaN = 0 / 0
-	local MapModule = require(srcWorkspace.luaUtils.Map)
-	local Map = MapModule.Map
-	local coerceToTable = MapModule.coerceToTable
+	local NaN = Number.NaN
 
 	local inspect = require(srcWorkspace.jsutils.inspect).inspect
 	local identityFunc = require(srcWorkspace.jsutils.identityFunc).identityFunc
@@ -97,10 +98,10 @@ return function()
 			})
 
 			expect(scalar:parseLiteral(parseValue("null"))).to.equal("parseValue: null")
-			expect(scalar:parseLiteral(parseValue("{ foo: \"bar\" }"))).to.equal("parseValue: { foo: \"bar\" }")
+			expect(scalar:parseLiteral(parseValue('{ foo: "bar" }'))).to.equal('parseValue: { foo: "bar" }')
 			expect(scalar:parseLiteral(parseValue("{ foo: { bar: $var } }"), {
 				var = "baz",
-			})).to.equal("parseValue: { foo: { bar: \"baz\" } }")
+			})).to.equal('parseValue: { foo: { bar: "baz" } }')
 		end)
 
 		it("rejects a Scalar type without name", function()
@@ -115,7 +116,9 @@ return function()
 					name = "SomeScalar",
 					serialize = {},
 				})
-			end).to.throw("SomeScalar must provide \"serialize\" function. If this custom Scalar is also used as an input type, ensure \"parseValue\" and \"parseLiteral\" functions are also provided.")
+			end).to.throw(
+				'SomeScalar must provide "serialize" function. If this custom Scalar is also used as an input type, ensure "parseValue" and "parseLiteral" functions are also provided.'
+			)
 		end)
 
 		it("rejects a Scalar type defining parseLiteral but not parseValue", function()
@@ -124,21 +127,18 @@ return function()
 					name = "SomeScalar",
 					parseLiteral = dummyFunc,
 				})
-			end).to.throw("SomeScalar must provide both \"parseValue\" and \"parseLiteral\" functions.")
+			end).to.throw('SomeScalar must provide both "parseValue" and "parseLiteral" functions.')
 		end)
 
-		it(
-			"rejects a Scalar type defining parseValue and parseLiteral with an incorrect type",
-			function()
-				expect(function()
-					return GraphQLScalarType.new({
-						name = "SomeScalar",
-						parseValue = {},
-						parseLiteral = {},
-					})
-				end).to.throw("SomeScalar must provide both \"parseValue\" and \"parseLiteral\" functions.")
-			end
-		)
+		it("rejects a Scalar type defining parseValue and parseLiteral with an incorrect type", function()
+			expect(function()
+				return GraphQLScalarType.new({
+					name = "SomeScalar",
+					parseValue = {},
+					parseLiteral = {},
+				})
+			end).to.throw('SomeScalar must provide both "parseValue" and "parseLiteral" functions.')
+		end)
 
 		it("rejects a Scalar type defining specifiedByUrl with an incorrect type", function()
 			-- ROBLOX deviation: {} is treated as an Array in Lua so when printed it becomes [] rather than {}
@@ -147,7 +147,7 @@ return function()
 					name = "SomeScalar",
 					specifiedByUrl = {},
 				})
-			end).to.throw("SomeScalar must provide \"specifiedByUrl\" as a string, but got: [].")
+			end).to.throw('SomeScalar must provide "specifiedByUrl" as a string, but got: [].')
 		end)
 	end)
 
@@ -300,20 +300,17 @@ return function()
 			expect(objType:getInterfaces()).toEqual({ InterfaceType })
 		end)
 
-		it(
-			"accepts an Object type with interfaces as a function returning an array",
-			function()
-				local objType = GraphQLObjectType.new({
-					name = "SomeObject",
-					fields = {},
-					interfaces = function()
-						return { InterfaceType }
-					end,
-				})
+		it("accepts an Object type with interfaces as a function returning an array", function()
+			local objType = GraphQLObjectType.new({
+				name = "SomeObject",
+				fields = {},
+				interfaces = function()
+					return { InterfaceType }
+				end,
+			})
 
-				expect(objType:getInterfaces()).toEqual({ InterfaceType })
-			end
-		)
+			expect(objType:getInterfaces()).toEqual({ InterfaceType })
+		end)
 
 		it("accepts a lambda as an Object field resolver", function()
 			local objType = GraphQLObjectType.new({
@@ -360,26 +357,25 @@ return function()
 
 			expect(function()
 				return objType:getFields()
-			end).to.throw("SomeObject fields must be an object with field names as keys or a function which returns such an object.")
+			end).to.throw(
+				"SomeObject fields must be an object with field names as keys or a function which returns such an object."
+			)
 		end)
 
-		it(
-			"rejects an Object type with a field function that returns incorrect type",
-			function()
-				local objType = GraphQLObjectType.new({
-					name = "SomeObject",
-					fields = function()
-						return {
-							{ field = ScalarType },
-						}
-					end,
-				})
+		it("rejects an Object type with a field function that returns incorrect type", function()
+			local objType = GraphQLObjectType.new({
+				name = "SomeObject",
+				fields = function()
+					return {
+						{ field = ScalarType },
+					}
+				end,
+			})
 
-				expect(function()
-					return objType:getFields()
-				end).to.throw()
-			end
-		)
+			expect(function()
+				return objType:getFields()
+			end).to.throw()
+		end)
 
 		it("rejects an Object type with incorrectly typed field args", function()
 			local objType = GraphQLObjectType.new({
@@ -412,23 +408,20 @@ return function()
 			end).to.throw("SomeObject interfaces must be an Array or a function which returns an Array.")
 		end)
 
-		it(
-			"rejects an Object type with interfaces as a function returning an incorrect type",
-			function()
-				local objType = GraphQLObjectType.new({
-					name = "SomeObject",
-					fields = {},
-					interfaces = function()
-						-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty object
-						return { key = "value" }
-					end,
-				})
+		it("rejects an Object type with interfaces as a function returning an incorrect type", function()
+			local objType = GraphQLObjectType.new({
+				name = "SomeObject",
+				fields = {},
+				interfaces = function()
+					-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty object
+					return { key = "value" }
+				end,
+			})
 
-				expect(function()
-					return objType:getInterfaces()
-				end).to.throw("SomeObject interfaces must be an Array or a function which returns an Array.")
-			end
-		)
+			expect(function()
+				return objType:getInterfaces()
+			end).to.throw("SomeObject interfaces must be an Array or a function which returns an Array.")
+		end)
 
 		it("rejects an empty Object field resolver", function()
 			local objType = GraphQLObjectType.new({
@@ -471,7 +464,7 @@ return function()
 					fields = {},
 					isTypeOf = {},
 				})
-			end).to.throw("AnotherObject must provide \"isTypeOf\" as a function, but got: [].")
+			end).to.throw('AnotherObject must provide "isTypeOf" as a function, but got: [].')
 		end)
 	end)
 
@@ -497,20 +490,17 @@ return function()
 			expect(implementing:getInterfaces()).toEqual({ InterfaceType })
 		end)
 
-		it(
-			"accepts an Interface type with interfaces as a function returning an array",
-			function()
-				local implementing = GraphQLInterfaceType.new({
-					name = "AnotherInterface",
-					fields = {},
-					interfaces = function()
-						return { InterfaceType }
-					end,
-				})
+		it("accepts an Interface type with interfaces as a function returning an array", function()
+			local implementing = GraphQLInterfaceType.new({
+				name = "AnotherInterface",
+				fields = {},
+				interfaces = function()
+					return { InterfaceType }
+				end,
+			})
 
-				expect(implementing:getInterfaces()).toEqual({ InterfaceType })
-			end
-		)
+			expect(implementing:getInterfaces()).toEqual({ InterfaceType })
+		end)
 
 		it("rejects an Interface type without name", function()
 			expect(function()
@@ -531,23 +521,20 @@ return function()
 			end).to.throw("AnotherInterface interfaces must be an Array or a function which returns an Array.")
 		end)
 
-		it(
-			"rejects an Interface type with interfaces as a function returning an incorrect type",
-			function()
-				local objType = GraphQLInterfaceType.new({
-					name = "AnotherInterface",
-					fields = {},
-					interfaces = function()
-						-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty object
-						return { key = "value" }
-					end,
-				})
+		it("rejects an Interface type with interfaces as a function returning an incorrect type", function()
+			local objType = GraphQLInterfaceType.new({
+				name = "AnotherInterface",
+				fields = {},
+				interfaces = function()
+					-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty object
+					return { key = "value" }
+				end,
+			})
 
-				expect(function()
-					return objType:getInterfaces()
-				end).to.throw("AnotherInterface interfaces must be an Array or a function which returns an Array.")
-			end
-		)
+			expect(function()
+				return objType:getInterfaces()
+			end).to.throw("AnotherInterface interfaces must be an Array or a function which returns an Array.")
+		end)
 
 		it("rejects an Interface type with an incorrect type for resolveType", function()
 			-- ROBLOX deviation: {} is treated as an Array in Lua so when printed it becomes [] rather than {}
@@ -557,7 +544,7 @@ return function()
 					fields = {},
 					resolveType = {},
 				})
-			end).to.throw("AnotherInterface must provide \"resolveType\" as a function, but got: [].")
+			end).to.throw('AnotherInterface must provide "resolveType" as a function, but got: [].')
 		end)
 	end)
 
@@ -614,7 +601,7 @@ return function()
 					types = {},
 					resolveType = {},
 				})
-			end).to.throw("SomeUnion must provide \"resolveType\" as a function, but got: [].")
+			end).to.throw('SomeUnion must provide "resolveType" as a function, but got: [].')
 		end)
 
 		it("rejects a Union type with incorrectly typed types", function()
@@ -625,7 +612,9 @@ return function()
 
 			expect(function()
 				return unionType:getTypes()
-			end).to.throw("Must provide Array of types or a function which returns such an array for Union SomeUnion.")
+			end).to.throw(
+				"Must provide Array of types or a function which returns such an array for Union SomeUnion."
+			)
 		end)
 	end)
 
@@ -656,9 +645,9 @@ return function()
 				name = "EnumWithNullishValue",
 				-- ROBLOX deviation: use Map to guarantee order
 				values = Map.new({
-					{ "NULL", { value = NULL }},
-					{ "NAN", { value = NaN }},
-					{ "NO_CUSTOM_VALUE", { value = nil }},
+					{ "NULL", { value = NULL } },
+					{ "NAN", { value = NaN } },
+					{ "NO_CUSTOM_VALUE", { value = nil } },
 				}),
 			})
 
@@ -741,7 +730,9 @@ return function()
 					name = "SomeEnum",
 					values = { FOO = NULL },
 				})
-			end).to.throw("SomeEnum.FOO must refer to an object with a \"value\" key representing an internal value but got: null.")
+			end).to.throw(
+				'SomeEnum.FOO must refer to an object with a "value" key representing an internal value but got: null.'
+			)
 		end)
 
 		it("rejects an Enum type with incorrectly typed value definition", function()
@@ -750,7 +741,9 @@ return function()
 					name = "SomeEnum",
 					values = { FOO = 10 },
 				})
-			end).to.throw("SomeEnum.FOO must refer to an object with a \"value\" key representing an internal value but got: 10.")
+			end).to.throw(
+				'SomeEnum.FOO must refer to an object with a "value" key representing an internal value but got: 10.'
+			)
 		end)
 	end)
 
@@ -815,25 +808,26 @@ return function()
 
 				expect(function()
 					return inputObjType:getFields()
-				end).to.throw("SomeInputObject fields must be an object with field names as keys or a function which returns such an object.")
+				end).to.throw(
+					"SomeInputObject fields must be an object with field names as keys or a function which returns such an object."
+				)
 			end)
 
-			it(
-				"rejects an Input Object type with fields function that returns incorrect type",
-				function()
-					local inputObjType = GraphQLInputObjectType.new({
-						name = "SomeInputObject",
-						fields = function()
-							-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty array
-							return { "foo" }
-						end,
-					})
+			it("rejects an Input Object type with fields function that returns incorrect type", function()
+				local inputObjType = GraphQLInputObjectType.new({
+					name = "SomeInputObject",
+					fields = function()
+						-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty array
+						return { "foo" }
+					end,
+				})
 
-					expect(function()
-						return inputObjType:getFields()
-					end).to.throw("SomeInputObject fields must be an object with field names as keys or a function which returns such an object.")
-				end
-			)
+				expect(function()
+					return inputObjType:getFields()
+				end).to.throw(
+					"SomeInputObject fields must be an object with field names as keys or a function which returns such an object."
+				)
+			end)
 		end)
 
 		describe("Input Object fields must not have resolvers", function()
@@ -850,7 +844,9 @@ return function()
 
 				expect(function()
 					return inputObjType:getFields()
-				end).to.throw("SomeInputObject.f field has a resolve property, but Input Types cannot define resolvers.")
+				end).to.throw(
+					"SomeInputObject.f field has a resolve property, but Input Types cannot define resolvers."
+				)
 			end)
 
 			it("rejects an Input Object type with resolver constant", function()
@@ -866,7 +862,9 @@ return function()
 
 				expect(function()
 					return inputObjType:getFields()
-				end).to.throw("SomeInputObject.f field has a resolve property, but Input Types cannot define resolvers.")
+				end).to.throw(
+					"SomeInputObject.f field has a resolve property, but Input Types cannot define resolvers."
+				)
 			end)
 		end)
 	end)
@@ -945,21 +943,21 @@ return function()
 			-- ROBLOX deviation: no JSON.stringify in Lua
 			local JSON = {
 				stringify = function(v)
-					return "\"" .. v:toJSON() .. "\""
+					return '"' .. v:toJSON() .. '"'
 				end,
 			}
 
-			expect(JSON.stringify(ScalarType)).to.equal("\"Scalar\"")
-			expect(JSON.stringify(ObjectType)).to.equal("\"Object\"")
-			expect(JSON.stringify(InterfaceType)).to.equal("\"Interface\"")
-			expect(JSON.stringify(UnionType)).to.equal("\"Union\"")
-			expect(JSON.stringify(EnumType)).to.equal("\"Enum\"")
-			expect(JSON.stringify(InputObjectType)).to.equal("\"InputObject\"")
-			expect(JSON.stringify(NonNullScalarType)).to.equal("\"Scalar!\"")
-			expect(JSON.stringify(ListOfScalarsType)).to.equal("\"[Scalar]\"")
-			expect(JSON.stringify(NonNullListOfScalars)).to.equal("\"[Scalar]!\"")
-			expect(JSON.stringify(ListOfNonNullScalarsType)).to.equal("\"[Scalar!]\"")
-			expect(JSON.stringify(GraphQLList.new(ListOfScalarsType))).to.equal("\"[[Scalar]]\"")
+			expect(JSON.stringify(ScalarType)).to.equal('"Scalar"')
+			expect(JSON.stringify(ObjectType)).to.equal('"Object"')
+			expect(JSON.stringify(InterfaceType)).to.equal('"Interface"')
+			expect(JSON.stringify(UnionType)).to.equal('"Union"')
+			expect(JSON.stringify(EnumType)).to.equal('"Enum"')
+			expect(JSON.stringify(InputObjectType)).to.equal('"InputObject"')
+			expect(JSON.stringify(NonNullScalarType)).to.equal('"Scalar!"')
+			expect(JSON.stringify(ListOfScalarsType)).to.equal('"[Scalar]"')
+			expect(JSON.stringify(NonNullListOfScalars)).to.equal('"[Scalar]!"')
+			expect(JSON.stringify(ListOfNonNullScalarsType)).to.equal('"[Scalar!]"')
+			expect(JSON.stringify(GraphQLList.new(ListOfScalarsType))).to.equal('"[[Scalar]]"')
 		end)
 
 		--[[

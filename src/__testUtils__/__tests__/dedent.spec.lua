@@ -3,7 +3,9 @@
 return function()
 	local testUtilsWorkspace = script.Parent.Parent
 	local srcWorkspace = testUtilsWorkspace.Parent
-	local Array = require(srcWorkspace.luaUtils.Array)
+	local Packages = srcWorkspace.Parent
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Array = LuauPolyfill.Array
 
 	local dedent = require(testUtilsWorkspace.dedent).dedent
 
@@ -19,20 +21,17 @@ return function()
                   name: String
                 }
             ]])
-			expect(output).to.equal(Array.join(
-				{
-					"type Query {",
-					"  me: User",
-					"}",
-					"",
-					"type User {",
-					"  id: ID",
-					"  name: String",
-					"}",
-					"",
-				},
-				"\n"
-			))
+			expect(output).to.equal(Array.join({
+				"type Query {",
+				"  me: User",
+				"}",
+				"",
+				"type User {",
+				"  id: ID",
+				"  name: String",
+				"}",
+				"",
+			}, "\n"))
 		end)
 
 		it("removes only the first level of indentation", function()
@@ -42,42 +41,38 @@ return function()
                     third
                       fourth
             ]])
-			expect(output).to.equal(Array.join(
-				{
-					"first",
-					"  second",
-					"    third",
-					"      fourth",
-					"",
-				},
-				"\n"
-			))
+			expect(output).to.equal(Array.join({
+				"first",
+				"  second",
+				"    third",
+				"      fourth",
+				"",
+			}, "\n"))
 		end)
 
 		it("does not escape special characters", function()
-			local output = dedent("\n" ..
-				"      type Root {\n" ..
-				"        field(arg: String = \"wi\th de\fault\"): String\n" ..
-				"      }\n" ..
-				"    "
-			)
-			expect(output).to.equal(Array.join(
-				{
-					"type Root {",
-					"  field(arg: String = \"wi\th de\fault\"): String",
-					"}",
-					"",
-				},
+			local output = dedent(
 				"\n"
-			))
+					.. "      type Root {\n"
+					.. '        field(arg: String = "wi\th de\fault"): String\n'
+					.. "      }\n"
+					.. "    "
+			)
+			expect(output).to.equal(Array.join({
+				"type Root {",
+				'  field(arg: String = "wi\th de\fault"): String',
+				"}",
+				"",
+			}, "\n"))
 		end)
 
 		it("also removes indentation using tabs", function()
-			local output = dedent("\n" ..
-				"        \t\t    type Query {\n" ..
-				"        \t\t      me: User\n" ..
-				"        \t\t    }\n" ..
-				"    "
+			local output = dedent(
+				"\n"
+					.. "        \t\t    type Query {\n"
+					.. "        \t\t      me: User\n"
+					.. "        \t\t    }\n"
+					.. "    "
 			)
 			expect(output).to.equal(Array.join({
 				"type Query {",
@@ -118,11 +113,8 @@ return function()
 		end)
 
 		it("removes all trailing spaces and tabs", function()
-			local output = dedent("\n" ..
-				"      type Query {\n" ..
-				"        me: User\n" ..
-				"      }\n" ..
-				"          \t\t  \t "
+			local output = dedent(
+				"\n" .. "      type Query {\n" .. "        me: User\n" .. "      }\n" .. "          \t\t  \t "
 			)
 			expect(output).to.equal(Array.join({
 				"type Query {",
@@ -133,10 +125,7 @@ return function()
 		end)
 
 		it("works on text without leading newline", function()
-			local output = dedent("      type Query {\n" ..
-				"        me: User\n" ..
-				"      }"
-			)
+			local output = dedent("      type Query {\n" .. "        me: User\n" .. "      }")
 			expect(output).to.equal(Array.join({
 				"type Query {",
 				"  me: User",
@@ -154,18 +143,15 @@ return function()
 			    }
 			  }
 			]])
-			expect(output).to.equal(Array.join(
-				{
-					"{",
-					"  \"me\": {",
-					"    \"name\": \"Luke Skywalker\"",
-					"    \"age\": 42",
-					"  }",
-					"}",
-					"",
-				},
-				"\n"
-			))
+			expect(output).to.equal(Array.join({
+				"{",
+				'  "me": {',
+				'    "name": "Luke Skywalker"',
+				'    "age": 42',
+				"  }",
+				"}",
+				"",
+			}, "\n"))
 		end)
 	end)
 end

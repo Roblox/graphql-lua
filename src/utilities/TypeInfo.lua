@@ -1,6 +1,11 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/TypeInfo.js
 
 local srcWorkspace = script.Parent.Parent
+local Packages = srcWorkspace.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
+type Array<T> = LuauPolyfill.Array<T>
+
 local language = srcWorkspace.language
 local typeWorkspace = srcWorkspace.type
 
@@ -18,7 +23,7 @@ type ASTNode = {
 	value: string,
 	operation: any,
 	typeCondition: NamedTypeNode,
-	type: TypeNode
+	type: TypeNode,
 } -- astImport.ASTNode
 type ASTKindToNode = astImport.ASTKindToNode
 type FieldNode = astImport.FieldNode
@@ -56,10 +61,6 @@ local TypeMetaFieldDef = introspectionImport.TypeMetaFieldDef
 local TypeNameMetaFieldDef = introspectionImport.TypeNameMetaFieldDef
 
 local typeFromAST = require(srcWorkspace.utilities.typeFromAST).typeFromAST
-
-local Array = require(srcWorkspace.luaUtils.Array)
-
-type Array<T> = { [number]: T }
 
 -- ROBLOX deviation: use the following table as a symbol to represent
 -- a `null` value within the arrays
@@ -218,7 +219,8 @@ function TypeInfo:enter(node: ASTNode)
 				fieldType = fieldDef.type
 			end
 		end
-		table.insert(self._fieldDefStack,
+		table.insert(
+			self._fieldDefStack,
 			(function()
 				if fieldDef then
 					return fieldDef
@@ -259,9 +261,7 @@ function TypeInfo:enter(node: ASTNode)
 			end)()
 		)
 		return
-	elseif nodeKind == Kind.INLINE_FRAGMENT or
-		nodeKind == Kind.FRAGMENT_DEFINITION
-	then
+	elseif nodeKind == Kind.INLINE_FRAGMENT or nodeKind == Kind.FRAGMENT_DEFINITION then
 		local typeConditionAST = node.typeCondition
 		local outputType = (function()
 			if typeConditionAST then
@@ -269,21 +269,27 @@ function TypeInfo:enter(node: ASTNode)
 			end
 			return getNamedType(self:getType())
 		end)()
-		table.insert(self._typeStack, (function()
-			if isOutputType(outputType) then
-				return outputType
-			end
-			return NULL
-		end)())
+		table.insert(
+			self._typeStack,
+			(function()
+				if isOutputType(outputType) then
+					return outputType
+				end
+				return NULL
+			end)()
+		)
 		return
 	elseif nodeKind == Kind.VARIABLE_DEFINITION then
 		local inputType = typeFromAST(schema, node.type)
-		table.insert(self._inputTypeStack, (function()
-			if isInputType(inputType) then
-				return inputType
-			end
-			return NULL
-		end)())
+		table.insert(
+			self._inputTypeStack,
+			(function()
+				if isInputType(inputType) then
+					return inputType
+				end
+				return NULL
+			end)()
+		)
 		return
 	elseif nodeKind == Kind.ARGUMENT then
 		local argDef
@@ -304,18 +310,24 @@ function TypeInfo:enter(node: ASTNode)
 			end
 		end
 		self._argument = argDef
-		table.insert(self._defaultValueStack, (function()
-			if argDef then
-				return argDef.defaultValue
-			end
-			return NULL
-		end)())
-		table.insert(self._inputTypeStack, (function()
-			if isInputType(argType) then
-				return argType
-			end
-			return NULL
-		end)())
+		table.insert(
+			self._defaultValueStack,
+			(function()
+				if argDef then
+					return argDef.defaultValue
+				end
+				return NULL
+			end)()
+		)
+		table.insert(
+			self._inputTypeStack,
+			(function()
+				if isInputType(argType) then
+					return argType
+				end
+				return NULL
+			end)()
+		)
 		return
 	elseif nodeKind == Kind.LIST then
 		local listType = getNullableType(self:getInputType())
@@ -327,12 +339,15 @@ function TypeInfo:enter(node: ASTNode)
 		end)()
 		-- // List positions never have a default value.
 		table.insert(self._defaultValueStack, NULL)
-		table.insert(self._inputTypeStack, (function()
-			if isInputType(itemType) then
-				return itemType
-			end
-			return NULL
-		end)())
+		table.insert(
+			self._inputTypeStack,
+			(function()
+				if isInputType(itemType) then
+					return itemType
+				end
+				return NULL
+			end)()
+		)
 		return
 	elseif nodeKind == Kind.OBJECT_FIELD then
 		local objectType = getNamedType(self:getInputType())
@@ -345,18 +360,24 @@ function TypeInfo:enter(node: ASTNode)
 				inputFieldType = inputField.type
 			end
 		end
-		table.insert(self._defaultValueStack, (function()
-			if inputField and inputField.defaultValue then
-				return inputField.defaultValue
-			end
-			return NULL
-		end)())
-		table.insert(self._inputTypeStack, (function()
-			if isInputType(inputFieldType) then
-				return inputFieldType
-			end
-			return NULL
-		end)())
+		table.insert(
+			self._defaultValueStack,
+			(function()
+				if inputField and inputField.defaultValue then
+					return inputField.defaultValue
+				end
+				return NULL
+			end)()
+		)
+		table.insert(
+			self._inputTypeStack,
+			(function()
+				if isInputType(inputFieldType) then
+					return inputFieldType
+				end
+				return NULL
+			end)()
+		)
 		return
 	elseif nodeKind == Kind.ENUM then
 		local enumType = getNamedType(self:getInputType())
@@ -378,9 +399,10 @@ function TypeInfo:leave(node: ASTNode)
 		table.remove(self._typeStack)
 	elseif nodeKind == Kind.DIRECTIVE then
 		self._directive = nil
-	elseif nodeKind == Kind.OPERATION_DEFINITION or
-		nodeKind == Kind.INLINE_FRAGMENT or
-		nodeKind == Kind.FRAGMENT_DEFINITION
+	elseif
+		nodeKind == Kind.OPERATION_DEFINITION
+		or nodeKind == Kind.INLINE_FRAGMENT
+		or nodeKind == Kind.FRAGMENT_DEFINITION
 	then
 		table.remove(self._typeStack)
 	elseif nodeKind == Kind.VARIABLE_DEFINITION then
@@ -389,9 +411,7 @@ function TypeInfo:leave(node: ASTNode)
 		self._argument = nil
 		table.remove(self._defaultValueStack)
 		table.remove(self._inputTypeStack)
-	elseif nodeKind == Kind.LIST or
-		nodeKind == Kind.OBJECT_FIELD
-	then
+	elseif nodeKind == Kind.LIST or nodeKind == Kind.OBJECT_FIELD then
 		table.remove(self._defaultValueStack)
 		table.remove(self._inputTypeStack)
 	elseif nodeKind == Kind.ENUM then
@@ -431,14 +451,15 @@ end
 --  * Creates a new visitor instance which maintains a provided TypeInfo instance
 --  * along with visiting visitor.
 --  */
-local function visitWithTypeInfo(
-	typeInfo: TypeInfo,
-	visitor: Visitor<ASTKindToNode>
-): Visitor<ASTKindToNode>
+local function visitWithTypeInfo(typeInfo: TypeInfo, visitor: Visitor<ASTKindToNode>): Visitor<ASTKindToNode>
 	return {
 		enter = function(_self, node, ...)
 			typeInfo:enter(node)
-			local fn = getVisitFn(visitor, node.kind, --[[ isLeaving ]] false)
+			local fn = getVisitFn(
+				visitor,
+				node.kind, --[[ isLeaving ]]
+				false
+			)
 			if fn then
 				local result = fn(visitor, node, ...)
 				if result ~= nil then
@@ -452,7 +473,11 @@ local function visitWithTypeInfo(
 			return nil
 		end,
 		leave = function(_self, node, ...)
-			local fn = getVisitFn(visitor, node.kind, --[[ isLeaving ]] true)
+			local fn = getVisitFn(
+				visitor,
+				node.kind, --[[ isLeaving ]]
+				true
+			)
 			local result
 			if fn then
 				result = fn(visitor, node, ...)

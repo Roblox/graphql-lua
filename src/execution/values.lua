@@ -1,21 +1,42 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/execution/values.js
-
+--!nonstrict
+-- ROBLOX FIXME Luau: Luau analyze hangs when this file is strict, needs CLI-50589
 local srcWorkspace = script.Parent.Parent
 
 local root = srcWorkspace.Parent
 local LuauPolyfill = require(root.LuauPolyfill)
+type void = nil
 local Array = LuauPolyfill.Array
+type Array<T> = LuauPolyfill.Array<T>
 local NULL = require(srcWorkspace.luaUtils.null)
 local isNillish = require(srcWorkspace.luaUtils.isNillish).isNillish
 
+local objMapImport = require(srcWorkspace.jsutils.ObjMap)
+type ObjMap<T> = objMapImport.ObjMap<T>
 local keyMap = require(srcWorkspace.jsutils.keyMap).keyMap
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
 local printPathArray = require(srcWorkspace.jsutils.printPathArray).printPathArray
 
-local GraphQLError = require(srcWorkspace.error.GraphQLError).GraphQLError
+local graphqlErrorImport = require(srcWorkspace.error.GraphQLError)
+local GraphQLError = graphqlErrorImport.GraphQLError
+type GraphQLError = graphqlErrorImport.GraphQLError
 
-local Kind = require(srcWorkspace.language.kinds).Kind
-local print_ = require(srcWorkspace.language.printer).print
+local languageWorkspace = srcWorkspace.language
+local astImport = require(languageWorkspace.ast)
+type FieldNode = astImport.FieldNode
+type DirectiveNode = astImport.DirectiveNode
+type VariableDefinitionNode = astImport.VariableDefinitionNode
+local Kind = require(languageWorkspace.kinds).Kind
+local print_ = require(languageWorkspace.printer).print
+
+local typeWorkspace = srcWorkspace.type
+local schemaImport = require(typeWorkspace.schema)
+type GraphQLSchema = schemaImport.GraphQLSchema
+local definitionImport = require(typeWorkspace.definition)
+type GraphQLField<TSource, TContext> = definitionImport.GraphQLField<TSource, TContext>
+local directivesImport = require(typeWorkspace.directives)
+type GraphQLDirective = directivesImport.GraphQLDirective
+
 
 local definition = require(srcWorkspace.type.definition)
 local isInputType = definition.isInputType
@@ -32,6 +53,10 @@ local getArgumentValues
 local getDirectiveValues
 local hasOwnProperty
 
+type CoercedVariableValues =
+	{ errors: Array<GraphQLError> }
+	| { coerced: { [string]: any }}
+
 --[[*
 --  * Prepares an object map of variableValues of the correct type based on the
 --  * provided variable definitions and arbitrary input. If the input cannot be
@@ -43,35 +68,32 @@ local hasOwnProperty
 --  *
 --  * @internal
 --  *]]
-getVariableValues = function(schema, varDefNodes, inputs, options)
-	local errors = {}
+getVariableValues = function(
+	schema: GraphQLSchema,
+	varDefNodes: Array<VariableDefinitionNode>,
+	inputs: { [string]: any },
+	options: { maxErrors: number? }?
+): CoercedVariableValues
+	local errors: Array<GraphQLError> = {}
 	local maxErrors
 	if options ~= nil then
 		maxErrors = options.maxErrors
 	end
 
-	local ok, result = pcall(function()
-		local coerced = coerceVariableValues(schema, varDefNodes, inputs, function(error_)
+	local ok, coerced = pcall(
+		coerceVariableValues, schema, varDefNodes, inputs, function(error_)
 			if maxErrors ~= nil and #errors >= maxErrors then
 				error(GraphQLError.new("Too many errors processing variables, error limit reached. Execution aborted."))
 			end
 			table.insert(errors, error_)
 		end)
 
-		if #errors == 0 then
-			return { coerced = coerced }
-		end
-		-- ROBLOX deviation: no implicit returns in Lua
-		return nil
-	end)
-
-	-- ROBLOX deviation: return from inside try
-	if ok and result ~= nil then
-		return result
-	end
-	-- ROBLOX catch
 	if not ok then
-		table.insert(errors, result)
+		table.insert(errors, coerced)
+	end
+		-- ROBLOX TODO: pull this logic out of try{} block in upstream
+	if #errors == 0 then
+		return { coerced = coerced }
 	end
 
 	return { errors = errors }
@@ -235,17 +257,23 @@ end
 --  * exposed to user code. Care should be taken to not pull values from the
 --  * Object prototype.
 --  *]]
-getDirectiveValues = function(directiveDef, node, variableValues)
+getDirectiveValues = function(
+	directiveDef: GraphQLDirective,
+	node: { directives: Array<DirectiveNode>? },
+	variableValues: ObjMap<any>
+): void | { [string]: any }
 	-- istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
-	local directiveNode = node.directives and Array.find(node.directives, function(directive)
-		return directive.name.value == directiveDef.name
-	end)
+	local directiveNode = if node.directives
+		then Array.find(node.directives, function(directive)
+			return directive.name.value == directiveDef.name
+		end)
+		else nil
 
 	if directiveNode then
 		return getArgumentValues(directiveDef, directiveNode, variableValues)
 	end
 
-	-- ROBLOX deviation: no implicit returns in Lua
+	-- ROBLOX FIXME Luau: can't express `() | { [string]: any }` withouy type packs. remove this explicit nil return once that's fixed.
 	return nil
 end
 

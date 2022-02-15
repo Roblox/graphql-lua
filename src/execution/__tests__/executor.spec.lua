@@ -5,6 +5,19 @@ return function()
 	local srcWorkspace = executionWorkspace.Parent
 	local luaUtilsWorkspace = srcWorkspace.luaUtils
 
+	local Packages = srcWorkspace.Parent
+	local JestGlobals = require(Packages.Dev.JestGlobals)
+	local jestExpect = JestGlobals.expect
+	-- ROBLOX deviation: utils
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Error = LuauPolyfill.Error
+	local Array = LuauPolyfill.Array
+	local Object = LuauPolyfill.Object
+	local Promise = require(Packages.Promise)
+	local instanceof = LuauPolyfill.instanceof
+	local NULL = require(luaUtilsWorkspace.null)
+	local HttpService = game:GetService("HttpService")
+
 	local inspect = require(srcWorkspace.jsutils.inspect).inspect
 	local invariant = require(srcWorkspace.jsutils.invariant).invariant
 
@@ -26,15 +39,6 @@ return function()
 	local executeImport = require(executionWorkspace.execute)
 	local execute = executeImport.execute
 	local executeSync = executeImport.executeSync
-
-	-- ROBLOX deviation: utils
-	local Error = require(luaUtilsWorkspace.Error)
-	local Array = require(luaUtilsWorkspace.Array)
-	local Object = require(srcWorkspace.Parent.LuauPolyfill).Object
-	local Promise = require(srcWorkspace.Parent.Promise)
-	local instanceOf = require(srcWorkspace.jsutils.instanceOf)
-	local NULL = require(luaUtilsWorkspace.null)
-	local HttpService = game:GetService("HttpService")
 
 	describe("Execute: Handles basic execution tasks", function()
 		it("throws if no document is provided", function()
@@ -82,7 +86,7 @@ return function()
         fieldA(argA: $a)
       }
     ]])
-			local variableValues = "{ \"a\": 1 }"
+			local variableValues = '{ "a": 1 }'
 
 			-- $FlowExpectedError[incompatible-call]
 			expect(function()
@@ -91,7 +95,9 @@ return function()
 					document = document,
 					variableValues = variableValues,
 				})
-			end).toThrow("Variables must be provided as an Object where each property is a variable value. Perhaps look to see if an unparsed JSON string was provided.")
+			end).toThrow(
+				"Variables must be provided as an Object where each property is a variable value. Perhaps look to see if an unparsed JSON string was provided."
+			)
 		end)
 
 		it("executes arbitrary code", function()
@@ -263,7 +269,6 @@ return function()
 					},
 				},
 			})
-
 		end)
 
 		it("merges parallel fragments", function()
@@ -655,184 +660,89 @@ return function()
 				rootValue = rootValue,
 			}):expect()
 
-			--[[
-			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
-			--]]
-			expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
-			expect(result.data).toEqual({
-				sync = "sync",
-				syncError = NULL,
-				syncRawError = NULL,
-				syncReturnError = NULL,
-				syncReturnErrorList = {
-					"sync0",
-					NULL,
-					"sync2",
-					NULL,
+			--  ROBLOX deviation: .to.deep.equal matcher equates to jest's toMatchObject
+			jestExpect(result).toMatchObject({
+				data = {
+					sync = "sync",
+					syncError = NULL,
+					syncRawError = NULL,
+					syncReturnError = NULL,
+					syncReturnErrorList = { "sync0", NULL, "sync2", NULL },
+					async = "async",
+					asyncReject = NULL,
+					asyncRawReject = NULL,
+					asyncEmptyReject = NULL,
+					asyncError = NULL,
+					asyncRawError = NULL,
+					asyncReturnError = NULL,
+					asyncReturnErrorWithExtensions = NULL,
 				},
-				async = "async",
-				asyncReject = NULL,
-				asyncRawReject = NULL,
-				asyncEmptyReject = NULL,
-				asyncError = NULL,
-				asyncRawError = NULL,
-				asyncReturnError = NULL,
-				asyncReturnErrorWithExtensions = NULL,
-			})
-			expect(result.errors).toHaveSameMembers(
-				{
+				errors = {
 					{
 						message = "Error getting syncError",
-						locations = {
-							{
-								line = 4,
-								column = 9,
-							},
-						},
-						path = {
-							"syncError",
-						},
+						locations = { { line = 4, column = 9 } },
+						path = { "syncError" },
 					},
 					{
-						message = "Unexpected error value: \"Error getting syncRawError\"",
-						locations = {
-							{
-								line = 5,
-								column = 9,
-							},
-						},
-						path = {
-							"syncRawError",
-						},
+						message = 'Unexpected error value: "Error getting syncRawError"',
+						locations = { { line = 5, column = 9 } },
+						path = { "syncRawError" },
 					},
 					{
 						message = "Error getting syncReturnError",
-						locations = {
-							{
-								line = 6,
-								column = 9,
-							},
-						},
-						path = {
-							"syncReturnError",
-						},
+						locations = { { line = 6, column = 9 } },
+						path = { "syncReturnError" },
 					},
 					{
 						message = "Error getting syncReturnErrorList1",
-						locations = {
-							{
-								line = 7,
-								column = 9,
-							},
-						},
-						path = {
-							"syncReturnErrorList",
-							2,
-						},
+						locations = { { line = 7, column = 9 } },
+						-- ROBLOX deviation: offset due to Lua 1-based indexing
+						path = { "syncReturnErrorList", 2 },
 					},
 					{
 						message = "Error getting syncReturnErrorList3",
-						locations = {
-							{
-								line = 7,
-								column = 9,
-							},
-						},
-						path = {
-							"syncReturnErrorList",
-							4,
-						},
+						locations = { { line = 7, column = 9 } },
+						-- ROBLOX deviation: offset due to Lua 1-based indexing
+						path = { "syncReturnErrorList", 4 },
 					},
 					{
 						message = "Error getting asyncReject",
-						locations = {
-							{
-								line = 9,
-								column = 9,
-							},
-						},
-						path = {
-							"asyncReject",
-						},
+						locations = { { line = 9, column = 9 } },
+						path = { "asyncReject" },
 					},
 					{
-						message = "Unexpected error value: \"Error getting asyncRawReject\"",
-						locations = {
-							{
-								line = 10,
-								column = 9,
-							},
-						},
-						path = {
-							"asyncRawReject",
-						},
+						message = 'Unexpected error value: "Error getting asyncRawReject"',
+						locations = { { line = 10, column = 9 } },
+						path = { "asyncRawReject" },
 					},
 					{
 						message = "Unexpected error value: nil",
-						locations = {
-							{
-								line = 11,
-								column = 9,
-							},
-						},
-						path = {
-							"asyncEmptyReject",
-						},
+						locations = { { line = 11, column = 9 } },
+						path = { "asyncEmptyReject" },
 					},
 					{
 						message = "Error getting asyncError",
-						locations = {
-							{
-								line = 12,
-								column = 9,
-							},
-						},
-						path = {
-							"asyncError",
-						},
+						locations = { { line = 12, column = 9 } },
+						path = { "asyncError" },
 					},
 					{
-						message = "Unexpected error value: \"Error getting asyncRawError\"",
-						locations = {
-							{
-								line = 13,
-								column = 9,
-							},
-						},
-						path = {
-							"asyncRawError",
-						},
+						message = 'Unexpected error value: "Error getting asyncRawError"',
+						locations = { { line = 13, column = 9 } },
+						path = { "asyncRawError" },
 					},
 					{
 						message = "Error getting asyncReturnError",
-						locations = {
-							{
-								line = 14,
-								column = 9,
-							},
-						},
-						path = {
-							"asyncReturnError",
-						},
+						locations = { { line = 14, column = 9 } },
+						path = { "asyncReturnError" },
 					},
 					{
 						message = "Error getting asyncReturnErrorWithExtensions",
-						locations = {
-							{
-								line = 15,
-								column = 9,
-							},
-						},
-						path = {
-							"asyncReturnErrorWithExtensions",
-						},
-						extensions = {
-							foo = "bar",
-						},
+						locations = { { line = 15, column = 9 } },
+						path = { "asyncReturnErrorWithExtensions" },
+						extensions = { foo = "bar" },
 					},
 				},
-				true
-			)
+			})
 		end)
 
 		it("nulls error subtree for promise rejection #1071", function()
@@ -868,22 +778,15 @@ return function()
 				document = document,
 			}):expect()
 
-			--[[
-			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
-			--]]
-			expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
-			expect(result.data).toEqual({ foods = NULL })
-			expect(#result.errors).to.equal(1)
-			expect(result.errors[1]).toObjectContain({
-				locations = {
+			--  ROBLOX deviation: .to.deep.equal matcher equates to jest's toMatchObject
+			jestExpect(result).toMatchObject({
+				data = { foods = NULL },
+				errors = {
 					{
-						column = 9,
-						line = 3,
+						locations = { { column = 9, line = 3 } },
+						message = "Oops",
+						path = { "foods" },
 					},
-				},
-				message = "Oops",
-				path = {
-					"foods",
 				},
 			})
 		end)
@@ -951,33 +854,22 @@ return function()
 			})
 
 			--[[
-			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+			--  ROBLOX deviation: .to.deep.equal matcher equates to jest's toMatchObject
 			--]]
-			expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
-			expect(result.data).toEqual({
-				nullableA = { aliasedA = NULL },
-			})
-			expect(result.errors).toHaveSameMembers(
-				{
-					{
-						message = "Catch me if you can",
-						locations = {
-							{
-								line = 7,
-								column = 17,
-							},
-						},
-						path = {
-							"nullableA",
-							"aliasedA",
-							"nonNullA",
-							"anotherA",
-							"throws",
-						},
+			jestExpect(result).toMatchObject({
+				data = {
+					nullableA = {
+						aliasedA = NULL,
 					},
 				},
-				true
-			)
+				errors = {
+					{
+						message = "Catch me if you can",
+						locations = { { line = 7, column = 17 } },
+						path = { "nullableA", "aliasedA", "nonNullA", "anotherA", "throws" },
+					},
+				},
+			})
 		end)
 
 		it("uses the inline operation if no operation name is provided", function()
@@ -1086,12 +978,12 @@ return function()
 			})
 
 			--[[
-			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+			--  ROBLOX deviation: .to.deep.equal matcher equates to jests' toMatchObject
 			--]]
-			expect(Object.keys(result)).toEqual({ "errors" })
-			expect(#result.errors).to.equal(1)
-			expect(result.errors[1]).toObjectContain({
-				message = "Must provide an operation.",
+			jestExpect(result).toMatchObject({
+				errors = {
+					{ message = "Must provide an operation." },
+				},
 			})
 		end)
 
@@ -1115,12 +1007,12 @@ return function()
 			})
 
 			--[[
-			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+			--  ROBLOX deviation: .to.deep.equal matcher equates to jest's toMatchObject
 			--]]
-			expect(Object.keys(result)).toEqual({ "errors" })
-			expect(#result.errors).to.equal(1)
-			expect(result.errors[1]).toObjectContain({
-				message = "Must provide operation name if query contains multiple operations.",
+			jestExpect(result).toMatchObject({
+				errors = {
+					{ message = "Must provide operation name if query contains multiple operations." },
+				},
 			})
 		end)
 
@@ -1146,12 +1038,12 @@ return function()
 			})
 
 			--[[
-			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+			--  ROBLOX deviation: .to.deep.equal matcher equates to jest's toMatchObject
 			--]]
-			expect(Object.keys(result)).toEqual({ "errors" })
-			expect(#result.errors).to.equal(1)
-			expect(result.errors[1]).toObjectContain({
-				message = "Unknown operation named \"UnknownExample\".",
+			jestExpect(result).toMatchObject({
+				errors = {
+					{ message = 'Unknown operation named "UnknownExample".' },
+				},
 			})
 		end)
 
@@ -1173,12 +1065,12 @@ return function()
 			})
 
 			--[[
-			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+			--  ROBLOX deviation: .to.deep.equal matcher equated to jest's toMatchObject
 			--]]
-			expect(Object.keys(result)).toEqual({ "errors" })
-			expect(#result.errors).to.equal(1)
-			expect(result.errors[1]).toObjectContain({
-				message = "Unknown operation named \"\".",
+			jestExpect(result).toMatchObject({
+				errors = {
+					{ message = 'Unknown operation named "".' },
+				},
 			})
 		end)
 
@@ -1506,7 +1398,7 @@ return function()
 			local SpecialType = GraphQLObjectType.new({
 				name = "SpecialType",
 				isTypeOf = function(self, obj, context)
-					local result = instanceOf(obj, Special)
+					local result = instanceof(obj, Special)
 					return (function()
 						if context and context.async then
 							return Promise.resolve(result)
@@ -1543,29 +1435,19 @@ return function()
 			})
 
 			--[[
-			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+			--  ROBLOX deviation: .to.deep.equal matcher equates to jest's toMatchObject
 			--]]
-			expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
-			expect(result.data).toEqual({
-				specials = {
-					{
-						value = "foo",
-					},
-					NULL,
+			jestExpect(result).toMatchObject({
+				data = {
+					specials = { { value = "foo" }, NULL },
 				},
-			})
-			expect(#result.errors).toEqual(1)
-			expect(result.errors[1]).toObjectContain({
-				message = "Expected value of type \"SpecialType\" but got: { value: \"bar\" }.",
-				locations = {
+				errors = {
 					{
-						line = 1,
-						column = 3,
+						message = 'Expected value of type "SpecialType" but got: { value: "bar" }.',
+						locations = { { line = 1, column = 3 } },
+						-- ROBLOX deviation: adjusted for Lua's 1-based indexing
+						path = { "specials", 2 },
 					},
-				},
-				path = {
-					"specials",
-					2,
 				},
 			})
 
@@ -1582,7 +1464,10 @@ return function()
 				return HttpService:JSONDecode(inspect(err_))
 			end
 			-- ROBLOX deviation: upstream only compares enumerable properties
-			expect(Array.map(asyncResult.errors, enumerableOnly)).toEqual(Array.map(result.errors, enumerableOnly), true)
+			expect(Array.map(asyncResult.errors, enumerableOnly)).toEqual(
+				Array.map(result.errors, enumerableOnly),
+				true
+			)
 			-- ROBLOX deviation: errors have been already verified
 			asyncResult.errors = nil
 			result.errors = nil
@@ -1615,21 +1500,16 @@ return function()
 			})
 
 			--[[
-			--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
+			--  ROBLOX deviation: .to.deep.equal matcher equates to jest's toMatchObject
 			--]]
-			expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
-			expect(result.data).toEqual({ customScalar = NULL })
-			expect(#result.errors).toEqual(1)
-			expect(result.errors[1]).toObjectContain({
-				message = "Expected a value of type \"CustomScalar\" but received: \"CUSTOM_VALUE\"",
-				locations = {
+			jestExpect(result).toMatchObject({
+				data = { customScalar = NULL },
+				errors = {
 					{
-						line = 1,
-						column = 3,
+						message = 'Expected a value of type "CustomScalar" but received: "CUSTOM_VALUE"',
+						locations = { { line = 1, column = 3 } },
+						path = { "customScalar" },
 					},
-				},
-				path = {
-					"customScalar",
 				},
 			})
 		end)

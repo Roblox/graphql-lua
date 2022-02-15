@@ -2,9 +2,10 @@
 
 local utilitiesWorkspace = script.Parent.Parent
 local srcWorkspace = script.Parent.Parent.Parent
+local rootWorkspace = srcWorkspace.Parent
 
--- ROBLOX deviation: use map type
-local Map = require(srcWorkspace.luaUtils.Map).Map
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+local Map = LuauPolyfill.Map
 
 local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
 
@@ -55,7 +56,6 @@ local function buildSingleFieldSchema(fieldConfig)
 end
 
 return function()
-
 	describe("Type System Printer", function()
 		it("Prints String Field", function()
 			local schema = buildSingleFieldSchema({ type = GraphQLString })
@@ -938,6 +938,5 @@ return function()
       }
     ]]))
 		end)
-
 	end)
 end

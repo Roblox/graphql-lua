@@ -1,6 +1,9 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/type/__tests__/directive-test.js
 
-local Map = require(script.Parent.Parent.Parent.luaUtils.Map).Map
+local srcWorkspace = script.Parent.Parent.Parent
+local rootWorkspace = srcWorkspace.Parent
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+local Map = LuauPolyfill.Map
 
 local directives = require(script.Parent.Parent.directives)
 local GraphQLDirective = directives.GraphQLDirective
@@ -32,8 +35,8 @@ return function()
 			local directive = GraphQLDirective.new({
 				name = "Foo",
 				args = Map.new({
-					{ "foo", { type = GraphQLString }},
-					{ "bar", { type = GraphQLInt }},
+					{ "foo", { type = GraphQLString } },
+					{ "bar", { type = GraphQLInt } },
 				}),
 				locations = {
 					"QUERY",
@@ -92,7 +95,7 @@ return function()
 			-- ROBLOX deviation: no JSON.stringify in Lua
 			local JSON = {
 				stringify = function(v)
-					return "\"" .. v:toJSON() .. "\""
+					return '"' .. v:toJSON() .. '"'
 				end,
 			}
 
@@ -104,7 +107,7 @@ return function()
 			})
 
 			expect(tostring(directive)).to.equal("@Foo")
-			expect(JSON.stringify(directive)).to.equal("\"@Foo\"")
+			expect(JSON.stringify(directive)).to.equal('"@Foo"')
 			-- ROBLOX deviation: there's only one way to convert object to string in Lua. We're using and testing the __tostring method
 			-- expect(Object.toString(directive)).to.equal('[object GraphQLDirective]')
 		end)

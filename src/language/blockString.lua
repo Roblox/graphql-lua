@@ -2,14 +2,11 @@
 
 local language = script.Parent
 local src = language.Parent
+local Packages = src.Parent
 
-local PolyArray = require(script.Parent.Parent.Parent.LuauPolyfill).Array
-
-local slice = require(src.luaUtils.slice)
-local sliceString = slice.sliceString
-local Array = require(src.luaUtils.Array)
-local charCodeAt = require(src.luaUtils.charCodeAt)
-local String = require(src.luaUtils.String)
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local String = LuauPolyfill.String
 
 -- deviation: pre-declare functions
 local getBlockStringIndentation
@@ -25,7 +22,7 @@ function dedentBlockStringValue(rawString: string): string
 
 	if commonIndent ~= 0 then
 		for i = 2, #lines do
-			lines[i] = sliceString(lines[i], commonIndent + 1)
+			lines[i] = String.slice(lines[i], commonIndent + 1)
 		end
 	end
 
@@ -42,7 +39,7 @@ function dedentBlockStringValue(rawString: string): string
 	end
 
 	-- Return a string of the lines joined with U+000A.
-	return Array.join(PolyArray.slice(lines, startLine + 1, endLine + 1), "\n")
+	return Array.join(Array.slice(lines, startLine + 1, endLine + 1), "\n")
 end
 
 function isBlank(str: string): boolean
@@ -65,9 +62,9 @@ function getBlockStringIndentation(value: string): number
 	local i = 1
 	local valueLen = string.len(value)
 	while i <= valueLen do
-		local charAtIndex = charCodeAt(value, i)
+		local charAtIndex = String.charCodeAt(value, i)
 		if charAtIndex == 13 then -- \r
-			if charCodeAt(value, i + 1) == 10 then
+			if String.charCodeAt(value, i + 1) == 10 then
 				i = i + 1 -- skip \r\n as one symbol
 			end
 			-- falls through
@@ -92,20 +89,14 @@ function getBlockStringIndentation(value: string): number
 	return commonIndent and commonIndent or 0
 end
 
-function printBlockString(
-	value: string,
-	_indentation: string,
-	preferMultipleLines: boolean
-): string
+function printBlockString(value: string, _indentation: string?, _preferMultipleLines: boolean?): string
 	local indentation = _indentation or ""
+	local preferMultipleLines = if _preferMultipleLines == nil then false else _preferMultipleLines
 	local isSingleLine = string.find(value, "\n") == nil
 	local hasLeadingSpace = string.sub(value, 1, 1) == " " or string.sub(value, 1, 1) == "\t"
-	local hasTrailingQuote = string.sub(value, #value, #value) == "\""
+	local hasTrailingQuote = string.sub(value, #value, #value) == '"'
 	local hasTrailingSlash = string.sub(value, #value, #value) == "\\"
-	local printAsMultipleLines = isSingleLine ~= true
-		or hasTrailingQuote
-		or hasTrailingSlash
-		or preferMultipleLines
+	local printAsMultipleLines = isSingleLine ~= true or hasTrailingQuote or hasTrailingSlash or preferMultipleLines
 
 	local result = ""
 	-- Format a multi-line block quote to account for leading space.
@@ -116,7 +107,7 @@ function printBlockString(
 	if printAsMultipleLines then
 		result = result .. "\n"
 	end
-	return "\"\"\"" .. string.gsub(result, "\"\"\"", "\\\"\"\"") .. "\"\"\""
+	return '"""' .. string.gsub(result, '"""', '\\"""') .. '"""'
 end
 
 return {

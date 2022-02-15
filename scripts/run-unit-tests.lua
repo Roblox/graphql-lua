@@ -1,7 +1,7 @@
 local Root = script.Parent.TestingBundle
 local GraphQL = Root.Packages.GraphQL
 
-local TestEZ = require(Root.Packages.Dev.TestEZ)
+local TestEZ = require(Root.Packages.Dev.JestGlobals).TestEZ
 
 local function stripSpecSuffix(name)
 	return (name:gsub("%.spec$", ""))
@@ -47,7 +47,7 @@ for _, module in ipairs(GraphQL:GetDescendants()) do
 			table.insert(modules, {
 				method = require(module),
 				path = path,
-				pathStringForSorting = pathString:lower()
+				pathStringForSorting = pathString:lower(),
 			})
 		end
 	end

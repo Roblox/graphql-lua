@@ -2,6 +2,8 @@
 
 local srcWorkspace = script.Parent.Parent
 local languageWorkspace = srcWorkspace.language
+local Packages = srcWorkspace.Parent
+local String = require(Packages.LuauPolyfill).String
 
 local sourceImport = require(languageWorkspace.source)
 local Source = sourceImport.Source
@@ -13,8 +15,6 @@ local isPunctuatorTokenKind = lexerImport.isPunctuatorTokenKind
 local blockStringImport = require(languageWorkspace.blockString)
 local dedentBlockStringValue = blockStringImport.dedentBlockStringValue
 local getBlockStringIndentation = blockStringImport.getBlockStringIndentation
-
-local String = require(srcWorkspace.luaUtils.String)
 
 -- ROBLOX deviation: pre-declare functions
 local dedentBlockString
@@ -100,7 +100,7 @@ local function stripIgnoredCharacters(source: string | any): string
 			end
 		end
 
-        local tokenBody = String.slice(body, currentToken.start, currentToken._end)
+		local tokenBody = String.slice(body, currentToken.start, currentToken._end)
 		if tokenKind == TokenKind.BLOCK_STRING then
 			strippedBody ..= dedentBlockString(tokenBody)
 		else
@@ -123,12 +123,12 @@ function dedentBlockString(blockStr: string): string
 	end
 
 	local lastChar = String.slice(body, utf8.len(body))
-	local hasTrailingQuote = lastChar == "\"" and String.slice(body, -4) ~= "\\\"\"\""
+	local hasTrailingQuote = lastChar == '"' and String.slice(body, -4) ~= '\\"""'
 	if hasTrailingQuote or lastChar == "\\" then
 		body ..= "\n"
 	end
 
-	return "\"\"\"" .. body .. "\"\"\""
+	return '"""' .. body .. '"""'
 end
 
 return {

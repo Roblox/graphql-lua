@@ -2,6 +2,10 @@
 
 local root = script.Parent.Parent.Parent
 local jsutils = root.jsutils
+local PackagesWorkspace = root.Parent
+local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
+local Array = LuauPolyfill.Array
+
 local didYouMean = require(jsutils.didYouMean).didYouMean
 local suggestionList = require(jsutils.suggestionList).suggestionList
 local GraphQLError = require(root.error.GraphQLError).GraphQLError
@@ -9,9 +13,6 @@ local definition = require(root.type.definition)
 local isObjectType = definition.isObjectType
 local isInterfaceType = definition.isInterfaceType
 local isAbstractType = definition.isAbstractType
-local PackagesWorkspace = root.Parent
-local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
-local Array = LuauPolyfill.Array
 
 -- ROBLOX deviation: predeclare variable
 local getSuggestedFieldNames
@@ -37,7 +38,10 @@ exports.FieldsOnCorrectTypeRule = function(context)
 					local fieldName = node.name.value
 
 					-- // First determine if there are any suggested types to condition on.
-					local suggestion = didYouMean("to use an inline fragment on", getSuggestedTypeNames(schema, type_, fieldName))
+					local suggestion = didYouMean(
+						"to use an inline fragment on",
+						getSuggestedTypeNames(schema, type_, fieldName)
+					)
 
 					-- // If there are no suggested types, then perhaps this was a typo?
 					if suggestion == "" then
@@ -47,8 +51,7 @@ exports.FieldsOnCorrectTypeRule = function(context)
 					-- // Report an error, including helpful suggestions.
 					context:reportError(
 						GraphQLError.new(
-							('Cannot query field "%s" on type "%s".'):format(fieldName, type_.name)
-								.. suggestion,
+							('Cannot query field "%s" on type "%s".'):format(fieldName, type_.name) .. suggestion,
 							node
 						)
 					)

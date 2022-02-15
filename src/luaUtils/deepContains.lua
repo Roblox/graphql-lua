@@ -1,7 +1,7 @@
 local Number = require(script.Parent.Parent.Parent.LuauPolyfill).Number
 local NULL = require(script.Parent.null)
 
-local function deepContains(a: any, b: any)
+local function deepContains(a: any, b: any): (boolean, string?)
 	if typeof(a) ~= typeof(b) then
 		local message = ("{1}: value of type '%s'\n{2}: value of type '%s'"):format(
 			typeof(a),
@@ -25,7 +25,8 @@ local function deepContains(a: any, b: any)
 	for key, value in pairs(b) do
 		local success, innerMessage = deepContains(a[key], value)
 		if not success then
-			local message = innerMessage
+			-- ROBLOX FIXME Luau: Luau should infer the return as (false, string) | (true, nil), and then know `not success` means innerMessage is string
+			local message = (innerMessage :: string)
 				:gsub("{1}", ("{1}[%s]"):format(tostring(key)))
 				:gsub("{2}", ("{2}[%s]"):format(tostring(key)))
 

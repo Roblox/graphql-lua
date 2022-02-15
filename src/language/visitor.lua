@@ -4,7 +4,7 @@ local srcWorkspace = script.Parent.Parent
 local LuauPolyfill = require(srcWorkspace.Parent.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
-type Array<T> = { [number]: T }
+type Array<T> = LuauPolyfill.Array<T>
 type ObjMap<K, V> = { [K]: V }
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
 
@@ -17,20 +17,17 @@ local isNode = require(script.Parent.ast).isNode
  * A visitor is provided to visit, it contains the collection of
  * relevant functions to be called during the visitor's traversal.
  ]]
- -- ROBLOX TODO: Luau doesn't support default type args, so we inline
- type Nodes = any
- export type ASTVisitor = Visitor<ASTKindToNode, Nodes>
+export type ASTVisitor = Visitor<ASTKindToNode>
 -- ROBLOX deviation: Luau doesn't support the equivalent of $Value or default type args
 -- export type Visitor<KindToNode, Nodes = $Values<KindToNode>> =
-export type Visitor<KindToNode, Nodes> =
-  EnterLeave<
-      VisitFn
-      | ShapeMap<KindToNode, VisitFn>
-    >
-  | ShapeMap<
-      KindToNode,
-      VisitFn | EnterLeave<VisitFn>
-    >
+export type Visitor<KindToNode, Nodes = any> =
+	EnterLeave<
+		VisitFn<Nodes>
+		| ShapeMap<KindToNode, <Node>(Node) -> VisitFn<Nodes, Node>>
+	>
+	| ShapeMap<
+		KindToNode,
+		<Node>(Node) -> VisitFn<Nodes, Node> | EnterLeave<VisitFn<Nodes, Node>>>
 type EnterLeave<T> = { enter: T?, leave: T? }
 -- ROBLOX deviation: Luau doesn't have $Shape, so manually mark fields optional
 -- ROBLOX deviation: Luau doesn't have $ObjMap type util, so marking indexer type as string | number
@@ -41,34 +38,28 @@ type ShapeMap<O, F> = { [string | number]: F? }
  * A visitor is comprised of visit functions, which are called on each node
  * during the visitor's traversal.
  ]]
--- ROBLOX TODO: Luau doesn't currently support function generics or default type args
-type TVisitedNode = any
-type TAnyNode = any
-export type VisitFn = (
-  self: any,
-  -- The current node being visiting.
-  any,
-  -- The index or key to this node from the parent node or Array.
-  string | number | nil,
-  -- The parent immediately above this node, which may be an Array.
-  TAnyNode | Array<TAnyNode> | nil,
-  -- The key path to get to this node from the root node.
-  Array<string | number>,
-  -- All nodes and Arrays visited before reaching parent of this node.
-  -- These correspond to array indices in `path`.
-  -- Note: ancestors includes arrays which contain the parent of visited node.
-  Array<TAnyNode | Array<TAnyNode>>
+export type VisitFn<TAnyNode, TVisitedNode = TAnyNode> = (
+	self: any,
+	-- The current node being visiting.
+	node: TVisitedNode,
+	-- The index or key to this node from the parent node or Array.
+	key: string | number | nil,
+	-- The parent immediately above this node, which may be an Array.
+	parent: TAnyNode | Array<TAnyNode> | nil,
+	-- The key path to get to this node from the root node.
+	path: Array<string | number>,
+	-- All nodes and Arrays visited before reaching parent of this node.
+	-- These correspond to array indices in `path`.
+	-- Note: ancestors includes arrays which contain the parent of visited node.
+	ancestors: Array<TAnyNode | Array<TAnyNode>>
 ) -> ...any
 
 --[[*
  * A KeyMap describes each the traversable properties of each kind of node.
  ]]
-export type VisitorKeyMap<KindToNode> = ObjMap<
-  KindToNode,
- -- ROBLOX TODO: Luau doesn't support function generics or $Keys
+export type VisitorKeyMap<KindToNode> = ObjMap<KindToNode, -- ROBLOX TODO: Luau doesn't support function generics or $Keys
 --  <T>(T) -> Array<$Keys<T>>,
- (any) -> Array<any>
->
+(any) -> Array<any>>
 
 local QueryDocumentKeys: VisitorKeyMap<ASTKindToNode> = {
 	Name = {},
@@ -257,8 +248,7 @@ local getVisitFn
 --  */
 local function visit(
 	root: ASTNode,
-	-- ROBLOX TODO: Luau doesn't support default type args, so inline here
-	visitor: Visitor<ASTKindToNode, Nodes>,
+	visitor: Visitor<ASTKindToNode>,
 	visitorKeys_: VisitorKeyMap<ASTKindToNode>?
 ): any
 	local visitorKeys: VisitorKeyMap<ASTKindToNode> = visitorKeys_ or QueryDocumentKeys
@@ -301,7 +291,8 @@ local function visit(
 
 				local editOffset = 0
 				for ii = 1, #edits do
-					local editKey = edits[ii][1]
+					-- ROBLOX deviation: Luau needs to know this is a number to allow -=, but we can't type packed arrays yet
+					local editKey: number = edits[ii][1]
 					local editValue = edits[ii][2]
 					if inArray then
 						editKey -= editOffset
@@ -361,8 +352,8 @@ local function visit(
 						table.remove(path)
 						continue
 					end
-				-- ROBLOX deviation: in JS returning null from visit results in removing the node
-				-- in order to distinguish implicit return of nil from intend to remove it we use NULL const
+					-- ROBLOX deviation: in JS returning null from visit results in removing the node
+					-- in order to distinguish implicit return of nil from intend to remove it we use NULL const
 				elseif result ~= nil or result == NULL then
 					if result == NULL then
 						result = nil
@@ -377,7 +368,6 @@ local function visit(
 						end
 					end
 				end
-
 			end
 		end
 
@@ -417,11 +407,9 @@ local function visit(
 	return newRoot
 end
 
-
 function visitInParallel(
-	-- ROBLOX TODO: Luau doesn't support default type args, so inline here
-	visitors: Array<Visitor<ASTKindToNode, Nodes>>
-): Visitor<ASTKindToNode, Nodes>
+	visitors: Array<Visitor<ASTKindToNode>>
+): Visitor<ASTKindToNode>
 	-- ROBLOX deviation: no predefined Array length
 	local skipping = {}
 
@@ -475,12 +463,12 @@ function visitInParallel(
 end
 
 function getVisitFn(
-	visitor: any, -- ROBLOX FIXME: Visitor<any, Nodes> errors with Expected type table, got 'EnterLeave<< VALUELESS BY EXCEPTION >> | ShapeMap<< VALUELESS BY EXCEPTION >, < VALUELESS BY EXCEPTION >>' instead
+	visitor: Visitor<any>,
 	kind: string,
 	isLeaving: boolean
-	-- ROBLOX TODO: Luau doesn't currently support default type args
-  ): VisitFn?
-	local kindVisitor = visitor[kind]
+): VisitFn<any>?
+	-- ROBLOX TODO Luau? not sure how we can match this typecheck, or if it's even provably valid
+	local kindVisitor = (visitor :: any)[kind]
 	if kindVisitor then
 		if not isLeaving and type(kindVisitor) == "function" then
 			--[[// { Kind() {} }]]
@@ -499,7 +487,6 @@ function getVisitFn(
 			return kindSpecificVisitor
 		end
 	else
-
 		local specificVisitor
 		if isLeaving then
 			specificVisitor = visitor.leave
@@ -509,12 +496,14 @@ function getVisitFn(
 		if specificVisitor then
 			if type(specificVisitor) == "function" then
 				--[[// { enter() {}, leave() {} }]]
-				return specificVisitor
+				-- ROBLOX TODO Luau? could narrowing infer this annotation, or is this bogus TS leaps?
+				return specificVisitor :: VisitFn<any>
 			end
-			local specificKindVisitor = specificVisitor[kind]
+			-- ROBLOX TODO Luau? can this be modeled in Luau?
+			local specificKindVisitor = (specificVisitor :: any)[kind]
 			if type(specificKindVisitor) == "function" then
 				--[[// { enter: { Kind() {} }, leave: { Kind() {} } }]]
-				return specificKindVisitor
+				return specificKindVisitor :: VisitFn<any>
 			end
 		end
 	end
@@ -527,5 +516,5 @@ return {
 	visit = visit,
 	visitInParallel = visitInParallel,
 	getVisitFn = getVisitFn,
-	QueryDocumentKeys = QueryDocumentKeys
+	QueryDocumentKeys = QueryDocumentKeys,
 }

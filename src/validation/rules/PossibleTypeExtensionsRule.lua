@@ -2,6 +2,11 @@
 
 local root = script.Parent.Parent.Parent
 local jsutils = root.jsutils
+local PackagesWorkspace = root.Parent
+local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local Object = LuauPolyfill.Object
+
 local inspect = require(jsutils.inspect).inspect
 local invariant = require(jsutils.invariant).invariant
 local didYouMean = require(jsutils.didYouMean).didYouMean
@@ -18,10 +23,6 @@ local isInterfaceType = definition.isInterfaceType
 local isUnionType = definition.isUnionType
 local isEnumType = definition.isEnumType
 local isInputObjectType = definition.isInputObjectType
-local PackagesWorkspace = root.Parent
-local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
-local Array = LuauPolyfill.Array
-local Object = LuauPolyfill.Object
 
 local exports = {}
 
@@ -39,7 +40,7 @@ exports.PossibleTypeExtensionsRule = function(context)
 	local schema = context:getSchema()
 	local definedTypes = {}
 
-	for _, def in ipairs(context:getDocument().definitions)do
+	for _, def in ipairs(context:getDocument().definitions) do
 		if isTypeDefinitionNode(def) then
 			definedTypes[def.name.value] = def
 		end
@@ -67,7 +68,7 @@ exports.PossibleTypeExtensionsRule = function(context)
 				context:reportError(
 					GraphQLError.new(
 						('Cannot extend non-%s type "%s".'):format(kindStr, typeName),
-						defNode and {defNode, node} or node
+						defNode and { defNode, node } or node
 					)
 				)
 			end
@@ -81,8 +82,8 @@ exports.PossibleTypeExtensionsRule = function(context)
 			local suggestedTypes = suggestionList(typeName, allTypeNames)
 			context:reportError(
 				GraphQLError.new(
-					('Cannot extend type "%s" because it is not defined.'):format(typeName) ..
-						didYouMean(suggestedTypes),
+					('Cannot extend type "%s" because it is not defined.'):format(typeName)
+						.. didYouMean(suggestedTypes),
 					node.name
 				)
 			)

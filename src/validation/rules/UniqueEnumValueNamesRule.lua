@@ -1,12 +1,12 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/validation/rules/UniqueEnumValueNamesRule.js
 
-local root = script.Parent.Parent.Parent
+local srcWorkspace = script.Parent.Parent.Parent
+local rootWorkspace = srcWorkspace.Parent
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+local Map = LuauPolyfill.Map
 
--- ROBLOX deviation: use Map type
-local Map = require(root.luaUtils.Map).Map
-
-local GraphQLError = require(root.error.GraphQLError).GraphQLError
-local definition = require(root.type.definition)
+local GraphQLError = require(srcWorkspace.error.GraphQLError).GraphQLError
+local definition = require(srcWorkspace.type.definition)
 local isEnumType = definition.isEnumType
 
 local exports = {}
@@ -43,19 +43,17 @@ exports.UniqueEnumValueNamesRule = function(context)
 			if isEnumType(existingType) and existingType:getValue(valueName) then
 				context:reportError(
 					GraphQLError.new(
-						('Enum value "%s.%s" already exists in the schema. It cannot also be defined in this type extension.')
-							:format(typeName, valueName),
+						(
+							'Enum value "%s.%s" already exists in the schema. It cannot also be defined in this type extension.'
+						):format(typeName, valueName),
 						valueDef.name
 					)
 				)
 			elseif valueNames[valueName] then
 				context:reportError(
 					GraphQLError.new(
-						('Enum value "%s.%s" can only be defined once.'):format(
-							typeName,
-							valueName
-						),
-						{valueNames[valueName], valueDef.name}
+						('Enum value "%s.%s" can only be defined once.'):format(typeName, valueName),
+						{ valueNames[valueName], valueDef.name }
 					)
 				)
 			else

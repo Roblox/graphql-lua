@@ -3,11 +3,15 @@
 return function()
 	local executionWorkspace = script.Parent.Parent
 	local srcWorkspace = executionWorkspace.Parent
+	local rootWorkspace = srcWorkspace.Parent
 
-	-- ROBLOX deviation: utils
-	local Object = require(srcWorkspace.Parent.LuauPolyfill).Object
+	local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+	local Map = LuauPolyfill.Map
+	local Number = LuauPolyfill.Number
+	local Object = LuauPolyfill.Object
+	local NaN = Number.NaN
+
 	local NULL = require(srcWorkspace.luaUtils.null)
-	local Map = require(srcWorkspace.luaUtils.Map).Map
 
 	local inspect = require(srcWorkspace.jsutils.inspect).inspect
 	local invariant = require(srcWorkspace.jsutils.invariant).invariant
@@ -44,10 +48,10 @@ return function()
 	local TestInputObject = GraphQLInputObjectType.new({
 		name = "TestInputObject",
 		fields = Map.new({
-			{"a", { type = GraphQLString }},
-			{"b", { type = GraphQLList.new(GraphQLString)}},
-			{"c", { type = GraphQLNonNull.new(GraphQLString)}},
-			{"d", { type = TestComplexScalar }},
+			{ "a", { type = GraphQLString } },
+			{ "b", { type = GraphQLList.new(GraphQLString) } },
+			{ "c", { type = GraphQLNonNull.new(GraphQLString) } },
+			{ "d", { type = TestComplexScalar } },
 		}),
 	})
 	local TestNestedInputObject = GraphQLInputObjectType.new({
@@ -55,21 +59,21 @@ return function()
 		fields = Map.new({
 			{ "na", {
 				type = GraphQLNonNull.new(TestInputObject),
-			}},
+			} },
 			{ "nb", {
 				type = GraphQLNonNull.new(GraphQLString),
-			}},
+			} },
 		}),
 	})
 	local TestEnum = GraphQLEnumType.new({
 		name = "TestEnum",
 		values = Map.new({
-			{"NULL", { value = NULL }},
-			{"UNDEFINED", { value = nil }},
-			{"NAN", { value = 0/0 }},
-			{"FALSE", { value = false }},
-			{"CUSTOM", { value = "custom value"}},
-			{"DEFAULT_VALUE", {}},
+			{ "NULL", { value = NULL } },
+			{ "UNDEFINED", { value = nil } },
+			{ "NAN", { value = NaN } },
+			{ "FALSE", { value = false } },
+			{ "CUSTOM", { value = "custom value" } },
+			{ "DEFAULT_VALUE", {} },
 		}),
 	})
 
@@ -89,39 +93,54 @@ return function()
 	local TestType = GraphQLObjectType.new({
 		name = "TestType",
 		fields = Map.new({
-			{ "fieldWithEnumInput", fieldWithInputArg({ type = TestEnum })},
+			{ "fieldWithEnumInput", fieldWithInputArg({ type = TestEnum }) },
 			{ "fieldWithNonNullableEnumInput", fieldWithInputArg({
 				type = GraphQLNonNull.new(TestEnum),
-			})},
-			{ "fieldWithObjectInput", fieldWithInputArg({ type = TestInputObject })},
-			{ "fieldWithNullableStringInput", fieldWithInputArg({ type = GraphQLString })},
-			{ "fieldWithNonNullableStringInput", fieldWithInputArg({
-				type = GraphQLNonNull.new(GraphQLString),
-			})},
-			{ "fieldWithDefaultArgumentValue", fieldWithInputArg({
-				type = GraphQLString,
-				defaultValue = "Hello World",
-			})},
-			{ "fieldWithNonNullableStringInputAndDefaultArgumentValue", fieldWithInputArg({
-				type = GraphQLNonNull.new(GraphQLString),
-				defaultValue = "Hello World",
-			})},
-			{ "fieldWithNestedInputObject", fieldWithInputArg({
-				type = TestNestedInputObject,
-				defaultValue = "Hello World",
-			})},
+			}) },
+			{ "fieldWithObjectInput", fieldWithInputArg({ type = TestInputObject }) },
+			{ "fieldWithNullableStringInput", fieldWithInputArg({ type = GraphQLString }) },
+			{
+				"fieldWithNonNullableStringInput",
+				fieldWithInputArg({
+					type = GraphQLNonNull.new(GraphQLString),
+				}),
+			},
+			{
+				"fieldWithDefaultArgumentValue",
+				fieldWithInputArg({
+					type = GraphQLString,
+					defaultValue = "Hello World",
+				}),
+			},
+			{
+				"fieldWithNonNullableStringInputAndDefaultArgumentValue",
+				fieldWithInputArg({
+					type = GraphQLNonNull.new(GraphQLString),
+					defaultValue = "Hello World",
+				}),
+			},
+			{
+				"fieldWithNestedInputObject",
+				fieldWithInputArg({
+					type = TestNestedInputObject,
+					defaultValue = "Hello World",
+				}),
+			},
 			{ "list", fieldWithInputArg({
 				type = GraphQLList.new(GraphQLString),
-			})},
+			}) },
 			{ "nnList", fieldWithInputArg({
 				type = GraphQLNonNull.new(GraphQLList.new(GraphQLString)),
-			})},
+			}) },
 			{ "listNN", fieldWithInputArg({
 				type = GraphQLList.new(GraphQLNonNull.new(GraphQLString)),
-			})},
-			{ "nnListNN", fieldWithInputArg({
-				type = GraphQLNonNull.new(GraphQLList.new(GraphQLNonNull.new(GraphQLString))),
-			})},
+			}) },
+			{
+				"nnListNN",
+				fieldWithInputArg({
+					type = GraphQLNonNull.new(GraphQLList.new(GraphQLNonNull.new(GraphQLString))),
+				}),
+			},
 		}),
 	})
 	local schema = GraphQLSchema.new({ query = TestType })
@@ -154,7 +173,7 @@ return function()
 							-- original code:
 							-- fieldWithObjectInput = "{ a: \"foo\", b: [\"bar\"], c: \"baz\" }",
 							--]]
-							fieldWithObjectInput = "{ a: \"foo\", c: \"baz\", b: [\"bar\"] }",
+							fieldWithObjectInput = '{ a: "foo", c: "baz", b: ["bar"] }',
 						},
 					})
 				end)
@@ -174,7 +193,7 @@ return function()
 							-- original code:
 							-- fieldWithObjectInput = "{ a: \"foo\", b: [\"bar\"], c: \"baz\" }",
 							--]]
-							fieldWithObjectInput = "{ a: \"foo\", c: \"baz\", b: [\"bar\"] }",
+							fieldWithObjectInput = '{ a: "foo", c: "baz", b: ["bar"] }',
 						},
 					})
 				end)
@@ -194,7 +213,7 @@ return function()
 							-- original code:
 							-- fieldWithObjectInput = "{ a: null, b: null, c: \"C\", d: null }",
 							--]]
-							fieldWithObjectInput = "{ a: null, d: null, c: \"C\", b: null }",
+							fieldWithObjectInput = '{ a: null, d: null, c: "C", b: null }',
 						},
 					})
 				end)
@@ -214,7 +233,7 @@ return function()
 							-- original code:
 							-- fieldWithObjectInput = "{ b: [\"A\", null, \"C\"], c: \"C\" }",
 							--]]
-							fieldWithObjectInput = "{ c: \"C\", b: [\"A\", null, \"C\"] }",
+							fieldWithObjectInput = '{ c: "C", b: ["A", null, "C"] }',
 						},
 					})
 				end)
@@ -232,23 +251,20 @@ return function()
 					--]]
 					expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
 					expect(result.data).toEqual({ fieldWithObjectInput = NULL })
-					expect(result.errors).toHaveSameMembers(
+					expect(result.errors).toHaveSameMembers({
 						{
-							{
-								message = "Argument \"input\" has invalid value [\"foo\", \"bar\", \"baz\"].",
-								path = {
-									"fieldWithObjectInput",
-								},
-								locations = {
-									{
-										line = 3,
-										column = 41,
-									},
+							message = 'Argument "input" has invalid value ["foo", "bar", "baz"].',
+							path = {
+								"fieldWithObjectInput",
+							},
+							locations = {
+								{
+									line = 3,
+									column = 41,
 								},
 							},
 						},
-						true
-					)
+					}, true)
 				end)
 
 				it("properly runs parseLiteral on complex scalar types", function()
@@ -261,7 +277,7 @@ return function()
 
 					expect(result).toEqual({
 						data = {
-							fieldWithObjectInput = "{ c: \"foo\", d: \"DeserializedValue\" }",
+							fieldWithObjectInput = '{ c: "foo", d: "DeserializedValue" }',
 						},
 					})
 				end)
@@ -294,7 +310,7 @@ return function()
 							-- original code:
 							-- fieldWithObjectInput = "{ a: \"foo\", b: [\"bar\"], c: \"baz\" }",
 							--]]
-							fieldWithObjectInput = "{ a: \"foo\", c: \"baz\", b: [\"bar\"] }",
+							fieldWithObjectInput = '{ a: "foo", c: "baz", b: ["bar"] }',
 						},
 					})
 				end)
@@ -348,7 +364,7 @@ return function()
 							-- original code:
 							-- fieldWithObjectInput = "{ a: \"foo\", b: [\"bar\"], c: \"baz\" }",
 							--]]
-							fieldWithObjectInput = "{ a: \"foo\", c: \"baz\", b: [\"bar\"] }",
+							fieldWithObjectInput = '{ a: "foo", c: "baz", b: ["bar"] }',
 						},
 					})
 				end)
@@ -368,7 +384,7 @@ return function()
 
 					expect(result).toEqual({
 						data = {
-							fieldWithNullableStringInput = "\"Variable value\"",
+							fieldWithNullableStringInput = '"Variable value"',
 						},
 					})
 				end)
@@ -426,7 +442,7 @@ return function()
 							-- original code:
 							-- fieldWithObjectInput = "{ a: \"foo\", b: [\"bar\"], c: \"baz\" }",
 							--]]
-							fieldWithObjectInput = "{ a: \"foo\", c: \"baz\", b: [\"bar\"] }",
+							fieldWithObjectInput = '{ a: "foo", c: "baz", b: ["bar"] }',
 						},
 					})
 				end)
@@ -442,7 +458,7 @@ return function()
 
 					expect(result).toEqual({
 						data = {
-							fieldWithObjectInput = "{ c: \"foo\", d: \"DeserializedValue\" }",
+							fieldWithObjectInput = '{ c: "foo", d: "DeserializedValue" }',
 						},
 					})
 				end)
@@ -461,20 +477,17 @@ return function()
 					--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 					--]]
 					expect(Object.keys(result)).toEqual({ "errors" })
-					expect(result.errors).toHaveSameMembers(
+					expect(result.errors).toHaveSameMembers({
 						{
-							{
-								message = "Variable \"$input\" got invalid value null at \"input.c\"; Expected non-nullable type \"String!\" not to be null.",
-								locations = {
-									{
-										line = 2,
-										column = 16,
-									},
+							message = 'Variable "$input" got invalid value null at "input.c"; Expected non-nullable type "String!" not to be null.',
+							locations = {
+								{
+									line = 2,
+									column = 16,
 								},
 							},
 						},
-						true
-					)
+					}, true)
 				end)
 
 				it("errors on incorrect type", function()
@@ -486,20 +499,17 @@ return function()
 					--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 					--]]
 					expect(Object.keys(result)).toEqual({ "errors" })
-					expect(result.errors).toHaveSameMembers(
+					expect(result.errors).toHaveSameMembers({
 						{
-							{
-								message = "Variable \"$input\" got invalid value \"foo bar\"; Expected type \"TestInputObject\" to be an object.",
-								locations = {
-									{
-										line = 2,
-										column = 16,
-									},
+							message = 'Variable "$input" got invalid value "foo bar"; Expected type "TestInputObject" to be an object.',
+							locations = {
+								{
+									line = 2,
+									column = 16,
 								},
 							},
 						},
-						true
-					)
+					}, true)
 				end)
 
 				it("errors on omission of nested non-null", function()
@@ -514,20 +524,17 @@ return function()
 					--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 					--]]
 					expect(Object.keys(result)).toEqual({ "errors" })
-					expect(result.errors).toHaveSameMembers(
+					expect(result.errors).toHaveSameMembers({
 						{
-							{
-								message = "Variable \"$input\" got invalid value { a: \"foo\", b: \"bar\" }; Field \"c\" of required type \"String!\" was not provided.",
-								locations = {
-									{
-										line = 2,
-										column = 16,
-									},
+							message = 'Variable "$input" got invalid value { a: "foo", b: "bar" }; Field "c" of required type "String!" was not provided.',
+							locations = {
+								{
+									line = 2,
+									column = 16,
 								},
 							},
 						},
-						true
-					)
+					}, true)
 				end)
 
 				it("errors on deep nested errors and with many errors", function()
@@ -549,29 +556,26 @@ return function()
 					--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 					--]]
 					expect(Object.keys(result)).toEqual({ "errors" })
-					expect(result.errors).toHaveSameMembers(
+					expect(result.errors).toHaveSameMembers({
 						{
-							{
-								message = "Variable \"$input\" got invalid value { a: \"foo\" } at \"input.na\"; Field \"c\" of required type \"String!\" was not provided.",
-								locations = {
-									{
-										line = 2,
-										column = 18,
-									},
-								},
-							},
-							{
-								message = "Variable \"$input\" got invalid value { na: { a: \"foo\" } }; Field \"nb\" of required type \"String!\" was not provided.",
-								locations = {
-									{
-										line = 2,
-										column = 18,
-									},
+							message = 'Variable "$input" got invalid value { a: "foo" } at "input.na"; Field "c" of required type "String!" was not provided.',
+							locations = {
+								{
+									line = 2,
+									column = 18,
 								},
 							},
 						},
-						true
-					)
+						{
+							message = 'Variable "$input" got invalid value { na: { a: "foo" } }; Field "nb" of required type "String!" was not provided.',
+							locations = {
+								{
+									line = 2,
+									column = 18,
+								},
+							},
+						},
+					}, true)
 				end)
 
 				it("errors on addition of unknown input field", function()
@@ -589,25 +593,22 @@ return function()
 					--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 					--]]
 					expect(Object.keys(result)).toEqual({ "errors" })
-					expect(result.errors).toHaveSameMembers(
+					expect(result.errors).toHaveSameMembers({
 						{
-							{
 							--[[
 							-- ROBLOX FIXME: order of properties is not kept
 							-- original code:
 							-- message = "Variable \"$input\" got invalid value { a: \"foo\", b: \"bar\", c: \"baz\", extra: \"dog\" }; Field \"extra\" is not defined by type \"TestInputObject\".",
 							--]]
-								message = "Variable \"$input\" got invalid value { a: \"foo\", extra: \"dog\", c: \"baz\", b: \"bar\" }; Field \"extra\" is not defined by type \"TestInputObject\".",
-								locations = {
-									{
-										line = 2,
-										column = 16,
-									},
+							message = 'Variable "$input" got invalid value { a: "foo", extra: "dog", c: "baz", b: "bar" }; Field "extra" is not defined by type "TestInputObject".',
+							locations = {
+								{
+									line = 2,
+									column = 16,
 								},
 							},
 						},
-						true
-					)
+					}, true)
 				end)
 			end)
 		end)
@@ -630,8 +631,8 @@ return function()
 						null = "null",
 						NaN = "NaN",
 						["false"] = "false",
-						customValue = "\"custom value\"",
-						defaultValue = "\"DEFAULT_VALUE\"",
+						customValue = '"custom value"',
+						defaultValue = '"DEFAULT_VALUE"',
 					},
 				})
 			end)
@@ -721,7 +722,7 @@ return function()
 
 				expect(result).toEqual({
 					data = {
-						fieldWithNullableStringInput = "\"a\"",
+						fieldWithNullableStringInput = '"a"',
 					},
 				})
 			end)
@@ -736,7 +737,7 @@ return function()
 
 				expect(result).toEqual({
 					data = {
-						fieldWithNullableStringInput = "\"a\"",
+						fieldWithNullableStringInput = '"a"',
 					},
 				})
 			end)
@@ -753,7 +754,7 @@ return function()
 
 				expect(result).toEqual({
 					data = {
-						fieldWithNullableStringInput = "\"default\"",
+						fieldWithNullableStringInput = '"default"',
 					},
 				})
 			end)
@@ -768,7 +769,7 @@ return function()
 
 				expect(result).toEqual({
 					data = {
-						fieldWithNonNullableStringInput = "\"default\"",
+						fieldWithNonNullableStringInput = '"default"',
 					},
 				})
 			end)
@@ -785,20 +786,17 @@ return function()
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toEqual({ "errors" })
-				expect(result.errors).toHaveSameMembers(
+				expect(result.errors).toHaveSameMembers({
 					{
-						{
-							message = "Variable \"$value\" of required type \"String!\" was not provided.",
-							locations = {
-								{
-									line = 2,
-									column = 16,
-								},
+						message = 'Variable "$value" of required type "String!" was not provided.',
+						locations = {
+							{
+								line = 2,
+								column = 16,
 							},
 						},
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("does not allow non-nullable inputs to be set to null in a variable", function()
@@ -814,20 +812,17 @@ return function()
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toEqual({ "errors" })
-				expect(result.errors).toHaveSameMembers(
+				expect(result.errors).toHaveSameMembers({
 					{
-						{
-							message = "Variable \"$value\" of non-null type \"String!\" must not be null.",
-							locations = {
-								{
-									line = 2,
-									column = 16,
-								},
+						message = 'Variable "$value" of non-null type "String!" must not be null.',
+						locations = {
+							{
+								line = 2,
+								column = 16,
 							},
 						},
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("allows non-nullable inputs to be set to a value in a variable", function()
@@ -843,7 +838,7 @@ return function()
 
 				expect(result).toEqual({
 					data = {
-						fieldWithNonNullableStringInput = "\"a\"",
+						fieldWithNonNullableStringInput = '"a"',
 					},
 				})
 			end)
@@ -858,7 +853,7 @@ return function()
 
 				expect(result).toEqual({
 					data = {
-						fieldWithNonNullableStringInput = "\"a\"",
+						fieldWithNonNullableStringInput = '"a"',
 					},
 				})
 			end)
@@ -871,23 +866,20 @@ return function()
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
 				expect(result.data).toEqual({ fieldWithNonNullableStringInput = NULL })
-				expect(result.errors).toHaveSameMembers(
+				expect(result.errors).toHaveSameMembers({
 					{
-						{
-							message = "Argument \"input\" of required type \"String!\" was not provided.",
-							locations = {
-								{
-									line = 1,
-									column = 3,
-								},
-							},
-							path = {
-								"fieldWithNonNullableStringInput",
+						message = 'Argument "input" of required type "String!" was not provided.',
+						locations = {
+							{
+								line = 1,
+								column = 3,
 							},
 						},
+						path = {
+							"fieldWithNonNullableStringInput",
+						},
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("reports error for array passed into string input", function()
@@ -905,20 +897,17 @@ return function()
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toEqual({ "errors" })
-				expect(result.errors).toHaveSameMembers(
+				expect(result.errors).toHaveSameMembers({
 					{
-						{
-							message = "Variable \"$value\" got invalid value [1, 2, 3]; String cannot represent a non string value: [1, 2, 3]",
-							locations = {
-								{
-									line = 2,
-									column = 16,
-								},
+						message = 'Variable "$value" got invalid value [1, 2, 3]; String cannot represent a non string value: [1, 2, 3]',
+						locations = {
+							{
+								line = 2,
+								column = 16,
 							},
 						},
 					},
-					true
-				)
+				}, true)
 				--[[
                     ROBLOX deviation: in upstream test the `originalError` property is defined but it's value is `undefined`
 					there's no such a distinction in Lua
@@ -944,23 +933,20 @@ return function()
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
 				expect(result.data).toEqual({ fieldWithNonNullableStringInput = NULL })
-				expect(result.errors).toHaveSameMembers(
+				expect(result.errors).toHaveSameMembers({
 					{
-						{
-							message = "Argument \"input\" of required type \"String!\" was provided the variable \"$foo\" which was not provided a runtime value.",
-							locations = {
-								{
-									line = 3,
-									column = 50,
-								},
-							},
-							path = {
-								"fieldWithNonNullableStringInput",
+						message = 'Argument "input" of required type "String!" was provided the variable "$foo" which was not provided a runtime value.',
+						locations = {
+							{
+								line = 3,
+								column = 50,
 							},
 						},
+						path = {
+							"fieldWithNonNullableStringInput",
+						},
 					},
-					true
-				)
+				}, true)
 			end)
 		end)
 
@@ -996,7 +982,7 @@ return function()
 
 				expect(result).toEqual({
 					data = {
-						list = "[\"A\"]",
+						list = '["A"]',
 					},
 				})
 			end)
@@ -1018,7 +1004,7 @@ return function()
 
 				expect(result).toEqual({
 					data = {
-						list = "[\"A\", null, \"B\"]",
+						list = '["A", null, "B"]',
 					},
 				})
 			end)
@@ -1036,20 +1022,17 @@ return function()
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toEqual({ "errors" })
-				expect(result.errors).toHaveSameMembers(
+				expect(result.errors).toHaveSameMembers({
 					{
-						{
-							message = "Variable \"$input\" of non-null type \"[String]!\" must not be null.",
-							locations = {
-								{
-									line = 2,
-									column = 16,
-								},
+						message = 'Variable "$input" of non-null type "[String]!" must not be null.',
+						locations = {
+							{
+								line = 2,
+								column = 16,
 							},
 						},
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("allows non-null lists to contain values", function()
@@ -1067,7 +1050,7 @@ return function()
 
 				expect(result).toEqual({
 					data = {
-						nnList = "[\"A\"]",
+						nnList = '["A"]',
 					},
 				})
 			end)
@@ -1089,7 +1072,7 @@ return function()
 
 				expect(result).toEqual({
 					data = {
-						nnList = "[\"A\", null, \"B\"]",
+						nnList = '["A", null, "B"]',
 					},
 				})
 			end)
@@ -1125,7 +1108,7 @@ return function()
 
 				expect(result).toEqual({
 					data = {
-						listNN = "[\"A\"]",
+						listNN = '["A"]',
 					},
 				})
 			end)
@@ -1149,20 +1132,17 @@ return function()
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toEqual({ "errors" })
-				expect(result.errors).toHaveSameMembers(
+				expect(result.errors).toHaveSameMembers({
 					{
-						{
-							message = "Variable \"$input\" got invalid value null at \"input[2]\"; Expected non-nullable type \"String!\" not to be null.",
-							locations = {
-								{
-									line = 2,
-									column = 16,
-								},
+						message = 'Variable "$input" got invalid value null at "input[2]"; Expected non-nullable type "String!" not to be null.',
+						locations = {
+							{
+								line = 2,
+								column = 16,
 							},
 						},
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("does not allow non-null lists of non-nulls to be null", function()
@@ -1178,20 +1158,17 @@ return function()
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toEqual({ "errors" })
-				expect(result.errors).toHaveSameMembers(
+				expect(result.errors).toHaveSameMembers({
 					{
-						{
-							message = "Variable \"$input\" of non-null type \"[String!]!\" must not be null.",
-							locations = {
-								{
-									line = 2,
-									column = 16,
-								},
+						message = 'Variable "$input" of non-null type "[String!]!" must not be null.',
+						locations = {
+							{
+								line = 2,
+								column = 16,
 							},
 						},
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("allows non-null lists of non-nulls to contain values", function()
@@ -1209,7 +1186,7 @@ return function()
 
 				expect(result).toEqual({
 					data = {
-						nnListNN = "[\"A\"]",
+						nnListNN = '["A"]',
 					},
 				})
 			end)
@@ -1233,20 +1210,17 @@ return function()
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toEqual({ "errors" })
-				expect(result.errors).toHaveSameMembers(
+				expect(result.errors).toHaveSameMembers({
 					{
-						{
-							message = "Variable \"$input\" got invalid value null at \"input[2]\"; Expected non-nullable type \"String!\" not to be null.",
-							locations = {
-								{
-									line = 2,
-									column = 16,
-								},
+						message = 'Variable "$input" got invalid value null at "input[2]"; Expected non-nullable type "String!" not to be null.',
+						locations = {
+							{
+								line = 2,
+								column = 16,
 							},
 						},
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("does not allow invalid types to be used as values", function()
@@ -1269,20 +1243,17 @@ return function()
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toEqual({ "errors" })
-				expect(result.errors).toHaveSameMembers(
+				expect(result.errors).toHaveSameMembers({
 					{
-						{
-							message = "Variable \"$input\" expected value of type \"TestType!\" which cannot be used as an input type.",
-							locations = {
-								{
-									line = 2,
-									column = 24,
-								},
+						message = 'Variable "$input" expected value of type "TestType!" which cannot be used as an input type.',
+						locations = {
+							{
+								line = 2,
+								column = 24,
 							},
 						},
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("does not allow unknown types to be used as values", function()
@@ -1300,20 +1271,17 @@ return function()
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
 				expect(Object.keys(result)).toEqual({ "errors" })
-				expect(result.errors).toHaveSameMembers(
+				expect(result.errors).toHaveSameMembers({
 					{
-						{
-							message = "Variable \"$input\" expected value of type \"UnknownType!\" which cannot be used as an input type.",
-							locations = {
-								{
-									line = 2,
-									column = 24,
-								},
+						message = 'Variable "$input" expected value of type "UnknownType!" which cannot be used as an input type.',
+						locations = {
+							{
+								line = 2,
+								column = 24,
 							},
 						},
 					},
-					true
-				)
+				}, true)
 			end)
 		end)
 
@@ -1323,7 +1291,7 @@ return function()
 
 				expect(result).toEqual({
 					data = {
-						fieldWithDefaultArgumentValue = "\"Hello World\"",
+						fieldWithDefaultArgumentValue = '"Hello World"',
 					},
 				})
 			end)
@@ -1338,7 +1306,7 @@ return function()
 
 				expect(result).toEqual({
 					data = {
-						fieldWithDefaultArgumentValue = "\"Hello World\"",
+						fieldWithDefaultArgumentValue = '"Hello World"',
 					},
 				})
 			end)
@@ -1356,23 +1324,20 @@ return function()
 				--]]
 				expect(Object.keys(result)).toHaveSameMembers({ "errors", "data" })
 				expect(result.data).toEqual({ fieldWithDefaultArgumentValue = NULL })
-				expect(result.errors).toHaveSameMembers(
+				expect(result.errors).toHaveSameMembers({
 					{
-						{
-							message = "Argument \"input\" has invalid value WRONG_TYPE.",
-							locations = {
-								{
-									line = 3,
-									column = 48,
-								},
-							},
-							path = {
-								"fieldWithDefaultArgumentValue",
+						message = 'Argument "input" has invalid value WRONG_TYPE.',
+						locations = {
+							{
+								line = 3,
+								column = 48,
 							},
 						},
+						path = {
+							"fieldWithDefaultArgumentValue",
+						},
 					},
-					true
-				)
+				}, true)
 			end)
 
 			it("when no runtime value is provided to a non-null argument", function()
@@ -1385,7 +1350,7 @@ return function()
 
 				expect(result).toEqual({
 					data = {
-						fieldWithNonNullableStringInputAndDefaultArgumentValue = "\"Hello World\"",
+						fieldWithNonNullableStringInputAndDefaultArgumentValue = '"Hello World"',
 					},
 				})
 			end)
@@ -1412,7 +1377,9 @@ return function()
 
 			local function invalidValueError(value, index)
 				return {
-					message = ("Variable \"$input\" got invalid value %s at \"input[%s]\"; String cannot represent a non string value: %s"):format(value, index, value),
+					message = (
+						'Variable "$input" got invalid value %s at "input[%s]"; String cannot represent a non string value: %s'
+					):format(value, index, value),
 					locations = {
 						{
 							line = 2,

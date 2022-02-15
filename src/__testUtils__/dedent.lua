@@ -1,23 +1,23 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/__testUtils__/dedent.js
-type Array<T> = { [number]: T }
-
 local testUtilsWorkspace = script.Parent
 local srcWorkspace = testUtilsWorkspace.Parent
 local rootWorkspace = srcWorkspace.Parent
-local PackagesWorkspace = rootWorkspace
+local Packages = rootWorkspace
 
-local LuauPolyfill = require(PackagesWorkspace.LuauPolyfill)
+local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
-local String = require(srcWorkspace.luaUtils.String)
+local String = LuauPolyfill.String
+type Array<T> = LuauPolyfill.Array<T>
 
 function dedent(strings: Array<string> | string, ...): string
 	local values: Array<string> = { ... }
 
 	local str = ""
 
+	-- ROBLOX TODO Luau: Array.isArray true should narrow to Array<?> and therefore narrow strings to Array<string>
 	if Array.isArray(strings) then
 		for i = 1, #strings do
-			str ..= strings[i]
+			str ..= (strings :: Array<string>)[i]
 			if i <= #values then
 				local value = values[i]
 
@@ -25,7 +25,7 @@ function dedent(strings: Array<string> | string, ...): string
 			end
 		end
 	else
-		str = strings
+		str = strings :: string
 	end
 
 	local trimmedStr = removeTrailingSpacesAndTabs(removeLeadingNewLines(str))
@@ -52,7 +52,7 @@ end
 
 function removeTrailingSpacesAndTabs(str: string): string
 	local match
-	local lastMatch
+	local lastMatch: { index: number, match: string }?
 	local init = 1
 	repeat
 		match = String.findOr(str, { " +", "\t+" }, init)

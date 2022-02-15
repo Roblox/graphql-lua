@@ -1,5 +1,8 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/parser.js
-type Array<T> = { [number]: T }
+local rootWorkspace = script.Parent.Parent.Parent
+local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+type Array<T> = LuauPolyfill.Array<T>
+type void = nil
 
 local language = script.Parent
 
@@ -7,7 +10,15 @@ local AstModule = require(language.ast)
 local Location = AstModule.Location
 type DocumentNode = AstModule.DocumentNode
 type DefinitionNode = AstModule.DefinitionNode
+type FragmentDefinitionNode = AstModule.FragmentDefinitionNode
+type FragmentSpreadNode = AstModule.FragmentSpreadNode
+type InlineFragmentNode = AstModule.InlineFragmentNode
+type Location = AstModule.Location
+type ListValueNode = AstModule.ListValueNode
 type NameNode = AstModule.NameNode
+type ObjectFieldNode = AstModule.ObjectFieldNode
+type ObjectValueNode = AstModule.ObjectValueNode
+type StringValueNode = AstModule.StringValueNode
 type ValueNode = AstModule.ValueNode
 type Token = AstModule.Token
 type TypeNode = AstModule.TypeNode
@@ -32,14 +43,14 @@ local syntaxError = require(script.Parent.Parent.error.syntaxError).syntaxError
  * Configuration options to control parser behavior
  *]]
 export type ParseOptions = {
-  --[[/**
+	--[[/**
    * By default, the parser creates AST nodes that know the location
    * in the source that they correspond to. This configuration flag
    * disables that behavior for performance or testing.
    */
   ]]
-  noLocation: boolean?,
-  --[[
+	noLocation: boolean?,
+	--[[
    * EXPERIMENTAL:
    *
    * If enabled, the parser will understand and parse variable definitions
@@ -55,9 +66,8 @@ export type ParseOptions = {
    * Note: this feature is experimental and may change or be removed in the
    * future.
    *]]
-  experimentalFragmentVariables: boolean?
+	experimentalFragmentVariables: boolean?,
 }
-
 
 -- deviation: pre-declare functions
 local getTokenDesc
@@ -70,10 +80,7 @@ Parser.__index = Parser
 --  * Given a GraphQL source, parses it into a Document.
 --  * Throws GraphQLError if a syntax error is encountered.
 --  *]]
-local function parse(
-	source: string | Source,
-	options: ParseOptions?
-): DocumentNode
+local function parse(source: string | Source, options: ParseOptions?): DocumentNode
 	local parser = Parser.new(source, options)
 	return parser:parseDocument()
 end
@@ -88,10 +95,7 @@ end
 --  *
 --  * Consider providing the results to the utility function: valueFromAST().
 ]]
-local function parseValue(
-	source: string | Source,
-	options: ParseOptions?
-): ValueNode
+local function parseValue(source: string | Source, options: ParseOptions?): ValueNode
 	local parser = Parser.new(source, options)
 	parser:expectToken(TokenKind.SOF)
 	local value = parser:parseValueLiteral(false)
@@ -109,10 +113,7 @@ end
 --  *
 --  * Consider providing the results to the utility function: typeFromAST().
 --  *]]
-local function parseType(
-	source: string | Source,
-	options: ParseOptions?
-): TypeNode
+local function parseType(source: string | Source, options: ParseOptions?): TypeNode
 	local parser = Parser.new(source, options)
 	parser:expectToken(TokenKind.SOF)
 	local type_ = parser:parseTypeReference()
@@ -120,10 +121,7 @@ local function parseType(
 	return type_
 end
 
-function Parser.new(
-	source: string | Source,
-	options: ParseOptions?
-)
+function Parser.new(source: string | Source, options: ParseOptions?)
 	local sourceObj
 	if typeof(source) == "string" then
 		sourceObj = Source.new(source)
@@ -407,7 +405,7 @@ end
 --  *
 --  * InlineFragment : ... TypeCondition? Directives? SelectionSet
 --  *]]
-function Parser:parseFragment()
+function Parser:parseFragment(): FragmentSpreadNode | InlineFragmentNode
 	local start = self._lexer.token
 	self:expectToken(TokenKind.SPREAD)
 
@@ -441,7 +439,7 @@ end
 --  *
 --  * TypeCondition : NamedType
 --  *]]
-function Parser:parseFragmentDefinition()
+function Parser:parseFragmentDefinition(): FragmentDefinitionNode
 	local start = self._lexer.token
 	self:expectKeyword("fragment")
 	-- Experimental support for defining variables within fragments changes
@@ -484,7 +482,7 @@ end
 --[[*
 --  * FragmentName : Name but not `on`
 --  *]]
-function Parser:parseFragmentName()
+function Parser:parseFragmentName(): NameNode
 	if self._lexer.token.value == "on" then
 		error(self:unexpected())
 	end
@@ -511,7 +509,7 @@ end
 --  *
 --  * EnumValue : Name but not `true`, `false` or `null`
 --  *]]
-function Parser:parseValueLiteral(isConst: boolean)
+function Parser:parseValueLiteral(isConst: boolean): ValueNode
 	local token = self._lexer.token
 
 	local kind = token.kind
@@ -560,7 +558,7 @@ function Parser:parseValueLiteral(isConst: boolean)
 	error(self:unexpected())
 end
 
-function Parser:parseStringLiteral()
+function Parser:parseStringLiteral(): StringValueNode
 	local token = self._lexer.token
 	self._lexer:advance()
 	return {
@@ -576,7 +574,7 @@ end
 --  *   - [ ]
 --  *   - [ Value[?Const]+ ]
 --  *]]
-function Parser:parseList(isConst: boolean)
+function Parser:parseList(isConst: boolean): ListValueNode
 	local start = self._lexer.token
 	local item = function()
 		return self:parseValueLiteral(isConst)
@@ -593,7 +591,7 @@ end
 --  *   - { }
 --  *   - { ObjectField[?Const]+ }
 --  *]]
-function Parser:parseObject(isConst: boolean)
+function Parser:parseObject(isConst: boolean): ObjectValueNode
 	local start = self._lexer.token
 	local item = function()
 		return self:parseObjectField(isConst)
@@ -608,7 +606,7 @@ end
 --[[*
 --  * ObjectField[Const] : Name : Value[?Const]
 --  *]]
-function Parser:parseObjectField(isConst: boolean)
+function Parser:parseObjectField(isConst: boolean): ObjectFieldNode
 	local start = self._lexer.token
 	local name = self:parseName()
 	self:expectToken(TokenKind.COLON)
@@ -1312,7 +1310,7 @@ end
 --  *   `INPUT_OBJECT`
 --  *   `INPUT_FIELD_DEFINITION`
 --  *]]
-function Parser:parseDirectiveLocation()
+function Parser:parseDirectiveLocation(): NameNode
 	local start = self._lexer.token
 	local name = self:parseName()
 	if DirectiveLocation[name.value] ~= nil then
@@ -1325,17 +1323,17 @@ end
 --  * Returns a location object, used to identify the place in
 --  * the source that created a given parsed object.
 --  *]]
-function Parser:loc(startToken)
+function Parser:loc(startToken: Token): Location | void
 	if (self._options and self._options.noLocation) ~= true then
 		return Location.new(startToken, self._lexer.lastToken, self._lexer.source)
 	end
-	return
+	return nil
 end
 
 --[[*
 --  * Determines if the next token is of a given kind
 --  *]]
-function Parser:peek(kind)
+function Parser:peek(kind: TokenKindEnum): boolean
 	return self._lexer.token.kind == kind
 end
 
@@ -1343,18 +1341,20 @@ end
 --  * If the next token is of the given kind, return that token after advancing
 --  * the lexer. Otherwise, do not change the parser state and throw an error.
 --  *]]
-function Parser:expectToken(kind)
+function Parser:expectToken(kind: TokenKindEnum): Token
 	local token = self._lexer.token
 	if token.kind == kind then
 		self._lexer:advance()
 		return token
 	end
 
-	error(syntaxError(
-		self._lexer.source,
-		token.start,
-		"Expected " .. getTokenKindDesc(kind) .. ", found " .. getTokenDesc(token) .. "."
-	))
+	error(
+		syntaxError(
+			self._lexer.source,
+			token.start,
+			"Expected " .. getTokenKindDesc(kind) .. ", found " .. getTokenDesc(token) .. "."
+		)
+	)
 end
 
 --[[*
@@ -1379,11 +1379,13 @@ function Parser:expectKeyword(value: string): ()
 	if token.kind == TokenKind.NAME and token.value == value then
 		self._lexer:advance()
 	else
-		error(syntaxError(
-			self._lexer.source,
-			token.start,
-			"Expected \"" .. value .. "\", found " .. getTokenDesc(token) .. "."
-		))
+		error(
+			syntaxError(
+				self._lexer.source,
+				token.start,
+				'Expected "' .. value .. '", found ' .. getTokenDesc(token) .. "."
+			)
+		)
 	end
 end
 
@@ -1406,11 +1408,7 @@ end
 --  *]]
 function Parser:unexpected(atToken: Token?)
 	local token = atToken ~= nil and atToken or self._lexer.token
-	return syntaxError(
-		self._lexer.source,
-		token.start,
-		"Unexpected " .. getTokenDesc(token) .. "."
-	)
+	return syntaxError(self._lexer.source, token.start, "Unexpected " .. getTokenDesc(token) .. ".")
 end
 
 --[[*
@@ -1482,13 +1480,13 @@ end
 * Advances the parser to the next lex token after last item in the list.
 ]]
 function Parser:delimitedMany(delimiterKind, parseFn: (any) -> any): Array<any>
- self:expectOptionalToken(delimiterKind);
+	self:expectOptionalToken(delimiterKind)
 
- local nodes = {}
- repeat
-	table.insert(nodes, parseFn(self))
- until not (self:expectOptionalToken(delimiterKind))
- return nodes
+	local nodes = {}
+	repeat
+		table.insert(nodes, parseFn(self))
+	until not (self:expectOptionalToken(delimiterKind))
+	return nodes
 end
 
 --[[*
@@ -1496,14 +1494,14 @@ end
 --  *]]
 function getTokenDesc(token): string
 	local value = token.value
-	return getTokenKindDesc(token.kind) .. (value ~= nil and " \"" .. value .. "\"" or "")
+	return getTokenKindDesc(token.kind) .. (value ~= nil and ' "' .. value .. '"' or "")
 end
 
 --[[*
 --  * A helper function to describe a token kind as a string for debugging
 --  *]]
 function getTokenKindDesc(kind): string
-	return isPunctuatorTokenKind(kind) and "\"" .. kind .. "\"" or kind
+	return isPunctuatorTokenKind(kind) and '"' .. kind .. '"' or kind
 end
 
 return {

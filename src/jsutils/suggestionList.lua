@@ -4,8 +4,7 @@ local graphql = jsutils.Parent
 local Packages = graphql.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
-
-type Array<T> = { [number]: T }
+type Array<T> = LuauPolyfill.Array<T>
 
 local naturalCompare = require(script.Parent.naturalCompare).naturalCompare
 
@@ -15,10 +14,7 @@ local LexicalDistance = {}
  * Given an invalid input string and a list of valid options, returns a filtered
  * list of valid options sorted based on their similarity with the input.
  ]]
-local function suggestionList(
-	input: string,
-	options: Array<string>
-): Array<string>
+local function suggestionList(input: string, options: Array<string>): Array<string>
 	local optionsByDistance = {}
 	local lexicalDistance = LexicalDistance.new(input)
 
@@ -84,7 +80,7 @@ function LexicalDistance:measure(option: string, threshold: number): number | ni
 
 	local optionLowerCase = option:lower()
 
-    -- // Any case change counts as a single edit
+	-- // Any case change counts as a single edit
 	if self._inputLowerCase == optionLowerCase then
 		return 1
 	end
@@ -106,11 +102,11 @@ function LexicalDistance:measure(option: string, threshold: number): number | ni
 	end
 
 	local rows = self._rows
-    for j = 0, bLength do
+	for j = 0, bLength do
 		rows[1][j + 1] = j
 	end
 
-    for i = 1, aLength do
+	for i = 1, aLength do
 		local upRow = rows[(i - 1) % 3 + 1]
 		local currentRow = rows[i % 3 + 1]
 
@@ -162,5 +158,5 @@ function stringToArray(str: string): Array<number>
 end
 
 return {
-	suggestionList = suggestionList
+	suggestionList = suggestionList,
 }

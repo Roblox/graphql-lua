@@ -21,7 +21,7 @@ local function kind_of(obj)
 	end
 end
 
-local function escape_str(s)
+local function escape_str(s: string)
 	local in_char = { "\\", "\"", "/", "\b", "\f", "\n", "\r", "\t" }
 	local out_char = { "\\", "\"", "/", "b", "f", "n", "r", "t" }
 	for i, c in ipairs(in_char) do
@@ -30,7 +30,7 @@ local function escape_str(s)
 	return s
 end
 
-function json.stringify(obj, as_key)
+function json.stringify(obj: any, as_key: boolean?)
 	local s = {} -- We'll build the string as an array of strings to be concatenated.
 	local kind = kind_of(obj) -- This is 'array' if it's an array or type(obj) otherwise.
 	if kind == "array" then
