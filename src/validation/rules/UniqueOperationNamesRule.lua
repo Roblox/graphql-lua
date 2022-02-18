@@ -12,7 +12,7 @@ local exports = {}
 --  */
 exports.UniqueOperationNamesRule = function(context)
 	local knownOperationNames = {}
-	return{
+	return {
 		OperationDefinition = function(_self, node)
 			local operationName = node.name
 			if operationName then
@@ -20,7 +20,7 @@ exports.UniqueOperationNamesRule = function(context)
 					context:reportError(
 						GraphQLError.new(
 							('There can be only one operation named "%s".'):format(operationName.value),
-							{knownOperationNames[operationName.value], operationName}
+							{ knownOperationNames[operationName.value], operationName }
 						)
 					)
 				else

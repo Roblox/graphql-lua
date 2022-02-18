@@ -2,8 +2,8 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local PossibleFragmentSpreadsRule = require(validationWorkspace.rules.PossibleFragmentSpreadsRule)
-		.PossibleFragmentSpreadsRule
+	local PossibleFragmentSpreadsRule =
+		require(validationWorkspace.rules.PossibleFragmentSpreadsRule).PossibleFragmentSpreadsRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -20,225 +20,297 @@ return function()
 
 	describe("Validate: Possible fragment spreads", function()
 		it("of the same object", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment objectWithinObject on Dog { ...dogFragment }
 				fragment dogFragment on Dog { barkVolume }
-			]])
+			]]
+			)
 		end)
 
 		it("of the same object with inline fragment", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment objectWithinObjectAnon on Dog { ... on Dog { barkVolume } }
-			]])
+			]]
+			)
 		end)
 
 		it("object into an implemented interface", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment objectWithinInterface on Pet { ...dogFragment }
 				fragment dogFragment on Dog { barkVolume }
-			]])
+			]]
+			)
 		end)
 
 		it("object into containing union", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment objectWithinUnion on CatOrDog { ...dogFragment }
 				fragment dogFragment on Dog { barkVolume }
-			]])
+			]]
+			)
 		end)
 
 		it("union into contained object", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment unionWithinObject on Dog { ...catOrDogFragment }
 				fragment catOrDogFragment on CatOrDog { __typename }
-			]])
+			]]
+			)
 		end)
 
 		it("union into overlapping interface", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment unionWithinInterface on Pet { ...catOrDogFragment }
 				fragment catOrDogFragment on CatOrDog { __typename }
-			]])
+			]]
+			)
 		end)
 
 		it("union into overlapping union", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment unionWithinUnion on DogOrHuman { ...catOrDogFragment }
 				fragment catOrDogFragment on CatOrDog { __typename }
-			]])
+			]]
+			)
 		end)
 
 		it("interface into implemented object", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment interfaceWithinObject on Dog { ...petFragment }
 				fragment petFragment on Pet { name }
-			]])
+			]]
+			)
 		end)
 
 		it("interface into overlapping interface", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment interfaceWithinInterface on Pet { ...beingFragment }
 				fragment beingFragment on Being { name }
-			]])
+			]]
+			)
 		end)
 
 		it("interface into overlapping interface in inline fragment", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment interfaceWithinInterface on Pet { ... on Being { name } }
-			]])
+			]]
+			)
 		end)
 
 		it("interface into overlapping union", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment interfaceWithinUnion on CatOrDog { ...petFragment }
 				fragment petFragment on Pet { name }
-			]])
+			]]
+			)
 		end)
 
 		it("ignores incorrect type (caught by FragmentsOnCompositeTypesRule)", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment petFragment on Pet { ...badInADifferentWay }
 				fragment badInADifferentWay on String { name }
-			]])
+			]]
+			)
 		end)
 
 		it("ignores unknown fragments (caught by KnownFragmentNamesRule)", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment petFragment on Pet { ...UnknownFragment }
-			]])
+			]]
+			)
 		end)
 
 		it("different object into object", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment invalidObjectWithinObject on Cat { ...dogFragment }
       fragment dogFragment on Dog { barkVolume }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment "dogFragment" cannot be spread here as objects of type "Cat" can never be of type "Dog".',
-					locations = {{ line = 2, column = 51 }},
+					locations = { { line = 2, column = 51 } },
 				},
 			})
 		end)
 
 		it("different object into object in inline fragment", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment invalidObjectWithinObjectAnon on Cat {
         ... on Dog { barkVolume }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment cannot be spread here as objects of type "Cat" can never be of type "Dog".',
-					locations = {{ line = 3, column = 9 }},
+					locations = { { line = 3, column = 9 } },
 				},
 			})
 		end)
 
 		it("object into not implementing interface", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment invalidObjectWithinInterface on Pet { ...humanFragment }
       fragment humanFragment on Human { pets { name } }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment "humanFragment" cannot be spread here as objects of type "Pet" can never be of type "Human".',
-					locations = {{ line = 2, column = 54 }},
+					locations = { { line = 2, column = 54 } },
 				},
 			})
 		end)
 
 		it("object into not containing union", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment invalidObjectWithinUnion on CatOrDog { ...humanFragment }
       fragment humanFragment on Human { pets { name } }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment "humanFragment" cannot be spread here as objects of type "CatOrDog" can never be of type "Human".',
-					locations = {{ line = 2, column = 55 }},
+					locations = { { line = 2, column = 55 } },
 				},
 			})
 		end)
 
 		it("union into not contained object", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment invalidUnionWithinObject on Human { ...catOrDogFragment }
       fragment catOrDogFragment on CatOrDog { __typename }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment "catOrDogFragment" cannot be spread here as objects of type "Human" can never be of type "CatOrDog".',
-					locations = {{ line = 2, column = 52 }},
+					locations = { { line = 2, column = 52 } },
 				},
 			})
 		end)
 
 		it("union into non overlapping interface", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment invalidUnionWithinInterface on Pet { ...humanOrAlienFragment }
       fragment humanOrAlienFragment on HumanOrAlien { __typename }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment "humanOrAlienFragment" cannot be spread here as objects of type "Pet" can never be of type "HumanOrAlien".',
-					locations = {{ line = 2, column = 53 }},
+					locations = { { line = 2, column = 53 } },
 				},
 			})
 		end)
 
 		it("union into non overlapping union", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment invalidUnionWithinUnion on CatOrDog { ...humanOrAlienFragment }
       fragment humanOrAlienFragment on HumanOrAlien { __typename }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment "humanOrAlienFragment" cannot be spread here as objects of type "CatOrDog" can never be of type "HumanOrAlien".',
-					locations = {{ line = 2, column = 54 }},
+					locations = { { line = 2, column = 54 } },
 				},
 			})
 		end)
 
 		it("interface into non implementing object", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment invalidInterfaceWithinObject on Cat { ...intelligentFragment }
       fragment intelligentFragment on Intelligent { iq }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment "intelligentFragment" cannot be spread here as objects of type "Cat" can never be of type "Intelligent".',
-					locations = {{ line = 2, column = 54 }},
+					locations = { { line = 2, column = 54 } },
 				},
 			})
 		end)
 
 		it("interface into non overlapping interface", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment invalidInterfaceWithinInterface on Pet {
         ...intelligentFragment
       }
       fragment intelligentFragment on Intelligent { iq }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment "intelligentFragment" cannot be spread here as objects of type "Pet" can never be of type "Intelligent".',
-					locations = {{ line = 3, column = 9 }},
+					locations = { { line = 3, column = 9 } },
 				},
 			})
 		end)
 
 		it("interface into non overlapping interface in inline fragment", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment invalidInterfaceWithinInterfaceAnon on Pet {
         ...on Intelligent { iq }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment cannot be spread here as objects of type "Pet" can never be of type "Intelligent".',
-					locations = {{ line = 3, column = 9 }},
+					locations = { { line = 3, column = 9 } },
 				},
 			})
 		end)
 
 		it("interface into non overlapping union", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment invalidInterfaceWithinUnion on HumanOrAlien { ...petFragment }
       fragment petFragment on Pet { name }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment "petFragment" cannot be spread here as objects of type "HumanOrAlien" can never be of type "Pet".',
-					locations = {{ line = 2, column = 62 }},
+					locations = { { line = 2, column = 62 } },
 				},
 			})
 		end)

@@ -5,8 +5,8 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local UniqueEnumValueNamesRule = require(validationWorkspace.rules.UniqueEnumValueNamesRule)
-		.UniqueEnumValueNamesRule
+	local UniqueEnumValueNamesRule =
+		require(validationWorkspace.rules.UniqueEnumValueNamesRule).UniqueEnumValueNamesRule
 	local harness = require(script.Parent.harness)
 	local expectSDLValidationErrors = harness.expectSDLValidationErrors
 
@@ -23,36 +23,48 @@ return function()
 
 	describe("Validate: Unique enum value names", function()
 		it("no values", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				enum SomeEnum
-			]])
+			]]
+			)
 		end)
 
 		it("one value", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				enum SomeEnum {
 					FOO
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("multiple values", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				enum SomeEnum {
 					FOO
 					BAR
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("duplicate values inside the same enum definition", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       enum SomeEnum {
         FOO
         BAR
         FOO
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Enum value "SomeEnum.FOO" can only be defined once.',
 					locations = {
@@ -64,7 +76,9 @@ return function()
 		end)
 
 		it("extend enum with new value", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				enum SomeEnum {
 					FOO
 				}
@@ -74,18 +88,22 @@ return function()
 				extend enum SomeEnum {
 					BAZ
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("extend enum with duplicate value", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       extend enum SomeEnum {
         FOO
       }
       enum SomeEnum {
         FOO
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Enum value "SomeEnum.FOO" can only be defined once.',
 					locations = {
@@ -97,14 +115,17 @@ return function()
 		end)
 
 		it("duplicate value inside extension", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       enum SomeEnum
       extend enum SomeEnum {
         FOO
         BAR
         FOO
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Enum value "SomeEnum.FOO" can only be defined once.',
 					locations = {
@@ -116,7 +137,9 @@ return function()
 		end)
 
 		it("duplicate value inside different extensions", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       enum SomeEnum
       extend enum SomeEnum {
         FOO
@@ -124,7 +147,8 @@ return function()
       extend enum SomeEnum {
         FOO
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Enum value "SomeEnum.FOO" can only be defined once.',
 					locations = {
@@ -164,11 +188,11 @@ return function()
 			expectSDLErrors(expect, sdl, schema).toEqual({
 				{
 					message = 'Enum value "SomeEnum.FOO" already exists in the schema. It cannot also be defined in this type extension.',
-					locations = {{ line = 3, column = 9 }},
+					locations = { { line = 3, column = 9 } },
 				},
 				{
 					message = 'Enum value "SomeEnum.FOO" already exists in the schema. It cannot also be defined in this type extension.',
-					locations = {{ line = 6, column = 9 }},
+					locations = { { line = 6, column = 9 } },
 				},
 			})
 		end)

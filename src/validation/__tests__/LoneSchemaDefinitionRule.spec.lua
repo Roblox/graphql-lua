@@ -5,8 +5,8 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local LoneSchemaDefinitionRule = require(validationWorkspace.rules.LoneSchemaDefinitionRule)
-		.LoneSchemaDefinitionRule
+	local LoneSchemaDefinitionRule =
+		require(validationWorkspace.rules.LoneSchemaDefinitionRule).LoneSchemaDefinitionRule
 	local harness = require(script.Parent.harness)
 	local expectSDLValidationErrors = harness.expectSDLValidationErrors
 
@@ -14,12 +14,7 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectSDLValidationErrors(
-			expect_,
-			schema,
-			LoneSchemaDefinitionRule,
-			"\n" .. sdlStr
-		)
+		return expectSDLValidationErrors(expect_, schema, LoneSchemaDefinitionRule, "\n" .. sdlStr)
 	end
 
 	local function expectValidSDL(expect_, sdlStr: string, schema)
@@ -28,15 +23,20 @@ return function()
 
 	describe("Validate: Schema definition should be alone", function()
 		it("no schema", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				type Query {
 					foo: String
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("one schema definition", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				schema {
 					query: Foo
 				}
@@ -44,11 +44,14 @@ return function()
 				type Foo {
 					foo: String
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("multiple schema definitions", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       schema {
         query: Foo
       }
@@ -64,14 +67,15 @@ return function()
       schema {
         subscription: Foo
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = "Must provide only one schema definition.",
-					locations = {{ line = 10, column = 7 }},
+					locations = { { line = 10, column = 7 } },
 				},
 				{
 					message = "Must provide only one schema definition.",
-					locations = {{ line = 14, column = 7 }},
+					locations = { { line = 14, column = 7 } },
 				},
 			})
 		end)
@@ -83,11 +87,15 @@ return function()
 				}
 			]])
 
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
 				schema {
 					query: Foo
 				}
-			]], schema).toEqual({})
+			]],
+				schema
+			).toEqual({})
 		end)
 
 		it("redefine schema in schema extension", function()
@@ -101,14 +109,18 @@ return function()
 				}
 			]])
 
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
         schema {
           mutation: Foo
         }
-			]], schema).toEqual({
+			]],
+				schema
+			).toEqual({
 				{
 					message = "Cannot define a new schema within a schema extension.",
-					locations = {{ line = 2, column = 9 }},
+					locations = { { line = 2, column = 9 } },
 				},
 			})
 		end)
@@ -124,14 +136,18 @@ return function()
 				}
 			]])
 
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
         schema {
           mutation: Foo
         }
-			]], schema).toEqual({
+			]],
+				schema
+			).toEqual({
 				{
 					message = "Cannot define a new schema within a schema extension.",
-					locations = {{ line = 2, column = 9 }},
+					locations = { { line = 2, column = 9 } },
 				},
 			})
 		end)
@@ -147,11 +163,15 @@ return function()
 				}
 			]])
 
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				extend schema {
 				mutation: Foo
 				}
-			]], schema)
+			]],
+				schema
+			)
 		end)
 	end)
 end

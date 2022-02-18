@@ -2,8 +2,8 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local LoneAnonymousOperationRule = require(validationWorkspace.rules.LoneAnonymousOperationRule)
-		.LoneAnonymousOperationRule
+	local LoneAnonymousOperationRule =
+		require(validationWorkspace.rules.LoneAnonymousOperationRule).LoneAnonymousOperationRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -20,23 +20,31 @@ return function()
 
 	describe("Validate: Anonymous operation must be alone", function()
 		it("no operations", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment fragA on Type {
 					field
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("one anon operation", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("multiple named operations", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo {
 					field
 				}
@@ -44,68 +52,81 @@ return function()
 				query Bar {
 					field
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("anon operation with fragment", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					...Foo
 				}
 				fragment Foo on Type {
 					field
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("multiple anon operations", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         fieldA
       }
       {
         fieldB
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = "This anonymous operation must be the only defined operation.",
-					locations = {{ line = 2, column = 7 }},
+					locations = { { line = 2, column = 7 } },
 				},
 				{
 					message = "This anonymous operation must be the only defined operation.",
-					locations = {{ line = 5, column = 7 }},
+					locations = { { line = 5, column = 7 } },
 				},
 			})
 		end)
 
 		it("anon operation with a mutation", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         fieldA
       }
       mutation Foo {
         fieldB
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = "This anonymous operation must be the only defined operation.",
-					locations = {{ line = 2, column = 7 }},
+					locations = { { line = 2, column = 7 } },
 				},
 			})
 		end)
 
 		it("anon operation with a subscription", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         fieldA
       }
       subscription Foo {
         fieldB
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = "This anonymous operation must be the only defined operation.",
-					locations = {{ line = 2, column = 7 }},
+					locations = { { line = 2, column = 7 } },
 				},
 			})
 		end)

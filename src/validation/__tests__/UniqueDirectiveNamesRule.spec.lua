@@ -5,8 +5,8 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local UniqueDirectiveNamesRule = require(validationWorkspace.rules.UniqueDirectiveNamesRule)
-		.UniqueDirectiveNamesRule
+	local UniqueDirectiveNamesRule =
+		require(validationWorkspace.rules.UniqueDirectiveNamesRule).UniqueDirectiveNamesRule
 	local harness = require(script.Parent.harness)
 	local expectSDLValidationErrors = harness.expectSDLValidationErrors
 
@@ -20,45 +20,60 @@ return function()
 
 	describe("Validate: Unique directive names", function()
 		it("no directive", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				type Foo
-			]])
+			]]
+			)
 		end)
 
 		it("one directive", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				directive @foo on SCHEMA
-			]])
+			]]
+			)
 		end)
 
 		it("many directives", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				directive @foo on SCHEMA
 				directive @bar on SCHEMA
 				directive @baz on SCHEMA
-			]])
+			]]
+			)
 		end)
 
 		it("directive and non-directive definitions named the same", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				query foo { __typename }
 				fragment foo on foo { __typename }
 				type foo
 
 				directive @foo on SCHEMA
-			]])
+			]]
+			)
 		end)
 
 		it("directives named the same", function()
 			-- ROBLOX deviation: we append a new line at the begining of the
 			-- query string because of how Lua multiline strings works (it does
 			-- take the new line if it's the first character of the string)
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
 
       directive @foo on SCHEMA
 
       directive @foo on SCHEMA
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'There can be only one directive named "@foo".',
 					locations = {
@@ -81,7 +96,7 @@ return function()
 			expectSDLErrors(expect, "directive @skip on SCHEMA", schema).toEqual({
 				{
 					message = 'Directive "@skip" already exists in the schema. It cannot be redefined.',
-					locations = {{ line = 1, column = 12 }},
+					locations = { { line = 1, column = 12 } },
 				},
 			})
 		end)
@@ -98,7 +113,7 @@ return function()
 			expectSDLErrors(expect, "directive @foo on SCHEMA", schema).toEqual({
 				{
 					message = 'Directive "@foo" already exists in the schema. It cannot be redefined.',
-					locations = {{ line = 1, column = 12 }},
+					locations = { { line = 1, column = 12 } },
 				},
 			})
 		end)

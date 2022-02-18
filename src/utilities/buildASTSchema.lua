@@ -25,27 +25,23 @@ local specifiedDirectives = directivesModule.specifiedDirectives
 local extendSchema = require(script.Parent.extendSchema)
 local extendSchemaImpl = extendSchema.extendSchemaImpl
 
-export type BuildSchemaOptions =
-  GraphQLSchemaValidationOptions & {
+export type BuildSchemaOptions = GraphQLSchemaValidationOptions & {
 
-  --[[*
+	--[[*
    * Set to true to assume the SDL is valid.
    *
    * Default: false
    ]]
-  assumeValidSDL: boolean?,
+	assumeValidSDL: boolean?,
 }
 
 local buildASTSchema = function(
 	documentAST: DocumentNode,
 	options: BuildSchemaOptions -- ROBLOX TODO: this is nilable upstream, working around Luau narrow issues for now
-  ): GraphQLSchema
-	devAssert(
-		documentAST ~= nil and documentAST.kind == Kind.DOCUMENT,
-		"Must provide valid Document AST."
-	)
+): GraphQLSchema
+	devAssert(documentAST ~= nil and documentAST.kind == Kind.DOCUMENT, "Must provide valid Document AST.")
 
-	if  options ~= nil and not (options.assumeValid or options.assumeValidSDL) then
+	if options ~= nil and not (options.assumeValid or options.assumeValidSDL) then
 		assertValidSDL(documentAST)
 	end
 
@@ -84,10 +80,7 @@ local buildASTSchema = function(
 	return GraphQLSchema.new(config)
 end
 
-local function buildSchema(
-	source: string | Source,
-	options: { BuildSchemaOptions & ParseOptions }
-  ): GraphQLSchema
+local function buildSchema(source: string | Source, options: { BuildSchemaOptions & ParseOptions }): GraphQLSchema
 	local document = parse(source, {
 		noLocation = (function()
 			if options ~= nil then

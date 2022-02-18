@@ -14,11 +14,11 @@ exports.UniqueOperationTypesRule = function(context)
 	local schema = context:getSchema()
 	local definedOperationTypes = {}
 	local existingOperationTypes = schema
-		and {
-			query = schema:getQueryType(),
-			mutation = schema:getMutationType(),
-			subscription = schema:getSubscriptionType(),
-		}
+			and {
+				query = schema:getQueryType(),
+				mutation = schema:getMutationType(),
+				subscription = schema:getSubscriptionType(),
+			}
 		or {}
 
 	-- ROBLOX deviation: function needs to be defined before the
@@ -34,8 +34,7 @@ exports.UniqueOperationTypesRule = function(context)
 			if existingOperationTypes[operation] then
 				context:reportError(
 					GraphQLError.new(
-						('Type for %s already defined in the schema. It cannot be redefined.')
-							:format(operation),
+						("Type for %s already defined in the schema. It cannot be redefined."):format(operation),
 						operationType
 					)
 				)
@@ -43,7 +42,7 @@ exports.UniqueOperationTypesRule = function(context)
 				context:reportError(
 					GraphQLError.new(
 						("There can be only one %s type in schema."):format(operation),
-						{alreadyDefinedOperationType, operationType}
+						{ alreadyDefinedOperationType, operationType }
 					)
 				)
 			else

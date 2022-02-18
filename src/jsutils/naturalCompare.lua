@@ -62,8 +62,8 @@ end
 DIGIT_0 = 48
 DIGIT_9 = 57
 
-isDigit = function(code: number)
-: boolean	return not isNaN(code) and DIGIT_0 <= code and code <= DIGIT_9
+isDigit = function(code: number): boolean
+	return not isNaN(code) and DIGIT_0 <= code and code <= DIGIT_9
 end
 
 return {

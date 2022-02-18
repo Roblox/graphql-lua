@@ -8,8 +8,7 @@ return function()
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
 	local validate = require(validationWorkspace.validate).validate
-	local FieldsOnCorrectTypeRule = require(validationWorkspace.rules.FieldsOnCorrectTypeRule)
-		.FieldsOnCorrectTypeRule
+	local FieldsOnCorrectTypeRule = require(validationWorkspace.rules.FieldsOnCorrectTypeRule).FieldsOnCorrectTypeRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -26,58 +25,78 @@ return function()
 
 	describe("Validate: Fields on correct type", function()
 		it("Object field selection", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment objectFieldSelection on Dog {
 					__typename
 					name
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("Aliased object field selection", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment aliasedObjectFieldSelection on Dog {
 					tn : __typename
 					otherName : name
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("Interface field selection", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment interfaceFieldSelection on Pet {
 					__typename
 					name
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("Aliased interface field selection", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment interfaceFieldSelection on Pet {
 					otherName : name
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("Lying alias selection", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment lyingAliasSelection on Dog {
 					name : nickname
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("Ignores fields on unknown type", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment unknownSelection on UnknownType {
 					unknownField
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("reports errors when type is known again", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment typeKnownAgain on Pet {
         unknown_pet_field {
           ... on Cat {
@@ -85,164 +104,200 @@ return function()
           }
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot query field "unknown_pet_field" on type "Pet".',
-					locations = {{ line = 3, column = 9 }},
+					locations = { { line = 3, column = 9 } },
 				},
 				{
 					message = 'Cannot query field "unknown_cat_field" on type "Cat".',
-					locations = {{ line = 5, column = 13 }},
+					locations = { { line = 5, column = 13 } },
 				},
 			})
 		end)
 
 		it("Field not defined on fragment", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment fieldNotDefined on Dog {
         meowVolume
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot query field "meowVolume" on type "Dog". Did you mean "barkVolume"?',
-					locations = {{ line = 3, column = 9 }},
+					locations = { { line = 3, column = 9 } },
 				},
 			})
 		end)
 
 		it("Ignores deeply unknown field", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment deepFieldNotDefined on Dog {
         unknown_field {
           deeper_unknown_field
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot query field "unknown_field" on type "Dog".',
-					locations = {{ line = 3, column = 9 }},
+					locations = { { line = 3, column = 9 } },
 				},
 			})
 		end)
 
 		it("Sub-field not defined", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment subFieldNotDefined on Human {
         pets {
           unknown_field
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot query field "unknown_field" on type "Pet".',
-					locations = {{ line = 4, column = 11 }},
+					locations = { { line = 4, column = 11 } },
 				},
 			})
 		end)
 
 		it("Field not defined on inline fragment", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment fieldNotDefined on Pet {
         ... on Dog {
           meowVolume
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot query field "meowVolume" on type "Dog". Did you mean "barkVolume"?',
-					locations = {{ line = 4, column = 11 }},
+					locations = { { line = 4, column = 11 } },
 				},
 			})
 		end)
 
 		it("Aliased field target not defined", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment aliasedFieldTargetNotDefined on Dog {
         volume : mooVolume
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot query field "mooVolume" on type "Dog". Did you mean "barkVolume"?',
-					locations = {{ line = 3, column = 9 }},
+					locations = { { line = 3, column = 9 } },
 				},
 			})
 		end)
 
 		it("Aliased lying field target not defined", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment aliasedLyingFieldTargetNotDefined on Dog {
         barkVolume : kawVolume
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot query field "kawVolume" on type "Dog". Did you mean "barkVolume"?',
-					locations = {{ line = 3, column = 9 }},
+					locations = { { line = 3, column = 9 } },
 				},
 			})
 		end)
 
 		it("Not defined on interface", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment notDefinedOnInterface on Pet {
         tailLength
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot query field "tailLength" on type "Pet".',
-					locations = {{ line = 3, column = 9 }},
+					locations = { { line = 3, column = 9 } },
 				},
 			})
 		end)
 
 		it("Defined on implementors but not on interface", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment definedOnImplementorsButNotInterface on Pet {
         nickname
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot query field "nickname" on type "Pet". Did you mean to use an inline fragment on "Cat" or "Dog"?',
-					locations = {{ line = 3, column = 9 }},
+					locations = { { line = 3, column = 9 } },
 				},
 			})
 		end)
 
 		it("Meta field selection on union", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment directFieldSelectionOnUnion on CatOrDog {
 					__typename
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("Direct field selection on union", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment directFieldSelectionOnUnion on CatOrDog {
         directField
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot query field "directField" on type "CatOrDog".',
-					locations = {{ line = 3, column = 9 }},
+					locations = { { line = 3, column = 9 } },
 				},
 			})
 		end)
 
 		it("Defined on implementors queried on union", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment definedOnImplementorsQueriedOnUnion on CatOrDog {
         name
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot query field "name" on type "CatOrDog". Did you mean to use an inline fragment on "Being", "Pet", "Canine", "Cat", or "Dog"?',
-					locations = {{ line = 3, column = 9 }},
+					locations = { { line = 3, column = 9 } },
 				},
 			})
 		end)
 
 		it("valid field in inline fragment", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment objectFieldSelection on Pet {
 					... on Dog {
 					name
@@ -251,12 +306,13 @@ return function()
 					name
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		describe("Fields on correct type error message", function()
 			local function expectErrorMessage(expect_, schema, queryStr: string)
-				local errors = validate(schema, parse(queryStr), {FieldsOnCorrectTypeRule})
+				local errors = validate(schema, parse(queryStr), { FieldsOnCorrectTypeRule })
 
 				expect_(#errors).to.equal(1)
 
@@ -385,7 +441,9 @@ return function()
 					type Query { t: T }
 				]])
 
-				expectErrorMessage(expect, schema, "{ t { f } }").to.equal('Cannot query field "f" on type "T". Did you mean "u", "v", "w", "x", or "y"?')
+				expectErrorMessage(expect, schema, "{ t { f } }").to.equal(
+					'Cannot query field "f" on type "T". Did you mean "u", "v", "w", "x", or "y"?'
+				)
 			end)
 		end)
 	end)

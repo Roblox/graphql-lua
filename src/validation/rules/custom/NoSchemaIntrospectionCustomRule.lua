@@ -25,8 +25,9 @@ exports.NoSchemaIntrospectionCustomRule = function(context)
 			if type_ and isIntrospectionType(type_) then
 				context:reportError(
 					GraphQLError.new(
-						('GraphQL introspection has been disabled, but the requested query contained the field "%s".')
-							:format(node.name.value),
+						('GraphQL introspection has been disabled, but the requested query contained the field "%s".'):format(
+							node.name.value
+						),
 						node
 					)
 				)

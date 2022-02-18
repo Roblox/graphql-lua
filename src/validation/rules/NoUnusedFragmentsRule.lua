@@ -15,7 +15,7 @@ exports.NoUnusedFragmentsRule = function(context)
 	local operationDefs = {}
 	local fragmentDefs = {}
 
-	return{
+	return {
 		OperationDefinition = function(_self, node)
 			table.insert(operationDefs, node)
 			return false
@@ -37,10 +37,7 @@ exports.NoUnusedFragmentsRule = function(context)
 					local fragName = fragmentDef.name.value
 					if fragmentNameUsed[fragName] ~= true then
 						context:reportError(
-							GraphQLError.new(
-								('Fragment "%s" is never used.'):format(fragName),
-								fragmentDef
-							)
+							GraphQLError.new(('Fragment "%s" is never used.'):format(fragName), fragmentDef)
 						)
 					end
 				end

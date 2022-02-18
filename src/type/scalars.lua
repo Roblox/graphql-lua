@@ -1,5 +1,4 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/type/scalars.js
-
 local function parseInt(value, base)
 	return tonumber(value, base)
 end
@@ -56,11 +55,12 @@ function serializeInt(outputValue): number
 	if typeof(num) ~= "number" or not Number.isInteger(num) then
 		error(GraphQLError.new(("Int cannot represent non-integer value: %s"):format(inspect(coercedValue))))
 	end
-	if num > MAX_INT or num < MIN_INT then
+	-- ROBLOX FIXME Luau: Luau should know num is number based on error() branch above
+	if (num :: number) > MAX_INT or (num :: number) < MIN_INT then
 		error(GraphQLError.new("Int cannot represent non 32-bit signed integer value: " .. inspect(coercedValue)))
 	end
 
-	return num
+	return num :: number
 end
 function coerceInt(inputValue)
 	if typeof(inputValue) ~= "number" or not Number.isInteger(inputValue) then
@@ -85,7 +85,8 @@ local GraphQLInt = GraphQLScalarType.new({
 
 		local num = parseInt(valueNode.value, 10)
 
-		if num > MAX_INT or num < MIN_INT then
+		-- ROBLOX TODO Luau: when singleton types are used for kind, the casts below should go away
+		if (num :: number) > MAX_INT or (num :: number) < MIN_INT then
 			error(
 				GraphQLError.new(
 					("Int cannot represent non 32-bit signed integer value: %s"):format(valueNode.value),
@@ -94,7 +95,7 @@ local GraphQLInt = GraphQLScalarType.new({
 			)
 		end
 
-		return num
+		return (num :: number)
 	end,
 })
 
@@ -120,7 +121,8 @@ function serializeFloat(outputValue)
 		error(GraphQLError.new(("Float cannot represent non numeric value: %s"):format(inspect(coercedValue))))
 	end
 
-	return num
+	-- ROBLOX FIXME Luau: Luau should know num is number based on error branch above
+	return (num :: number)
 end
 function coerceFloat(inputValue)
 	if typeof(inputValue) ~= "number" or not NumberisFinite(inputValue) then

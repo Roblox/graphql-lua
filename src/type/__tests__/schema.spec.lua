@@ -273,9 +273,7 @@ return function()
 							type = GraphQLInputObjectType.new({ name = "Foo", fields = {} }),
 						},
 						argList = {
-							type = GraphQLList.new(
-								GraphQLInputObjectType.new({ name = "Bar", fields = {} })
-							),
+							type = GraphQLList.new(GraphQLInputObjectType.new({ name = "Bar", fields = {} })),
 						},
 					},
 				})
@@ -366,12 +364,12 @@ return function()
 					-- // $FlowExpectedError[incompatible-call]
 					expect(function()
 						-- ROBLOX deviation: Lua empty object/array is indistinguishable, so make it a non-empty object
-						return GraphQLSchema.new({ types = {nonEmpty = true} })
+						return GraphQLSchema.new({ types = { nonEmpty = true } })
 					end).toThrow()
 					-- // $FlowExpectedError[incompatible-call]
 					expect(function()
 						-- ROBLOX deviation: Lua empty object/array is indistinguishable, so make it a non-empty object
-						return GraphQLSchema.new({ directives = {nonEmpty = true} })
+						return GraphQLSchema.new({ directives = { nonEmpty = true } })
 					end).toThrow()
 				end)
 			end)
@@ -389,7 +387,9 @@ return function()
 
 					expect(function()
 						return GraphQLSchema.new({ query = QueryType })
-					end).toThrow("Schema must contain uniquely named types but contains multiple types named \"String\".")
+					end).toThrow(
+						'Schema must contain uniquely named types but contains multiple types named "String".'
+					)
 				end)
 
 				it("rejects a Schema when a provided type has no name", function()
@@ -416,7 +416,9 @@ return function()
 
 					expect(function()
 						return GraphQLSchema.new({ types = types })
-					end).toThrow("Schema must contain uniquely named types but contains multiple types named \"SameName\".")
+					end).toThrow(
+						'Schema must contain uniquely named types but contains multiple types named "SameName".'
+					)
 				end)
 
 				it("rejects a Schema which defines fields with conflicting types", function()
@@ -435,7 +437,9 @@ return function()
 
 					expect(function()
 						return GraphQLSchema.new({ query = QueryType })
-					end).toThrow("Schema must contain uniquely named types but contains multiple types named \"SameName\".")
+					end).toThrow(
+						'Schema must contain uniquely named types but contains multiple types named "SameName".'
+					)
 				end)
 			end)
 

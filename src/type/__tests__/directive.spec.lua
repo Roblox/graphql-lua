@@ -112,16 +112,14 @@ return function()
 
 		it("rejects a directive with incorrectly typed args", function()
 			expect(function()
-				return GraphQLDirective.new(
-					{
-						name = "Foo",
-						locations = {
-							"QUERY",
-						},
-						-- ROBLOX deviation: Lua can't distinguish between object and empty array, so use a non-empty array
-						args = {"this is not object-like"},
-					}
-				)
+				return GraphQLDirective.new({
+					name = "Foo",
+					locations = {
+						"QUERY",
+					},
+					-- ROBLOX deviation: Lua can't distinguish between object and empty array, so use a non-empty array
+					args = { "this is not object-like" },
+				})
 			end).toThrow("@Foo args must be an object with argument names as keys.")
 		end)
 
@@ -135,13 +133,11 @@ return function()
 
 		it("rejects a directive with incorrectly typed locations", function()
 			expect(function()
-				return GraphQLDirective.new(
-					{
-						name = "Foo",
-						-- ROBLOX deviation: because empty object is same as Array, make this a non-empty object
-						locations = { key = "value" },
-					}
-				)
+				return GraphQLDirective.new({
+					name = "Foo",
+					-- ROBLOX deviation: because empty object is same as Array, make this a non-empty object
+					locations = { key = "value" },
+				})
 			end).toThrow("@Foo locations must be an Array.")
 		end)
 	end)

@@ -1,5 +1,5 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/TypeInfo.js
-
+--!strict
 local srcWorkspace = script.Parent.Parent
 local Packages = srcWorkspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
@@ -92,8 +92,17 @@ export type TypeInfo = {
 	_enumValue: GraphQLEnumValue?,
 	_getFieldDef: (GraphQLSchema, GraphQLType, FieldNode) -> GraphQLField<any, any>?,
 	-- functions
-	enter: (TypeInfo, ASTNode) -> (),
-	leave: (TypeInfo, ASTNode) -> (),
+	getType: (self: TypeInfo) -> GraphQLOutputType?,
+	getParentType: (self: TypeInfo) -> GraphQLCompositeType?,
+	getInputType: (self: TypeInfo) -> GraphQLInputType?,
+	getParentInputType: (self: TypeInfo) -> GraphQLInputType?,
+	getFieldDef: (self: TypeInfo) -> GraphQLField<any, any>?,
+	getDefaultValue: (self: TypeInfo) -> any?,
+	getDirective: (self: TypeInfo) -> GraphQLDirective?,
+	getArgument: (self: TypeInfo) -> GraphQLArgument?,
+	getEnumValue: (self: TypeInfo) -> GraphQLEnumValue?,
+	enter: (self: TypeInfo, ASTNode) -> (),
+	leave: (self: TypeInfo, ASTNode) -> (),
 }
 
 -- ROBLOX deviation: pre-declare variables
@@ -107,9 +116,10 @@ function TypeInfo.new(
 	getFieldDefFn: ((GraphQLSchema, GraphQLType, FieldNode) -> GraphQLField<any, any>?)?,
 	-- // Initial type may be provided in rare cases to facilitate traversals
 	-- // beginning somewhere other than documents.
+	--[[* @deprecated will be removed in 17.0.0 ]]
 	initialType: GraphQLType?
-)
-	local self = setmetatable({}, TypeInfoMetatable)
+): TypeInfo
+	local self = (setmetatable({}, TypeInfoMetatable) :: any) :: TypeInfo
 	self._schema = schema
 	self._typeStack = {}
 	self._parentTypeStack = {}
@@ -219,24 +229,8 @@ function TypeInfo:enter(node: ASTNode)
 				fieldType = fieldDef.type
 			end
 		end
-		table.insert(
-			self._fieldDefStack,
-			(function()
-				if fieldDef then
-					return fieldDef
-				end
-				return NULL
-			end)()
-		)
-		table.insert(
-			self._typeStack,
-			(function()
-				if isOutputType(fieldType) then
-					return fieldType
-				end
-				return NULL
-			end)()
-		)
+		table.insert(self._fieldDefStack, if fieldDef then fieldDef else NULL)
+		table.insert(self._typeStack, if isOutputType(fieldType) then fieldType else NULL)
 		return
 	elseif nodeKind == Kind.DIRECTIVE then
 		self._directive = schema:getDirective(node.name.value)
@@ -251,15 +245,7 @@ function TypeInfo:enter(node: ASTNode)
 		elseif nodeOperation == "subscription" then
 			type_ = schema:getSubscriptionType()
 		end
-		table.insert(
-			self._typeStack,
-			(function()
-				if isObjectType(type_) then
-					return type_
-				end
-				return NULL
-			end)()
-		)
+		table.insert(self._typeStack, if isObjectType(type_) then type_ else NULL)
 		return
 	elseif nodeKind == Kind.INLINE_FRAGMENT or nodeKind == Kind.FRAGMENT_DEFINITION then
 		local typeConditionAST = node.typeCondition
@@ -269,27 +255,11 @@ function TypeInfo:enter(node: ASTNode)
 			end
 			return getNamedType(self:getType())
 		end)()
-		table.insert(
-			self._typeStack,
-			(function()
-				if isOutputType(outputType) then
-					return outputType
-				end
-				return NULL
-			end)()
-		)
+		table.insert(self._typeStack, if isOutputType(outputType) then outputType else NULL)
 		return
 	elseif nodeKind == Kind.VARIABLE_DEFINITION then
 		local inputType = typeFromAST(schema, node.type)
-		table.insert(
-			self._inputTypeStack,
-			(function()
-				if isInputType(inputType) then
-					return inputType
-				end
-				return NULL
-			end)()
-		)
+		table.insert(self._inputTypeStack, if isInputType(inputType) then inputType else NULL)
 		return
 	elseif nodeKind == Kind.ARGUMENT then
 		local argDef
@@ -310,44 +280,15 @@ function TypeInfo:enter(node: ASTNode)
 			end
 		end
 		self._argument = argDef
-		table.insert(
-			self._defaultValueStack,
-			(function()
-				if argDef then
-					return argDef.defaultValue
-				end
-				return NULL
-			end)()
-		)
-		table.insert(
-			self._inputTypeStack,
-			(function()
-				if isInputType(argType) then
-					return argType
-				end
-				return NULL
-			end)()
-		)
+		table.insert(self._defaultValueStack, if argDef then argDef.defaultValue else NULL)
+		table.insert(self._inputTypeStack, if isInputType(argType) then argType else NULL)
 		return
 	elseif nodeKind == Kind.LIST then
 		local listType = getNullableType(self:getInputType())
-		local itemType = (function()
-			if isListType(listType) then
-				return listType.ofType
-			end
-			return listType
-		end)()
+		local itemType = if isListType(listType) then listType.ofType else listType
 		-- // List positions never have a default value.
 		table.insert(self._defaultValueStack, NULL)
-		table.insert(
-			self._inputTypeStack,
-			(function()
-				if isInputType(itemType) then
-					return itemType
-				end
-				return NULL
-			end)()
-		)
+		table.insert(self._inputTypeStack, if isInputType(itemType) then itemType else NULL)
 		return
 	elseif nodeKind == Kind.OBJECT_FIELD then
 		local objectType = getNamedType(self:getInputType())
@@ -360,24 +301,8 @@ function TypeInfo:enter(node: ASTNode)
 				inputFieldType = inputField.type
 			end
 		end
-		table.insert(
-			self._defaultValueStack,
-			(function()
-				if inputField and inputField.defaultValue then
-					return inputField.defaultValue
-				end
-				return NULL
-			end)()
-		)
-		table.insert(
-			self._inputTypeStack,
-			(function()
-				if isInputType(inputFieldType) then
-					return inputFieldType
-				end
-				return NULL
-			end)()
-		)
+		table.insert(self._defaultValueStack, if inputField then inputField.defaultValue else NULL)
+		table.insert(self._inputTypeStack, if isInputType(inputFieldType) then inputFieldType else NULL)
 		return
 	elseif nodeKind == Kind.ENUM then
 		local enumType = getNamedType(self:getInputType())
@@ -424,11 +349,7 @@ end
 --  * statically evaluated environment we do not always have an Object type,
 --  * and need to handle Interface and Union types.
 --  */
-function getFieldDef(
-	schema: { getQueryType: (any) -> any }, -- ROBLOX TODO: Luau error says GraphQLSchema can't be converted to `any?`
-	parentType: { getFields: (any) -> any }, -- ROBLOX TODO: type violation from upstream, not all GraphQLType union members have getFields()
-	fieldNode: FieldNode
-): GraphQLField<any, any>?
+function getFieldDef(schema: GraphQLSchema, parentType: GraphQLType, fieldNode: FieldNode): GraphQLField<any, any>?
 	local name = fieldNode.name.value
 
 	if name == SchemaMetaFieldDef.name and schema:getQueryType() == parentType then

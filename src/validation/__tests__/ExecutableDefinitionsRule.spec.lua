@@ -1,9 +1,9 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/bbd8429b85594d9ee8cc632436e2d0f900d703ef/src/validation/__tests__/ExecutableDefinitionsRule-test.js
 
-return function ()
+return function()
 	local validationWorkspace = script.Parent.Parent
-	local ExecutableDefinitionsRule = require(validationWorkspace.rules.ExecutableDefinitionsRule)
-		.ExecutableDefinitionsRule
+	local ExecutableDefinitionsRule =
+		require(validationWorkspace.rules.ExecutableDefinitionsRule).ExecutableDefinitionsRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -20,17 +20,22 @@ return function ()
 
 	describe("Validate: Executable definitions", function()
 		it("with only operation", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo {
 					dog {
 						name
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("with operation and fragment", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo {
 					dog {
 						name
@@ -41,11 +46,14 @@ return function ()
 				fragment Frag on Dog {
 					name
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("with type definition", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo {
         dog {
           name
@@ -59,20 +67,23 @@ return function ()
       extend type Dog {
         color: String
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'The "Cow" definition is not executable.',
-					locations = {{ line = 8, column = 7 }},
+					locations = { { line = 8, column = 7 } },
 				},
 				{
 					message = 'The "Dog" definition is not executable.',
-					locations = {{ line = 12, column = 7 }},
+					locations = { { line = 12, column = 7 } },
 				},
 			})
 		end)
 
 		it("with schema definition", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       schema {
         query: Query
       }
@@ -82,18 +93,19 @@ return function ()
       }
 
       extend schema @directive
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = "The schema definition is not executable.",
-					locations = {{ line = 2, column = 7 }},
+					locations = { { line = 2, column = 7 } },
 				},
 				{
 					message = 'The "Query" definition is not executable.',
-					locations = {{ line = 6, column = 7 }},
+					locations = { { line = 6, column = 7 } },
 				},
 				{
-					message = 'The schema definition is not executable.',
-					locations = {{ line = 10, column = 7 }},
+					message = "The schema definition is not executable.",
+					locations = { { line = 10, column = 7 } },
 				},
 			})
 		end)

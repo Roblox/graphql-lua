@@ -2,8 +2,7 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local UniqueVariableNamesRule = require(validationWorkspace.rules.UniqueVariableNamesRule)
-		.UniqueVariableNamesRule
+	local UniqueVariableNamesRule = require(validationWorkspace.rules.UniqueVariableNamesRule).UniqueVariableNamesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -20,18 +19,24 @@ return function()
 
 	describe("Validate: Unique variable names", function()
 		it("unique variable names", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query A($x: Int, $y: String) { __typename }
 				query B($x: String, $y: Int) { __typename }
-			]])
+			]]
+			)
 		end)
 
 		it("duplicate variable names", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query A($x: Int, $x: Int, $x: String) { __typename }
       query B($x: String, $x: Int) { __typename }
       query C($x: Int, $x: Int) { __typename }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'There can be only one variable named "$x".',
 					locations = {

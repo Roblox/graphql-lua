@@ -10,7 +10,9 @@ return function()
 
 	describe("printSourceLocation", function()
 		it("prints minified documents", function()
-			local minifiedSource = Source.new("query SomeMinifiedQueryWithErrorInside($foo:String!=FIRST_ERROR_HERE$bar:String){someField(foo:$foo bar:$bar baz:SECOND_ERROR_HERE){fieldA fieldB{fieldC fieldD...on THIRD_ERROR_HERE}}}")
+			local minifiedSource = Source.new(
+				"query SomeMinifiedQueryWithErrorInside($foo:String!=FIRST_ERROR_HERE$bar:String){someField(foo:$foo bar:$bar baz:SECOND_ERROR_HERE){fieldA fieldB{fieldC fieldD...on THIRD_ERROR_HERE}}}"
+			)
 
 			local firstLocation = printSourceLocation(minifiedSource, {
 				line = 1,

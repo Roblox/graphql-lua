@@ -5,7 +5,6 @@ local exports = {}
 local PathModule = require(script.Parent.jsutils.Path)
 export type ResponsePath = PathModule.Path
 
-
 local schemaModule = require(script.schema)
 -- Predicate
 exports.isSchema = schemaModule.isSchema
@@ -16,7 +15,6 @@ exports.GraphQLSchema = schemaModule.GraphQLSchema
 
 export type GraphQLSchemaConfig = schemaModule.GraphQLSchemaConfig
 export type GraphQLSchema = schemaModule.GraphQLSchema
-
 
 local definitionModule = require(script.definition)
 -- Predicates
@@ -78,7 +76,6 @@ export type GraphQLUnionType = definitionModule.GraphQLUnionType
 export type GraphQLEnumType = definitionModule.GraphQLEnumType
 export type GraphQLInputObjectType = definitionModule.GraphQLInputObjectType
 
-
 local directivesModule = require(script.directives)
 
 -- Predicate
@@ -134,7 +131,6 @@ exports.SchemaMetaFieldDef = introspectionModule.SchemaMetaFieldDef
 exports.TypeMetaFieldDef = introspectionModule.TypeMetaFieldDef
 exports.TypeNameMetaFieldDef = introspectionModule.TypeNameMetaFieldDef
 
-
 -- ROBLOX deviation: add types
 export type GraphQLType = definitionModule.GraphQLType
 export type GraphQLInputType = definitionModule.GraphQLInputType
@@ -157,7 +153,8 @@ export type GraphQLFieldConfig<TSource, TContext, TArgs> = definitionModule.Grap
 export type GraphQLFieldConfigArgumentMap = definitionModule.GraphQLFieldConfigArgumentMap
 export type GraphQLFieldConfigMap<TSource, TContext> = definitionModule.GraphQLFieldConfigMap<TSource, TContext>
 export type GraphQLFieldMap<TSource, TContext> = definitionModule.GraphQLFieldMap<TSource, TContext>
-export type GraphQLFieldResolver<TSource, TContext, TArgs> = definitionModule.GraphQLFieldResolver<TSource, TContext, TArgs>
+export type GraphQLFieldResolver<TSource, TContext, TArgs> =
+	definitionModule.GraphQLFieldResolver<TSource, TContext, TArgs>
 export type GraphQLInputField = definitionModule.GraphQLInputField
 export type GraphQLInputFieldConfig = definitionModule.GraphQLInputFieldConfig
 export type GraphQLInputFieldConfigMap = definitionModule.GraphQLInputFieldConfigMap

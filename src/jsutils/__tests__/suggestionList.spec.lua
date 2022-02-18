@@ -10,7 +10,7 @@ return function()
 		end
 
 		it("Returns results when input is empty", function()
-			expectSuggestions("", {"a"}).toEqual({"a"})
+			expectSuggestions("", { "a" }).toEqual({ "a" })
 		end)
 
 		it("Returns empty array when there are no options", function()
@@ -18,37 +18,37 @@ return function()
 		end)
 
 		it("Returns options with small lexical distance", function()
-			expectSuggestions("greenish", {"green"}).toEqual({"green"})
-			expectSuggestions("green", {"greenish"}).toEqual({"greenish"})
+			expectSuggestions("greenish", { "green" }).toEqual({ "green" })
+			expectSuggestions("green", { "greenish" }).toEqual({ "greenish" })
 		end)
 
 		it("Rejects options with distance that exceeds threshold", function()
-			expectSuggestions("aaaa", {"aaab"}).toEqual({"aaab"})
-			expectSuggestions("aaaa", {"aabb"}).toEqual({"aabb"})
-			expectSuggestions("aaaa", {"abbb"}).toEqual({})
+			expectSuggestions("aaaa", { "aaab" }).toEqual({ "aaab" })
+			expectSuggestions("aaaa", { "aabb" }).toEqual({ "aabb" })
+			expectSuggestions("aaaa", { "abbb" }).toEqual({})
 
-			expectSuggestions("ab", {"ca"}).toEqual({})
+			expectSuggestions("ab", { "ca" }).toEqual({})
 		end)
 
 		it("Returns options with different case", function()
-			expectSuggestions("verylongstring", {"VERYLONGSTRING"}).toEqual({
-				"VERYLONGSTRING"
+			expectSuggestions("verylongstring", { "VERYLONGSTRING" }).toEqual({
+				"VERYLONGSTRING",
 			})
-			expectSuggestions("VERYLONGSTRING", {"verylongstring"}).toEqual({
+			expectSuggestions("VERYLONGSTRING", { "verylongstring" }).toEqual({
 				"verylongstring",
 			})
-			expectSuggestions("VERYLONGSTRING", {"VeryLongString"}).toEqual({
+			expectSuggestions("VERYLONGSTRING", { "VeryLongString" }).toEqual({
 				"VeryLongString",
 			})
 		end)
 
 		it("Returns options with transpositions", function()
-			expectSuggestions("agr", {"arg"}).toEqual({"arg"})
-			expectSuggestions("214365879", {"123456789"}).toEqual({"123456789"})
+			expectSuggestions("agr", { "arg" }).toEqual({ "arg" })
+			expectSuggestions("214365879", { "123456789" }).toEqual({ "123456789" })
 		end)
 
 		it("Returns options sorted based on lexical distance", function()
-			expectSuggestions("abc", {"a", "ab", "abc"}).toEqual({
+			expectSuggestions("abc", { "a", "ab", "abc" }).toEqual({
 				"abc",
 				"ab",
 				"a",
@@ -56,7 +56,7 @@ return function()
 		end)
 
 		it("Returns options with the same lexical distance sorted lexicographically", function()
-			expectSuggestions("a", {"az", "ax", "ay"}).toEqual({
+			expectSuggestions("a", { "az", "ax", "ay" }).toEqual({
 				"ax",
 				"ay",
 				"az",

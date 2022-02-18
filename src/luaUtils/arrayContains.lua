@@ -13,7 +13,6 @@ return function(tbl, item, looseEquals)
 				return true
 			end
 		end
-
 	end
 
 	return false

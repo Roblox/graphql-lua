@@ -5,8 +5,8 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local UniqueOperationTypesRule = require(validationWorkspace.rules.UniqueOperationTypesRule)
-		.UniqueOperationTypesRule
+	local UniqueOperationTypesRule =
+		require(validationWorkspace.rules.UniqueOperationTypesRule).UniqueOperationTypesRule
 	local harness = require(script.Parent.harness)
 	local expectSDLValidationErrors = harness.expectSDLValidationErrors
 
@@ -23,13 +23,18 @@ return function()
 
 	describe("Validate: Unique operation types", function()
 		it("no schema definition", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				type Foo
-			]])
+			]]
+			)
 		end)
 
 		it("schema definition with all types", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				type Foo
 
 				schema {
@@ -37,11 +42,14 @@ return function()
 					mutation: Foo
 					subscription: Foo
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("schema definition with single extension", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				type Foo
 
 				schema { query: Foo }
@@ -50,32 +58,41 @@ return function()
 					mutation: Foo
 					subscription: Foo
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("schema definition with separate extensions", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				type Foo
 
 				schema { query: Foo }
 				extend schema { mutation: Foo }
 				extend schema { subscription: Foo }
-			]])
+			]]
+			)
 		end)
 
 		it("extend schema before definition", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				type Foo
 
 				extend schema { mutation: Foo }
 				extend schema { subscription: Foo }
 
 				schema { query: Foo }
-			]])
+			]]
+			)
 		end)
 
 		it("duplicate operation types inside single schema definition", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       type Foo
 
       schema {
@@ -87,7 +104,8 @@ return function()
         mutation: Foo
         subscription: Foo
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = "There can be only one query type in schema.",
 					locations = {
@@ -113,7 +131,9 @@ return function()
 		end)
 
 		it("duplicate operation types inside schema extension", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       type Foo
 
       schema {
@@ -127,7 +147,8 @@ return function()
         mutation: Foo
         subscription: Foo
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = "There can be only one query type in schema.",
 					locations = {
@@ -153,7 +174,9 @@ return function()
 		end)
 
 		it("duplicate operation types inside schema extension twice", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       type Foo
 
       schema {
@@ -173,7 +196,8 @@ return function()
         mutation: Foo
         subscription: Foo
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = "There can be only one query type in schema.",
 					locations = {
@@ -220,7 +244,9 @@ return function()
 		end)
 
 		it("duplicate operation types inside second schema extension", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       type Foo
 
       schema {
@@ -237,7 +263,8 @@ return function()
         mutation: Foo
         subscription: Foo
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = "There can be only one query type in schema.",
 					locations = {

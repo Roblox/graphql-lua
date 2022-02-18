@@ -5,8 +5,8 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local UniqueFieldDefinitionNamesRule = require(validationWorkspace.rules.UniqueFieldDefinitionNamesRule)
-		.UniqueFieldDefinitionNamesRule
+	local UniqueFieldDefinitionNamesRule =
+		require(validationWorkspace.rules.UniqueFieldDefinitionNamesRule).UniqueFieldDefinitionNamesRule
 	local harness = require(script.Parent.harness)
 	local expectSDLValidationErrors = harness.expectSDLValidationErrors
 
@@ -14,12 +14,7 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectSDLValidationErrors(
-			expect_,
-			schema,
-			UniqueFieldDefinitionNamesRule,
-			"\n" .. sdlStr
-		)
+		return expectSDLValidationErrors(expect_, schema, UniqueFieldDefinitionNamesRule, "\n" .. sdlStr)
 	end
 
 	local function expectValidSDL(expect_, sdlStr: string, schema)
@@ -28,15 +23,20 @@ return function()
 
 	describe("Validate: Unique field definition names", function()
 		it("no fields", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				type SomeObject
 				interface SomeInterface
 				input SomeInputObject
-			]])
+			]]
+			)
 		end)
 
 		it("one field", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				type SomeObject {
 					foo: String
 				}
@@ -48,11 +48,14 @@ return function()
 				input SomeInputObject {
 					foo: String
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("multiple fields", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				type SomeObject {
 					foo: String
 					bar: String
@@ -67,11 +70,14 @@ return function()
 					foo: String
 					bar: String
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("duplicate fields inside the same type definition", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       type SomeObject {
         foo: String
         bar: String
@@ -89,7 +95,8 @@ return function()
         bar: String
         foo: String
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Field "SomeObject.foo" can only be defined once.',
 					locations = {
@@ -115,7 +122,9 @@ return function()
 		end)
 
 		it("extend type with new field", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				type SomeObject {
 					foo: String
 				}
@@ -145,11 +154,14 @@ return function()
 				extend input SomeInputObject {
 					baz: String
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("extend type with duplicate field", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       extend type SomeObject {
         foo: String
       }
@@ -170,7 +182,8 @@ return function()
       input SomeInputObject {
         foo: String
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Field "SomeObject.foo" can only be defined once.',
 					locations = {
@@ -196,7 +209,9 @@ return function()
 		end)
 
 		it("duplicate field inside extension", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       type SomeObject
       extend type SomeObject {
         foo: String
@@ -217,7 +232,8 @@ return function()
         bar: String
         foo: String
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Field "SomeObject.foo" can only be defined once.',
 					locations = {
@@ -243,7 +259,9 @@ return function()
 		end)
 
 		it("duplicate field inside different extensions", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       type SomeObject
       extend type SomeObject {
         foo: String
@@ -267,7 +285,8 @@ return function()
       extend input SomeInputObject {
         foo: String
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Field "SomeObject.foo" can only be defined once.',
 					locations = {

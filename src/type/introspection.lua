@@ -1,5 +1,5 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/056fac955b7172e55b33e0a1b35b4ddb8951a99c/src/type/introspection.js
-
+--!nonstrict
 local srcWorkspace = script.Parent.Parent
 local jsutilsWorkspace = srcWorkspace.jsutils
 local languageWorkspace = srcWorkspace.language
@@ -349,7 +349,7 @@ exports.__Type = GraphQLObjectType.new({
 						end
 
 						-- // istanbul ignore next (Not reachable. All possible types have been considered)
-						invariant(false, ("Unexpected type: \"%s\"."):format(inspect(type_)))
+						invariant(false, ('Unexpected type: "%s".'):format(inspect(type_)))
 						return nil
 					end,
 				},
@@ -411,9 +411,10 @@ exports.__Type = GraphQLObjectType.new({
 						if isObjectType(type_) or isInterfaceType(type_) then
 							-- ROBLOX deviation: use Map
 							local fields = type_:getFields():values()
-							return includeDeprecated and fields or Array.filter(fields, function(field)
-								return field.deprecationReason == nil
-							end)
+							return includeDeprecated and fields
+								or Array.filter(fields, function(field)
+									return field.deprecationReason == nil
+								end)
 						end
 						return
 					end,
@@ -461,9 +462,10 @@ exports.__Type = GraphQLObjectType.new({
 						if isEnumType(type_) then
 							local values = type_:getValues()
 
-							return includeDeprecated and values or Array.filter(values, function(field)
-								return field.deprecationReason == nil
-							end)
+							return includeDeprecated and values
+								or Array.filter(values, function(field)
+									return field.deprecationReason == nil
+								end)
 						end
 						return
 					end,
@@ -486,9 +488,10 @@ exports.__Type = GraphQLObjectType.new({
 							-- ROBLOX deviation: use Map
 							local values = type_:getFields():values()
 
-							return includeDeprecated and values or Array.filter(values, function(field)
-								return field.deprecationReason == nil
-							end)
+							return includeDeprecated and values
+								or Array.filter(values, function(field)
+									return field.deprecationReason == nil
+								end)
 						end
 						return
 					end,
@@ -857,7 +860,9 @@ exports.introspectionTypes = Object.freeze({
 	exports.__TypeKind,
 })
 
-function exports.isIntrospectionType(type_ --[[: GraphQLNamedType ]])
+function exports.isIntrospectionType(
+	type_ --[[: GraphQLNamedType ]]
+)
 	return Array.some(exports.introspectionTypes, function(currentType_)
 		local name = currentType_.name
 		-- ROBLOX deviation: Lua doesn't allow indexing into a function

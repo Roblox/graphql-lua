@@ -16,12 +16,7 @@ exports.KnownFragmentNamesRule = function(context)
 			local fragmentName = node.name.value
 			local fragment = context:getFragment(fragmentName)
 			if not fragment then
-				context:reportError(
-					GraphQLError.new(
-						('Unknown fragment "%s".'):format(fragmentName),
-						node.name
-					)
-				)
+				context:reportError(GraphQLError.new(('Unknown fragment "%s".'):format(fragmentName), node.name))
 			end
 		end,
 	}

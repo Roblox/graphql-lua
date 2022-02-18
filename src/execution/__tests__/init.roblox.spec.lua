@@ -2,7 +2,6 @@
 
 return function()
 	describe("Execute - init", function()
-
 		it("should contain execute function", function()
 			local execute = require(script.Parent.Parent).execute
 			expect(execute).to.be.a("function")

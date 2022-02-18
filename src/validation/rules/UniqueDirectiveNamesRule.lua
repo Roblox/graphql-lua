@@ -21,8 +21,7 @@ exports.UniqueDirectiveNamesRule = function(context)
 			if schema and schema:getDirective(directiveName) then
 				context:reportError(
 					GraphQLError.new(
-						('Directive "@%s" already exists in the schema. It cannot be redefined.')
-							:format(directiveName),
+						('Directive "@%s" already exists in the schema. It cannot be redefined.'):format(directiveName),
 						node.name
 					)
 				)
@@ -33,7 +32,7 @@ exports.UniqueDirectiveNamesRule = function(context)
 				context:reportError(
 					GraphQLError.new(
 						('There can be only one directive named "@%s".'):format(directiveName),
-						{knownDirectiveNames[directiveName], node.name}
+						{ knownDirectiveNames[directiveName], node.name }
 					)
 				)
 			else

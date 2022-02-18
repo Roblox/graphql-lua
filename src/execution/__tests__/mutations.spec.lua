@@ -1,7 +1,6 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/execution/__tests__/mutations-test.js
 
 return function()
-
 	local srcWorkspace = script.Parent.Parent.Parent
 
 	local resolveOnNextTick = require(srcWorkspace.__testUtils__.resolveOnNextTick)
@@ -244,8 +243,6 @@ return function()
 			})
 			-- ROBLOX deviation: message property contains more error substrings
 			expect(result.errors[2].message:match("Cannot change the number")).to.be.ok()
-
 		end)
 	end)
-
 end

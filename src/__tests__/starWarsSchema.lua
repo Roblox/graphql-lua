@@ -6,7 +6,7 @@ local LuauPolyfill = require(Packages.LuauPolyfill)
 local Error = LuauPolyfill.Error
 type Array<T> = LuauPolyfill.Array<T>
 
-local invariant = require(rootWorkspace.jsutils.invariant).invariant
+local _invariant = require(rootWorkspace.jsutils.invariant).invariant
 
 local GraphQLSchema = require(rootWorkspace.type.schema).GraphQLSchema
 local GraphQLString = require(rootWorkspace.type.scalars).GraphQLString
@@ -16,6 +16,7 @@ local GraphQLNonNull = definitionModule.GraphQLNonNull
 local GraphQLEnumType = definitionModule.GraphQLEnumType
 local GraphQLInterfaceType = definitionModule.GraphQLInterfaceType
 local GraphQLObjectType = definitionModule.GraphQLObjectType
+type GraphQLObjectType = definitionModule.GraphQLObjectType
 
 local starWarsDataModule = require(script.Parent.starWarsData)
 local getFriends = starWarsDataModule.getFriends
@@ -23,7 +24,9 @@ local getHero = starWarsDataModule.getHero
 local getHuman = starWarsDataModule.getHuman
 local getDroid = starWarsDataModule.getDroid
 
-local characterInterface, humanType, droidType
+local characterInterface
+local humanType: GraphQLObjectType
+local droidType: GraphQLObjectType
 
 --[[*
  * This is designed to be an end-to-end test, demonstrating
@@ -146,8 +149,9 @@ characterInterface = GraphQLInterfaceType.new({
 		end
 
 		-- istanbul ignore next (Not reachable. All possible types have been considered)
-		invariant(false)
-		return nil
+		-- ROBLOX TODO START: use assert explicitly since it's no-return effect doesn't bubble up through wrappers like invariant
+		assert(false)
+		-- ROBLOX TODO END
 	end,
 })
 

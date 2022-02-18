@@ -1,5 +1,4 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/type/directives.js
---!strict
 local srcWorkspace = script.Parent.Parent
 local Packages = srcWorkspace.Parent
 
@@ -61,7 +60,7 @@ end
  * Directives are used by the GraphQL runtime as a way of modifying execution
  * behavior. Type system creators will usually not create these directly.
  ]]
- export type GraphQLDirective = {
+export type GraphQLDirective = {
 	name: string,
 	description: string?,
 	locations: Array<DirectiveLocationEnum>,
@@ -72,7 +71,7 @@ end
 	-- ROBLOX deviation: add extra parameter for self
 	toConfig: (any) -> GraphQLDirectiveNormalizedConfig,
 	toString: (any) -> string,
-	toJSON: (any) -> string
+	toJSON: (any) -> string,
 }
 
 GraphQLDirective = {}
@@ -97,10 +96,7 @@ function GraphQLDirective.new(config: GraphQLDirectiveConfig): GraphQLDirective
 	self.astNode = config.astNode
 
 	devAssert(config.name, "Directive must be named.")
-	devAssert(
-		Array.isArray(config.locations),
-		("@%s locations must be an Array."):format(config.name)
-	)
+	devAssert(Array.isArray(config.locations), ("@%s locations must be an Array."):format(config.name))
 
 	local args = if config.args then config.args else {}
 
@@ -155,19 +151,19 @@ end
  * Used to conditionally include fields or fragments.
  *]]
 export type GraphQLDirectiveConfig = {
-  name: string,
-  description: string?,
-  locations: Array<DirectiveLocationEnum>,
-  args: GraphQLFieldConfigArgumentMap?,
-  isRepeatable: boolean?,
-  extensions: ReadOnlyObjMapLike<any>?,
-  astNode: DirectiveDefinitionNode?,
+	name: string,
+	description: string?,
+	locations: Array<DirectiveLocationEnum>,
+	args: GraphQLFieldConfigArgumentMap?,
+	isRepeatable: boolean?,
+	extensions: ReadOnlyObjMapLike<any>?,
+	astNode: DirectiveDefinitionNode?,
 }
 
 type GraphQLDirectiveNormalizedConfig = GraphQLDirectiveConfig & {
-  args: GraphQLFieldConfigArgumentMap,
-  isRepeatable: boolean,
-  extensions: ReadOnlyObjMap<any>?,
+	args: GraphQLFieldConfigArgumentMap,
+	isRepeatable: boolean,
+	extensions: ReadOnlyObjMap<any>?,
 }
 
 --[[*
@@ -238,7 +234,7 @@ local GraphQLDeprecatedDirective = GraphQLDirective.new({
 })
 
 -- type GraphQLArgumentConfig = {
-	-- description: string?, type: GraphQLInputType, defaultValue: any?, extensions: ReadOnlyObjMapLike<any>?, deprecationReason: string?, astNode: InputValueDefinitionNode?}
+-- description: string?, type: GraphQLInputType, defaultValue: any?, extensions: ReadOnlyObjMapLike<any>?, deprecationReason: string?, astNode: InputValueDefinitionNode?}
 --[[**
  * Used to provide a URL for specifying the behaviour of custom scalar definitions.
  *]]
@@ -267,9 +263,7 @@ local specifiedDirectives = Object.freeze({
 	GraphQLSpecifiedByDirective,
 })
 
-local function isSpecifiedDirective(
-	directive: GraphQLDirective
-): boolean
+local function isSpecifiedDirective(directive: GraphQLDirective): boolean
 	return Array.some(specifiedDirectives, function(specifiedDirective)
 		local name = specifiedDirective.name
 

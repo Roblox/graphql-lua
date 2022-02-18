@@ -2,7 +2,7 @@
 -- Luau currently requires manual hoisting of types, which causes this file to become extremely unaligned
 -- file checks out okay other than that issue, which looks like "definition.lua:149:5-15: (E001) Generic type 'GraphQLList' expects 0 type arguments, but 1 is specified"
 -- Luau issue: https://jira.rbx.com/browse/CLI-34658
-
+--!nonstrict
 local srcWorkspace = script.Parent.Parent
 local Packages = srcWorkspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
@@ -405,14 +405,14 @@ GraphQLList = {}
 
 GraphQLList.__index = GraphQLList
 
-function GraphQLList.new(ofType)
+function GraphQLList.new<T>(ofType: T): GraphQLList<T>
 	local self = {}
 
 	devAssert(isType(ofType), ("Expected %s to be a GraphQL type."):format(inspect(ofType)))
 
 	self.ofType = ofType
 
-	return setmetatable(self, GraphQLList)
+	return (setmetatable(self, GraphQLList) :: any) :: GraphQLList<T>
 end
 
 function GraphQLList.__tostring(self)
@@ -596,29 +596,12 @@ end
 -- ROBLOX FIXME: use of the Thunk type requires implementation of this RFC: https://github.com/Roblox/luau/pull/86
 export type Thunk<T> = (() -> T) | T
 
--- ROBLOX TODO: align once Luau has function generics
-local function resolveThunk(thunk: Thunk<any>)
-	return (function() -- ROBLOX TODO: IFEE not necessary
-		if typeof(thunk) == "function" then
-			-- ROBLOX TODO: workaround for Luau type narrowing bug
-			local _thunk: any = thunk
-			return _thunk()
-		end
-
-		return thunk
-	end)()
+local function resolveThunk<T>(thunk: Thunk<T>): T
+	return if typeof(thunk) == "function" then thunk() else thunk
 end
 
-local function undefineIfEmpty(arr: Array<any>?): Array<any>?
-	return (function() -- ROBLOX TODO: IFEE not necessary
-		-- ROBLOX TODO: workaround for Luau type narrowing bug
-		local _arr: any = arr
-		if _arr and #_arr > 0 then
-			return _arr
-		end
-
-		return nil
-	end)()
+local function undefineIfEmpty<T>(arr: Array<T>?): Array<T>?
+	return if arr and #arr > 0 then arr else nil
 end
 
 --[[*
@@ -656,17 +639,16 @@ export type GraphQLScalarType = {
 	astNode: ScalarTypeDefinitionNode?,
 	extensionASTNodes: Array<ScalarTypeExtensionNode>?,
 
-	-- ROBLOX deviation: add extra parameter for self
-	toConfig: (any) -> GraphQLScalarTypeNormalizedConfig,
-	toString: (any) -> string,
-	toJSON: (any) -> string,
+	toConfig: (self: GraphQLScalarType) -> GraphQLScalarTypeNormalizedConfig,
+	toString: (self: GraphQLScalarType) -> string,
+	toJSON: (self: GraphQLScalarType) -> string,
 }
 
 GraphQLScalarType = {}
 
 GraphQLScalarType.__index = GraphQLScalarType
 
-function GraphQLScalarType.new(config: GraphQLScalarTypeConfig<any, any>)
+function GraphQLScalarType.new(config: GraphQLScalarTypeConfig<any, any>): GraphQLScalarType
 	local self = {}
 	local parseValue
 	if config.parseValue then
@@ -722,7 +704,7 @@ function GraphQLScalarType.new(config: GraphQLScalarTypeConfig<any, any>)
 		)
 	end
 
-	return setmetatable(self, GraphQLScalarType)
+	return (setmetatable(self, GraphQLScalarType) :: any) :: GraphQLScalarType
 end
 
 function GraphQLScalarType:toConfig(): GraphQLScalarTypeNormalizedConfig
@@ -1109,12 +1091,12 @@ export type GraphQLIsTypeOfFn<TSource, TContext> = (
 	GraphQLResolveInfo
 ) -> PromiseOrValue<boolean>
 
-export type GraphQLFieldResolver<TSource, TContext, TArgs = { [string]: any }> = (
+export type GraphQLFieldResolver<TSource, TContext, TArgs = any, TResult = any> = (
 	TSource,
 	TArgs,
 	TContext,
 	GraphQLResolveInfo
-) -> any
+) -> TResult
 
 export type GraphQLResolveInfo = {
 	fieldName: string,
@@ -1223,7 +1205,7 @@ export type GraphQLInterfaceType = {
 GraphQLInterfaceType = {}
 GraphQLInterfaceType.__index = GraphQLInterfaceType
 
-function GraphQLInterfaceType.new(config: GraphQLInterfaceTypeConfig<any, any>)
+function GraphQLInterfaceType.new(config: GraphQLInterfaceTypeConfig<any, any>): GraphQLInterfaceType
 	local self = {}
 	self.name = config.name
 	self.description = config.description
@@ -1247,7 +1229,7 @@ function GraphQLInterfaceType.new(config: GraphQLInterfaceTypeConfig<any, any>)
 		)
 	)
 
-	return setmetatable(self, GraphQLInterfaceType)
+	return (setmetatable(self, GraphQLInterfaceType) :: any) :: GraphQLInterfaceType
 end
 
 function GraphQLInterfaceType:getFields(): GraphQLFieldMap<any, any>
@@ -1373,7 +1355,7 @@ export type GraphQLUnionType = {
 GraphQLUnionType = {}
 GraphQLUnionType.__index = GraphQLUnionType
 
-function GraphQLUnionType.new(config: GraphQLUnionTypeConfig<any, any>)
+function GraphQLUnionType.new(config: GraphQLUnionTypeConfig<any, any>): GraphQLUnionType
 	local self = {}
 	self.name = config.name
 	self.description = config.description
@@ -1394,7 +1376,7 @@ function GraphQLUnionType.new(config: GraphQLUnionTypeConfig<any, any>)
 		)
 	)
 
-	return setmetatable(self, GraphQLUnionType)
+	return (setmetatable(self, GraphQLUnionType) :: any) :: GraphQLUnionType
 end
 
 function GraphQLUnionType:getTypes(): Array<GraphQLObjectType>
@@ -1514,7 +1496,7 @@ export type GraphQLEnumType =  --[[ <T> ]]{
 GraphQLEnumType = {}
 GraphQLEnumType.__index = GraphQLEnumType
 
-function GraphQLEnumType.new(config: GraphQLEnumTypeConfig)
+function GraphQLEnumType.new(config: GraphQLEnumTypeConfig): GraphQLEnumType
 	local self = {}
 	self.name = config.name
 	self.description = config.description
@@ -1543,7 +1525,7 @@ function GraphQLEnumType.new(config: GraphQLEnumTypeConfig)
 
 	devAssert(typeof(config.name) == "string", "Must provide name.")
 
-	return setmetatable(self, GraphQLEnumType)
+	return (setmetatable(self, GraphQLEnumType) :: any) :: GraphQLEnumType
 end
 
 function GraphQLEnumType:getValues(): Array<GraphQLEnumValue>
@@ -1787,7 +1769,7 @@ export type GraphQLInputObjectType = {
 GraphQLInputObjectType = {}
 GraphQLInputObjectType.__index = GraphQLInputObjectType
 
-function GraphQLInputObjectType.new(config: GraphQLInputObjectTypeConfig)
+function GraphQLInputObjectType.new(config: GraphQLInputObjectTypeConfig): GraphQLInputObjectType
 	local self = {}
 	self.name = config.name
 	self.description = config.description
@@ -1799,7 +1781,7 @@ function GraphQLInputObjectType.new(config: GraphQLInputObjectTypeConfig)
 		return defineInputFieldMap(config)
 	end
 	devAssert(typeof(config.name) == "string", "Must provide name.")
-	return setmetatable(self, GraphQLInputObjectType)
+	return (setmetatable(self, GraphQLInputObjectType) :: any) :: GraphQLInputObjectType
 end
 
 function GraphQLInputObjectType:getFields(): GraphQLInputFieldMap

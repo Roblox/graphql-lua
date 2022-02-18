@@ -21,9 +21,8 @@ exports.UniqueVariableNamesRule = function(context)
 			if knownVariableNames[variableName] then
 				context:reportError(
 					GraphQLError.new(
-						('There can be only one variable named "$%s".')
-							:format(variableName),
-						{knownVariableNames[variableName], node.variable.name}
+						('There can be only one variable named "$%s".'):format(variableName),
+						{ knownVariableNames[variableName], node.variable.name }
 					)
 				)
 			else

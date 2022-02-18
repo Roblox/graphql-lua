@@ -1,5 +1,4 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/execution/execute.js
---!nonstrict
 local srcWorkspace = script.Parent.Parent
 local jsUtilsWorkspace = srcWorkspace.jsutils
 local errorWorkspace = srcWorkspace.error
@@ -24,6 +23,7 @@ local PromiseOrValueImport = require(jsUtilsWorkspace.PromiseOrValue)
 type PromiseOrValue<T> = PromiseOrValueImport.PromiseOrValue<T>
 
 local Promise = require(srcWorkspace.Parent.Promise)
+type Promise<T> = LuauPolyfill.Promise<T>
 local NULL = require(luaUtilsWorkspace.null)
 local isNillish = require(luaUtilsWorkspace.isNillish).isNillish
 
@@ -65,10 +65,8 @@ type GraphQLObjectType = definitionImport.GraphQLObjectType
 type GraphQLOutputType = definitionImport.GraphQLOutputType
 type GraphQLLeafType = definitionImport.GraphQLLeafType
 type GraphQLAbstractType = definitionImport.GraphQLAbstractType
--- ROBLOX TODO: Luau doesn't currently support default type args, so we inline here
-type GraphQLFieldDefaultTArgs = { [string]: any }
-type GraphQLField<Source, TContext> = definitionImport.GraphQLField<Source, TContext, GraphQLFieldDefaultTArgs>
-type GraphQLFieldResolver<T, V> = definitionImport.GraphQLFieldResolver<T, V, GraphQLFieldDefaultTArgs>
+type GraphQLField<Source, TContext> = definitionImport.GraphQLField<Source, TContext>
+type GraphQLFieldResolver<T, V> = definitionImport.GraphQLFieldResolver<T, V>
 type GraphQLResolveInfo = definitionImport.GraphQLResolveInfo
 type GraphQLTypeResolver<T, V> = definitionImport.GraphQLTypeResolver<T, V>
 type GraphQLList<T> = definitionImport.GraphQLList<T>
@@ -141,7 +139,7 @@ export type ExecutionContext = {
 --  *]]
 export type ExecutionResult = {
 	errors: Array<GraphQLError>?,
-	data: ObjMap<any>?,
+	data: ObjMap<any> | typeof(NULL),
 	extensions: ObjMap<any>?,
 }
 
@@ -169,9 +167,9 @@ local assertValidExecutionArguments
 local buildExecutionContext
 local collectFields
 local buildResolveInfo
-local defaultTypeResolver: GraphQLFieldResolver<any, any>
+local defaultTypeResolver: GraphQLTypeResolver<any, any>
 local defaultFieldResolver: GraphQLFieldResolver<any, any>
-local getFieldDef
+local getFieldDef: (schema: GraphQLSchema, parentType: GraphQLObjectType, fieldName: string) -> GraphQLField<any, any>?
 local buildResponse
 local executeOperation
 local executeFieldsSerially
@@ -229,8 +227,10 @@ function execute(args: ExecutionArgs): PromiseOrValue<ExecutionResult>
 	)
 
 	-- Return early errors if execution context failed.
-	if Array.isArray(exeContext) then
-		return { errors = exeContext }
+	-- ROBLOX FIXME Luau: Luau should narrow the union based on this, since ExecutionContext.schema can't be falsey
+	if not (exeContext :: any).schema then
+		-- ROBLOX FIXME Luau: Luau shouldn't need this ExecutionResult annotation, probably needs normalization
+		return { errors = exeContext :: Array<GraphQLError> } :: ExecutionResult
 	end
 
 	-- Return a Promise that will eventually resolve to the data described by
@@ -240,9 +240,9 @@ function execute(args: ExecutionArgs): PromiseOrValue<ExecutionResult>
 	-- field and its descendants will be omitted, and sibling fields will still
 	-- be executed. An execution which encounters errors will still result in a
 	-- resolved Promise.
-	local data = executeOperation(exeContext, exeContext.operation, rootValue)
+	local data = executeOperation(exeContext :: ExecutionContext, (exeContext :: ExecutionContext).operation, rootValue)
 
-	return buildResponse(exeContext, data)
+	return buildResponse(exeContext :: ExecutionContext, data)
 end
 
 --[[*
@@ -258,7 +258,8 @@ function executeSync(args: ExecutionArgs): ExecutionResult
 		error(Error.new("GraphQL execution failed to complete synchronously."))
 	end
 
-	return result
+	-- ROBLOX TODO Luau: Luau needs something like %checks functionality on isPromise to not need this cast
+	return result :: ExecutionResult
 end
 
 --[[*
@@ -268,24 +269,21 @@ end
 function buildResponse(
 	exeContext: ExecutionContext,
 	-- ROBLOX deviation: workaround Luau, which doesn't have predicates, and has nilability narrowing issues. should be PromiseOrValue<ObjMap<any>?>
-	data: PromiseOrValue<ObjMap<any>>
+	data: PromiseOrValue<ObjMap<any> | typeof(NULL)>
 ): PromiseOrValue<ExecutionResult>
 	if isPromise(data) then
-		return data:andThen(function(resolved)
+		-- ROBLOX FIXME: couldn't figure out typing for this Promise<T> that returns a Promise<R>
+		return (data :: Promise<any>):andThen(function(resolved)
 			return buildResponse(exeContext, resolved)
 		end)
 	end
 
-	return (function()
-		if #exeContext.errors == 0 then
-			return { data = data }
-		end
-
-		return {
-			errors = exeContext.errors,
-			data = data,
-		}
-	end)()
+	return if #exeContext.errors == 0
+		then { data = data :: ObjMap<any> } :: ExecutionResult
+		else {
+			errors = exeContext.errors :: Array<GraphQLError>,
+			data = data :: typeof(NULL),
+		} :: ExecutionResult
 end
 
 --[[*
@@ -322,12 +320,12 @@ end
 function buildExecutionContext(
 	schema: GraphQLSchema,
 	document: DocumentNode,
-	rootValue,
-	contextValue,
+	rootValue: any?,
+	contextValue: any?,
 	rawVariableValues: { [string]: any }?, -- ROBLOX TODO: missing type varargs
 	operationName: string?,
 	fieldResolver: GraphQLFieldResolver<any, any>?,
-	typeResolver: GraphQLFieldResolver<any, any>?
+	typeResolver: GraphQLTypeResolver<any, any>?
 ): Array<GraphQLError> | ExecutionContext
 	local operation: OperationDefinitionNode -- ROBLOX TODO: should be nilable, fix then Luau narrowing is fixed
 	local fragments = {}
@@ -367,12 +365,13 @@ function buildExecutionContext(
 	local coercedVariableValues = getVariableValues(
 		schema,
 		variableDefinitions,
-		rawVariableValues or {},
+		if rawVariableValues then rawVariableValues else {},
 		{ maxErrors = 50 }
 	)
 
-	if coercedVariableValues.errors then
-		return coercedVariableValues.errors
+	-- ROBLOX TODO: This is a type error in upstream that TS doesn't catch
+	if (coercedVariableValues :: any).errors then
+		return (coercedVariableValues :: { errors: Array<GraphQLError> }).errors
 	end
 
 	return {
@@ -381,7 +380,8 @@ function buildExecutionContext(
 		rootValue = rootValue,
 		contextValue = contextValue,
 		operation = operation,
-		variableValues = coercedVariableValues.coerced,
+		-- ROBLOX TODO: This is a type error in upstream that TS doesn't catch
+		variableValues = (coercedVariableValues :: { coerced: { [string]: any } }).coerced,
 		fieldResolver = fieldResolver or defaultFieldResolver,
 		typeResolver = typeResolver or defaultTypeResolver,
 		errors = {},
@@ -442,22 +442,25 @@ function executeFieldsSerially(
 	exeContext: ExecutionContext,
 	parentType: GraphQLObjectType,
 	sourceValue: any,
-	path: Path | nil, -- ROBLOX deviation: Luau can't express void, use nil instead
-	fields: Map<string, Array<FieldNode>> -- ROBLOX deviation: use our ordered Map
+	path: Path | nil,
+	fields: Map<string, Array<FieldNode>>
 ): PromiseOrValue<ObjMap<any>>
 	return promiseReduce(
 		-- ROBLOX deviation: use Map
 		fields:keys(),
 		function(results, responseName)
-			local fieldNodes = fields:get(responseName)
-			local fieldPath = addPath(path, responseName, parentType.name)
-			local result = resolveField(exeContext, parentType, sourceValue, fieldNodes, fieldPath)
+			-- ROBLOX TODO: this is a type bug in upstream, which should also need annotation
+			local fieldNodes = fields[responseName] :: Array<FieldNode>
+			-- ROBLOX FIXME Luau: Type 'Path?' could not be converted into 'Path?'
+			local fieldPath = addPath(path :: any, responseName, parentType.name)
+			local result = resolveField(exeContext, parentType, sourceValue, fieldNodes, fieldPath :: any)
 
 			if result == nil then
 				return results
 			end
 			if isPromise(result) then
-				return result:andThen(function(resolvedResult)
+				-- ROBLOX FIXME: couldn't figure out typing for this Promise<T> that returns a Promise<R>
+				return (result :: Promise<any>):andThen(function(resolvedResult)
 					results[responseName] = resolvedResult
 
 					return results
@@ -488,9 +491,11 @@ function executeFields(
 
 	-- ROBLOX deviation: use Map
 	for _, responseName in ipairs(fields:keys()) do
-		local fieldNodes = fields:get(responseName)
-		local fieldPath = addPath(path, responseName, parentType.name)
-		local result = resolveField(exeContext, parentType, sourceValue, fieldNodes, fieldPath)
+		-- ROBLOX TODO: this is a type bug in upstream, which should also need annotation
+		local fieldNodes = fields[responseName] :: Array<FieldNode>
+		-- ROBLOX FIXME Luau: Type 'Path?' could not be converted into 'Path?'
+		local fieldPath = addPath(path :: any, responseName, parentType.name)
+		local result = resolveField(exeContext, parentType, sourceValue, fieldNodes, fieldPath :: any)
 
 		if result ~= nil then
 			results[responseName] = result
@@ -649,24 +654,28 @@ function resolveField(
 		return
 	end
 
-	local returnType = fieldDef.type
-	local resolveFn = fieldDef.resolve or exeContext.fieldResolver
+	-- ROBLOX Luau FIXME: should narrow based on branch above
+	local returnType = (fieldDef :: GraphQLField<any, any>).type
+	local resolveFn = if (fieldDef :: GraphQLField<any, any>).resolve
+		then (fieldDef :: GraphQLField<any, any>).resolve :: GraphQLFieldResolver<any, any>
+		else exeContext.fieldResolver
 
-	local info = buildResolveInfo(exeContext, fieldDef, fieldNodes, parentType, path)
+	local info = buildResolveInfo(exeContext, (fieldDef :: GraphQLField<any, any>), fieldNodes, parentType, path)
 
 	-- Get the resolve function, regardless of if its result is normal or abrupt (error).
 	local ok, resultOrError = pcall(function()
 		-- Build a JS object of arguments from the field.arguments AST, using the
 		-- variables scope to fulfill any variable references.
 		-- TODO: find a way to memoize, in case this field is within a List type.
-		local args = getArgumentValues(fieldDef, fieldNodes[1], exeContext.variableValues)
+		local args = getArgumentValues((fieldDef :: GraphQLField<any, any>), fieldNodes[1], exeContext.variableValues)
 
 		-- The resolve function's optional third argument is a context value that
 		-- is provided to every resolve function within an execution. It is commonly
 		-- used to represent an authenticated user, or request-specific caches.
 		local contextValue = exeContext.contextValue
 
-		local result = resolveFn(source, args, contextValue, info)
+		-- ROBLOX FIXME Luau: needs normalization
+		local result = (resolveFn :: (any, any, any, GraphQLResolveInfo) -> any)(source, args, contextValue, info)
 
 		local completed
 		if isPromise(result) then
@@ -681,7 +690,8 @@ function resolveField(
 			-- Note: we don't rely on a `catch` method, but we do expect "thenable"
 			-- to take a second callback for the error case.
 			return completed:andThen(nil, function(rawError)
-				local error_ = locatedError(rawError, fieldNodes, pathToArray(path))
+				-- ROBLOX FIXME Luau: Type 'Path' could not be converted into 'Path'
+				local error_ = locatedError(rawError, fieldNodes, pathToArray(path :: any))
 				return handleFieldError(error_, returnType, exeContext)
 			end)
 		end
@@ -690,7 +700,8 @@ function resolveField(
 
 	if not ok then
 		local rawError = resultOrError
-		local error_ = locatedError(rawError, fieldNodes, pathToArray(path))
+		-- ROBLOX FIXME Luau: Type 'Path' could not be converted into 'Path'
+		local error_ = locatedError(rawError, fieldNodes, pathToArray(path :: any))
 		return handleFieldError(error_, returnType, exeContext)
 	end
 
@@ -723,7 +734,11 @@ function buildResolveInfo(
 	}
 end
 
-function handleFieldError(error_: GraphQLError, returnType: GraphQLOutputType, exeContext: ExecutionContext): typeof(NULL)
+function handleFieldError(
+	error_: GraphQLError,
+	returnType: GraphQLOutputType,
+	exeContext: ExecutionContext
+): typeof(NULL)
 	-- If the field type is non-nullable, then it is resolved without any
 	-- protection from errors, however it still properly locates the error.
 	if isNonNullType(returnType) then
@@ -858,7 +873,8 @@ function completeListValue(
 	local completedResults = Array.from(result, function(item, index)
 		-- No need to modify the info object containing the path,
 		-- since from here on it is not ever accessed by resolver functions.
-		local itemPath = addPath(path, index, nil)
+		-- ROBLOX FIXME Luau: Type 'Path' could not be converted into 'Path'
+		local itemPath = addPath(path :: any, index, nil) :: any
 
 		local ok, resultOrError = pcall(function()
 			local completedItem
@@ -1028,16 +1044,20 @@ function ensureValidRuntimeType(
 		)
 	end
 
-	if not exeContext.schema:isSubType(returnType, runtimeType) then
+	-- ROBLOX TODO: how does upstream know this is safe?
+	if not exeContext.schema:isSubType(returnType, runtimeType :: any) then
 		error(
 			GraphQLError.new(
-				('Runtime Object type "%s" is not a possible type for "%s".'):format(runtimeType.name, returnType.name),
+				('Runtime Object type "%s" is not a possible type for "%s".'):format(
+					(runtimeType :: any).name,
+					returnType.name
+				),
 				fieldNodes
 			)
 		)
 	end
 
-	return runtimeType
+	return runtimeType :: any
 end
 
 --[[*
@@ -1058,7 +1078,8 @@ function completeObjectValue(
 		local isTypeOf = returnType.isTypeOf(returnType, result, exeContext.contextValue, info)
 
 		if isPromise(isTypeOf) then
-			return isTypeOf:andThen(function(resolvedIsTypeOf)
+			-- ROBLOX TODO Luau: we needs a %checks annotation for functions like isPromise
+			return (isTypeOf :: Promise<any>):andThen(function(resolvedIsTypeOf)
 				if not resolvedIsTypeOf then
 					error(invalidReturnTypeError(returnType, result, fieldNodes))
 				end
@@ -1102,8 +1123,8 @@ function _collectSubfields(
 	exeContext: ExecutionContext,
 	returnType: GraphQLObjectType,
 	fieldNodes: Array<FieldNode>
-): ObjMap<Array<FieldNode>>
-	-- ROBLOX deviation: use Map
+	-- ROBLOX note: pulled in return type from 16.x.x that fixed an incorrect annotation in 15.x.x
+): Map<string, Array<FieldNode>>
 	local subFieldNodes = Map.new()
 	local visitedFragmentNames = {}
 
@@ -1169,10 +1190,10 @@ defaultTypeResolver = function(value, contextValue, info, abstractType)
 					return possibleTypes[i].name
 				end
 			end
-			return -- ROBLOX deviation: no implicit return
+			return nil -- ROBLOX deviation: no implicit return
 		end)
 	end
-	return -- ROBLOX deviation: no implicit return
+	return nil -- ROBLOX deviation: no implicit return
 end
 
 --[[*
@@ -1192,7 +1213,7 @@ defaultFieldResolver = function(source: any, args, contextValue, info)
 		end
 		return property
 	end
-	return -- ROBLOX deviation: no implicit return
+	return nil -- ROBLOX deviation: no implicit return
 end
 
 --[[*

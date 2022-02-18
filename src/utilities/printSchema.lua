@@ -171,12 +171,13 @@ local function printImplementedInterfaces(type_)
 
 	return (function()
 		if #interfaces > 0 then
-			return " implements " .. Array.join(
-				Array.map(interfaces, function(i)
-					return i.name
-				end),
-				" & "
-			)
+			return " implements "
+				.. Array.join(
+					Array.map(interfaces, function(i)
+						return i.name
+					end),
+					" & "
+				)
 		end
 
 		return ""

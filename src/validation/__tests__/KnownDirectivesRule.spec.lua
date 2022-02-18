@@ -5,8 +5,7 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local KnownDirectivesRule = require(validationWorkspace.rules.KnownDirectivesRule)
-		.KnownDirectivesRule
+	local KnownDirectivesRule = require(validationWorkspace.rules.KnownDirectivesRule).KnownDirectivesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 	local expectSDLValidationErrors = harness.expectSDLValidationErrors
@@ -26,12 +25,7 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectSDLValidationErrors(
-			expect_,
-			schema,
-			KnownDirectivesRule,
-			"\n" .. sdlStr
-		)
+		return expectSDLValidationErrors(expect_, schema, KnownDirectivesRule, "\n" .. sdlStr)
 	end
 
 	local function expectValidSDL(expect_, sdlStr, schema)
@@ -54,7 +48,9 @@ return function()
 
 	describe("Validate: Known directives", function()
 		it("with no directives", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo {
 					name
 					...Frag
@@ -63,11 +59,14 @@ return function()
 				fragment Frag on Dog {
 					name
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("with known directives", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					dog @include(if: true) {
 						name
@@ -76,26 +75,32 @@ return function()
 						name
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("with unknown directive", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         dog @unknown(directive: "value") {
           name
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Unknown directive "@unknown".',
-					locations = {{ line = 3, column = 13 }},
+					locations = { { line = 3, column = 13 } },
 				},
 			})
 		end)
 
 		it("with many unknown directives", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         dog @unknown(directive: "value") {
           name
@@ -107,24 +112,27 @@ return function()
           }
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Unknown directive "@unknown".',
-					locations = {{ line = 3, column = 13 }},
+					locations = { { line = 3, column = 13 } },
 				},
 				{
 					message = 'Unknown directive "@unknown".',
-					locations = {{ line = 6, column = 15 }},
+					locations = { { line = 6, column = 15 } },
 				},
 				{
 					message = 'Unknown directive "@unknown".',
-					locations = {{ line = 8, column = 16 }},
+					locations = { { line = 8, column = 16 } },
 				},
 			})
 		end)
 
 		it("with well placed directives", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query ($var: Boolean) @onQuery {
 					name @include(if: $var)
 					...Frag @include(if: true)
@@ -147,19 +155,25 @@ return function()
 				fragment Frag on SomeType @onFragmentDefinition {
 					someField
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("with well placed variable definition directive", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo($var: Boolean @onVariableDefinition) {
 					name
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("with misplaced directives", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($var: Boolean) @include(if: true) {
         name @onQuery @include(if: $var)
         ...Frag @onQuery
@@ -168,65 +182,78 @@ return function()
       mutation Bar @onQuery {
         someField
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Directive "@include" may not be used on QUERY.',
-					locations = {{ line = 2, column = 32 }},
+					locations = { { line = 2, column = 32 } },
 				},
 				{
 					message = 'Directive "@onQuery" may not be used on FIELD.',
-					locations = {{ line = 3, column = 14 }},
+					locations = { { line = 3, column = 14 } },
 				},
 				{
 					message = 'Directive "@onQuery" may not be used on FRAGMENT_SPREAD.',
-					locations = {{ line = 4, column = 17 }},
+					locations = { { line = 4, column = 17 } },
 				},
 				{
 					message = 'Directive "@onQuery" may not be used on MUTATION.',
-					locations = {{ line = 7, column = 20 }},
+					locations = { { line = 7, column = 20 } },
 				},
 			})
 		end)
 
 		it("with misplaced variable definition directive", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($var: Boolean @onField) {
         name
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Directive "@onField" may not be used on VARIABLE_DEFINITION.',
-					locations = {{ line = 2, column = 31 }},
+					locations = { { line = 2, column = 31 } },
 				},
 			})
 		end)
 
 		describe("within SDL", function()
 			it("with directive defined inside SDL", function()
-				expectValidSDL(expect, [[
+				expectValidSDL(
+					expect,
+					[[
 					type Query {
 						foo: String @test
 					}
 
 					directive @test on FIELD_DEFINITION
-				]])
+				]]
+				)
 			end)
 
 			it("with standard directive", function()
-				expectValidSDL(expect, [[
+				expectValidSDL(
+					expect,
+					[[
 					type Query {
 						foo: String @deprecated
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("with overridden standard directive", function()
-				expectValidSDL(expect, [[
+				expectValidSDL(
+					expect,
+					[[
 					schema @deprecated {
 						query: Query
 					}
 					directive @deprecated on SCHEMA
-				]])
+				]]
+				)
 			end)
 
 			it("with directive defined in schema extension", function()
@@ -236,11 +263,15 @@ return function()
 					}
 				]])
 
-				expectValidSDL(expect, [[
+				expectValidSDL(
+					expect,
+					[[
 					directive @test on OBJECT
 
 					extend type Query @test
-				]], schema)
+				]],
+					schema
+				)
 			end)
 
 			it("with directive used in schema extension", function()
@@ -252,9 +283,13 @@ return function()
 					}
 				]])
 
-				expectValidSDL(expect, [[
+				expectValidSDL(
+					expect,
+					[[
 					extend type Query @test
-				]], schema)
+				]],
+					schema
+				)
 			end)
 
 			it("with unknown directive in schema extension", function()
@@ -264,18 +299,24 @@ return function()
 					}
 				]])
 
-				expectSDLErrors(expect, [[
+				expectSDLErrors(
+					expect,
+					[[
           extend type Query @unknown
-				]], schema).toEqual({
+				]],
+					schema
+				).toEqual({
 					{
 						message = 'Unknown directive "@unknown".',
-						locations = {{ line = 2, column = 29 }},
+						locations = { { line = 2, column = 29 } },
 					},
 				})
 			end)
 
 			it("with well placed directives", function()
-				expectValidSDL(expect, [[
+				expectValidSDL(
+					expect,
+					[[
 					type MyObj implements MyInterface @onObject {
 						myField(myArg: Int @onArgumentDefinition): String @onFieldDefinition
 					}
@@ -313,11 +354,15 @@ return function()
 					}
 
 					extend schema @onSchema
-				]], schemaWithSDLDirectives)
+				]],
+					schemaWithSDLDirectives
+				)
 			end)
 
 			it("with misplaced directives", function()
-				expectSDLErrors(expect, [[
+				expectSDLErrors(
+					expect,
+					[[
           type MyObj implements MyInterface @onInterface {
             myField(myArg: Int @onInputFieldDefinition): String @onInputFieldDefinition
           }
@@ -343,62 +388,64 @@ return function()
           }
 
           extend schema @onObject
-				]], schemaWithSDLDirectives).toEqual({
+				]],
+					schemaWithSDLDirectives
+				).toEqual({
 					{
 						message = 'Directive "@onInterface" may not be used on OBJECT.',
-						locations = {{ line = 2, column = 45 }},
+						locations = { { line = 2, column = 45 } },
 					},
 					{
 						message = 'Directive "@onInputFieldDefinition" may not be used on ARGUMENT_DEFINITION.',
-						locations = {{ line = 3, column = 32 }},
+						locations = { { line = 3, column = 32 } },
 					},
 					{
 						message = 'Directive "@onInputFieldDefinition" may not be used on FIELD_DEFINITION.',
-						locations = {{ line = 3, column = 65 }},
+						locations = { { line = 3, column = 65 } },
 					},
 					{
 						message = 'Directive "@onEnum" may not be used on SCALAR.',
-						locations = {{ line = 6, column = 27 }},
+						locations = { { line = 6, column = 27 } },
 					},
 					{
 						message = 'Directive "@onObject" may not be used on INTERFACE.',
-						locations = {{ line = 8, column = 33 }},
+						locations = { { line = 8, column = 33 } },
 					},
 					{
 						message = 'Directive "@onInputFieldDefinition" may not be used on ARGUMENT_DEFINITION.',
-						locations = {{ line = 9, column = 32 }},
+						locations = { { line = 9, column = 32 } },
 					},
 					{
 						message = 'Directive "@onInputFieldDefinition" may not be used on FIELD_DEFINITION.',
-						locations = {{ line = 9, column = 65 }},
+						locations = { { line = 9, column = 65 } },
 					},
 					{
 						message = 'Directive "@onEnumValue" may not be used on UNION.',
-						locations = {{ line = 12, column = 25 }},
+						locations = { { line = 12, column = 25 } },
 					},
 					{
 						message = 'Directive "@onScalar" may not be used on ENUM.',
-						locations = {{ line = 14, column = 23 }},
+						locations = { { line = 14, column = 23 } },
 					},
 					{
 						message = 'Directive "@onUnion" may not be used on ENUM_VALUE.',
-						locations = {{ line = 15, column = 22 }},
+						locations = { { line = 15, column = 22 } },
 					},
 					{
 						message = 'Directive "@onEnum" may not be used on INPUT_OBJECT.',
-						locations = {{ line = 18, column = 25 }},
+						locations = { { line = 18, column = 25 } },
 					},
 					{
 						message = 'Directive "@onArgumentDefinition" may not be used on INPUT_FIELD_DEFINITION.',
-						locations = {{ line = 19, column = 26 }},
+						locations = { { line = 19, column = 26 } },
 					},
 					{
 						message = 'Directive "@onObject" may not be used on SCHEMA.',
-						locations = {{ line = 22, column = 18 }},
+						locations = { { line = 22, column = 18 } },
 					},
 					{
 						message = 'Directive "@onObject" may not be used on SCHEMA.',
-						locations = {{ line = 26, column = 25 }},
+						locations = { { line = 26, column = 25 } },
 					},
 				})
 			end)

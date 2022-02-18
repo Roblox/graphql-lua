@@ -34,7 +34,7 @@ return function()
 				expect(preReleaseTag).to.be.a("string")
 			end
 
-			expect(("%s.%s.%s"):format(major, minor, patch) .. (function()
+			expect(("%d.%d.%d"):format(major, minor, patch) .. (function()
 				if preReleaseTag ~= "" then
 					return "-" .. preReleaseTag
 				end

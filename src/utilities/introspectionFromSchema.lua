@@ -28,19 +28,13 @@ local getIntrospectionQuery = getIntrospectionQueryModule.getIntrospectionQuery
 	* This is the inverse of buildClientSchema. The primary use case is outside
 	* of the server context, for instance when doing schema comparisons.
 	*]]
-local function introspectionFromSchema(
-	schema: GraphQLSchema,
-	options: IntrospectionOptions?
-): IntrospectionQuery
-	local optionsWithDefaults = Object.assign(
-		{
-			specifiedByUrl = true,
-			directiveIsRepeatable = true,
-			schemaDescription = true,
-			inputValueDeprecation = true,
-		},
-		options
-	)
+local function introspectionFromSchema(schema: GraphQLSchema, options: IntrospectionOptions?): IntrospectionQuery
+	local optionsWithDefaults = Object.assign({
+		specifiedByUrl = true,
+		directiveIsRepeatable = true,
+		schemaDescription = true,
+		inputValueDeprecation = true,
+	}, options)
 
 	local document = parse(getIntrospectionQuery(optionsWithDefaults))
 	local result = executeSync({ schema = schema, document = document })

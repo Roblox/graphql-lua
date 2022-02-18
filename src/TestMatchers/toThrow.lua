@@ -17,11 +17,11 @@ local function toThrow(fn: () -> any, errorString: string?, isPattern: boolean?)
 				return {
 					pass = false,
 					message = string.format(
-						"Matcher Error:\n" ..
-						"Expected function to throw a string or an Error " ..
-						"object, but it threw an error of type '%s'.\nYou " ..
-						"may wish to use `pcall` instead and run custom " ..
-						"expectations on the returned error",
+						"Matcher Error:\n"
+							.. "Expected function to throw a string or an Error "
+							.. "object, but it threw an error of type '%s'.\nYou "
+							.. "may wish to use `pcall` instead and run custom "
+							.. "expectations on the returned error",
 						typeof(result)
 					),
 				}
@@ -29,10 +29,7 @@ local function toThrow(fn: () -> any, errorString: string?, isPattern: boolean?)
 			if resultErrorString:find(errorString, 1, not isPattern) ~= nil then
 				return {
 					pass = true,
-					message = string.format(
-						"Expected function not to throw with '%s'",
-						errorString
-					),
+					message = string.format("Expected function not to throw with '%s'", errorString),
 				}
 			end
 

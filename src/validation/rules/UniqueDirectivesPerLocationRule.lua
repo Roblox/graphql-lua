@@ -52,9 +52,7 @@ exports.UniqueDirectivesPerLocationRule = function(context)
 			end
 
 			local seenDirectives
-			if node.kind == Kind.SCHEMA_DEFINITION or
-				node.kind == Kind.SCHEMA_EXTENSION
-			then
+			if node.kind == Kind.SCHEMA_DEFINITION or node.kind == Kind.SCHEMA_EXTENSION then
 				seenDirectives = schemaDirectives
 			elseif isTypeDefinitionNode(node) or isTypeExtensionNode(node) then
 				local typeName = node.name.value
@@ -67,7 +65,7 @@ exports.UniqueDirectivesPerLocationRule = function(context)
 				seenDirectives = {}
 			end
 
-			for _, directive in ipairs(node.directives)do
+			for _, directive in ipairs(node.directives) do
 				local directiveName = directive.name.value
 
 				if uniqueDirectiveMap[directiveName] then
@@ -75,7 +73,7 @@ exports.UniqueDirectivesPerLocationRule = function(context)
 						context:reportError(
 							GraphQLError.new(
 								('The directive "@%s" can only be used once at this location.'):format(directiveName),
-								{seenDirectives[directiveName], directive}
+								{ seenDirectives[directiveName], directive }
 							)
 						)
 					else

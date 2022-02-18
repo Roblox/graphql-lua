@@ -5,8 +5,7 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local KnownTypeNamesRule = require(validationWorkspace.rules.KnownTypeNamesRule)
-		.KnownTypeNamesRule
+	local KnownTypeNamesRule = require(validationWorkspace.rules.KnownTypeNamesRule).KnownTypeNamesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 	local expectValidationErrorsWithSchema = harness.expectValidationErrorsWithSchema
@@ -23,12 +22,7 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectValidationErrorsWithSchema(
-			expect_,
-			schema,
-			KnownTypeNamesRule,
-			"\n" .. queryStr
-		)
+		return expectValidationErrorsWithSchema(expect_, schema, KnownTypeNamesRule, "\n" .. queryStr)
 	end
 
 	local function expectValid(expect_, queryStr: string)
@@ -48,7 +42,9 @@ return function()
 
 	describe("Validate: Known type names", function()
 		it("known type names are valid", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo(
 					$var: String
 					$required: [Int!]!
@@ -62,11 +58,14 @@ return function()
 				fragment PetFields on Pet {
 					name
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("unknown type names are invalid", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($var: JumbledUpLetters) {
         user(id: 4) {
           name
@@ -76,18 +75,19 @@ return function()
       fragment PetFields on Peat {
         name
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Unknown type "JumbledUpLetters".',
-					locations = {{ line = 2, column = 23 }},
+					locations = { { line = 2, column = 23 } },
 				},
 				{
 					message = 'Unknown type "Badger".',
-					locations = {{ line = 5, column = 25 }},
+					locations = { { line = 5, column = 25 } },
 				},
 				{
 					message = 'Unknown type "Peat". Did you mean "Pet" or "Cat"?',
-					locations = {{ line = 8, column = 29 }},
+					locations = { { line = 8, column = 29 } },
 				},
 			})
 		end)
@@ -103,22 +103,24 @@ return function()
 			expectErrorsWithSchema(expect, schema, query).toEqual({
 				{
 					message = 'Unknown type "ID".',
-					locations = {{ line = 2, column = 19 }},
+					locations = { { line = 2, column = 19 } },
 				},
 				{
 					message = 'Unknown type "Float".',
-					locations = {{ line = 2, column = 31 }},
+					locations = { { line = 2, column = 31 } },
 				},
 				{
 					message = 'Unknown type "Int".',
-					locations = {{ line = 2, column = 44 }},
+					locations = { { line = 2, column = 44 } },
 				},
 			})
 		end)
 
 		describe("within SDL", function()
 			it("use standard types", function()
-				expectValidSDL(expect, [[
+				expectValidSDL(
+					expect,
+					[[
 				type Query {
 					string: String
 					int: Int
@@ -127,11 +129,14 @@ return function()
 					id: ID
 					introspectionType: __EnumValue
 				}
-				]])
+				]]
+				)
 			end)
 
 			it("reference types defined inside the same document", function()
-				expectValidSDL(expect, [[
+				expectValidSDL(
+					expect,
+					[[
 					union SomeUnion = SomeObject | AnotherObject
 
 					type SomeObject implements SomeInterface {
@@ -162,11 +167,14 @@ return function()
 					schema {
 						query: RootQuery
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("unknown type references", function()
-				expectSDLErrors(expect, [[
+				expectSDLErrors(
+					expect,
+					[[
         type A
         type B
 
@@ -191,60 +199,63 @@ return function()
           mutation: M
           subscription: N
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Unknown type "C". Did you mean "A" or "B"?',
-						locations = {{ line = 5, column = 36 }},
+						locations = { { line = 5, column = 36 } },
 					},
 					{
 						message = 'Unknown type "D". Did you mean "A", "B", or "ID"?',
-						locations = {{ line = 6, column = 16 }},
+						locations = { { line = 6, column = 16 } },
 					},
 					{
 						message = 'Unknown type "E". Did you mean "A" or "B"?',
-						locations = {{ line = 6, column = 20 }},
+						locations = { { line = 6, column = 20 } },
 					},
 					{
 						message = 'Unknown type "F". Did you mean "A" or "B"?',
-						locations = {{ line = 9, column = 27 }},
+						locations = { { line = 9, column = 27 } },
 					},
 					{
 						message = 'Unknown type "G". Did you mean "A" or "B"?',
-						locations = {{ line = 9, column = 31 }},
+						locations = { { line = 9, column = 31 } },
 					},
 					{
 						message = 'Unknown type "H". Did you mean "A" or "B"?',
-						locations = {{ line = 12, column = 16 }},
+						locations = { { line = 12, column = 16 } },
 					},
 					{
 						message = 'Unknown type "I". Did you mean "A", "B", or "ID"?',
-						locations = {{ line = 12, column = 20 }},
+						locations = { { line = 12, column = 20 } },
 					},
 					{
 						message = 'Unknown type "J". Did you mean "A" or "B"?',
-						locations = {{ line = 16, column = 14 }},
+						locations = { { line = 16, column = 14 } },
 					},
 					{
 						message = 'Unknown type "K". Did you mean "A" or "B"?',
-						locations = {{ line = 19, column = 37 }},
+						locations = { { line = 19, column = 37 } },
 					},
 					{
 						message = 'Unknown type "L". Did you mean "A" or "B"?',
-						locations = {{ line = 22, column = 18 }},
+						locations = { { line = 22, column = 18 } },
 					},
 					{
 						message = 'Unknown type "M". Did you mean "A" or "B"?',
-						locations = {{ line = 23, column = 21 }},
+						locations = { { line = 23, column = 21 } },
 					},
 					{
 						message = 'Unknown type "N". Did you mean "A" or "B"?',
-						locations = {{ line = 24, column = 25 }},
+						locations = { { line = 24, column = 25 } },
 					},
 				})
 			end)
 
 			it("does not consider non-type definitions", function()
-				expectSDLErrors(expect, [[
+				expectSDLErrors(
+					expect,
+					[[
         query Foo { __typename }
         fragment Foo on Query { __typename }
         directive @Foo on QUERY
@@ -252,10 +263,11 @@ return function()
         type Query {
           foo: Foo
         }
-			]]).toEqual({
+			]]
+				).toEqual({
 					{
 						message = 'Unknown type "Foo".',
-						locations = {{ line = 7, column = 16 }},
+						locations = { { line = 7, column = 16 } },
 					},
 				})
 			end)
@@ -325,51 +337,51 @@ return function()
 				expectSDLErrors(expect, sdl, schema).toEqual({
 					{
 						message = 'Unknown type "C". Did you mean "A" or "B"?',
-						locations = {{ line = 4, column = 36 }},
+						locations = { { line = 4, column = 36 } },
 					},
 					{
 						message = 'Unknown type "D". Did you mean "A", "B", or "ID"?',
-						locations = {{ line = 5, column = 16 }},
+						locations = { { line = 5, column = 16 } },
 					},
 					{
 						message = 'Unknown type "E". Did you mean "A" or "B"?',
-						locations = {{ line = 5, column = 20 }},
+						locations = { { line = 5, column = 20 } },
 					},
 					{
 						message = 'Unknown type "F". Did you mean "A" or "B"?',
-						locations = {{ line = 8, column = 27 }},
+						locations = { { line = 8, column = 27 } },
 					},
 					{
 						message = 'Unknown type "G". Did you mean "A" or "B"?',
-						locations = {{ line = 8, column = 31 }},
+						locations = { { line = 8, column = 31 } },
 					},
 					{
 						message = 'Unknown type "H". Did you mean "A" or "B"?',
-						locations = {{ line = 11, column = 16 }},
+						locations = { { line = 11, column = 16 } },
 					},
 					{
 						message = 'Unknown type "I". Did you mean "A", "B", or "ID"?',
-						locations = {{ line = 11, column = 20 }},
+						locations = { { line = 11, column = 20 } },
 					},
 					{
 						message = 'Unknown type "J". Did you mean "A" or "B"?',
-						locations = {{ line = 15, column = 14 }},
+						locations = { { line = 15, column = 14 } },
 					},
 					{
 						message = 'Unknown type "K". Did you mean "A" or "B"?',
-						locations = {{ line = 18, column = 37 }},
+						locations = { { line = 18, column = 37 } },
 					},
 					{
 						message = 'Unknown type "L". Did you mean "A" or "B"?',
-						locations = {{ line = 21, column = 18 }},
+						locations = { { line = 21, column = 18 } },
 					},
 					{
 						message = 'Unknown type "M". Did you mean "A" or "B"?',
-						locations = {{ line = 22, column = 21 }},
+						locations = { { line = 22, column = 21 } },
 					},
 					{
 						message = 'Unknown type "N". Did you mean "A" or "B"?',
-						locations = {{ line = 23, column = 25 }},
+						locations = { { line = 23, column = 25 } },
 					},
 				})
 			end)

@@ -1,6 +1,4 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/execution/values.js
---!nonstrict
--- ROBLOX FIXME Luau: Luau analyze hangs when this file is strict, needs CLI-50589
 local srcWorkspace = script.Parent.Parent
 
 local root = srcWorkspace.Parent
@@ -37,7 +35,6 @@ type GraphQLField<TSource, TContext> = definitionImport.GraphQLField<TSource, TC
 local directivesImport = require(typeWorkspace.directives)
 type GraphQLDirective = directivesImport.GraphQLDirective
 
-
 local definition = require(srcWorkspace.type.definition)
 local isInputType = definition.isInputType
 local isNonNullType = definition.isNonNullType
@@ -53,9 +50,7 @@ local getArgumentValues
 local getDirectiveValues
 local hasOwnProperty
 
-type CoercedVariableValues =
-	{ errors: Array<GraphQLError> }
-	| { coerced: { [string]: any }}
+type CoercedVariableValues = { errors: Array<GraphQLError> } | { coerced: { [string]: any } }
 
 --[[*
 --  * Prepares an object map of variableValues of the correct type based on the
@@ -80,18 +75,17 @@ getVariableValues = function(
 		maxErrors = options.maxErrors
 	end
 
-	local ok, coerced = pcall(
-		coerceVariableValues, schema, varDefNodes, inputs, function(error_)
-			if maxErrors ~= nil and #errors >= maxErrors then
-				error(GraphQLError.new("Too many errors processing variables, error limit reached. Execution aborted."))
-			end
-			table.insert(errors, error_)
-		end)
+	local ok, coerced = pcall(coerceVariableValues, schema, varDefNodes, inputs, function(error_)
+		if maxErrors ~= nil and #errors >= maxErrors then
+			error(GraphQLError.new("Too many errors processing variables, error limit reached. Execution aborted."))
+		end
+		table.insert(errors, error_)
+	end)
 
 	if not ok then
 		table.insert(errors, coerced)
 	end
-		-- ROBLOX TODO: pull this logic out of try{} block in upstream
+	-- ROBLOX TODO: pull this logic out of try{} block in upstream
 	if #errors == 0 then
 		return { coerced = coerced }
 	end
@@ -108,10 +102,15 @@ function coerceVariableValues(schema, varDefNodes, inputs, onError)
 			-- Must use input types for variables. This should be caught during
 			-- validation, however is checked again here for safety.
 			local varTypeStr = print_(varDefNode.type)
-			onError(GraphQLError.new(
-				("Variable \"$%s\" expected value of type \"%s\" which cannot be used as an input type."):format(varName, varTypeStr),
-				varDefNode.type
-			))
+			onError(
+				GraphQLError.new(
+					('Variable "$%s" expected value of type "%s" which cannot be used as an input type.'):format(
+						varName,
+						varTypeStr
+					),
+					varDefNode.type
+				)
+			)
 			continue
 		end
 
@@ -120,10 +119,12 @@ function coerceVariableValues(schema, varDefNodes, inputs, onError)
 				coercedValues[varName] = valueFromAST(varDefNode.defaultValue, varType)
 			elseif isNonNullType(varType) then
 				local varTypeStr = inspect(varType)
-				onError(GraphQLError.new(
-					("Variable \"$%s\" of required type \"%s\" was not provided."):format(varName, varTypeStr),
-					varDefNode
-				))
+				onError(
+					GraphQLError.new(
+						('Variable "$%s" of required type "%s" was not provided.'):format(varName, varTypeStr),
+						varDefNode
+					)
+				)
 			end
 			continue
 		end
@@ -131,31 +132,22 @@ function coerceVariableValues(schema, varDefNodes, inputs, onError)
 		local value = inputs[varName]
 		if value == NULL and isNonNullType(varType) then
 			local varTypeStr = inspect(varType)
-			onError(GraphQLError.new(
-				("Variable \"$%s\" of non-null type \"%s\" must not be null."):format(varName, varTypeStr),
-				varDefNode
-			))
+			onError(
+				GraphQLError.new(
+					('Variable "$%s" of non-null type "%s" must not be null.'):format(varName, varTypeStr),
+					varDefNode
+				)
+			)
 			continue
 		end
 
-		coercedValues[varName] = coerceInputValue(
-			value,
-			varType,
-			function(path, invalidValue, error_)
-				local prefix = ("Variable \"$%s\" got invalid value "):format(varName) .. inspect(invalidValue)
-				if #path > 0 then
-					prefix ..= (" at \"%s%s\""):format(varName, printPathArray(path))
-				end
-				onError(GraphQLError.new(
-					prefix .. "; " .. error_.message,
-					varDefNode,
-					nil,
-					nil,
-					nil,
-					error_.originalError
-				))
+		coercedValues[varName] = coerceInputValue(value, varType, function(path, invalidValue, error_)
+			local prefix = ('Variable "$%s" got invalid value '):format(varName) .. inspect(invalidValue)
+			if #path > 0 then
+				prefix ..= (' at "%s%s"'):format(varName, printPathArray(path))
 			end
-		)
+			onError(GraphQLError.new(prefix .. "; " .. error_.message, varDefNode, nil, nil, nil, error_.originalError))
+		end)
 	end
 
 	return coercedValues
@@ -197,10 +189,12 @@ getArgumentValues = function(def, node, variableValues)
 			if argDef.defaultValue ~= nil then
 				coercedValues[name] = argDef.defaultValue
 			elseif isNonNullType(argType) then
-				error(GraphQLError.new(
-					("Argument \"%s\" of required type \"%s\" "):format(name, inspect(argType)) .. "was not provided.",
-					node
-				))
+				error(
+					GraphQLError.new(
+						('Argument "%s" of required type "%s" '):format(name, inspect(argType)) .. "was not provided.",
+						node
+					)
+				)
 			end
 			continue
 		end
@@ -214,10 +208,15 @@ getArgumentValues = function(def, node, variableValues)
 				if argDef.defaultValue ~= nil then
 					coercedValues[name] = argDef.defaultValue
 				elseif isNonNullType(argType) then
-					error(GraphQLError.new(
-						("Argument \"%s\" of required type \"%s\" "):format(name, inspect(argType)) .. ("was provided the variable \"$%s\" which was not provided a runtime value."):format(variableName),
-						valueNode
-					))
+					error(
+						GraphQLError.new(
+							('Argument "%s" of required type "%s" '):format(name, inspect(argType))
+								.. ('was provided the variable "$%s" which was not provided a runtime value.'):format(
+									variableName
+								),
+							valueNode
+						)
+					)
 				end
 				continue
 			end
@@ -225,10 +224,12 @@ getArgumentValues = function(def, node, variableValues)
 		end
 
 		if isNull and isNonNullType(argType) then
-			error(GraphQLError.new(
-				("Argument \"%s\" of non-null type \"%s\" "):format(name, inspect(argType)) .. "must not be null.",
-				valueNode
-			))
+			error(
+				GraphQLError.new(
+					('Argument "%s" of non-null type "%s" '):format(name, inspect(argType)) .. "must not be null.",
+					valueNode
+				)
+			)
 		end
 
 		local coercedValue = valueFromAST(valueNode, argType, variableValues)
@@ -236,10 +237,7 @@ getArgumentValues = function(def, node, variableValues)
 			-- Note: ValuesOfCorrectTypeRule validation should catch this before
 			-- execution. This is a runtime check to ensure execution does not
 			-- continue with an invalid argument value.
-			error(GraphQLError.new(
-				("Argument \"%s\" has invalid value %s."):format(name, print_(valueNode)),
-				valueNode
-			))
+			error(GraphQLError.new(('Argument "%s" has invalid value %s.'):format(name, print_(valueNode)), valueNode))
 		end
 		coercedValues[name] = coercedValue
 	end

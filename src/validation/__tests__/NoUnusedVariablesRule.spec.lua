@@ -2,8 +2,7 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local NoUnusedVariablesRule = require(validationWorkspace.rules.NoUnusedVariablesRule)
-		.NoUnusedVariablesRule
+	local NoUnusedVariablesRule = require(validationWorkspace.rules.NoUnusedVariablesRule).NoUnusedVariablesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -20,15 +19,20 @@ return function()
 
 	describe("Validate: No unused variables", function()
 		it("uses all variables", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query ($a: String, $b: String, $c: String) {
 					field(a: $a, b: $b, c: $c)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("uses all variables deeply", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo($a: String, $b: String, $c: String) {
 					field(a: $a) {
 						field(b: $b) {
@@ -36,11 +40,14 @@ return function()
 						}
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("uses all variables deeply in inline fragments", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo($a: String, $b: String, $c: String) {
 					... on Type {
 						field(a: $a) {
@@ -52,11 +59,14 @@ return function()
 						}
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("uses all variables in fragments", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo($a: String, $b: String, $c: String) {
 					...FragA
 				}
@@ -73,11 +83,14 @@ return function()
 				fragment FragC on Type {
 					field(c: $c)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("variable used by fragment in multiple operations", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo($a: String) {
 					...FragA
 				}
@@ -90,11 +103,14 @@ return function()
 				fragment FragB on Type {
 					field(b: $b)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("variable used by recursive fragment", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo($a: String) {
 					...FragA
 				}
@@ -103,41 +119,50 @@ return function()
 						...FragA
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("variable not used", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query ($a: String, $b: String, $c: String) {
         field(a: $a, b: $b)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$c" is never used.',
-					locations = {{ line = 2, column = 38}},
+					locations = { { line = 2, column = 38 } },
 				},
 			})
 		end)
 
 		it("multiple variables not used", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($a: String, $b: String, $c: String) {
         field(b: $b)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$a" is never used in operation "Foo".',
-					locations = {{ line = 2, column = 17}},
+					locations = { { line = 2, column = 17 } },
 				},
 				{
 					message = 'Variable "$c" is never used in operation "Foo".',
-					locations = {{ line = 2, column = 41}},
+					locations = { { line = 2, column = 41 } },
 				},
 			})
 		end)
 
 		it("variable not used in fragments", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($a: String, $b: String, $c: String) {
         ...FragA
       }
@@ -154,16 +179,19 @@ return function()
       fragment FragC on Type {
         field
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$c" is never used in operation "Foo".',
-					locations = {{ line = 2, column = 41}},
+					locations = { { line = 2, column = 41 } },
 				},
 			})
 		end)
 
 		it("multiple variables not used in fragments", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($a: String, $b: String, $c: String) {
         ...FragA
       }
@@ -180,20 +208,23 @@ return function()
       fragment FragC on Type {
         field
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$a" is never used in operation "Foo".',
-					locations = {{ line = 2, column = 17}},
+					locations = { { line = 2, column = 17 } },
 				},
 				{
 					message = 'Variable "$c" is never used in operation "Foo".',
-					locations = {{ line = 2, column = 41}},
+					locations = { { line = 2, column = 41 } },
 				},
 			})
 		end)
 
 		it("variable not used by unreferenced fragment", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($b: String) {
         ...FragA
       }
@@ -203,16 +234,19 @@ return function()
       fragment FragB on Type {
         field(b: $b)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$b" is never used in operation "Foo".',
-					locations = {{ line = 2, column = 17}},
+					locations = { { line = 2, column = 17 } },
 				},
 			})
 		end)
 
 		it("variable not used by fragment used by other operation", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($b: String) {
         ...FragA
       }
@@ -225,14 +259,15 @@ return function()
       fragment FragB on Type {
         field(b: $b)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$b" is never used in operation "Foo".',
-					locations = {{ line = 2, column = 17}},
+					locations = { { line = 2, column = 17 } },
 				},
 				{
 					message = 'Variable "$a" is never used in operation "Bar".',
-					locations = {{ line = 5, column = 17}},
+					locations = { { line = 5, column = 17 } },
 				},
 			})
 		end)

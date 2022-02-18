@@ -5,8 +5,8 @@ return function()
 	local root = validationWorkspace.Parent
 	local parse = require(root.language.parser).parse
 	local extendSchema = require(root.utilities.extendSchema).extendSchema
-	local UniqueDirectivesPerLocationRule = require(validationWorkspace.rules.UniqueDirectivesPerLocationRule)
-		.UniqueDirectivesPerLocationRule
+	local UniqueDirectivesPerLocationRule =
+		require(validationWorkspace.rules.UniqueDirectivesPerLocationRule).UniqueDirectivesPerLocationRule
 	local harness = require(script.Parent.harness)
 	local testSchema = harness.testSchema
 	local expectValidationErrorsWithSchema = harness.expectValidationErrorsWithSchema
@@ -44,56 +44,76 @@ return function()
 
 	describe("Validate: Directives Are Unique Per Location", function()
 		it("no directives", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment Test on Type {
 					field
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("unique directives in different locations", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment Test on Type @directiveA {
 					field @directiveB
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("unique directives in same locations", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment Test on Type @directiveA @directiveB {
 					field @directiveA @directiveB
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("same directives in different locations", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment Test on Type @directiveA {
 					field @directiveA
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("same directives in similar locations", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment Test on Type {
 					field @directive
 					field @directive
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("repeatable directives in same location", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment Test on Type @repeatable @repeatable {
 					field @repeatable @repeatable
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("unknown directives must be ignored", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				type Test @unknown @unknown {
 					field: String! @unknown @unknown
 				}
@@ -101,15 +121,19 @@ return function()
 				extend type Test @unknown {
 					anotherField: String!
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("duplicate directives in one location", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment Test on Type {
         field @directive @directive
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'The directive "@directive" can only be used once at this location.',
 					locations = {
@@ -121,11 +145,14 @@ return function()
 		end)
 
 		it("many duplicate directives in one location", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment Test on Type {
         field @directive @directive @directive
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'The directive "@directive" can only be used once at this location.',
 					locations = {
@@ -144,11 +171,14 @@ return function()
 		end)
 
 		it("different duplicate directives in one location", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment Test on Type {
         field @directiveA @directiveB @directiveA @directiveB
       }
-		]]).toEqual({
+		]]
+			).toEqual({
 				{
 					message = 'The directive "@directiveA" can only be used once at this location.',
 					locations = {
@@ -167,11 +197,14 @@ return function()
 		end)
 
 		it("duplicate directives in many locations", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment Test on Type @directive @directive {
         field @directive @directive
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'The directive "@directive" can only be used once at this location.',
 					locations = {
@@ -190,7 +223,9 @@ return function()
 		end)
 
 		it("duplicate directives on SDL definitions", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       directive @nonRepeatable on
         SCHEMA | SCALAR | OBJECT | INTERFACE | UNION | INPUT_OBJECT
 
@@ -201,7 +236,8 @@ return function()
       interface TestInterface @nonRepeatable @nonRepeatable
       union TestUnion @nonRepeatable @nonRepeatable
       input TestInput @nonRepeatable @nonRepeatable
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'The directive "@nonRepeatable" can only be used once at this location.',
 					locations = {
@@ -248,7 +284,9 @@ return function()
 		end)
 
 		it("duplicate directives on SDL extensions", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       directive @nonRepeatable on
         SCHEMA | SCALAR | OBJECT | INTERFACE | UNION | INPUT_OBJECT
 
@@ -259,7 +297,8 @@ return function()
       extend interface TestInterface @nonRepeatable @nonRepeatable
       extend union TestUnion @nonRepeatable @nonRepeatable
       extend input TestInput @nonRepeatable @nonRepeatable
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'The directive "@nonRepeatable" can only be used once at this location.',
 					locations = {
@@ -306,12 +345,15 @@ return function()
 		end)
 
 		it("duplicate directives between SDL definitions and extensions", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       directive @nonRepeatable on SCHEMA
 
       schema @nonRepeatable { query: Dummy }
       extend schema @nonRepeatable
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'The directive "@nonRepeatable" can only be used once at this location.',
 					locations = {
@@ -320,13 +362,16 @@ return function()
 					},
 				},
 			})
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       directive @nonRepeatable on SCALAR
 
       scalar TestScalar @nonRepeatable
       extend scalar TestScalar @nonRepeatable
       scalar TestScalar @nonRepeatable
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'The directive "@nonRepeatable" can only be used once at this location.',
 					locations = {
@@ -342,13 +387,16 @@ return function()
 					},
 				},
 			})
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       directive @nonRepeatable on OBJECT
 
       extend type TestObject @nonRepeatable
       type TestObject @nonRepeatable
       extend type TestObject @nonRepeatable
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'The directive "@nonRepeatable" can only be used once at this location.',
 					locations = {

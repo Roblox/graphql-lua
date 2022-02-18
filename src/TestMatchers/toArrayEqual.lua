@@ -10,19 +10,19 @@ local function toArrayEqual(arrA, arrB, looseEquals)
 		}
 	end
 
-    for i = 1, #arrA do
+	for i = 1, #arrA do
 		local success, innerMessage
-        if looseEquals then
+		if looseEquals then
 			success, innerMessage = deepContains(arrA[i], arrB[i])
 			if success then
 				continue
 			end
-        else
+		else
 			success, innerMessage = deepEqual(arrA[i], arrB[i])
 			if success then
 				continue
 			end
-        end
+		end
 
 		local message = innerMessage
 			:gsub("{1}", ("{1}[%s]"):format(tostring(i)))
@@ -30,9 +30,9 @@ local function toArrayEqual(arrA, arrB, looseEquals)
 
 		return {
 			pass = false,
-			message = message
+			message = message,
 		}
-    end
+	end
 
 	return {
 		pass = true,

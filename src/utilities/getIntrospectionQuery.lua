@@ -1,4 +1,6 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/getIntrospectionQuery.js
+--!nonstrict
+-- ROBLOX note: resolving the default generic arg TODOs in here will require improved support for recursive generic types in Luau
 local rootWorkspace = script.Parent.Parent.Parent
 local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
 local Object = LuauPolyfill.Object

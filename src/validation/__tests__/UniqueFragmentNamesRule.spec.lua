@@ -2,8 +2,7 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local UniqueFragmentNamesRule = require(validationWorkspace.rules.UniqueFragmentNamesRule)
-		.UniqueFragmentNamesRule
+	local UniqueFragmentNamesRule = require(validationWorkspace.rules.UniqueFragmentNamesRule).UniqueFragmentNamesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -20,15 +19,20 @@ return function()
 
 	describe("Validate: Unique fragment names", function()
 		it("no fragments", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("one fragment", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					...fragA
 				}
@@ -36,11 +40,14 @@ return function()
 				fragment fragA on Type {
 					field
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("many fragments", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					...fragA
 					...fragB
@@ -55,11 +62,14 @@ return function()
 				fragment fragC on Type {
 					fieldC
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("inline fragments are always unique", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					...on Type {
 						fieldA
@@ -68,22 +78,28 @@ return function()
 						fieldB
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("fragment and operation named the same", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo {
 					...Foo
 				}
 				fragment Foo on Type {
 					field
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("fragments named the same", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         ...fragA
       }
@@ -93,7 +109,8 @@ return function()
       fragment fragA on Type {
         fieldB
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'There can be only one fragment named "fragA".',
 					locations = {
@@ -111,14 +128,17 @@ return function()
 		end)
 
 		it("fragments named the same without being referenced", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment fragA on Type {
         fieldA
       }
       fragment fragA on Type {
         fieldB
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'There can be only one fragment named "fragA".',
 					locations = {

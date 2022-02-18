@@ -2,7 +2,6 @@ local arrayContains = require(script.Parent.Parent.luaUtils.arrayContains)
 local inspect = require(script.Parent.inspect).inspect
 
 local function toArrayContains(tbl, item, looseEquals)
-
 	local success = arrayContains(tbl, item, looseEquals)
 
 	local message = ""

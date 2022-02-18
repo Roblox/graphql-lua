@@ -27,7 +27,7 @@ exports.UniqueArgumentNamesRule = function(context)
 				context:reportError(
 					GraphQLError.new(
 						('There can be only one argument named "%s".'):format(argName),
-						{knownArgNames[argName], node.name}
+						{ knownArgNames[argName], node.name }
 					)
 				)
 			else

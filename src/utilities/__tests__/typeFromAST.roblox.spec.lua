@@ -20,14 +20,11 @@ return function()
 		}
 
 		it("returns the type from a node of kind `NAMED_TYPE`", function()
-			local result = typeFromAST(
-				{
-					getType = function(self)
-						return GraphQLID
-					end,
-				},
-				namedTypeNode
-			)
+			local result = typeFromAST({
+				getType = function(self)
+					return GraphQLID
+				end,
+			}, namedTypeNode)
 
 			expect(result).to.equal(GraphQLID)
 		end)
@@ -66,15 +63,12 @@ return function()
 			}
 
 			expect(function()
-				typeFromAST(
-					{
-						getType = function(self)
-							return GraphQLID
-						end,
-					},
-					unexpectedNode
-				)
-			end).to.throw("Unexpected type node: { kind: \"FOO_BAR\" }")
+				typeFromAST({
+					getType = function(self)
+						return GraphQLID
+					end,
+				}, unexpectedNode)
+			end).to.throw('Unexpected type node: { kind: "FOO_BAR" }')
 
 			expect(function()
 				typeFromAST({
@@ -85,7 +79,7 @@ return function()
 					kind = Kind.LIST_TYPE,
 					type = unexpectedNode,
 				})
-			end).to.throw("Unexpected type node: { kind: \"FOO_BAR\" }")
+			end).to.throw('Unexpected type node: { kind: "FOO_BAR" }')
 
 			expect(function()
 				typeFromAST({
@@ -96,7 +90,7 @@ return function()
 					kind = Kind.NON_NULL_TYPE,
 					type = unexpectedNode,
 				})
-			end).to.throw("Unexpected type node: { kind: \"FOO_BAR\" }")
+			end).to.throw('Unexpected type node: { kind: "FOO_BAR" }')
 		end)
 	end)
 end

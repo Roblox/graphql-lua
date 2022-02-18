@@ -17,6 +17,8 @@ export type SourceLocation = locationModule.SourceLocation
 export type KindEnum = kindsModule.KindEnum
 
 export type TokenKindEnum = tokenKindModule.TokenKindEnum
+local lexerModule = require(script.lexer)
+export type Lexer = lexerModule.Lexer
 
 export type ParseOptions = parserModule.ParseOptions
 
@@ -26,7 +28,6 @@ export type Visitor<KindToNode, Nodes> = visitorModule.Visitor<KindToNode, Nodes
 -- ROBLOX TODO: Luau doesn't current support default type arguments
 export type VisitFn<TAnyNode, TVisitedNode = TAnyNode> = visitorModule.VisitFn<TAnyNode, TVisitedNode>
 export type VisitorKeyMap<KindToNode> = visitorModule.VisitorKeyMap<KindToNode>
-
 
 export type ASTNode = astModule.ASTNode
 export type ASTKindToNode = astModule.ASTKindToNode
@@ -98,7 +99,7 @@ return {
 	printSourceLocation = printLocationModule.printSourceLocation,
 	Kind = kindsModule.Kind,
 	TokenKind = tokenKindModule.TokenKind,
-	Lexer = require(script.lexer).Lexer,
+	Lexer = lexerModule.Lexer,
 	parse = parserModule.parse,
 	parseValue = parserModule.parseValue,
 	parseType = parserModule.parseType,

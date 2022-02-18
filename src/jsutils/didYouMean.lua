@@ -35,7 +35,7 @@ local function didYouMean(firstArg: string, secondArg: Array<string>): string
 	elseif suggestionsLength == 1 then
 		return message .. suggestions[1] .. "?"
 	elseif suggestionsLength == 2 then
-		return message .. suggestions[1] .. " or " .. suggestions[2] .. "?";
+		return message .. suggestions[1] .. " or " .. suggestions[2] .. "?"
 	end
 
 	local selected = {}
@@ -46,5 +46,5 @@ local function didYouMean(firstArg: string, secondArg: Array<string>): string
 end
 
 return {
-	didYouMean = didYouMean
+	didYouMean = didYouMean,
 }

@@ -6,6 +6,8 @@ local Packages = srcWorkspace.Parent
 -- ROBLOX deviation: use jestExpect here so that we get reasonably text diffing on failures
 local JestGlobals = require(Packages.Dev.JestGlobals)
 local jestExpect = JestGlobals.expect
+local astModule = require(languageWorkspace.ast)
+type FieldNode = astModule.FieldNode
 
 return function()
 	local dedent = require(script.Parent.Parent.Parent.__testUtils__.dedent).dedent
@@ -25,7 +27,8 @@ return function()
 		end)
 
 		it("prints minimal ast", function()
-			local ast = { kind = "Field", name = { kind = "Name", value = "foo" } }
+			-- ROBLOX FIXME Luau: shouldn't need this explicit annotation, gets this error: could not be converted into 'ArgumentNode | BooleanValueNode ... | FieldDefinitionNode | FieldNode
+			local ast = { kind = "Field", name = { kind = "Name", value = "foo" } } :: FieldNode
 			jestExpect(print_(ast)).toEqual("foo")
 		end)
 
@@ -36,7 +39,7 @@ return function()
 			-- ROBLOX deviation: strong typing prevents this from analyzing (yay!), so cast away safety
 			jestExpect(function()
 				print_(badAST :: any)
-			end).toThrow("Invalid AST Node: { random: \"Data\" }.")
+			end).toThrow('Invalid AST Node: { random: "Data" }.')
 		end)
 
 		it("correctly prints non-query operations without name", function()
@@ -74,7 +77,9 @@ return function()
 		end)
 
 		it("prints query with variable directives", function()
-			local queryASTWithVariableDirective = parse("query ($foo: TestType = {a: 123} @testDirective(if: true) @test) { id }")
+			local queryASTWithVariableDirective = parse(
+				"query ($foo: TestType = {a: 123} @testDirective(if: true) @test) { id }"
+			)
 			jestExpect(print_(queryASTWithVariableDirective)).toEqual(dedent([[
 				query ($foo: TestType = {a: 123} @testDirective(if: true) @test) {
 				  id
@@ -95,7 +100,11 @@ return function()
 		end)
 
 		it("puts arguments on multiple lines if line is long (> 80 chars)", function()
-			local printed = print_(parse("{trip(wheelchair:false arriveBy:false includePlannedCancellations:true transitDistanceReluctance:2000){dateTime}}"))
+			local printed = print_(
+				parse(
+					"{trip(wheelchair:false arriveBy:false includePlannedCancellations:true transitDistanceReluctance:2000){dateTime}}"
+				)
+			)
 
 			jestExpect(printed).toEqual(dedent([[
 				{

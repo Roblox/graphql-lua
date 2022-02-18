@@ -1,15 +1,17 @@
 -- ROBLOX deviation: no distinction between undefined and null in Lua so we need to go around this with custom NULL like constant
-local NULL = (setmetatable({}, {
-    -- ROBLOX deviation: mimic behavior of Object.preventExtension
-	__newindex = function(self, key, value)
-		local message = ("%q (%s) is not a valid member of %s"):format(tostring(key), typeof(key), "null")
+local NULL = (
+		setmetatable({}, {
+			-- ROBLOX deviation: mimic behavior of Object.preventExtension
+			__newindex = function(self, key, value)
+				local message = ("%q (%s) is not a valid member of %s"):format(tostring(key), typeof(key), "null")
 
-		error(message, 2)
-	end,
-	__metatable = false,
-	__tostring = function()
-		return "null"
-	end,
-}))
+				error(message, 2)
+			end,
+			__metatable = false,
+			__tostring = function()
+				return "null"
+			end,
+		})
+	)
 
 return NULL
