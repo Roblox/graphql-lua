@@ -7,7 +7,8 @@ return function()
 	local buildSchema = buildASTSchema.buildSchema
 	local ProvidedRequiredArgumentsRuleExports = require(validationWorkspace.rules.ProvidedRequiredArgumentsRule)
 	local ProvidedRequiredArgumentsRule = ProvidedRequiredArgumentsRuleExports.ProvidedRequiredArgumentsRule
-	local ProvidedRequiredArgumentsOnDirectivesRule = ProvidedRequiredArgumentsRuleExports.ProvidedRequiredArgumentsOnDirectivesRule
+	local ProvidedRequiredArgumentsOnDirectivesRule =
+		ProvidedRequiredArgumentsRuleExports.ProvidedRequiredArgumentsOnDirectivesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 	local expectSDLValidationErrors = harness.expectSDLValidationErrors
@@ -27,12 +28,7 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectSDLValidationErrors(
-			expect_,
-			schema,
-			ProvidedRequiredArgumentsOnDirectivesRule,
-			"\n" .. sdlStr
-		)
+		return expectSDLValidationErrors(expect_, schema, ProvidedRequiredArgumentsOnDirectivesRule, "\n" .. sdlStr)
 	end
 
 	local function expectValidSDL(expect_, sdlStr: string)
@@ -41,173 +37,218 @@ return function()
 
 	describe("Validate: Provided required arguments", function()
 		it("ignores unknown arguments", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					dog {
 						isHouseTrained(unknownArgument: true)
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		describe("Valid non-nullable value", function()
 			it("Arg on optional arg", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						dog {
 							isHouseTrained(atOtherHomes: true)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("No Arg on optional arg", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						dog {
 							isHouseTrained
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("No arg on non-null field with default", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							nonNullFieldWithDefault
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Multiple args", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleReqs(req1: 1, req2: 2)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Multiple args reverse order", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleReqs(req2: 2, req1: 1)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("No args on multiple optional", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleOpts
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("One arg on multiple optional", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleOpts(opt1: 1)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Second arg on multiple optional", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleOpts(opt2: 1)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Multiple required args on mixedList", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleOptAndReq(req1: 3, req2: 4)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("Multiple required and one optional arg on mixedList", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleOptAndReq(req1: 3, req2: 4, opt1: 5)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("All required and optional args on mixedList", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						complicatedArgs {
 							multipleOptAndReq(req1: 3, req2: 4, opt1: 5, opt2: 6)
 						}
 					}
-				]])
+				]]
+				)
 			end)
 		end)
 
 		describe("Invalid non-nullable value", function()
 			it("Missing one non-nullable argument", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             multipleReqs(req2: 2)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Field "multipleReqs" argument "req1" of type "Int!" is required, but it was not provided.',
-						locations = {{ line = 4, column = 13 }},
+						locations = { { line = 4, column = 13 } },
 					},
 				})
 			end)
 
 			it("Missing multiple non-nullable arguments", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             multipleReqs
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Field "multipleReqs" argument "req1" of type "Int!" is required, but it was not provided.',
-						locations = {{ line = 4, column = 13 }},
+						locations = { { line = 4, column = 13 } },
 					},
 					{
 						message = 'Field "multipleReqs" argument "req2" of type "Int!" is required, but it was not provided.',
-						locations = {{ line = 4, column = 13 }},
+						locations = { { line = 4, column = 13 } },
 					},
 				})
 			end)
 
 			it("Incorrect value and missing argument", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           complicatedArgs {
             multipleReqs(req1: "one")
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Field "multipleReqs" argument "req2" of type "Int!" is required, but it was not provided.',
-						locations = {{ line = 4, column = 13 }},
+						locations = { { line = 4, column = 13 } },
 					},
 				})
 			end)
@@ -215,15 +256,20 @@ return function()
 
 		describe("Directive arguments", function()
 			it("ignores unknown directives", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						dog @unknown
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("with directives of valid types", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						dog @include(if: true) {
 							name
@@ -232,24 +278,28 @@ return function()
 							name
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("with directive with missing types", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           dog @include {
             name @skip
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Directive "@include" argument "if" of type "Boolean!" is required, but it was not provided.',
-						locations = {{ line = 3, column = 15 }},
+						locations = { { line = 3, column = 15 } },
 					},
 					{
 						message = 'Directive "@skip" argument "if" of type "Boolean!" is required, but it was not provided.',
-						locations = {{ line = 4, column = 18 }},
+						locations = { { line = 4, column = 18 } },
 					},
 				})
 			end)
@@ -257,54 +307,66 @@ return function()
 
 		describe("within SDL", function()
 			it("Missing optional args on directive defined inside SDL", function()
-				expectValidSDL(expect, [[
+				expectValidSDL(
+					expect,
+					[[
 					type Query {
 						foo: String @test
 					}
 
 					directive @test(arg1: String, arg2: String! = "") on FIELD_DEFINITION
-				]])
+				]]
+				)
 			end)
 
 			it("Missing arg on directive defined inside SDL", function()
-				expectSDLErrors(expect, [[
+				expectSDLErrors(
+					expect,
+					[[
         type Query {
           foo: String @test
         }
 
         directive @test(arg: String!) on FIELD_DEFINITION
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Directive "@test" argument "arg" of type "String!" is required, but it was not provided.',
-						locations = {{ line = 3, column = 23 }},
+						locations = { { line = 3, column = 23 } },
 					},
 				})
 			end)
 
 			it("Missing arg on standard directive", function()
-				expectSDLErrors(expect, [[
+				expectSDLErrors(
+					expect,
+					[[
         type Query {
           foo: String @include
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Directive "@include" argument "if" of type "Boolean!" is required, but it was not provided.',
-						locations = {{ line = 3, column = 23 }},
+						locations = { { line = 3, column = 23 } },
 					},
 				})
 			end)
 
 			it("Missing arg on overridden standard directive", function()
-				expectSDLErrors(expect, [[
+				expectSDLErrors(
+					expect,
+					[[
         type Query {
           foo: String @deprecated
         }
         directive @deprecated(reason: String!) on FIELD
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 
 						message = 'Directive "@deprecated" argument "reason" of type "String!" is required, but it was not provided.',
-						locations = {{ line = 3, column = 23 }},
+						locations = { { line = 3, column = 23 } },
 					},
 				})
 			end)
@@ -316,15 +378,19 @@ return function()
 					}
 				]])
 
-				expectSDLErrors(expect, [[
+				expectSDLErrors(
+					expect,
+					[[
           directive @test(arg: String!) on OBJECT
 
           extend type Query  @test
-				]], schema).toEqual({
+				]],
+					schema
+				).toEqual({
 					{
 
 						message = 'Directive "@test" argument "arg" of type "String!" is required, but it was not provided.',
-						locations = {{ line = 4, column = 30 }},
+						locations = { { line = 4, column = 30 } },
 					},
 				})
 			end)
@@ -338,13 +404,17 @@ return function()
 					}
 				]])
 
-				expectSDLErrors(expect, [[
+				expectSDLErrors(
+					expect,
+					[[
           extend type Query @test
-				]], schema).toEqual({
+				]],
+					schema
+				).toEqual({
 					{
 
 						message = 'Directive "@test" argument "arg" of type "String!" is required, but it was not provided.',
-						locations = {{ line = 2, column = 29 }},
+						locations = { { line = 2, column = 29 } },
 					},
 				})
 			end)

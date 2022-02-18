@@ -1,5 +1,4 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/type/validate.js
--- ROBLOX deviation: selene suppression
 --# selene: allow(if_same_then_else)
 local srcWorkspace = script.Parent.Parent
 local root = srcWorkspace.Parent
@@ -35,6 +34,8 @@ local assertSchema = schemaModule.assertSchema
 type GraphQLSchema = schemaModule.GraphQLSchema
 
 local definitionModule = require(script.Parent.definition)
+type GraphQLArgument = definitionModule.GraphQLArgument
+type GraphQLInputField = definitionModule.GraphQLInputField
 type GraphQLObjectType = definitionModule.GraphQLObjectType
 type GraphQLInterfaceType = definitionModule.GraphQLInterfaceType
 type GraphQLUnionType = definitionModule.GraphQLUnionType
@@ -57,7 +58,8 @@ local isOutputType = definitionModule.isOutputType
 local isRequiredArgument = definitionModule.isRequiredArgument
 local isRequiredInputField = definitionModule.isRequiredInputField
 
-local SchemaValidationContext, validateRootTypes, validateDirectives, getOperationTypeNode, getAllSubNodes, getAllNodes, getAllImplementsInterfaceNodes, getDeprecatedDirectiveNode, getUnionMemberTypeNodes, validateEnumValues, validateName, validateFields, validateTypeImplementsAncestors, validateTypes, validateTypeImplementsInterface, validateInterfaces
+local SchemaValidationContext
+local validateRootTypes, validateDirectives, getOperationTypeNode, getAllSubNodes, getAllNodes, getAllImplementsInterfaceNodes, getDeprecatedDirectiveNode, getUnionMemberTypeNodes, validateEnumValues, validateName, validateFields, validateTypeImplementsAncestors, validateTypes, validateTypeImplementsInterface, validateInterfaces
 --[[*
  * Implements the "Type Validation" sub-sections of the specification's
  * "Type System" section.
@@ -65,7 +67,7 @@ local SchemaValidationContext, validateRootTypes, validateDirectives, getOperati
  * Validation runs synchronously, returning an array of encountered errors, or
  * an empty array if no errors were encountered and the Schema is valid.
  ]]
-local validateSchema = function(schema: GraphQLSchema): Array<GraphQLError>?
+local validateSchema = function(schema: GraphQLSchema): Array<GraphQLError>
 	-- First check to ensure the provided value is in fact a GraphQLSchema.
 	assertSchema(schema)
 
@@ -114,9 +116,10 @@ type SchemaValidationContext = {
 	reportError: (SchemaValidationContext, string, Array<ASTNode?> | ASTNode?) -> (),
 	addError: (SchemaValidationContext, GraphQLError) -> (),
 	getErrors: (SchemaValidationContext) -> Array<GraphQLError>,
+	new: (schema: GraphQLSchema) -> SchemaValidationContext,
 }
-SchemaValidationContext = {}
-SchemaValidationContext.__index = SchemaValidationContext
+SchemaValidationContext = {} :: any;
+(SchemaValidationContext :: any).__index = SchemaValidationContext
 
 function SchemaValidationContext.new(schema: GraphQLSchema): SchemaValidationContext
 	local self = setmetatable({}, SchemaValidationContext)
@@ -124,18 +127,16 @@ function SchemaValidationContext.new(schema: GraphQLSchema): SchemaValidationCon
 	self._errors = {}
 	self.schema = schema
 
-	return self
+	return (self :: any) :: SchemaValidationContext
 end
 
 function SchemaValidationContext:reportError(message: string, nodes: Array<ASTNode?> | ASTNode?): ()
-	local _nodes
-	if Array.isArray(nodes) then
-		_nodes = Array.filter(nodes, Boolean.toJSBoolean)
-	else
-		_nodes = nodes
-	end
+	local _nodes = if Array.isArray(nodes)
+		then Array.filter(nodes :: Array<ASTNode?>, Boolean.toJSBoolean)
+		else nodes :: ASTNode?
 
-	self:addError(GraphQLError.new(message, _nodes))
+	-- ROBLOX FIXME Luau: workaround for bug: None of the union options are compatible. For example: Type 'Array<(ArgumentNode | BooleanValueNode | DirectiveDefinitionNode
+	self:addError(GraphQLError.new(message, _nodes :: any))
 end
 
 function SchemaValidationContext:addError(error_: GraphQLError): ()
@@ -153,57 +154,42 @@ function validateRootTypes(context: SchemaValidationContext): ()
 	if not isNotNillish(queryType) then
 		context:reportError("Query root type must be provided.", schema.astNode)
 	elseif not isObjectType(queryType) then
+		-- ROBLOX TODO Luau: need null coalescing to do `getOperationTypeNode(schema, 'query') ?? queryType.astNode`
+		local ref = getOperationTypeNode(schema, "query")
 		context:reportError(
 			("Query root type must be Object type, it cannot be %s."):format(inspect(queryType)),
-			(function()
-				local _ref = getOperationTypeNode(schema, "query")
-
-				if _ref == nil then
-					_ref = queryType.astNode
-				end
-
-				return _ref
-			end)()
+			if ref then ref else (queryType :: any).astNode
 		)
 	end
 
 	local mutationType = schema:getMutationType()
 
 	if isNotNillish(mutationType) and not isObjectType(mutationType) then
+		-- ROBLOX TODO Luau: need null coalescing to do `getOperationTypeNode(schema, 'query') ?? queryType.astNode`
+		local ref = getOperationTypeNode(schema, "mutation")
 		context:reportError(
 			"Mutation root type must be Object type if provided, it cannot be " .. ("%s."):format(inspect(mutationType)),
-			(function()
-				local _ref = getOperationTypeNode(schema, "mutation")
-
-				if _ref == nil then
-					_ref = mutationType.astNode
-				end
-
-				return _ref
-			end)()
+			-- ROBLOX FIXME Luau: Value of type 'GraphQLObjectType?' could be nil
+			if ref then ref else (mutationType :: any).astNode
 		)
 	end
 
 	local subscriptionType = schema:getSubscriptionType()
 
 	if isNotNillish(subscriptionType) and not isObjectType(subscriptionType) then
+		-- ROBLOX TODO Luau: need null coalescing to do `getOperationTypeNode(schema, 'query') ?? queryType.astNode`
+		local ref = getOperationTypeNode(schema, "subscription")
 		context:reportError(
 			"Subscription root type must be Object type if provided, it cannot be "
 				.. ("%s."):format(inspect(subscriptionType)),
-			(function()
-				local _ref = getOperationTypeNode(schema, "subscription")
-
-				if _ref == nil then
-					_ref = subscriptionType.astNode
-				end
-
-				return _ref
-			end)()
+			-- ROBLOX FIXME Luau: Value of type 'GraphQLObjectType?' could be nil
+			if ref then ref else (subscriptionType :: any).astNode
 		)
 	end
 end
-function getOperationTypeNode(schema: SchemaValidationContext, operation: OperationTypeNode): ASTNode?
-	local operationNodes = getAllSubNodes(schema, function(node)
+function getOperationTypeNode(schema: GraphQLSchema, operation: OperationTypeNode): ASTNode?
+	-- ROBLOX FIXME Luau: this feels like a huge bug: Value of type '{| operationTypes: (Array<{| operation: any, type: (ArgumentNode | BooleanValueNode... <TRUNCATED>' could be nil
+	local operationNodes = getAllSubNodes(schema, function(node: any)
 		return node.operationTypes
 	end)
 
@@ -222,12 +208,7 @@ function validateDirectives(context: SchemaValidationContext): ()
 		if not isDirective(directive) then
 			context:reportError(
 				("Expected directive but got: %s."):format(inspect(directive)),
-				(function()
-					if directive ~= nil then
-						return directive.astNode
-					end
-					return
-				end)()
+				if directive then directive.astNode else nil
 			)
 			continue
 		end
@@ -255,23 +236,15 @@ function validateDirectives(context: SchemaValidationContext): ()
 					("Required argument @%s(%s:) cannot be deprecated."):format(directive.name, arg.name),
 					{
 						getDeprecatedDirectiveNode(arg.astNode),
-						(function()
-							-- istanbul ignore next (TODO need to write coverage tests)
-							if arg.astNode ~= nil then
-								return arg.astNode.type
-							end
-							return
-						end)(),
+						-- ROBLOX FIXME Luau: bizarre messages: Value of type 'InputValueDefinitionNode?' could be nil
+						if arg.astNode ~= nil then (arg :: any).astNode.type else nil,
 					}
 				)
 			end
 		end
 	end
 end
-function validateName(
-	context: SchemaValidationContext,
-	node -- ROBLOX TODO: support this type { +name: string, +astNode: ?ASTNode, ... }
-): ()
+function validateName(context: SchemaValidationContext, node: { name: string, astNode: ASTNode? }): ()
 	-- Ensure names are valid, however introspection types opt out.
 	-- ROBLOX deviation: Lua doesn't allow indexing (name) into a function
 	local nodeName
@@ -311,29 +284,31 @@ function validateTypes(context: SchemaValidationContext): ()
 			validateName(context, type_)
 		end
 
+		-- ROBLOX TODO START: Luau: hard casts here due to missing %checks feature
 		if isObjectType(type_) then
 			-- Ensure fields are valid
-			validateFields(context, type_)
+			validateFields(context, type_ :: GraphQLObjectType)
 			-- Ensure objects implement the interfaces they claim to.
-			validateInterfaces(context, type_)
+			validateInterfaces(context, type_ :: GraphQLObjectType)
 		elseif isInterfaceType(type_) then
 			-- Ensure fields are valid.
-			validateFields(context, type_)
+			validateFields(context, type_ :: GraphQLInterfaceType)
 			-- Ensure interfaces implement the interfaces they claim to.
-			validateInterfaces(context, type_)
+			validateInterfaces(context, type_ :: GraphQLInterfaceType)
 		elseif isUnionType(type_) then
 			-- Ensure Unions include valid member types.
-			validateUnionMembers(context, type_)
+			validateUnionMembers(context, type_ :: GraphQLUnionType)
 		elseif isEnumType(type_) then
 			-- Ensure Enums have valid values.
-			validateEnumValues(context, type_)
+			validateEnumValues(context, type_ :: GraphQLEnumType)
 		elseif isInputObjectType(type_) then
 			-- Ensure Input Object fields are valid.
-			validateInputFields(context, type_)
+			validateInputFields(context, type_ :: GraphQLInputObjectType)
 
 			-- Ensure Input Objects do not contain non-nullable circular references
-			validateInputObjectCircularRefs(type_)
+			validateInputObjectCircularRefs(type_ :: GraphQLInputObjectType)
 		end
+		-- ROBLOX TODO END
 	end
 end
 
@@ -360,7 +335,7 @@ function validateFields(context: SchemaValidationContext, type_: GraphQLObjectTy
 						-- istanbul ignore next (TODO need to write coverage tests)
 						return field.astNode.type
 					end
-					return
+					return nil
 				end)()
 			)
 		end
@@ -382,7 +357,7 @@ function validateFields(context: SchemaValidationContext, type_: GraphQLObjectTy
 							-- istanbul ignore next (TODO need to write coverage tests)
 							return arg.astNode.type
 						end
-						return
+						return nil
 					end)()
 				)
 			end
@@ -396,7 +371,7 @@ function validateFields(context: SchemaValidationContext, type_: GraphQLObjectTy
 								-- istanbul ignore next (TODO need to write coverage tests)
 								return arg.astNode.type
 							end
-							return
+							return nil
 						end)(),
 					}
 				)
@@ -484,20 +459,8 @@ function validateTypeImplementsInterface(
 					.. ("%s but %s.%s "):format(inspect(ifaceField.type), type_.name, fieldName)
 					.. ("is type %s."):format(inspect(typeField.type)),
 				{
-					(function()
-						if ifaceField.astNode ~= nil then
-							-- istanbul ignore next (TODO need to write coverage tests)
-							return ifaceField.astNode.type
-						end
-						return
-					end)(),
-					(function()
-						if typeField.astNode ~= nil then
-							-- istanbul ignore next (TODO need to write coverage tests)
-							return typeField.astNode.type
-						end
-						return
-					end)(),
+					if ifaceField.astNode ~= nil then ifaceField.astNode.type else nil,
+					if typeField.astNode ~= nil then typeField.astNode.type else nil,
 				}
 			)
 		end
@@ -537,20 +500,11 @@ function validateTypeImplementsInterface(
 						.. ("%s.%s(%s:) is type "):format(type_.name, fieldName, argName)
 						.. ("%s."):format(inspect(typeArg.type)),
 					{
-						(function()
-							if ifaceArg.astNode ~= nil then
-								-- istanbul ignore next (TODO need to write coverage tests)
-								return ifaceArg.astNode.type
-							end
-							return
-						end)(),
-						(function()
-							if typeArg.astNode ~= nil then
-								-- istanbul ignore next (TODO need to write coverage tests)
-								return typeArg.astNode.type
-							end
-							return
-						end)(),
+						if ifaceArg.astNode ~= nil then ifaceArg.astNode.type else nil,
+						if typeArg.astNode ~= nil
+							-- ROBLOX TODO Luau: I had a typo here that Luau didn't say anything about: typeArg.astNode.Type
+							then typeArg.astNode.type
+							else nil,
 					}
 				)
 			end
@@ -696,25 +650,17 @@ function validateInputFields(context: SchemaValidationContext, inputObj: GraphQL
 			context:reportError(
 				("The type of %s.%s must be Input Type "):format(inputObj.name, field.name)
 					.. ("but got: %s."):format(inspect(field.type)),
-				(function()
-					if field.astNode ~= nil then
-						-- istanbul ignore next (TODO need to write coverage tests)
-						return field.astNode.type
-					end
-					return
-				end)()
+				if field.astNode ~= nil then field.astNode.type else nil
 			)
 		end
 		if isRequiredInputField(field) and isNotNillish(field.deprecationReason) then
 			context:reportError(("Required input field %s.%s cannot be deprecated."):format(inputObj.name, field.name), {
-				getDeprecatedDirectiveNode(field.astNode),
-				(function()
-					if field.astNode ~= nil then
-						-- istanbul ignore next (TODO need to write coverage tests)
-						return field.astNode.type
-					end
-					return
-				end)(),
+				getDeprecatedDirectiveNode((field :: GraphQLInputField).astNode),
+				if field.astNode ~= nil
+					-- ROBLOX FIXME START: Luau: work around TypeError: Value of type 'InputValueDefinitionNode?' could be nil
+					then (field :: any).astNode.type
+					-- ROBLOX FIXME END
+					else nil,
 			})
 		end
 	end
@@ -796,61 +742,27 @@ type SDLDefinedObject<T, K> = {
 	extensionASTNodes: Array<K>?,
 }
 
--- ROBLOX TODO: revisit these types:
+-- ROBLOX TODO Luau: needs constraints
 -- function getAllNodes<T: ASTNode, K: ASTNode>(
--- 	object: SDLDefinedObject<T, K>,
---   ): $ReadOnlyArray<T | K> {
-function getAllNodes(object: SDLDefinedObject<ASTNode, ASTNode>): Array<ASTNode | ASTNode>
+function getAllNodes<T, K>(object: SDLDefinedObject<T, K>): Array<T | K>
 	local astNode, extensionASTNodes = object.astNode, object.extensionASTNodes
 
-	return (function()
-		if astNode then
-			return (function()
-				if extensionASTNodes then
-					return Array.concat({ astNode }, extensionASTNodes)
-				end
-
-				return { astNode }
-			end)()
-		end
-
-		return (function()
-			local _ref = extensionASTNodes
-
-			if _ref == nil then
-				_ref = {}
-			end
-
-			return _ref
-		end)()
-	end)()
+	return if astNode
+		then if extensionASTNodes then Array.concat({ astNode }, extensionASTNodes) else { astNode }
+		else if extensionASTNodes then extensionASTNodes else {}
 end
 
--- ROBLOX TODO: revisit these generic function declarations
+-- ROBLOX TODO Luau: needs constraints
 -- function getAllSubNodes<T: ASTNode, K: ASTNode, L: ASTNode>(
--- 	object: SDLDefinedObject<T, K>,
--- 	getter: (T | K) => ?(L | $ReadOnlyArray<L>),
---   ): $ReadOnlyArray<L> {
-function getAllSubNodes(
-	object: SDLDefinedObject<ASTNode, ASTNode>,
-	getter: (ASTNode | ASTNode) -> (ASTNode? | Array<ASTNode>?)
-): Array<any>
+function getAllSubNodes<T, K, L>(object: SDLDefinedObject<T, K>, getter: (T | K) -> (L | Array<L>)?): Array<L>
 	local subNodes = {}
 
-	for _, node in ipairs(getAllNodes(object)) do
+	-- ROBLOX FIXME Luau: this hard cast shouldn't be necessary, it duplicates the explicit return annotation
+	for _, node in ipairs(getAllNodes(object) :: Array<K | T>) do
 		-- istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
-		subNodes = Array.concat(
-			subNodes,
-			(function()
-				local _ref = getter(node)
-
-				if _ref == nil then
-					_ref = {}
-				end
-
-				return _ref
-			end)()
-		)
+		-- ROBLOX TODO Luau: needs null coalescing or similar to do `getter(node) ?? {}`
+		local ref = getter(node)
+		subNodes = Array.concat(subNodes, if ref then ref else {})
 	end
 
 	return subNodes
@@ -861,8 +773,9 @@ function getAllImplementsInterfaceNodes(
 	iface: GraphQLInterfaceType
 ): Array<NamedTypeNode>
 	return Array.filter(
-		getAllSubNodes(type_, function(typeNode)
-			return typeNode.interfaces
+		-- ROBLOX FIXME Luau: TypeError: Value of type '{| interfaces: (Array<NamedTypeNode> | NamedTypeNode)? |}?' could be nil
+		getAllSubNodes(type_, function(typeNode: any)
+			return typeNode.interfaces :: Array<NamedTypeNode> | NamedTypeNode
 		end),
 		function(ifaceNode)
 			return ifaceNode.name.value == iface.name
@@ -872,8 +785,9 @@ end
 
 function getUnionMemberTypeNodes(union: GraphQLUnionType, typeName: string): Array<NamedTypeNode>
 	return Array.filter(
-		getAllSubNodes(union, function(unionNode)
-			return unionNode.types
+		-- ROBLOX FIXME Luau: TypeError: Value of type '{| interfaces: (Array<NamedTypeNode> | NamedTypeNode)? |}?' could be nil
+		getAllSubNodes(union, function(unionNode: any)
+			return unionNode.types :: Array<NamedTypeNode> | NamedTypeNode
 		end),
 		function(typeNode)
 			return typeNode.name.value == typeName
@@ -881,7 +795,7 @@ function getUnionMemberTypeNodes(union: GraphQLUnionType, typeName: string): Arr
 	)
 end
 
-function getDeprecatedDirectiveNode(definitionNode): DirectiveNode?
+function getDeprecatedDirectiveNode(definitionNode: { directives: Array<DirectiveNode>? }?): DirectiveNode?
 	if definitionNode ~= nil and definitionNode.directives ~= nil then
 		-- istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
 		return Array.find(definitionNode.directives, function(node)

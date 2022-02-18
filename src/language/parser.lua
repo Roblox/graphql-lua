@@ -1,27 +1,67 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/parser.js
-local rootWorkspace = script.Parent.Parent.Parent
+--!strict
+local language = script.Parent
+local srcWorkspace = language.Parent
+local rootWorkspace = srcWorkspace.Parent
 local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
 type Array<T> = LuauPolyfill.Array<T>
 type void = nil
 
-local language = script.Parent
+local errorImport = require(srcWorkspace.error)
+type GraphQLError = errorImport.GraphQLError
+
+local TokenKindModule = require(language.tokenKind)
+type TokenKindEnum = TokenKindModule.TokenKindEnum
 
 local AstModule = require(language.ast)
 local Location = AstModule.Location
 type DocumentNode = AstModule.DocumentNode
+type NonNullTypeNode = AstModule.NonNullTypeNode
+type NameNode = AstModule.NameNode
+type ListTypeNode = AstModule.ListTypeNode
 type DefinitionNode = AstModule.DefinitionNode
+type OperationDefinitionNode = AstModule.OperationDefinitionNode
+type OperationTypeNode = AstModule.OperationTypeNode
+type VariableDefinitionNode = AstModule.VariableDefinitionNode
+type VariableNode = AstModule.VariableNode
+type SelectionSetNode = AstModule.SelectionSetNode
+type SelectionNode = AstModule.SelectionNode
+type FieldNode = AstModule.FieldNode
+type ArgumentNode = AstModule.ArgumentNode
+type ValueNode = AstModule.ValueNode
+type StringValueNode = AstModule.StringValueNode
+type ListValueNode = AstModule.ListValueNode
+type ObjectValueNode = AstModule.ObjectValueNode
+type ObjectFieldNode = AstModule.ObjectFieldNode
+type DirectiveNode = AstModule.DirectiveNode
+type TypeNode = AstModule.TypeNode
+type NamedTypeNode = AstModule.NamedTypeNode
+type TypeSystemDefinitionNode = AstModule.TypeSystemDefinitionNode
+type SchemaDefinitionNode = AstModule.SchemaDefinitionNode
+type OperationTypeDefinitionNode = AstModule.OperationTypeDefinitionNode
+type ScalarTypeDefinitionNode = AstModule.ScalarTypeDefinitionNode
+type ObjectTypeDefinitionNode = AstModule.ObjectTypeDefinitionNode
+type FieldDefinitionNode = AstModule.FieldDefinitionNode
+type InputValueDefinitionNode = AstModule.InputValueDefinitionNode
+type InterfaceTypeDefinitionNode = AstModule.InterfaceTypeDefinitionNode
+type UnionTypeDefinitionNode = AstModule.UnionTypeDefinitionNode
+type EnumTypeDefinitionNode = AstModule.EnumTypeDefinitionNode
+type EnumValueDefinitionNode = AstModule.EnumValueDefinitionNode
+type InputObjectTypeDefinitionNode = AstModule.InputObjectTypeDefinitionNode
+type TypeSystemExtensionNode = AstModule.TypeSystemExtensionNode
+type SchemaExtensionNode = AstModule.SchemaExtensionNode
+type ScalarTypeExtensionNode = AstModule.ScalarTypeExtensionNode
+type ObjectTypeExtensionNode = AstModule.ObjectTypeDefinitionNode
+type InterfaceTypeExtensionNode = AstModule.InterfaceTypeDefinitionNode
+type UnionTypeExtensionNode = AstModule.UnionTypeExtensionNode
+type EnumTypeExtensionNode = AstModule.EnumTypeExtensionNode
+type InputObjectTypeExtensionNode = AstModule.InputObjectTypeExtensionNode
+type DirectiveDefinitionNode = AstModule.DirectiveDefinitionNode
 type FragmentDefinitionNode = AstModule.FragmentDefinitionNode
 type FragmentSpreadNode = AstModule.FragmentSpreadNode
 type InlineFragmentNode = AstModule.InlineFragmentNode
 type Location = AstModule.Location
-type ListValueNode = AstModule.ListValueNode
-type NameNode = AstModule.NameNode
-type ObjectFieldNode = AstModule.ObjectFieldNode
-type ObjectValueNode = AstModule.ObjectValueNode
-type StringValueNode = AstModule.StringValueNode
-type ValueNode = AstModule.ValueNode
 type Token = AstModule.Token
-type TypeNode = AstModule.TypeNode
 
 local sourceModule = require(language.source)
 local Source = sourceModule.Source
@@ -29,11 +69,10 @@ type Source = sourceModule.Source
 
 local lexer = require(language.lexer)
 local Lexer = lexer.Lexer
+type Lexer = lexer.Lexer
 local isPunctuatorTokenKind = lexer.isPunctuatorTokenKind
 
-local TokenKindModule = require(language.tokenKind)
 local TokenKind = TokenKindModule.TokenKind
-type TokenKindEnum = TokenKindModule.TokenKindEnum
 local DirectiveLocation = require(language.directiveLocation).DirectiveLocation
 local Kind = require(language.kinds).Kind
 
@@ -72,6 +111,80 @@ export type ParseOptions = {
 -- deviation: pre-declare functions
 local getTokenDesc
 local getTokenKindDesc
+
+type Parser = {
+	_options: ParseOptions?,
+	_lexer: Lexer,
+
+	parseName: (self: Parser) -> NameNode,
+	parseDocument: (self: Parser) -> DocumentNode,
+	parseDefinition: (self: Parser) -> DefinitionNode,
+	parseOperationDefinition: (self: Parser) -> OperationDefinitionNode,
+	parseOperationType: (self: Parser) -> OperationTypeNode,
+	parseVariableDefinitions: (self: Parser) -> Array<VariableDefinitionNode>,
+	parseVariableDefinition: (self: Parser) -> VariableDefinitionNode,
+	parseVariable: (self: Parser) -> VariableNode,
+	parseSelectionSet: (self: Parser) -> SelectionSetNode,
+	parseSelection: (self: Parser) -> SelectionNode,
+	parseField: (self: Parser) -> FieldNode,
+	parseArguments: (self: Parser, isConst: boolean) -> Array<ArgumentNode>,
+	parseArgument: (self: Parser) -> ArgumentNode,
+	parseConstArgument: (self: Parser) -> ArgumentNode,
+	parseFragment: (self: Parser) -> FragmentSpreadNode | InlineFragmentNode,
+	parseFragmentDefinition: (self: Parser) -> FragmentDefinitionNode,
+	parseFragmentName: (self: Parser) -> NameNode,
+	parseValueLiteral: (self: Parser, isConst: boolean) -> ValueNode,
+	parseStringLiteral: (self: Parser) -> StringValueNode,
+	parseList: (self: Parser, isConst: boolean) -> ListValueNode,
+	parseObject: (self: Parser, isConst: boolean) -> ObjectValueNode,
+	parseObjectField: (self: Parser, isConst: boolean) -> ObjectFieldNode,
+	parseDirectives: (self: Parser, isConst: boolean) -> Array<DirectiveNode>,
+	parseDirective: (self: Parser, isConst: boolean) -> DirectiveNode,
+	parseTypeReference: (self: Parser) -> TypeNode,
+	parseNamedType: (self: Parser) -> NamedTypeNode,
+	parseTypeSystemDefinition: (self: Parser) -> TypeSystemDefinitionNode,
+	peekDescription: (self: Parser) -> boolean,
+	parseDescription: (self: Parser) -> void | StringValueNode,
+	parseSchemaDefinition: (self: Parser) -> SchemaDefinitionNode,
+	parseOperationTypeDefinition: (self: Parser) -> OperationTypeDefinitionNode,
+	parseScalarTypeDefinition: (self: Parser) -> ScalarTypeDefinitionNode,
+	parseObjectTypeDefinition: (self: Parser) -> ObjectTypeDefinitionNode,
+	parseImplementsInterfaces: (self: Parser) -> Array<NamedTypeNode>,
+	parseFieldsDefinition: (self: Parser) -> Array<FieldDefinitionNode>,
+	parseFieldDefinition: (self: Parser) -> FieldDefinitionNode,
+	parseArgumentDefs: (self: Parser) -> Array<InputValueDefinitionNode>,
+	parseInputValueDef: (self: Parser) -> InputValueDefinitionNode,
+	parseInterfaceTypeDefinition: (self: Parser) -> InterfaceTypeDefinitionNode,
+	parseUnionTypeDefinition: (self: Parser) -> UnionTypeDefinitionNode,
+	parseUnionMemberTypes: (self: Parser) -> Array<NamedTypeNode>,
+	parseEnumTypeDefinition: (self: Parser) -> EnumTypeDefinitionNode,
+	parseEnumValuesDefinition: (self: Parser) -> Array<EnumValueDefinitionNode>,
+	parseEnumValueDefinition: (self: Parser) -> EnumValueDefinitionNode,
+	parseInputObjectTypeDefinition: (self: Parser) -> InputObjectTypeDefinitionNode,
+	parseInputFieldsDefinition: (self: Parser) -> Array<InputValueDefinitionNode>,
+	parseTypeSystemExtension: (self: Parser) -> TypeSystemExtensionNode,
+	parseSchemaExtension: (self: Parser) -> SchemaExtensionNode,
+	parseScalarTypeExtension: (self: Parser) -> ScalarTypeExtensionNode,
+	parseObjectTypeExtension: (self: Parser) -> ObjectTypeExtensionNode,
+	parseInterfaceTypeExtension: (self: Parser) -> InterfaceTypeExtensionNode,
+	parseUnionTypeExtension: (self: Parser) -> UnionTypeExtensionNode,
+	parseEnumTypeExtension: (self: Parser) -> EnumTypeExtensionNode,
+	parseInputObjectTypeExtension: (self: Parser) -> InputObjectTypeExtensionNode,
+	parseDirectiveDefinition: (self: Parser) -> DirectiveDefinitionNode,
+	parseDirectiveLocations: (self: Parser) -> Array<NameNode>,
+	parseDirectiveLocation: (self: Parser) -> NameNode,
+	loc: (self: Parser, startToken: Token) -> Location | void,
+	peek: (self: Parser, kind: TokenKindEnum) -> boolean,
+	expectToken: (self: Parser, kind: TokenKindEnum) -> Token,
+	expectOptionalToken: (self: Parser, kind: TokenKindEnum) -> Token?,
+	expectKeyword: (self: Parser, value: string) -> (),
+	expectOptionalKeyword: (self: Parser, value: string) -> boolean,
+	unexpected: (self: Parser, atToken: Token?) -> GraphQLError,
+	any: <T>(openKind: TokenKindEnum, parseFn: () -> T, closeKind: TokenKindEnum) -> Array<T>,
+	optionalMany: <T>(openKind: TokenKindEnum, parseFn: () -> T, closeKind: TokenKindEnum) -> Array<T>,
+	many: <T>(openKind: TokenKindEnum, parseFn: () -> T, closeKind: TokenKindEnum) -> Array<T>,
+	delimitedMany: <T>(self: Parser, delimiterKind: TokenKindEnum, parseFn: () -> T) -> Array<T>,
+}
 
 local Parser = {}
 Parser.__index = Parser
@@ -121,7 +234,7 @@ local function parseType(source: string | Source, options: ParseOptions?): TypeN
 	return type_
 end
 
-function Parser.new(source: string | Source, options: ParseOptions?)
+function Parser.new(source: string | Source, options: ParseOptions?): Parser
 	local sourceObj
 	if typeof(source) == "string" then
 		sourceObj = Source.new(source)
@@ -133,7 +246,7 @@ function Parser.new(source: string | Source, options: ParseOptions?)
 	self._lexer = Lexer.new(sourceObj)
 	self._options = options
 
-	return setmetatable(self, Parser)
+	return (setmetatable(self, Parser) :: any) :: Parser
 end
 
 --[[*
@@ -172,7 +285,9 @@ end
 --  *   - OperationDefinition
 --  *   - FragmentDefinition
 --  *]]
-function Parser:parseDefinition(): DefinitionNode
+
+-- ROBLOX FIXME Luau: this is a workaround for CLI-50709, remove the workaround once that PR is merged and deployed
+function Parser.parseDefinition(self: Parser): DefinitionNode
 	if self:peek(TokenKind.NAME) then
 		local tokenValue = self._lexer.token.value
 		if tokenValue == "query" or tokenValue == "mutation" or tokenValue == "subscription" then
@@ -209,7 +324,8 @@ end
 --  *  - SelectionSet
 --  *  - OperationType Name? VariableDefinitions? Directives? SelectionSet
 --  *]]
-function Parser:parseOperationDefinition()
+-- ROBLOX FIXME Luau: this is a workaround for CLI-50709, remove the workaround once that PR is merged and deployed
+function Parser.parseOperationDefinition(self: Parser): OperationDefinitionNode
 	local start = self._lexer.token
 	if self:peek(TokenKind.BRACE_L) then
 		return {
@@ -649,17 +765,21 @@ end
 --  *   - ListType
 --  *   - NonNullType
 --  *]]
-function Parser:parseTypeReference()
+-- ROBLOX FIXME Luau: this is a workaround for CLI-50709, remove the workaround once that PR is merged and deployed
+function Parser.parseTypeReference(self: Parser): TypeNode
 	local start = self._lexer.token
-	local type_
+	-- ROBLOX FIXME Luau: Luau should infer this annotation
+	local type_: ListTypeNode | NamedTypeNode
 	if self:expectOptionalToken(TokenKind.BRACKET_L) then
-		type_ = self:parseTypeReference()
+		local innerType = self:parseTypeReference()
 		self:expectToken(TokenKind.BRACKET_R)
 		type_ = {
 			kind = Kind.LIST_TYPE,
-			type = type_,
+			type = innerType,
 			loc = self:loc(start),
-		}
+			-- ROBLOX deviation START: upstream 16.x and main needed a template type here, so we'll narrow with a manual cast
+		} :: ListTypeNode
+		-- ROBLOX deviation END
 	else
 		type_ = self:parseNamedType()
 	end
@@ -669,7 +789,9 @@ function Parser:parseTypeReference()
 			kind = Kind.NON_NULL_TYPE,
 			type = type_,
 			loc = self:loc(start),
-		}
+			-- ROBLOX deviation START: upstream 16.x and main needed a template type here, so we'll narrow with a manual cast
+		} :: NonNullTypeNode
+		-- ROBLOX deviation END
 	end
 	return type_
 end
@@ -734,7 +856,8 @@ function Parser:parseTypeSystemDefinition()
 	error(self:unexpected(keywordToken))
 end
 
-function Parser:peekDescription()
+-- ROBLOX FIXME Luau: this is a workaround for CLI-50709, remove the workaround once that PR is merged and deployed
+function Parser.peekDescription(self: Parser): boolean
 	return self:peek(TokenKind.STRING) or self:peek(TokenKind.BLOCK_STRING)
 end
 
@@ -949,7 +1072,8 @@ end
 --  *   - = `|`? NamedType
 --  *   - UnionMemberTypes | NamedType
 --  *]]
-function Parser:parseUnionMemberTypes()
+-- ROBLOX FIXME Luau: this is a workaround for CLI-50709, remove the workaround once that PR is merged and deployed
+function Parser.parseUnionMemberTypes(self: Parser): Array<NamedTypeNode>
 	local types = {}
 	if self:expectOptionalToken(TokenKind.EQUALS) then
 		--   // Optional leading pipe

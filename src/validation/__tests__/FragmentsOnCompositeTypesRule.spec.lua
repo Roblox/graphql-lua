@@ -2,8 +2,8 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local FragmentsOnCompositeTypesRule = require(validationWorkspace.rules.FragmentsOnCompositeTypesRule)
-		.FragmentsOnCompositeTypesRule
+	local FragmentsOnCompositeTypesRule =
+		require(validationWorkspace.rules.FragmentsOnCompositeTypesRule).FragmentsOnCompositeTypesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -19,109 +19,139 @@ return function()
 
 	describe("Validate: Fragments on composite types", function()
 		it("object is valid fragment type", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
       fragment validFragment on Dog {
         barks
       }
-			]])
+			]]
+			)
 		end)
 
 		it("interface is valid fragment type", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
       fragment validFragment on Pet {
         name
       }
-		]])
+		]]
+			)
 		end)
 
 		it("object is valid inline fragment type", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 		  fragment validFragment on Pet {
 			... on Dog {
 			  barks
 			}
 		  }
-			]])
+			]]
+			)
 		end)
 
 		it("interface is valid inline fragment type", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
       fragment validFragment on Mammal {
         ... on Canine {
           name
         }
       }
-			]])
+			]]
+			)
 		end)
 
 		it("inline fragment without type is valid", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
       fragment validFragment on Pet {
         ... {
           name
         }
       }
-			]])
+			]]
+			)
 		end)
 
 		it("union is valid fragment type", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
       fragment validFragment on CatOrDog {
         __typename
       }
-			]])
+			]]
+			)
 		end)
 
 		it("scalar is invalid fragment type", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment scalarFragment on Boolean {
         bad
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment "scalarFragment" cannot condition on non composite type "Boolean".',
-					locations = {{ line = 2, column = 34 }},
+					locations = { { line = 2, column = 34 } },
 				},
 			})
 		end)
 
 		it("enum is invalid fragment type", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment scalarFragment on FurColor {
         bad
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment "scalarFragment" cannot condition on non composite type "FurColor".',
-					locations = {{ line = 2, column = 34 }},
+					locations = { { line = 2, column = 34 } },
 				},
 			})
 		end)
 
-		it('input object is invalid fragment type', function()
-			expectErrors(expect, [[
+		it("input object is invalid fragment type", function()
+			expectErrors(
+				expect,
+				[[
       fragment inputFragment on ComplexInput {
         stringField
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment "inputFragment" cannot condition on non composite type "ComplexInput".',
-					locations = {{ line = 2, column = 33 }},
+					locations = { { line = 2, column = 33 } },
 				},
 			})
 		end)
 
-		it('scalar is invalid inline fragment type', function()
-			expectErrors(expect, [[
+		it("scalar is invalid inline fragment type", function()
+			expectErrors(
+				expect,
+				[[
       fragment invalidFragment on Pet {
         ... on String {
           barks
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment cannot condition on non composite type "String".',
-					locations = {{ line = 3, column = 16 }},
+					locations = { { line = 3, column = 16 } },
 				},
 			})
 		end)

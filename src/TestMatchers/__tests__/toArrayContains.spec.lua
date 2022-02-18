@@ -2,7 +2,6 @@ return function()
 	local toArrayContains = require(script.Parent.Parent.toArrayContains)
 
 	describe("toArrayContains", function()
-
 		it("should fail with a message printing full table values", function()
 			local tbl = { { name = "a" } }
 			local item = { name = "d" }

@@ -2,8 +2,7 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local ScalarLeafsRule = require(validationWorkspace.rules.ScalarLeafsRule)
-		.ScalarLeafsRule
+	local ScalarLeafsRule = require(validationWorkspace.rules.ScalarLeafsRule).ScalarLeafsRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -20,108 +19,135 @@ return function()
 
 	describe("Validate: Scalar leafs", function()
 		it("valid scalar selection", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment scalarSelection on Dog {
 					barks
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("object type missing selection", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query directQueryOnObjectWithoutSubFields {
         human
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Field "human" of type "Human" must have a selection of subfields. Did you mean "human { ... }"?',
-					locations = {{ line = 3, column = 9 }},
+					locations = { { line = 3, column = 9 } },
 				},
 			})
 		end)
 
 		it("interface type missing selection", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         human { pets }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Field "pets" of type "[Pet]" must have a selection of subfields. Did you mean "pets { ... }"?',
-					locations = {{ line = 3, column = 17 }},
+					locations = { { line = 3, column = 17 } },
 				},
 			})
 		end)
 
 		it("valid scalar selection with args", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment scalarSelectionWithArgs on Dog {
 					doesKnowCommand(dogCommand: SIT)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("scalar selection not allowed on Boolean", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment scalarSelectionsNotAllowedOnBoolean on Dog {
         barks { sinceWhen }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Field "barks" must not have a selection since type "Boolean" has no subfields.',
-					locations = {{ line = 3, column = 15 }},
+					locations = { { line = 3, column = 15 } },
 				},
 			})
 		end)
 
 		it("scalar selection not allowed on Enum", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment scalarSelectionsNotAllowedOnEnum on Cat {
         furColor { inHexDec }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Field "furColor" must not have a selection since type "FurColor" has no subfields.',
-					locations = {{ line = 3, column = 18 }},
+					locations = { { line = 3, column = 18 } },
 				},
 			})
 		end)
 
 		it("scalar selection not allowed with args", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment scalarSelectionsNotAllowedWithArgs on Dog {
         doesKnowCommand(dogCommand: SIT) { sinceWhen }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Field "doesKnowCommand" must not have a selection since type "Boolean" has no subfields.',
-					locations = {{ line = 3, column = 42 }},
+					locations = { { line = 3, column = 42 } },
 				},
 			})
 		end)
 
 		it("Scalar selection not allowed with directives", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment scalarSelectionsNotAllowedWithDirectives on Dog {
         name @include(if: true) { isAlsoHumanName }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Field "name" must not have a selection since type "String" has no subfields.',
-					locations = {{ line = 3, column = 33 }},
+					locations = { { line = 3, column = 33 } },
 				},
 			})
 		end)
 
 		it("Scalar selection not allowed with directives and args", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment scalarSelectionsNotAllowedWithDirectivesAndArgs on Dog {
         doesKnowCommand(dogCommand: SIT) @include(if: true) { sinceWhen }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Field "doesKnowCommand" must not have a selection since type "Boolean" has no subfields.',
-					locations = {{ line = 3, column = 61 }},
+					locations = { { line = 3, column = 61 } },
 				},
 			})
 		end)

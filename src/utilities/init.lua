@@ -1,5 +1,5 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/index.js
-
+--!strict
 local getIntrospectionQueryModule = require(script.getIntrospectionQuery)
 local buildASTSchemaModule = require(script.buildASTSchema)
 local printSchemaModule = require(script.printSchema)
@@ -51,7 +51,7 @@ return {
 	getOperationRootType = require(script.getOperationRootType).getOperationRootType,
 
 	-- Convert a GraphQLSchema to an IntrospectionQuery.
-	introspectionFromSchema =  require(script.introspectionFromSchema).introspectionFromSchema,
+	introspectionFromSchema = require(script.introspectionFromSchema).introspectionFromSchema,
 
 	-- Build a GraphQLSchema from an introspection result.
 	buildClientSchema = require(script.buildClientSchema).buildClientSchema,
@@ -115,5 +115,4 @@ return {
 	DangerousChangeType = findBreakingChangesModule.DangerousChangeType,
 	findBreakingChanges = findBreakingChangesModule.findBreakingChanges,
 	findDangerousChanges = findBreakingChangesModule.findDangerousChanges,
-
 }

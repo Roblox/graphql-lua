@@ -183,21 +183,18 @@ return function()
 				},
 			})
 		end)
-		it(
-			"Description followed by something other than type system definition throws",
-			function()
-				-- ROBLOX deviation: we use toObjectContain instead of to.deep.equal because in JS there seems to be some conversion on GraphQLError hapening implicitely which converts it to string and thus extract only message and locations
-				expectSyntaxError(expect, "\"Description\" 1").toObjectContain({
-					message = "Syntax Error: Unexpected Int \"1\".",
-					locations = {
-						{
-							line = 1,
-							column = 15,
-						},
+		it("Description followed by something other than type system definition throws", function()
+			-- ROBLOX deviation: we use toObjectContain instead of to.deep.equal because in JS there seems to be some conversion on GraphQLError hapening implicitely which converts it to string and thus extract only message and locations
+			expectSyntaxError(expect, '"Description" 1').toObjectContain({
+				message = 'Syntax Error: Unexpected Int "1".',
+				locations = {
+					{
+						line = 1,
+						column = 15,
 					},
-				})
-			end
-		)
+				},
+			})
+		end)
 		it("Simple extension", function()
 			local doc = parse(dedent([[
         extend type Hello {
@@ -487,7 +484,7 @@ return function()
       }
     ]]
 			).toObjectContain({
-				message = "Syntax Error: Unexpected Name \"extend\".",
+				message = 'Syntax Error: Unexpected Name "extend".',
 				locations = {
 					{
 						line = 3,
@@ -505,7 +502,7 @@ return function()
       }
     ]]
 			).toObjectContain({
-				message = "Syntax Error: Unexpected String \"Description\".",
+				message = 'Syntax Error: Unexpected String "Description".',
 				locations = {
 					{
 						line = 2,
@@ -526,7 +523,7 @@ return function()
       }
     ]]
 			).toObjectContain({
-				message = "Syntax Error: Unexpected Name \"extend\".",
+				message = 'Syntax Error: Unexpected Name "extend".',
 				locations = {
 					{
 						line = 3,
@@ -543,7 +540,7 @@ return function()
       }
     ]]
 			).toObjectContain({
-				message = "Syntax Error: Unexpected String \"Description\".",
+				message = 'Syntax Error: Unexpected String "Description".',
 				locations = {
 					{
 						line = 2,
@@ -641,7 +638,7 @@ return function()
 		end)
 		it("Schema extension with invalid operation type throws", function()
 			expectSyntaxError(expect, "extend schema { unknown: SomeType }").toObjectContain({
-				message = "Syntax Error: Unexpected Name \"unknown\".",
+				message = 'Syntax Error: Unexpected Name "unknown".',
 				locations = {
 					{
 						line = 1,
@@ -670,23 +667,27 @@ return function()
 						interfaces = {},
 						directives = {},
 						fields = {
-							fieldNode(nameNode("world", {
-								start = 16,
-								_end = 21,
-							}), {
-								kind = "NonNullType",
-								type = typeNode("String", {
-									start = 23,
-									_end = 29,
+							fieldNode(
+								nameNode("world", {
+									start = 16,
+									_end = 21,
 								}),
-								loc = {
-									start = 23,
-									_end = 30,
+								{
+									kind = "NonNullType",
+									type = typeNode("String", {
+										start = 23,
+										_end = 29,
+									}),
+									loc = {
+										start = 23,
+										_end = 30,
+									},
 								},
-							}, {
-								start = 16,
-								_end = 30,
-							}),
+								{
+									start = 16,
+									_end = 30,
+								}
+							),
 						},
 						loc = {
 							start = 1,
@@ -1521,7 +1522,7 @@ return function()
 		end)
 		it("Union fails with leading double pipe", function()
 			expectSyntaxError(expect, "union Hello = || Wo | Rld").toObjectContain({
-				message = "Syntax Error: Expected Name, found \"|\".",
+				message = 'Syntax Error: Expected Name, found "|".',
 				locations = {
 					{
 						line = 1,
@@ -1532,7 +1533,7 @@ return function()
 		end)
 		it("Union fails with double pipe", function()
 			expectSyntaxError(expect, "union Hello = Wo || Rld").toObjectContain({
-				message = "Syntax Error: Expected Name, found \"|\".",
+				message = 'Syntax Error: Expected Name, found "|".',
 				locations = {
 					{
 						line = 1,
@@ -1626,13 +1627,16 @@ input Hello {
 			})
 		end)
 		it("Simple input object with args should fail", function()
-			expectSyntaxError(expect, [[
+			expectSyntaxError(
+				expect,
+				[[
 
       input Hello {
         world(foo: Int): String
       }
-    ]]).toObjectContain({
-				message = "Syntax Error: Expected \":\", found \"(\".",
+    ]]
+			).toObjectContain({
+				message = 'Syntax Error: Expected ":", found "(".',
 				locations = {
 					{
 						line = 3,
@@ -1743,7 +1747,7 @@ input Hello {
 		end)
 		it("Directive with incorrect locations", function()
 			expectSyntaxError(expect, "directive @foo on FIELD | INCORRECT_LOCATION").toObjectContain({
-				message = "Syntax Error: Unexpected Name \"INCORRECT_LOCATION\".",
+				message = 'Syntax Error: Unexpected Name "INCORRECT_LOCATION".',
 				locations = {
 					{
 						line = 1,

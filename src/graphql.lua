@@ -1,6 +1,4 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/graphql.js
---!nonstrict
--- ROBLOX FIXME Luau: this file causes roblox-cli to hang in strict mode, needs CLI-50589
 local rootWorkspace = script.Parent
 
 local Packages = rootWorkspace.Parent
@@ -123,7 +121,8 @@ function graphqlImpl(args: GraphQLArgs): PromiseOrValue<ExecutionResult>
 	-- Validate Schema
 	local schemaValidationErrors = validateSchema(schema)
 	if #schemaValidationErrors > 0 then
-		return { errors = schemaValidationErrors }
+		-- ROBLOX FIXME Luau: Luau should be unifying here without an annotation
+		return { errors = schemaValidationErrors } :: ExecutionResult
 	end
 
 	-- Parse
@@ -132,13 +131,15 @@ function graphqlImpl(args: GraphQLArgs): PromiseOrValue<ExecutionResult>
 		document = parse(source)
 	end)
 	if not ok then
-		return { errors = { syntaxError } }
+		-- ROBLOX FIXME Luau: Luau should be unifying here without an annotation
+		return { errors = { syntaxError } } :: ExecutionResult
 	end
 
 	-- Validate
 	local validationErrors = validate(schema, document)
 	if #validationErrors > 0 then
-		return { errors = validationErrors }
+		-- ROBLOX FIXME Luau: Luau should be unifying here without an annotation
+		return { errors = validationErrors } :: ExecutionResult
 	end
 
 	-- Execute

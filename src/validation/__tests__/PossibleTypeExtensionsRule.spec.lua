@@ -5,8 +5,8 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local PossibleTypeExtensionsRule = require(validationWorkspace.rules.PossibleTypeExtensionsRule)
-		.PossibleTypeExtensionsRule
+	local PossibleTypeExtensionsRule =
+		require(validationWorkspace.rules.PossibleTypeExtensionsRule).PossibleTypeExtensionsRule
 	local harness = require(script.Parent.harness)
 	local expectSDLValidationErrors = harness.expectSDLValidationErrors
 
@@ -23,18 +23,23 @@ return function()
 
 	describe("Validate: Possible type extensions", function()
 		it("no extensions", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				scalar FooScalar
 				type FooObject
 				interface FooInterface
 				union FooUnion
 				enum FooEnum
 				input FooInputObject
-			]])
+			]]
+			)
 		end)
 
 		it("one extension per type", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				scalar FooScalar
 				type FooObject
 				interface FooInterface
@@ -48,11 +53,14 @@ return function()
 				extend union FooUnion @dummy
 				extend enum FooEnum @dummy
 				extend input FooInputObject @dummy
-			]])
+			]]
+			)
 		end)
 
 		it("many extensions per type", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				scalar FooScalar
 				type FooObject
 				interface FooInterface
@@ -73,13 +81,16 @@ return function()
 				extend union FooUnion @dummy
 				extend enum FooEnum @dummy
 				extend input FooInputObject @dummy
-			]])
+			]]
+			)
 		end)
 
 		it("extending unknown type", function()
 			local message = 'Cannot extend type "Unknown" because it is not defined. Did you mean "Known"?'
 
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       type Known
 
       extend scalar Unknown @dummy
@@ -88,39 +99,41 @@ return function()
       extend union Unknown @dummy
       extend enum Unknown @dummy
       extend input Unknown @dummy
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = message,
-					locations = {{ line = 4, column = 21 }},
+					locations = { { line = 4, column = 21 } },
 				},
 				{
 					message = message,
-					locations = {{ line = 5, column = 19 }},
+					locations = { { line = 5, column = 19 } },
 				},
 				{
 					message = message,
-					locations = {{ line = 6, column = 24 }},
+					locations = { { line = 6, column = 24 } },
 				},
 				{
 					message = message,
-					locations = {{ line = 7, column = 20 }},
+					locations = { { line = 7, column = 20 } },
 				},
 				{
 					message = message,
-					locations = {{ line = 8, column = 19 }},
+					locations = { { line = 8, column = 19 } },
 				},
 				{
 					message = message,
-					locations = {{ line = 9, column = 20 }},
+					locations = { { line = 9, column = 20 } },
 				},
 			})
 		end)
 
 		it("does not consider non-type definitions", function()
-
 			local message = 'Cannot extend type "Foo" because it is not defined.'
 
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       query Foo { __typename }
       fragment Foo on Query { __typename }
       directive @Foo on SCHEMA
@@ -131,36 +144,39 @@ return function()
       extend union Foo @dummy
       extend enum Foo @dummy
       extend input Foo @dummy
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = message,
-					locations = {{ line = 6, column = 21 }},
+					locations = { { line = 6, column = 21 } },
 				},
 				{
 					message = message,
-					locations = {{ line = 7, column = 19 }},
+					locations = { { line = 7, column = 19 } },
 				},
 				{
 					message = message,
-					locations = {{ line = 8, column = 24 }},
+					locations = { { line = 8, column = 24 } },
 				},
 				{
 					message = message,
-					locations = {{ line = 9, column = 20 }},
+					locations = { { line = 9, column = 20 } },
 				},
 				{
 					message = message,
-					locations = {{ line = 10, column = 19 }},
+					locations = { { line = 10, column = 19 } },
 				},
 				{
 					message = message,
-					locations = {{ line = 11, column = 20 }},
+					locations = { { line = 11, column = 20 } },
 				},
 			})
 		end)
 
 		it("extending with different kinds", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       scalar FooScalar
       type FooObject
       interface FooInterface
@@ -174,7 +190,8 @@ return function()
       extend enum FooUnion @dummy
       extend input FooEnum @dummy
       extend scalar FooInputObject @dummy
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot extend non-object type "FooScalar".',
 					locations = {
@@ -257,27 +274,27 @@ return function()
 			expectSDLErrors(expect, sdl, schema).toEqual({
 				{
 					message = message,
-					locations = {{ line = 2, column = 21 }},
+					locations = { { line = 2, column = 21 } },
 				},
 				{
 					message = message,
-					locations = {{ line = 3, column = 19 }},
+					locations = { { line = 3, column = 19 } },
 				},
 				{
 					message = message,
-					locations = {{ line = 4, column = 24 }},
+					locations = { { line = 4, column = 24 } },
 				},
 				{
 					message = message,
-					locations = {{ line = 5, column = 20 }},
+					locations = { { line = 5, column = 20 } },
 				},
 				{
 					message = message,
-					locations = {{ line = 6, column = 19 }},
+					locations = { { line = 6, column = 19 } },
 				},
 				{
 					message = message,
-					locations = {{ line = 7, column = 20 }},
+					locations = { { line = 7, column = 20 } },
 				},
 			})
 		end)
@@ -303,27 +320,27 @@ return function()
 			expectSDLErrors(expect, sdl, schema).toEqual({
 				{
 					message = 'Cannot extend non-object type "FooScalar".',
-					locations = {{ line = 2, column = 7 }},
+					locations = { { line = 2, column = 7 } },
 				},
 				{
 					message = 'Cannot extend non-interface type "FooObject".',
-					locations = {{ line = 3, column = 7 }},
+					locations = { { line = 3, column = 7 } },
 				},
 				{
 					message = 'Cannot extend non-union type "FooInterface".',
-					locations = {{ line = 4, column = 7 }},
+					locations = { { line = 4, column = 7 } },
 				},
 				{
 					message = 'Cannot extend non-enum type "FooUnion".',
-					locations = {{ line = 5, column = 7 }},
+					locations = { { line = 5, column = 7 } },
 				},
 				{
 					message = 'Cannot extend non-input object type "FooEnum".',
-					locations = {{ line = 6, column = 7 }},
+					locations = { { line = 6, column = 7 } },
 				},
 				{
 					message = 'Cannot extend non-scalar type "FooInputObject".',
-					locations = {{ line = 7, column = 7 }},
+					locations = { { line = 7, column = 7 } },
 				},
 			})
 		end)

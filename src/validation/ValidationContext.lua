@@ -74,7 +74,10 @@ export type ASTValidationContext = {
 	getDocument: (self: ASTValidationContext) -> DocumentNode,
 	getFragment: (self: ASTValidationContext, string) -> FragmentDefinitionNode?,
 	getFragmentSpreads: (self: ASTValidationContext, SelectionSetNode) -> Array<FragmentSpreadNode>,
-	getRecursivelyReferencedFragments: (self: ASTValidationContext, OperationDefinitionNode) -> Array<FragmentDefinitionNode>,
+	getRecursivelyReferencedFragments: (
+		self: ASTValidationContext,
+		OperationDefinitionNode
+	) -> Array<FragmentDefinitionNode>,
 }
 
 local ASTValidationContext = {}
@@ -124,9 +127,12 @@ function ASTValidationContext:getFragmentSpreads(node: SelectionSetNode): Array<
 				-- ROBLOX TODO Luau: when kind is a singleton type, the casts below shouldn't be necessary
 				if selection.kind == Kind.FRAGMENT_SPREAD then
 					table.insert(spreads, selection :: FragmentSpreadNode)
-				-- ROBLOX FIXME Luau: bad narrowing: TypeError: Type 'SelectionSetNode?' could not be converted into 'SelectionSetNode'
+					-- ROBLOX FIXME Luau: bad narrowing: TypeError: Type 'SelectionSetNode?' could not be converted into 'SelectionSetNode'
 				elseif (selection :: FieldNode | InlineFragmentNode).selectionSet then
-					table.insert(setsToVisit, (selection :: FieldNode | InlineFragmentNode).selectionSet :: SelectionSetNode)
+					table.insert(
+						setsToVisit,
+						(selection :: FieldNode | InlineFragmentNode).selectionSet :: SelectionSetNode
+					)
 				end
 			end
 		end

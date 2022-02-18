@@ -198,6 +198,7 @@ exports.printLocation = languageModule.printLocation
 exports.printSourceLocation = languageModule.printSourceLocation
 -- Lex
 exports.Lexer = languageModule.Lexer
+export type Lexer = languageModule.Lexer
 exports.TokenKind = languageModule.TokenKind
 -- Parse
 exports.parse = languageModule.parse
@@ -235,9 +236,7 @@ export type Source = languageModule.Source
 
 -- Visitor utilities
 export type ASTVisitor = languageModule.ASTVisitor
--- ROBLOX TODO: Luau doesn't current support default type arguments
-export type Visitor<KindToNode, Nodes> = languageModule.Visitor<KindToNode, Nodes>
--- ROBLOX TODO: Luau doesn't current support default type arguments
+export type Visitor<KindToNode, Nodes = any> = languageModule.Visitor<KindToNode, Nodes>
 export type VisitFn<TAnyNode, TVisitedNode = TAnyNode> = languageModule.VisitFn<TAnyNode, TVisitedNode>
 export type VisitorKeyMap<KindToNode> = languageModule.VisitorKeyMap<KindToNode>
 

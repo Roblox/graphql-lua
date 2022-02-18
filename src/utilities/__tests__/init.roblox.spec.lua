@@ -2,7 +2,6 @@
 
 return function()
 	describe("Utilities - init", function()
-
 		it("should contain getIntrospectionQuery function", function()
 			local getIntrospectionQuery = require(script.Parent.Parent).getIntrospectionQuery
 			expect(getIntrospectionQuery).to.be.a("function")
@@ -157,6 +156,5 @@ return function()
 			local findDangerousChanges = require(script.Parent.Parent).findDangerousChanges
 			expect(findDangerousChanges).to.be.a("function")
 		end)
-
 	end)
 end

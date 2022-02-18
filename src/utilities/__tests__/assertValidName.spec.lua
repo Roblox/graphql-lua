@@ -16,7 +16,7 @@ return function()
 			expect(_ok).to.equal(false)
 			local containsRequiredText = string.find(
 				thrownError.message,
-				"\"__bad\" must not begin with \"__\", which is reserved by GraphQL introspection."
+				'"__bad" must not begin with "__", which is reserved by GraphQL introspection.'
 			)
 			expect(containsRequiredText).to.be.ok()
 		end)

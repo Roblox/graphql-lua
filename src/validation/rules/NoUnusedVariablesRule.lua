@@ -14,7 +14,7 @@ local exports = {}
 exports.NoUnusedVariablesRule = function(context)
 	local variableDefs = {}
 
-	return{
+	return {
 		OperationDefinition = {
 			enter = function()
 				variableDefs = {}
@@ -34,17 +34,16 @@ exports.NoUnusedVariablesRule = function(context)
 						context:reportError(
 							GraphQLError.new(
 								operation.name
-									and ('Variable "$%s" is never used in operation "%s".'):format(
-										variableName,
-										operation.name.value
-									)
+										and ('Variable "$%s" is never used in operation "%s".'):format(
+											variableName,
+											operation.name.value
+										)
 									or ('Variable "$%s" is never used.'):format(variableName),
 								variableDef
 							)
 						)
 					end
 				end
-
 			end,
 		},
 		VariableDefinition = function(_self, def)

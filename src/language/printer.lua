@@ -110,7 +110,11 @@ printDocASTReducer = {
 		local type_ = node.type
 		local defaultValue = node.defaultValue
 		local directives = node.directives
-		return tostring(variable) .. ": " .. tostring(type_) .. wrap(" = ", defaultValue) .. wrap(" ", join(directives, " "))
+		return tostring(variable)
+			.. ": "
+			.. tostring(type_)
+			.. wrap(" = ", defaultValue)
+			.. wrap(" ", join(directives, " "))
 	end,
 
 	SelectionSet = function(_self, node)
@@ -195,10 +199,7 @@ printDocASTReducer = {
 		local value = node.value
 		local isBlockingString = node.block
 		return if isBlockingString
-			then printBlockString(
-				value,
-				if key == "description" then "" else "  "
-			)
+			then printBlockString(value, if key == "description" then "" else "  ")
 			else HttpService:JSONEncode(value)
 	end,
 	BooleanValue = function(_self, node)
@@ -259,8 +260,8 @@ printDocASTReducer = {
 	SchemaDefinition = addDescription(function(node: any)
 		local directives = node.directives
 		local operationTypes = node.operationTypes
-			-- ROBLOX FIXME Luau: Luau needs to understand mixed arrays
-			return join({ "schema", join(directives, " "), block(operationTypes) } :: Array<any>, " ")
+		-- ROBLOX FIXME Luau: Luau needs to understand mixed arrays
+		return join({ "schema" :: any, join(directives, " "), block(operationTypes) }, " ")
 	end),
 
 	OperationTypeDefinition = function(_self, node: OperationTypeDefinitionNode)
@@ -272,8 +273,8 @@ printDocASTReducer = {
 	ScalarTypeDefinition = addDescription(function(node: ScalarTypeDefinitionNode)
 		local name = node.name
 		local directives = node.directives
-			-- ROBLOX FIXME Luau: Luau needs to understand mixed arrays
-			return join({ "scalar", name, join(directives, " ") } :: Array<any>, " ")
+		-- ROBLOX FIXME Luau: Luau needs to understand mixed arrays
+		return join({ "scalar" :: any, name, join(directives, " ") }, " ")
 	end),
 
 	ObjectTypeDefinition = addDescription(function(node: ObjectTypeDefinitionNode)

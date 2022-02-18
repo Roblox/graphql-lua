@@ -115,7 +115,7 @@ return function()
 						end
 						return inspect(value)
 					end
-                    -- ROBLOX deviation: no JSON.stringify - original call: JSON.stringify({source, args})
+					-- ROBLOX deviation: no JSON.stringify - original call: JSON.stringify({source, args})
 					return ("[%s,%s]"):format(stringify(source), stringify(args))
 				end,
 			})
@@ -137,30 +137,30 @@ return function()
 			})
 			expect(executeQuery("{ test }", "Source!")).toEqual({
 				data = {
-					test = "[\"Source!\",{}]",
+					test = '["Source!",{}]',
 				},
 			})
-			expect(executeQuery("{ test(aStr: \"String!\") }", "Source!")).toEqual({
-                --[[
+			expect(executeQuery('{ test(aStr: "String!") }', "Source!")).toEqual({
+				--[[
                     ROBLOX deviation:
                     - inspect doesn't put quotes around prop names
                     - inspect adds spacing within printed object
                     - original test string '["Source!",{"aStr":"String!"}]'
                 --]]
 				data = {
-					test = "[\"Source!\",{ aStr: \"String!\" }]",
+					test = '["Source!",{ aStr: "String!" }]',
 				},
 			})
-			expect(executeQuery("{ test(aInt: -123, aStr: \"String!\") }", "Source!")).toEqual({
-                --[[
+			expect(executeQuery('{ test(aInt: -123, aStr: "String!") }', "Source!")).toEqual({
+				--[[
                     ROBLOX deviation:
                     - inspect doesn't put quotes around prop names
                     - inspect adds spacing within printed object
                     - original test string '["Source!",{"aStr":"String!","aInt":-123}]'
                 --]]
-                -- ROBLOX FIXME: order of params is not kept
+				-- ROBLOX FIXME: order of params is not kept
 				data = {
-					test = "[\"Source!\",{ aInt: -123, aStr: \"String!\" }]",
+					test = '["Source!",{ aInt: -123, aStr: "String!" }]',
 				},
 			})
 		end)

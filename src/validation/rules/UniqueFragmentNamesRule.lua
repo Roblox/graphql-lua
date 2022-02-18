@@ -13,7 +13,7 @@ local exports = {}
 exports.UniqueFragmentNamesRule = function(context)
 	local knownFragmentNames = {}
 
-	return{
+	return {
 		OperationDefinition = function()
 			return false
 		end,
@@ -23,7 +23,7 @@ exports.UniqueFragmentNamesRule = function(context)
 				context:reportError(
 					GraphQLError.new(
 						('There can be only one fragment named "%s".'):format(fragmentName),
-						{knownFragmentNames[fragmentName], node.name}
+						{ knownFragmentNames[fragmentName], node.name }
 					)
 				)
 			else

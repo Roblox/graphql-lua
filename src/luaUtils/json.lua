@@ -22,8 +22,8 @@ local function kind_of(obj)
 end
 
 local function escape_str(s: string)
-	local in_char = { "\\", "\"", "/", "\b", "\f", "\n", "\r", "\t" }
-	local out_char = { "\\", "\"", "/", "b", "f", "n", "r", "t" }
+	local in_char = { "\\", '"', "/", "\b", "\f", "\n", "\r", "\t" }
+	local out_char = { "\\", '"', "/", "b", "f", "n", "r", "t" }
 	for i, c in ipairs(in_char) do
 		s = s:gsub(c, "\\" .. out_char[i])
 	end
@@ -60,10 +60,10 @@ function json.stringify(obj: any, as_key: boolean?)
 		end
 		s[#s + 1] = "}"
 	elseif kind == "string" then
-		return "\"" .. escape_str(obj) .. "\""
+		return '"' .. escape_str(obj) .. '"'
 	elseif kind == "number" then
 		if as_key then
-			return "\"" .. tostring(obj) .. "\""
+			return '"' .. tostring(obj) .. '"'
 		end
 		return tostring(obj)
 	elseif kind == "boolean" then

@@ -4,8 +4,7 @@ return function()
 
 	local coerceToPromise = require(script.Parent.Parent.coerceToPromise).coerceToPromise
 
-	describe('coerceToPromise', function()
-
+	describe("coerceToPromise", function()
 		it("returns promise when passed promise", function()
 			local input = Promise.resolve("bar")
 			expect(coerceToPromise(input):expect()).to.equal("bar")
@@ -15,7 +14,5 @@ return function()
 			local input = "bar"
 			expect(coerceToPromise(input):expect()).to.equal("bar")
 		end)
-
 	end)
-
 end

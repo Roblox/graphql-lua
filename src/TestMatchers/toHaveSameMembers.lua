@@ -2,7 +2,6 @@ local arrayContains = require(script.Parent.Parent.luaUtils.arrayContains)
 local inspect = require(script.Parent.inspect).inspect
 
 local function toHaveSameMembers(arrA, arrB, looseEquals)
-
 	local sameLength = #arrA == #arrB
 	if not sameLength then
 		return {

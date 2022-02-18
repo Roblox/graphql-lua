@@ -5,7 +5,6 @@ return function()
 	local NULL = require(luaUtils.null)
 
 	describe("isNillish", function()
-
 		it("returns true when nil", function()
 			expect(isNillish(nil)).to.equal(true)
 		end)
@@ -28,7 +27,6 @@ return function()
 	end)
 
 	describe("isNotNillish", function()
-
 		it("returns false when nil", function()
 			expect(isNotNillish(nil)).to.equal(false)
 		end)

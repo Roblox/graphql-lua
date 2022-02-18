@@ -19,84 +19,114 @@ return function()
 
 	describe("Validate: Unique argument names", function()
 		it("no arguments on field", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("no arguments on directive", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field @directive
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("argument on field", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field(arg: "value")
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("argument on directive", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field @directive(arg: "value")
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("same argument on two fields", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					one: field(arg: "value")
 					two: field(arg: "value")
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("same argument on field and directive", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field(arg: "value") @directive(arg: "value")
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("same argument on two directives", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field @directive1(arg: "value") @directive2(arg: "value")
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("multiple field arguments", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field(arg1: "value", arg2: "value", arg3: "value")
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("multiple directive arguments", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field @directive(arg1: "value", arg2: "value", arg3: "value")
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("duplicate field arguments", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         field(arg1: "value", arg1: "value")
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'There can be only one argument named "arg1".',
 					locations = {
@@ -108,11 +138,14 @@ return function()
 		end)
 
 		it("many duplicate field arguments", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         field(arg1: "value", arg1: "value", arg1: "value")
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'There can be only one argument named "arg1".',
 					locations = {
@@ -131,11 +164,14 @@ return function()
 		end)
 
 		it("duplicate directive arguments", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         field @directive(arg1: "value", arg1: "value")
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'There can be only one argument named "arg1".',
 					locations = {
@@ -147,11 +183,14 @@ return function()
 		end)
 
 		it("many duplicate directive arguments", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         field @directive(arg1: "value", arg1: "value", arg1: "value")
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'There can be only one argument named "arg1".',
 					locations = {

@@ -18,12 +18,12 @@ local inspect = require(srcWorkspace.TestMatchers.inspect)
 
 return function()
 	describe("Printer: SDL document", function()
-
 		it("prints minimal ast", function()
+			-- ROBLOX FIXME Luau: gross workaround until string literals automatically track as singleton types
 			local ast = {
-				kind = "ScalarTypeDefinition",
+				kind = "ScalarTypeDefinition" :: "ScalarTypeDefinition",
 				name = {
-					kind = "Name",
+					kind = "Name" :: "Name",
 					value = "foo",
 				},
 			}
@@ -39,7 +39,7 @@ return function()
 			jestExpect(function()
 				-- ROBLOX deviation: strong typing prevents this from analyzing (yay!), so cast away safety
 				return print_(badAST :: any)
-			end).toThrow("Invalid AST Node: { random: \"Data\" }.")
+			end).toThrow('Invalid AST Node: { random: "Data" }.')
 		end)
 
 		it("does not alter ast", function()

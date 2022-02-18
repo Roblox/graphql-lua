@@ -28,9 +28,9 @@ exports.PossibleFragmentSpreadsRule = function(context)
 			local fragType = context:getType()
 			local parentType = context:getParentType()
 			if
-				isCompositeType(fragType) and
-				isCompositeType(parentType) and
-				not doTypesOverlap(context:getSchema(), fragType, parentType)
+				isCompositeType(fragType)
+				and isCompositeType(parentType)
+				and not doTypesOverlap(context:getSchema(), fragType, parentType)
 			then
 				local parentTypeStr = inspect(parentType)
 				local fragTypeStr = inspect(fragType)
@@ -50,11 +50,7 @@ exports.PossibleFragmentSpreadsRule = function(context)
 			local fragName = node.name.value
 			local fragType = getFragmentType(context, fragName)
 			local parentType = context:getParentType()
-			if
-				fragType and
-				parentType and
-				not doTypesOverlap(context:getSchema(), fragType, parentType)
-			then
+			if fragType and parentType and not doTypesOverlap(context:getSchema(), fragType, parentType) then
 				local parentTypeStr = inspect(parentType)
 				local fragTypeStr = inspect(fragType)
 				context:reportError(
@@ -72,10 +68,7 @@ exports.PossibleFragmentSpreadsRule = function(context)
 	}
 end
 
-function getFragmentType(
-	context,
-	name: string
-)
+function getFragmentType(context, name: string)
 	local frag = context:getFragment(name)
 	if frag then
 		local type_ = typeFromAST(context:getSchema(), frag.typeCondition)

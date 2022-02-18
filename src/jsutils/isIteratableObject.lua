@@ -37,5 +37,5 @@ local function isIteratableObject(maybeIteratable: any): boolean
 end
 
 return {
-	isIteratableObject = isIteratableObject
+	isIteratableObject = isIteratableObject,
 }

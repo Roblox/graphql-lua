@@ -2,8 +2,8 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local VariablesAreInputTypesRule = require(validationWorkspace.rules.VariablesAreInputTypesRule)
-		.VariablesAreInputTypesRule
+	local VariablesAreInputTypesRule =
+		require(validationWorkspace.rules.VariablesAreInputTypesRule).VariablesAreInputTypesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -20,29 +20,35 @@ return function()
 
 	describe("Validate: Variables are input types", function()
 		it("input types are valid", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo($a: String, $b: [Boolean!]!, $c: ComplexInput) {
 					field(a: $a, b: $b, c: $c)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("output types are invalid", function()
-			expectErrors(expect, [=[
+			expectErrors(
+				expect,
+				[=[
       query Foo($a: Dog, $b: [[CatOrDog!]]!, $c: Pet) {
         field(a: $a, b: $b, c: $c)
       }
-			]=]).toEqual({
+			]=]
+			).toEqual({
 				{
-					locations = {{ line = 2, column = 21 }},
+					locations = { { line = 2, column = 21 } },
 					message = 'Variable "$a" cannot be non-input type "Dog".',
 				},
 				{
-					locations = {{ line = 2, column = 30 }},
+					locations = { { line = 2, column = 30 } },
 					message = 'Variable "$b" cannot be non-input type "[[CatOrDog!]]!".',
 				},
 				{
-					locations = {{ line = 2, column = 50 }},
+					locations = { { line = 2, column = 50 } },
 					message = 'Variable "$c" cannot be non-input type "Pet".',
 				},
 			})

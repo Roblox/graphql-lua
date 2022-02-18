@@ -2,8 +2,8 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local SingleFieldSubscriptionsRule = require(validationWorkspace.rules.SingleFieldSubscriptionsRule)
-		.SingleFieldSubscriptionsRule
+	local SingleFieldSubscriptionsRule =
+		require(validationWorkspace.rules.SingleFieldSubscriptionsRule).SingleFieldSubscriptionsRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -11,11 +11,7 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectValidationErrors(
-			expect_,
-			SingleFieldSubscriptionsRule,
-			"\n" .. queryStr
-		)
+		return expectValidationErrors(expect_, SingleFieldSubscriptionsRule, "\n" .. queryStr)
 	end
 
 	local function expectValid(expect_, queryStr: string)
@@ -24,49 +20,61 @@ return function()
 
 	describe("Validate: Subscriptions with single field", function()
 		it("valid subscription", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				subscription ImportantEmails {
 					importantEmails
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("fails with more than one root field", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       subscription ImportantEmails {
         importantEmails
         notImportantEmails
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Subscription "ImportantEmails" must select only one top level field.',
-					locations = {{ line = 4, column = 9 }},
+					locations = { { line = 4, column = 9 } },
 				},
 			})
 		end)
 
 		it("fails with more than one root field including introspection", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       subscription ImportantEmails {
         importantEmails
         __typename
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Subscription "ImportantEmails" must select only one top level field.',
-					locations = {{ line = 4, column = 9 }},
+					locations = { { line = 4, column = 9 } },
 				},
 			})
 		end)
 
 		it("fails with many more than one root field", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       subscription ImportantEmails {
         importantEmails
         notImportantEmails
         spamEmails
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Subscription "ImportantEmails" must select only one top level field.',
 					locations = {
@@ -78,15 +86,18 @@ return function()
 		end)
 
 		it("fails with more than one root field in anonymous subscriptions", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       subscription {
         importantEmails
         notImportantEmails
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = "Anonymous Subscription must select only one top level field.",
-					locations = {{ line = 4, column = 9 }},
+					locations = { { line = 4, column = 9 } },
 				},
 			})
 		end)

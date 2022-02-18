@@ -28,10 +28,10 @@ return function()
 		assert(toEqual(someFunction, theSameFunction).pass)
 
 		local A = {
-			foo = someFunction
+			foo = someFunction,
 		}
 		local B = {
-			foo = theSameFunction
+			foo = theSameFunction,
 		}
 
 		assert(toEqual(A, B).pass)
@@ -50,14 +50,14 @@ return function()
 			nested = {
 				foo = 1,
 				bar = 2,
-			}
+			},
 		}
 		local B = {
 			foo = "bar",
 			nested = {
 				foo = 1,
 				bar = 2,
-			}
+			},
 		}
 
 		assert(toEqual(A, B).pass)
@@ -67,7 +67,7 @@ return function()
 			nested = {
 				foo = 1,
 				bar = 3,
-			}
+			},
 		}
 
 		local result = toEqual(A, C)

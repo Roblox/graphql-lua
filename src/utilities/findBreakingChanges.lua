@@ -1,5 +1,5 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/findBreakingChanges.js
-
+--!strict
 local srcWorkspace = script.Parent.Parent
 local rootWorkspace = srcWorkspace.Parent
 
@@ -570,14 +570,14 @@ function stringifyValue(value: any, type_: GraphQLInputType): string
 	return print_(sortedAST)
 end
 
--- ROBLOX TODO: align to upstream once Luau supports function generics
+-- ROBLOX TODO Luau: generic constraints
 -- function diff<T: { name: string, ... }>(
-function diff(
-	oldArray: Array<any>,
-	newArray: Array<any>
+function diff<T>(
+	oldArray: Array<T>,
+	newArray: Array<T>
 ): {
-	added: Array<any>,
-	removed: Array<any>,
+	added: Array<T>,
+	removed: Array<T>,
 	persisted: Array<any>,
 }
 	local added = {}
@@ -591,7 +591,8 @@ function diff(
 	end)
 
 	for _, oldItem in ipairs(oldArray) do
-		local newItem = newMap:get(oldItem.name)
+		-- ROBLOX TODO Luau: any hard cast due to lack of generic constraints
+		local newItem = newMap:get((oldItem :: any).name)
 
 		if newItem == nil then
 			table.insert(removed, oldItem)
@@ -600,7 +601,8 @@ function diff(
 		end
 	end
 	for _, newItem in ipairs(newArray) do
-		if oldMap:get(newItem.name) == nil then
+		-- ROBLOX TODO Luau: any hard cast due to lack of generic constraints
+		if oldMap:get((newItem :: any).name) == nil then
 			table.insert(added, newItem)
 		end
 	end

@@ -16,7 +16,7 @@ local exports = {}
 --  * input types (scalar, enum, or input object).
 --  */
 exports.VariablesAreInputTypesRule = function(context)
-	return{
+	return {
 		VariableDefinition = function(_self, node)
 			local type_ = typeFromAST(context:getSchema(), node.type)
 
@@ -26,10 +26,7 @@ exports.VariablesAreInputTypesRule = function(context)
 
 				context:reportError(
 					GraphQLError.new(
-						('Variable "$%s" cannot be non-input type "%s".'):format(
-							variableName,
-							typeName
-						),
+						('Variable "$%s" cannot be non-input type "%s".'):format(variableName, typeName),
 						node.type
 					)
 				)

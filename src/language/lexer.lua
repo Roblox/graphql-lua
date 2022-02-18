@@ -1,5 +1,4 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/lexer.js
---!nonstrict
 local language = script.Parent
 local src = language.Parent
 local Packages = src.Parent
@@ -7,14 +6,19 @@ local LuauPolyfill = require(Packages.LuauPolyfill)
 local Number = LuauPolyfill.Number
 local String = LuauPolyfill.String
 local isNaN = Number.isNaN
+local HttpService = game:GetService("HttpService")
 
 local syntaxError = require(src.error.syntaxError).syntaxError
-local TokenKind = require(language.tokenKind).TokenKind
-local Token = require(language.ast).Token
+local sourceImport = require(script.Parent.source)
+type Source = sourceImport.Source
+local tokenKindImport = require(language.tokenKind)
+type TokenKindEnum = tokenKindImport.TokenKindEnum
+local astImport = require(language.ast)
+local Token = astImport.Token
+local TokenKind = tokenKindImport.TokenKind
+type Token = astImport.Token
 local toUnicodeString = require(src.luaUtils.toUnicodeString)
 local dedentBlockStringValue = require(language.blockString).dedentBlockStringValue
-
-local HttpService = game:GetService("HttpService")
 
 -- deviation: pre-declare functions
 local readBlockString
@@ -22,6 +26,47 @@ local readString
 local uniCharCode
 local char2hex
 
+--[[*
+ * Given a Source object, creates a Lexer for that source.
+ * A Lexer is a stateful stream generator in that every time
+ * it is advanced, it returns the next token in the Source. Assuming the
+ * source lexes, the final Token emitted by the lexer will be of kind
+ * EOF, after which the lexer will repeatedly return the same EOF token
+ * whenever called.
+ ]]
+export type Lexer = {
+	source: Source,
+
+	--[[*
+   * The previously focused non-ignored token.
+   ]]
+	lastToken: Token,
+
+	--[[*
+   * The currently focused non-ignored token.
+   ]]
+	token: Token,
+
+	--[[*
+   * The (1-indexed) line containing the current token.
+   ]]
+	line: number,
+
+	--[[*
+   * The character offset at which the current line begins.
+   ]]
+	lineStart: number,
+
+	--[[*
+   * Advances the token stream to the next non-ignored token.
+   ]]
+	advance: (self: Lexer) -> Token,
+	--[[*
+   * Looks ahead and returns the next non-ignored token, but does not change
+   * the state of Lexer.
+   ]]
+	lookahead: (self: Lexer) -> Token,
+}
 
 --[[
  * Converts four hexadecimal chars to the integer that the
@@ -70,7 +115,7 @@ end
  [_A-Za-z][_0-9A-Za-z]*
 ]]
 --
-local function readName(source, start, line, col, prev)
+local function readName(source, start: number, line, col, prev): Token
 	local body = source.body
 	local bodyLength = string.len(body)
 	local position = start + 1
@@ -115,7 +160,7 @@ end
  -- #[\u0009\u0020-\uFFFF]*
 ]]
 --
-local function readComment(source, start, line, col, prev)
+local function readComment(source, start: number, line, col, prev): Token
 	local body = source.body
 	local code
 	local position = start
@@ -129,7 +174,7 @@ local function readComment(source, start, line, col, prev)
 	return Token.new(TokenKind.COMMENT, start, position, line, col, prev, String.slice(body, start + 1, position))
 end
 
-function printCharCode(code)
+function printCharCode(code: number): string
 	-- NaN/undefined represents access beyond the end of the file.
 	if isNaN(code) then
 		return TokenKind.EOF
@@ -148,7 +193,7 @@ end
  Returns the new position in the source after reading digits.
 ]]
 --
-function readDigits(source, start, firstCode)
+function readDigits(source, start: number, firstCode: number): number
 	local body = source.body
 	local position = start
 	local code = firstCode
@@ -196,10 +241,10 @@ end
  * Float: -?(0|[1-9][0-9]*)(\.[0-9]+)?((E|e)(+|-)?[0-9]+)?
 ]]
 --
-function readNumber(source, start, firstCode, line, col, prev)
+function readNumber(source, start: number, firstCode, line, col, prev)
 	local body = source.body
 	local code = firstCode
-	local position = start
+	local position: number = start
 	local isFloat = false
 
 	if code == 45 then
@@ -268,10 +313,12 @@ function readNumber(source, start, firstCode, line, col, prev)
 	)
 end
 
-local function readToken(lexer, prev)
+local function readToken(lexer: Lexer, prev)
 	local source = lexer.source
 	local body = source.body
 	local bodyLength = utf8.len(body)
+	-- ROBLOX deviation: assert utf8 string is legit
+	assert(bodyLength ~= nil, "invalid utf8 supplied for token")
 
 	local pos = prev._end
 
@@ -459,7 +506,7 @@ end
 local Lexer = {}
 Lexer.__index = Lexer
 
-function Lexer.new(source)
+function Lexer.new(source): Lexer
 	local startOfFileToken = Token.new(TokenKind.SOF, 1, 1, 0, 0, nil)
 
 	local self = {}
@@ -469,23 +516,29 @@ function Lexer.new(source)
 	self.line = 1
 	self.lineStart = 0
 
-	return setmetatable(self, Lexer)
+	return (setmetatable(self, Lexer) :: any) :: Lexer
 end
 
-function Lexer:advance()
+function Lexer:advance(): Token
 	self.lastToken = self.token
 	self.token = self:lookahead()
 	return self.token
 end
 
-function Lexer:lookahead()
+function Lexer:lookahead(): Token
 	local token = self.token
 	if token.kind ~= TokenKind.EOF then
 		repeat
-			token = token.next or (function()
-				token.next = readToken(self, token)
-				return token.next
-			end)()
+			-- ROBLOX deviation BEGIN: align this loop to 16.x.x, which has better type safety
+			if token.next then
+				token = token.next
+			else
+				local nextToken = readToken(self, token)
+				token.next = nextToken
+				nextToken.prev = token
+				token = nextToken
+			end
+		-- ROBLOX deviation END
 		until not (token.kind == TokenKind.COMMENT)
 	end
 	return token
@@ -494,8 +547,8 @@ end
 --[[
  * @internal
 ]]
---
-local function isPunctuatorTokenKind(kind)
+-- ROBLOX deviation: Luau doesn't model  %checks {
+local function isPunctuatorTokenKind(kind: TokenKindEnum): boolean
 	local tokenKind = kind == TokenKind.BANG
 		or kind == TokenKind.DOLLAR
 		or kind == TokenKind.AMP
@@ -528,7 +581,11 @@ function readBlockString(source, start, line, col, prev, lexer)
 	while position <= string.len(body) and not isNaN(String.charCodeAt(body, position)) do
 		code = String.charCodeAt(body, position)
 		-- Closing Triple-Quote (""")
-		if code == 34 and String.charCodeAt(body, position + 1) == 34 and String.charCodeAt(body, position + 2) == 34 then
+		if
+			code == 34
+			and String.charCodeAt(body, position + 1) == 34
+			and String.charCodeAt(body, position + 2) == 34
+		then
 			rawValue = rawValue .. String.slice(body, chunkStart, position)
 			return Token.new(
 				TokenKind.BLOCK_STRING,

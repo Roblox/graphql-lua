@@ -912,7 +912,7 @@ return function()
 				},
 				{
 					type = DangerousChangeType.ARG_DEFAULT_VALUE_CHANGE,
-					description = "Type1.field1 arg stringArg has changed defaultValue from \"test\" to \"Test\".",
+					description = 'Type1.field1 arg stringArg has changed defaultValue from "test" to "Test".',
 				},
 				{
 					type = DangerousChangeType.ARG_DEFAULT_VALUE_CHANGE,
@@ -920,7 +920,7 @@ return function()
 				},
 				{
 					type = DangerousChangeType.ARG_DEFAULT_VALUE_CHANGE,
-					description = "Type1.field1 arg valueArray has changed defaultValue from [[\"a\", \"b\"], [\"c\"]] to [[\"b\", \"a\"], [\"d\"]].",
+					description = 'Type1.field1 arg valueArray has changed defaultValue from [["a", "b"], ["c"]] to [["b", "a"], ["d"]].',
 				},
 				{
 					type = DangerousChangeType.ARG_DEFAULT_VALUE_CHANGE,
@@ -1152,7 +1152,7 @@ return function()
 				},
 				{
 					type = DangerousChangeType.ARG_DEFAULT_VALUE_CHANGE,
-					description = "Type1.field1 arg argThatChangesDefaultValue has changed defaultValue from \"test\" to \"Test\".",
+					description = 'Type1.field1 arg argThatChangesDefaultValue has changed defaultValue from "test" to "Test".',
 				},
 				{
 					type = DangerousChangeType.IMPLEMENTED_INTERFACE_ADDED,

@@ -1,5 +1,5 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/valueFromAST.js
-
+--!strict
 -- ROBLOX TODO: change this to `()` once Luau supports type packs
 type void = nil
 local srcWorkspace = script.Parent.Parent
@@ -89,7 +89,7 @@ local function valueFromAST(
 					if itemValue == nil then
 						return -- Invalid: intentionally return no value.
 					end
-					table.insert(coercedValues, itemValue)
+					table.insert(coercedValues, itemValue :: any)
 				end
 			end
 			return coercedValues

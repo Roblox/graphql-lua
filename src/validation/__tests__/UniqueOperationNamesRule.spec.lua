@@ -2,8 +2,8 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local UniqueOperationNamesRule = require(validationWorkspace.rules.UniqueOperationNamesRule)
-		.UniqueOperationNamesRule
+	local UniqueOperationNamesRule =
+		require(validationWorkspace.rules.UniqueOperationNamesRule).UniqueOperationNamesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -20,31 +20,42 @@ return function()
 
 	describe("Validate: Unique operation names", function()
 		it("no operations", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment fragA on Type {
 					field
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("one anon operation", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("one named operation", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo {
 					field
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("multiple operations", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo {
 					field
 				}
@@ -52,11 +63,14 @@ return function()
 				query Bar {
 					field
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("multiple operations of different types", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo {
 					field
 				}
@@ -68,29 +82,36 @@ return function()
 				subscription Baz {
 					field
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("fragment and operation named the same", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo {
 					...Foo
 				}
 				fragment Foo on Type {
 					field
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("multiple operations of same name", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo {
         fieldA
       }
       query Foo {
         fieldB
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'There can be only one operation named "Foo".',
 					locations = {
@@ -102,14 +123,17 @@ return function()
 		end)
 
 		it("multiple ops of same name of different types (mutation)", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo {
         fieldA
       }
       mutation Foo {
         fieldB
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'There can be only one operation named "Foo".',
 					locations = {
@@ -121,14 +145,17 @@ return function()
 		end)
 
 		it("multiple ops of same name of different types (subscription)", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo {
         fieldA
       }
       subscription Foo {
         fieldB
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'There can be only one operation named "Foo".',
 					locations = {

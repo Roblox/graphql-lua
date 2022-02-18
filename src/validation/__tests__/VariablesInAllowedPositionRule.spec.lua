@@ -2,8 +2,8 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local VariablesInAllowedPositionRule = require(validationWorkspace.rules.VariablesInAllowedPositionRule)
-		.VariablesInAllowedPositionRule
+	local VariablesInAllowedPositionRule =
+		require(validationWorkspace.rules.VariablesInAllowedPositionRule).VariablesInAllowedPositionRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -20,18 +20,23 @@ return function()
 
 	describe("Validate: Variables are in allowed positions", function()
 		it("Boolean => Boolean", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Query($booleanArg: Boolean)
 				{
 					complicatedArgs {
 						booleanArgField(booleanArg: $booleanArg)
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("Boolean => Boolean within fragment", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment booleanArgFrag on ComplicatedArgs {
 					booleanArgField(booleanArg: $booleanArg)
 				}
@@ -41,8 +46,11 @@ return function()
 						...booleanArgFrag
 					}
 				}
-			]])
-			expectValid(expect, [[
+			]]
+			)
+			expectValid(
+				expect,
+				[[
 				query Query($booleanArg: Boolean)
 				{
 					complicatedArgs {
@@ -52,22 +60,28 @@ return function()
 				fragment booleanArgFrag on ComplicatedArgs {
 					booleanArgField(booleanArg: $booleanArg)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("Boolean! => Boolean", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Query($nonNullBooleanArg: Boolean!)
 				{
 					complicatedArgs {
 						booleanArgField(booleanArg: $nonNullBooleanArg)
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("Boolean! => Boolean within fragment", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment booleanArgFrag on ComplicatedArgs {
 					booleanArgField(booleanArg: $nonNullBooleanArg)
 				}
@@ -78,92 +92,117 @@ return function()
 						...booleanArgFrag
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("[String] => [String]", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Query($stringListVar: [String])
 				{
 					complicatedArgs {
 						stringListArgField(stringListArg: $stringListVar)
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("[String!] => [String]", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Query($stringListVar: [String!])
 				{
 					complicatedArgs {
 						stringListArgField(stringListArg: $stringListVar)
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("String => [String] in item position", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Query($stringVar: String)
 				{
 					complicatedArgs {
 						stringListArgField(stringListArg: [$stringVar])
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("String! => [String] in item position", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Query($stringVar: String!)
 				{
 					complicatedArgs {
 						stringListArgField(stringListArg: [$stringVar])
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("ComplexInput => ComplexInput", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Query($complexVar: ComplexInput)
 				{
 					complicatedArgs {
 						complexArgField(complexArg: $complexVar)
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("ComplexInput => ComplexInput in field position", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Query($boolVar: Boolean = false)
 				{
 					complicatedArgs {
 						complexArgField(complexArg: {requiredArg: $boolVar})
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("Boolean! => Boolean! in directive", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Query($boolVar: Boolean!)
 				{
 					dog @include(if: $boolVar)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("Int => Int!", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Query($intArg: Int) {
         complicatedArgs {
           nonNullIntArgField(nonNullIntArg: $intArg)
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$intArg" of type "Int" used in position expecting type "Int!".',
 					locations = {
@@ -175,7 +214,9 @@ return function()
 		end)
 
 		it("Int => Int! within fragment", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment nonNullIntArgFieldFrag on ComplicatedArgs {
         nonNullIntArgField(nonNullIntArg: $intArg)
       }
@@ -185,7 +226,8 @@ return function()
           ...nonNullIntArgFieldFrag
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$intArg" of type "Int" used in position expecting type "Int!".',
 					locations = {
@@ -197,7 +239,9 @@ return function()
 		end)
 
 		it("Int => Int! within nested fragment", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment outerFrag on ComplicatedArgs {
         ...nonNullIntArgFieldFrag
       }
@@ -211,7 +255,8 @@ return function()
           ...outerFrag
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$intArg" of type "Int" used in position expecting type "Int!".',
 					locations = {
@@ -223,13 +268,16 @@ return function()
 		end)
 
 		it("String over Boolean", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Query($stringVar: String) {
         complicatedArgs {
           booleanArgField(booleanArg: $stringVar)
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$stringVar" of type "String" used in position expecting type "Boolean".',
 					locations = {
@@ -241,13 +289,16 @@ return function()
 		end)
 
 		it("String => [String]", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Query($stringVar: String) {
         complicatedArgs {
           stringListArgField(stringListArg: $stringVar)
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$stringVar" of type "String" used in position expecting type "[String]".',
 					locations = {
@@ -259,11 +310,14 @@ return function()
 		end)
 
 		it("Boolean => Boolean! in directive", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Query($boolVar: Boolean) {
         dog @include(if: $boolVar)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$boolVar" of type "Boolean" used in position expecting type "Boolean!".',
 					locations = {
@@ -275,11 +329,14 @@ return function()
 		end)
 
 		it("String => Boolean! in directive", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Query($stringVar: String) {
         dog @include(if: $stringVar)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$stringVar" of type "String" used in position expecting type "Boolean!".',
 					locations = {
@@ -291,14 +348,17 @@ return function()
 		end)
 
 		it("[String] => [String!]", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Query($stringListVar: [String])
       {
         complicatedArgs {
           stringListNonNullArgField(stringListNonNullArg: $stringListVar)
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$stringListVar" of type "[String]" used in position expecting type "[String!]".',
 					locations = {
@@ -311,13 +371,16 @@ return function()
 
 		describe("Allows optional (nullable) variables with default values", function()
 			it("Int => Int! fails when variable provides null default value", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         query Query($intVar: Int = null) {
           complicatedArgs {
             nonNullIntArgField(nonNullIntArg: $intVar)
           }
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Variable "$intVar" of type "Int" used in position expecting type "Int!".',
 						locations = {
@@ -332,16 +395,21 @@ return function()
 			end)
 
 			it("Int => Int! when variable provides non-null default value", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					query Query($intVar: Int = 1) {
 						complicatedArgs {
 							nonNullIntArgField(nonNullIntArg: $intVar)
 						}
-					}]])
+					}]]
+				)
 			end)
 
 			it("Int => Int! when optional argument provides default value", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					query Query($intVar: Int) {
 						complicatedArgs {
 							nonNullFieldWithDefault(nonNullIntArg: $intVar)
@@ -351,7 +419,9 @@ return function()
 			end)
 
 			it("Boolean => Boolean! in directive with default value with option", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					query Query($boolVar: Boolean = false) {
 						dog @include(if: $boolVar)
 					}]]

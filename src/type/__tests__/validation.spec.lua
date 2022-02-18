@@ -2,11 +2,11 @@
 return function()
 	local typeWorkspace = script.Parent.Parent
 	local srcWorkspace = typeWorkspace.Parent
-	local rootWorkspace = srcWorkspace.Parent
-	
-	local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+	local Packages = srcWorkspace.Parent
+	local LuauPolyfill = require(Packages.LuauPolyfill)
 	local Array = LuauPolyfill.Array
-	
+	local JestGlobals = require(Packages.Dev.JestGlobals)
+	local jestExpect = JestGlobals.expect
 	local luaUtilsWorkspace = srcWorkspace.luaUtils
 	local NULL = require(luaUtilsWorkspace.null)
 
@@ -456,7 +456,7 @@ return function()
 			-- ROBLOX deviation: TestEZ can't seem to do a partial object match within an array
 			expect(#validateSchema(schema)).to.equal(2)
 			expect(validateSchema(schema)[1]).toObjectContain({
-				message = "Expected GraphQL named type but got: { name: \"SomeType\" }.",
+				message = 'Expected GraphQL named type but got: { name: "SomeType" }.',
 			})
 			expect(validateSchema(schema)[2]).toObjectContain({
 				message = "Expected GraphQL named type but got: @SomeDirective.",
@@ -487,7 +487,7 @@ return function()
 
 			-- ROBLOX deviation: TestEZ can't seem to do a partial object match within an array
 			expect(validateSchema(schema)[1]).toObjectContain({
-				message = "Expected directive but got: \"SomeDirective\".",
+				message = 'Expected directive but got: "SomeDirective".',
 			})
 			expect(validateSchema(schema)[2]).toObjectContain({
 				message = "Expected directive but got: SomeScalar.",
@@ -572,7 +572,7 @@ return function()
 			-- ROBLOX deviation: TestEZ can't seem to do a partial object match within an array
 			expect(validateSchema(schema)[1]).toObjectContain({
 				-- ROBLOX deviation: Lua pattern instead of RegExp
-				message = "Names must match [_%a][_%a%d]* but \"bad-name-with-dashes\" does not.",
+				message = 'Names must match [_%a][_%a%d]* but "bad-name-with-dashes" does not.',
 			})
 		end)
 	end)
@@ -609,7 +609,7 @@ return function()
 			-- ROBLOX deviation: TestEZ can't seem to do a partial object match within an array
 			-- ROBLOX deviation: Lua pattern instead of RegExp
 			expect(validateSchema(schema)[1]).toObjectContain({
-				message = "Names must match [_%a][_%a%d]* but \"bad-name-with-dashes\" does not.",
+				message = 'Names must match [_%a][_%a%d]* but "bad-name-with-dashes" does not.',
 			})
 		end)
 	end)
@@ -802,7 +802,8 @@ return function()
 
 				-- ROBLOX TODO: TestEZ can't seem to do a partial object match within an array
 				expect(validateSchema(badSchema)[1]).toObjectContain({
-					message = "Union type BadUnion can only include Object types, " .. ("it cannot include %s."):format(inspect(memberType)),
+					message = "Union type BadUnion can only include Object types, "
+						.. ("it cannot include %s."):format(inspect(memberType)),
 				})
 			end
 		end)
@@ -895,7 +896,7 @@ return function()
 
 			-- ROBLOX TODO: TestEZ can't seem to do a partial object match within an array
 			expect(validateSchema(schema)[1]).toObjectContain({
-				message = "Cannot reference Input Object \"SomeInputObject\" within itself through a series of non-null fields: \"nonNullSelf\".",
+				message = 'Cannot reference Input Object "SomeInputObject" within itself through a series of non-null fields: "nonNullSelf".',
 				locations = {
 					{
 						line = 7,
@@ -905,10 +906,8 @@ return function()
 			})
 		end)
 
-		it(
-			"rejects Input Objects with non-breakable circular reference spread across them",
-			function()
-				local schema = buildSchema([[
+		it("rejects Input Objects with non-breakable circular reference spread across them", function()
+			local schema = buildSchema([[
 
       type Query {
         field(arg: SomeInputObject): String
@@ -927,26 +926,25 @@ return function()
       }
 	    ]])
 
-				-- ROBLOX TODO: TestEZ can't seem to do a partial object match within an array
-				expect(validateSchema(schema)[1]).toObjectContain({
-					message = "Cannot reference Input Object \"SomeInputObject\" within itself through a series of non-null fields: \"startLoop.nextInLoop.closeLoop\".",
-					locations = {
-						{
-							line = 7,
-							column = 9,
-						},
-						{
-							line = 11,
-							column = 9,
-						},
-						{
-							line = 15,
-							column = 9,
-						},
+			-- ROBLOX TODO: TestEZ can't seem to do a partial object match within an array
+			expect(validateSchema(schema)[1]).toObjectContain({
+				message = 'Cannot reference Input Object "SomeInputObject" within itself through a series of non-null fields: "startLoop.nextInLoop.closeLoop".',
+				locations = {
+					{
+						line = 7,
+						column = 9,
 					},
-				})
-			end
-		)
+					{
+						line = 11,
+						column = 9,
+					},
+					{
+						line = 15,
+						column = 9,
+					},
+				},
+			})
+		end)
 
 		it("rejects Input Objects with multiple non-breakable circular reference", function()
 			local schema = buildSchema([[
@@ -973,7 +971,7 @@ return function()
 			-- ROBLOX TODO: TestEZ can't seem to do a partial object match within an array
 			local validationResult = validateSchema(schema)
 			expect(validationResult[1]).toObjectContain({
-				message = "Cannot reference Input Object \"SomeInputObject\" within itself through a series of non-null fields: \"startLoop.closeLoop\".",
+				message = 'Cannot reference Input Object "SomeInputObject" within itself through a series of non-null fields: "startLoop.closeLoop".',
 				locations = {
 					{
 						line = 7,
@@ -987,7 +985,7 @@ return function()
 			})
 
 			expect(validationResult[2]).toObjectContain({
-				message = "Cannot reference Input Object \"AnotherInputObject\" within itself through a series of non-null fields: \"startSecondLoop.closeSecondLoop\".",
+				message = 'Cannot reference Input Object "AnotherInputObject" within itself through a series of non-null fields: "startSecondLoop.closeSecondLoop".',
 				locations = {
 					{
 						line = 12,
@@ -1001,7 +999,7 @@ return function()
 			})
 
 			expect(validationResult[3]).toObjectContain({
-				message = "Cannot reference Input Object \"YetAnotherInputObject\" within itself through a series of non-null fields: \"nonNullSelf\".",
+				message = 'Cannot reference Input Object "YetAnotherInputObject" within itself through a series of non-null fields: "nonNullSelf".',
 				locations = {
 					{
 						line = 17,
@@ -1135,7 +1133,7 @@ return function()
 			-- ROBLOX TODO: TestEZ can't seem to do a partial object match within an array
 			expect(validateSchema(schema1)[1]).toObjectContain({
 				-- ROBLOX deviation: Lua pattern instead of RegExp
-				message = "Names must match [_%a][_%a%d]* but \"#value\" does not.",
+				message = 'Names must match [_%a][_%a%d]* but "#value" does not.',
 			})
 
 			local schema2 = schemaWithEnum({
@@ -1145,7 +1143,7 @@ return function()
 			-- ROBLOX TODO: TestEZ can't seem to do a partial object match within an array
 			expect(validateSchema(schema2)[1]).toObjectContain({
 				-- ROBLOX deviation: Lua pattern instead of RegExp
-				message = "Names must match [_%a][_%a%d]* but \"1value\" does not.",
+				message = 'Names must match [_%a][_%a%d]* but "1value" does not.',
 			})
 
 			local schema3 = schemaWithEnum({
@@ -1155,7 +1153,7 @@ return function()
 			-- ROBLOX TODO: TestEZ can't seem to do a partial object match within an array
 			expect(validateSchema(schema3)[1]).toObjectContain({
 				-- ROBLOX deviation: Lua pattern instead of RegExp
-				message = "Names must match [_%a][_%a%d]* but \"KEBAB-CASE\" does not.",
+				message = 'Names must match [_%a][_%a%d]* but "KEBAB-CASE" does not.',
 			})
 
 			local schema4 = schemaWithEnum({ [true] = {} })
@@ -1172,13 +1170,11 @@ return function()
 				message = "Enum type SomeEnum cannot include value: false.",
 			})
 
-			local schema6 = schemaWithEnum({[NULL] = {}})
+			local schema6 = schemaWithEnum({ [NULL] = {} })
 
-			expect(validateSchema(schema6)[1]).toObjectContain(
-			    {
-			        message = 'Enum type SomeEnum cannot include value: null.',
-			    }
-			)
+			expect(validateSchema(schema6)[1]).toObjectContain({
+				message = "Enum type SomeEnum cannot include value: null.",
+			})
 		end)
 	end)
 
@@ -1203,14 +1199,11 @@ return function()
 		for _, type_ in ipairs(outputTypes) do
 			local typeName = inspect(type_)
 
-			it(
-				("accepts an output type as an Object field type: %s"):format(typeName),
-				function()
-					local schema = schemaWithObjectField({ type = type_ })
+			it(("accepts an output type as an Object field type: %s"):format(typeName), function()
+				local schema = schemaWithObjectField({ type = type_ })
 
-					expect(validateSchema(schema)).toEqual({})
-				end
-			)
+				expect(validateSchema(schema)).toEqual({})
+			end)
 		end
 
 		it("rejects an empty Object field type", function()
@@ -1225,23 +1218,19 @@ return function()
 		for _, type_ in ipairs(notOutputTypes) do
 			local typeStr = inspect(type_)
 
-			it(
-				("rejects a non-output type as an Object field type: %s"):format(typeStr),
-				function()
-					local schema = schemaWithObjectField({ type = type_ })
+			it(("rejects a non-output type as an Object field type: %s"):format(typeStr), function()
+				local schema = schemaWithObjectField({ type = type_ })
 
-					-- ROBLOX TODO: TestEZ can't seem to do a partial object match within an array
-					expect(validateSchema(schema)[1]).toObjectContain({
-						message = ("The type of BadObject.badField must be Output Type but got: %s."):format(typeStr),
-					})
-				end
-			)
+				-- ROBLOX TODO: TestEZ can't seem to do a partial object match within an array
+				expect(validateSchema(schema)[1]).toObjectContain({
+					message = ("The type of BadObject.badField must be Output Type but got: %s."):format(typeStr),
+				})
+			end)
 		end
 
 		it("rejects a non-type value as an Object field type", function()
 			-- ROBLOX deviation: upstream JS `Number` symbol resolves to a function for the purposes of this test
-			local function Number()
-			end
+			local function Number() end
 			local schema = schemaWithObjectField({ type = Number })
 
 			expect(validateSchema(schema)[1]).toObjectContain({
@@ -1252,10 +1241,8 @@ return function()
 			})
 		end)
 
-		it(
-			"rejects with relevant locations for a non-output type as an Object field type",
-			function()
-				local schema = buildSchema([[
+		it("rejects with relevant locations for a non-output type as an Object field type", function()
+			local schema = buildSchema([[
 
       type Query {
         field: [SomeInputObject]
@@ -1266,18 +1253,17 @@ return function()
       }
 	    ]])
 
-				-- ROBLOX TODO: TestEZ can't seem to do a partial object match within an array
-				expect(validateSchema(schema)[1]).toObjectContain({
-					message = "The type of Query.field must be Output Type but got: [SomeInputObject].",
-					locations = {
-						{
-							line = 3,
-							column = 16,
-						},
+			-- ROBLOX TODO: TestEZ can't seem to do a partial object match within an array
+			expect(validateSchema(schema)[1]).toObjectContain({
+				message = "The type of Query.field must be Output Type but got: [SomeInputObject].",
+				locations = {
+					{
+						line = 3,
+						column = 16,
 					},
-				})
-			end
-		)
+				},
+			})
+		end)
 	end)
 	describe("Type System: Objects can only implement unique interfaces", function()
 		-- ROBLOX deviation: can't store nil as a key, and Lua doesn't have `undefined`
@@ -1357,10 +1343,8 @@ return function()
 			})
 		end)
 
-		it(
-			"rejects an Object implementing the same interface twice due to extension",
-			function()
-				local schema = buildSchema([[
+		it("rejects an Object implementing the same interface twice due to extension", function()
+			local schema = buildSchema([[
 
       type Query {
         test: AnotherObject
@@ -1374,30 +1358,27 @@ return function()
         field: String
       }
     ]])
-				local extendedSchema = extendSchema(schema, parse("extend type AnotherObject implements AnotherInterface"))
+			local extendedSchema = extendSchema(schema, parse("extend type AnotherObject implements AnotherInterface"))
 
-				expect(validateSchema(extendedSchema)[1]).toObjectContain({
-					message = "Type AnotherObject can only implement AnotherInterface once.",
-					locations = {
-						{
-							line = 10,
-							column = 37,
-						},
-						{
-							line = 1,
-							column = 38,
-						},
+			expect(validateSchema(extendedSchema)[1]).toObjectContain({
+				message = "Type AnotherObject can only implement AnotherInterface once.",
+				locations = {
+					{
+						line = 10,
+						column = 37,
 					},
-				})
-			end
-		)
+					{
+						line = 1,
+						column = 38,
+					},
+				},
+			})
+		end)
 	end)
 
 	describe("Type System: Interface extensions should be valid", function()
-		it(
-			"rejects an Object implementing the extended interface due to missing field",
-			function()
-				local schema = buildSchema([[
+		it("rejects an Object implementing the extended interface due to missing field", function()
+			local schema = buildSchema([[
 
       type Query {
         test: AnotherObject
@@ -1411,9 +1392,9 @@ return function()
         field: String
       }
     ]])
-				local extendedSchema = extendSchema(
-					schema,
-					parse([[
+			local extendedSchema = extendSchema(
+				schema,
+				parse([[
 
         extend interface AnotherInterface {
           newField: String
@@ -1423,32 +1404,29 @@ return function()
           differentNewField: String
         }
       ]])
-				)
+			)
 
-				expect(validateSchema(extendedSchema)[1]).toObjectContain({
-					message = "Interface field AnotherInterface.newField expected but AnotherObject does not provide it.",
-					locations = {
-						{
-							line = 3,
-							column = 11,
-						},
-						{
-							line = 10,
-							column = 7,
-						},
-						{
-							line = 6,
-							column = 9,
-						},
+			expect(validateSchema(extendedSchema)[1]).toObjectContain({
+				message = "Interface field AnotherInterface.newField expected but AnotherObject does not provide it.",
+				locations = {
+					{
+						line = 3,
+						column = 11,
 					},
-				})
-			end
-		)
+					{
+						line = 10,
+						column = 7,
+					},
+					{
+						line = 6,
+						column = 9,
+					},
+				},
+			})
+		end)
 
-		it(
-			"rejects an Object implementing the extended interface due to missing field args",
-			function()
-				local schema = buildSchema([[
+		it("rejects an Object implementing the extended interface due to missing field args", function()
+			local schema = buildSchema([[
 
       type Query {
         test: AnotherObject
@@ -1462,9 +1440,9 @@ return function()
         field: String
       }
     ]])
-				local extendedSchema = extendSchema(
-					schema,
-					parse([[
+			local extendedSchema = extendSchema(
+				schema,
+				parse([[
 
         extend interface AnotherInterface {
           newField(test: Boolean): String
@@ -1474,28 +1452,25 @@ return function()
           newField: String
         }
       ]])
-				)
+			)
 
-				expect(validateSchema(extendedSchema)[1]).toObjectContain({
-					message = "Interface field argument AnotherInterface.newField(test:) expected but AnotherObject.newField does not provide it.",
-					locations = {
-						{
-							line = 3,
-							column = 20,
-						},
-						{
-							line = 7,
-							column = 11,
-						},
+			expect(validateSchema(extendedSchema)[1]).toObjectContain({
+				message = "Interface field argument AnotherInterface.newField(test:) expected but AnotherObject.newField does not provide it.",
+				locations = {
+					{
+						line = 3,
+						column = 20,
 					},
-				})
-			end
-		)
+					{
+						line = 7,
+						column = 11,
+					},
+				},
+			})
+		end)
 
-		it(
-			"rejects Objects implementing the extended interface due to mismatching interface type",
-			function()
-				local schema = buildSchema([[
+		it("rejects Objects implementing the extended interface due to mismatching interface type", function()
+			local schema = buildSchema([[
 
       type Query {
         test: AnotherObject
@@ -1509,9 +1484,9 @@ return function()
         field: String
       }
     ]])
-				local extendedSchema = extendSchema(
-					schema,
-					parse([[
+			local extendedSchema = extendSchema(
+				schema,
+				parse([[
 
         extend interface AnotherInterface {
           newInterfaceField: NewInterface
@@ -1534,23 +1509,22 @@ return function()
           newField: String
         }
       ]])
-				)
+			)
 
-				expect(validateSchema(extendedSchema)[1]).toObjectContain({
-					message = "Interface field AnotherInterface.newInterfaceField expects type NewInterface but AnotherObject.newInterfaceField is type MismatchingInterface.",
-					locations = {
-						{
-							line = 3,
-							column = 30,
-						},
-						{
-							line = 15,
-							column = 30,
-						},
+			expect(validateSchema(extendedSchema)[1]).toObjectContain({
+				message = "Interface field AnotherInterface.newInterfaceField expects type NewInterface but AnotherObject.newInterfaceField is type MismatchingInterface.",
+				locations = {
+					{
+						line = 3,
+						column = 30,
 					},
-				})
-			end
-		)
+					{
+						line = 15,
+						column = 30,
+					},
+				},
+			})
+		end)
 	end)
 
 	describe("Type System: Interface fields must have output types", function()
@@ -1580,14 +1554,11 @@ return function()
 		for _, type_ in ipairs(outputTypes) do
 			local typeName = inspect(type_)
 
-			it(
-				("accepts an output type as an Interface field type: %s"):format(typeName),
-				function()
-					local schema = schemaWithInterfaceField({ type = type_ })
+			it(("accepts an output type as an Interface field type: %s"):format(typeName), function()
+				local schema = schemaWithInterfaceField({ type = type_ })
 
-					expect(validateSchema(schema)).toEqual({})
-				end
-			)
+				expect(validateSchema(schema)).toEqual({})
+			end)
 		end
 
 		it("rejects an empty Interface field type", function()
@@ -1604,25 +1575,21 @@ return function()
 		for _, type_ in ipairs(notOutputTypes) do
 			local typeStr = inspect(type_)
 
-			it(
-				("rejects a non-output type as an Interface field type: %s"):format(typeStr),
-				function()
-					local schema = schemaWithInterfaceField({ type = type_ })
+			it(("rejects a non-output type as an Interface field type: %s"):format(typeStr), function()
+				local schema = schemaWithInterfaceField({ type = type_ })
 
-					expect(validateSchema(schema)[1]).toObjectContain({
-						message = ("The type of BadImplementing.badField must be Output Type but got: %s."):format(typeStr),
-					})
-					expect(validateSchema(schema)[2]).toObjectContain({
-						message = ("The type of BadInterface.badField must be Output Type but got: %s."):format(typeStr),
-					})
-				end
-			)
+				expect(validateSchema(schema)[1]).toObjectContain({
+					message = ("The type of BadImplementing.badField must be Output Type but got: %s."):format(typeStr),
+				})
+				expect(validateSchema(schema)[2]).toObjectContain({
+					message = ("The type of BadInterface.badField must be Output Type but got: %s."):format(typeStr),
+				})
+			end)
 		end
 
 		it("rejects a non-type value as an Interface field type", function()
 			-- ROBLOX deviation: upstream JS `Number` symbol resolves to a function for the purposes of this test
-			local function Number()
-			end
+			local function Number() end
 
 			local schema = schemaWithInterfaceField({ type = Number })
 
@@ -1759,15 +1726,16 @@ return function()
 					message = ("The type of @BadDirective(badArg:) must be Input Type but got: %s."):format(typeStr),
 				})
 				expect(validateSchema(schema)[2]).toObjectContain({
-					message = ("The type of BadObject.badField(badArg:) must be Input Type but got: %s."):format(typeStr),
+					message = ("The type of BadObject.badField(badArg:) must be Input Type but got: %s."):format(
+						typeStr
+					),
 				})
 			end)
 		end
 
 		it("rejects a non-type value as a field arg type", function()
 			-- ROBLOX deviation: upstream JS `Number` symbol resolves to a function for the purposes of this test
-			local function Number()
-			end
+			local function Number() end
 
 			local schema = schemaWithArg({ type = Number })
 
@@ -1880,14 +1848,11 @@ return function()
 		for _, type_ in ipairs(inputTypes) do
 			local typeName = inspect(type_)
 
-			it(
-				("accepts an input type as an input field type: %s"):format(typeName),
-				function()
-					local schema = schemaWithInputField({ type = type_ })
+			it(("accepts an input type as an input field type: %s"):format(typeName), function()
+				local schema = schemaWithInputField({ type = type_ })
 
-					expect(validateSchema(schema)).toEqual({})
-				end
-			)
+				expect(validateSchema(schema)).toEqual({})
+			end)
 		end
 
 		-- ROBLOX deviation: can't store nil as a key, and Lua doesn't have `undefined`
@@ -1902,22 +1867,18 @@ return function()
 		for _, type_ in ipairs(notInputTypes) do
 			local typeStr = inspect(type_)
 
-			it(
-				("rejects a non-input type as an input field type: %s"):format(typeStr),
-				function()
-					local schema = schemaWithInputField({ type = type_ })
+			it(("rejects a non-input type as an input field type: %s"):format(typeStr), function()
+				local schema = schemaWithInputField({ type = type_ })
 
-					expect(validateSchema(schema)[1]).toObjectContain({
-						message = ("The type of BadInputObject.badField must be Input Type but got: %s."):format(typeStr),
-					})
-				end
-			)
+				expect(validateSchema(schema)[1]).toObjectContain({
+					message = ("The type of BadInputObject.badField must be Input Type but got: %s."):format(typeStr),
+				})
+			end)
 		end
 
 		it("rejects a non-type value as an input field type", function()
 			-- ROBLOX deviation: upstream JS `Number` symbol resolves to a function for the purposes of this test
-			local function Number()
-			end
+			local function Number() end
 			local schema = schemaWithInputField({ type = Number })
 
 			expect(validateSchema(schema)[1]).toObjectContain({
@@ -1996,10 +1957,8 @@ return function()
 			expect(validateSchema(schema)).toEqual({})
 		end)
 
-		it(
-			"accepts an Object which implements an Interface field along with additional optional arguments",
-			function()
-				local schema = buildSchema([[
+		it("accepts an Object which implements an Interface field along with additional optional arguments", function()
+			local schema = buildSchema([[
 
       type Query {
         test: AnotherObject
@@ -2014,9 +1973,8 @@ return function()
       }
     ]])
 
-				expect(validateSchema(schema)).toEqual({})
-			end
-		)
+			expect(validateSchema(schema)).toEqual({})
+		end)
 
 		it("rejects an Object missing an Interface field", function()
 			local schema = buildSchema([[
@@ -2205,7 +2163,9 @@ return function()
       }
     ]])
 
-			expect(validateSchema(schema)[1]).toObjectContain({
+			-- ROBLOX deviation START: use jestExpect here so failures have easy-to-read diffs
+			jestExpect(validateSchema(schema)[1]).toMatchObject({
+				-- ROBLOX deviation END
 				message = "Interface field argument AnotherInterface.field(input:) expects type String but AnotherObject.field(input:) is type Int.",
 				locations = {
 					{
@@ -2263,10 +2223,8 @@ return function()
 			})
 		end)
 
-		it(
-			"rejects an Object which implements an Interface field along with additional required arguments",
-			function()
-				local schema = buildSchema([[
+		it("rejects an Object which implements an Interface field along with additional required arguments", function()
+			local schema = buildSchema([[
 
       type Query {
         test: AnotherObject
@@ -2286,21 +2244,20 @@ return function()
       }
     ]])
 
-				expect(validateSchema(schema)[1]).toObjectContain({
-					message = "Object field AnotherObject.field includes required argument requiredArg that is missing from the Interface field AnotherInterface.field.",
-					locations = {
-						{
-							line = 13,
-							column = 11,
-						},
-						{
-							line = 7,
-							column = 9,
-						},
+			expect(validateSchema(schema)[1]).toObjectContain({
+				message = "Object field AnotherObject.field includes required argument requiredArg that is missing from the Interface field AnotherInterface.field.",
+				locations = {
+					{
+						line = 13,
+						column = 11,
 					},
-				})
-			end
-		)
+					{
+						line = 7,
+						column = 9,
+					},
+				},
+			})
+		end)
 
 		it("accepts an Object with an equivalently wrapped Interface field type", function()
 			local schema = buildSchema([[
@@ -2489,10 +2446,8 @@ return function()
 			expect(validateSchema(schema)).toEqual({})
 		end)
 
-		it(
-			"accepts an Interface which implements an Interface along with more fields",
-			function()
-				local schema = buildSchema([[
+		it("accepts an Interface which implements an Interface along with more fields", function()
+			local schema = buildSchema([[
 
       type Query {
         test: ChildInterface
@@ -2508,9 +2463,8 @@ return function()
       }
     ]])
 
-				expect(validateSchema(schema)).toEqual({})
-			end
-		)
+			expect(validateSchema(schema)).toEqual({})
+		end)
 
 		it(
 			"accepts an Interface which implements an Interface field along with additional optional arguments",

@@ -2,8 +2,7 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local KnownFragmentNamesRule = require(validationWorkspace.rules.KnownFragmentNamesRule)
-		.KnownFragmentNamesRule
+	local KnownFragmentNamesRule = require(validationWorkspace.rules.KnownFragmentNamesRule).KnownFragmentNamesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -20,7 +19,9 @@ return function()
 
 	describe("Validate: Known fragment names", function()
 		it("known fragment names are valid", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					human(id: 4) {
 						...HumanFields1
@@ -42,11 +43,14 @@ return function()
 				fragment HumanFields3 on Human {
 					name
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("unknown fragment names are invalid", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         human(id: 4) {
           ...UnknownFragment1
@@ -59,18 +63,19 @@ return function()
         name
         ...UnknownFragment3
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Unknown fragment "UnknownFragment1".',
-					locations = {{ line = 4, column = 14 }},
+					locations = { { line = 4, column = 14 } },
 				},
 				{
 					message = 'Unknown fragment "UnknownFragment2".',
-					locations = {{ line = 6, column = 16 }},
+					locations = { { line = 6, column = 16 } },
 				},
 				{
 					message = 'Unknown fragment "UnknownFragment3".',
-					locations = {{ line = 12, column = 12 }},
+					locations = { { line = 12, column = 12 } },
 				},
 			})
 		end)

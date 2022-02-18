@@ -1,5 +1,4 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/aa650618426a301e3f0f61ead3adcd755055a627/src/type/schema.js
-
 local srcWorkspace = script.Parent.Parent
 local luaUtilsWorkspace = srcWorkspace.luaUtils
 
@@ -181,7 +180,7 @@ GraphQLSchema = {}
 GraphQLSchema.__index = GraphQLSchema
 
 function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
-	local self = setmetatable({}, GraphQLSchema)
+	local self = (setmetatable({}, GraphQLSchema) :: any) :: GraphQLSchema
 
 	-- // If this schema was built from a source known to be valid, then it may be
 	-- // marked with assumeValid to avoid an additional type system validation.
@@ -202,7 +201,7 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 	)
 
 	self.description = config.description
-	self.extensions = config.extensions and toObjMap(config.extensions)
+	self.extensions = if config.extensions then toObjMap(config.extensions) else nil
 	self.astNode = config.astNode
 	self.extensionASTNodes = config.extensionASTNodes
 
@@ -282,7 +281,11 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 			-- // Store implementations by interface.
 			for _, iface in ipairs(namedType:getInterfaces()) do
 				if isInterfaceType(iface) then
-					local implementations = self._implementationsMap:get(iface.name)
+					-- ROBLOX FIXME Luau: Luau doesn't understand if nil then initialize pattern
+					local implementations = self._implementationsMap:get(iface.name) :: {
+						objects: Array<GraphQLObjectType>,
+						interfaces: Array<GraphQLInterfaceType>,
+					}
 					if implementations == nil then
 						implementations = {
 							objects = {},
@@ -298,7 +301,11 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 			-- // Store implementations by objects.
 			for _, iface in ipairs(namedType:getInterfaces()) do
 				if isInterfaceType(iface) then
-					local implementations = self._implementationsMap:get(iface.name)
+					-- ROBLOX FIXME Luau: Luau doesn't understand if nil then initialize pattern
+					local implementations = self._implementationsMap:get(iface.name) :: {
+						objects: Array<GraphQLObjectType>,
+						interfaces: Array<GraphQLInterfaceType>,
+					}
 
 					if implementations == nil then
 						implementations = {

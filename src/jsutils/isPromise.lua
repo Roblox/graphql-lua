@@ -14,5 +14,5 @@ local function isPromise(value)
 end
 
 return {
-	isPromise = isPromise
+	isPromise = isPromise,
 }

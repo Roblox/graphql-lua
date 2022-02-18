@@ -9,7 +9,7 @@ return function()
 		it("should not be extendable", function()
 			expect(function()
 				NULL.foo = "bar"
-			end).toThrow("\"foo\" (string) is not a valid member of null")
+			end).toThrow('"foo" (string) is not a valid member of null')
 		end)
 	end)
 end

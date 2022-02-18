@@ -5,8 +5,8 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local NoDeprecatedCustomRule = require(validationWorkspace.rules.custom.NoDeprecatedCustomRule)
-		.NoDeprecatedCustomRule
+	local NoDeprecatedCustomRule =
+		require(validationWorkspace.rules.custom.NoDeprecatedCustomRule).NoDeprecatedCustomRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrorsWithSchema = harness.expectValidationErrorsWithSchema
 
@@ -17,12 +17,7 @@ return function()
 			-- ROBLOX deviation: we append a new line at the begining of the
 			-- query string because of how Lua multiline strings works (it does
 			-- take the new line if it's the first character of the string)
-			return expectValidationErrorsWithSchema(
-				expect_,
-				schema,
-				NoDeprecatedCustomRule,
-				"\n" .. queryStr
-			)
+			return expectValidationErrorsWithSchema(expect_, schema, NoDeprecatedCustomRule, "\n" .. queryStr)
 		end
 
 		local function expectValid(expect_, queryStr: string)
@@ -47,15 +42,20 @@ return function()
 			local expectErrors = assertion.expectErrors
 
 			it("ignores fields that are not deprecated", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						normalField
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("ignores unknown fields", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						unknownField
 					}
@@ -63,13 +63,16 @@ return function()
 					fragment UnknownFragment on UnknownType {
 						deprecatedField
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("reports error when a deprecated field is selected", function()
 				local message = "The field Query.deprecatedField is deprecated. Some field reason."
 
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           deprecatedField
         }
@@ -77,14 +80,15 @@ return function()
         fragment QueryFragment on Query {
           deprecatedField
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = message,
-						locations = {{ line = 3, column = 11 }},
+						locations = { { line = 3, column = 11 } },
 					},
 					{
 						message = message,
-						locations = {{ line = 7, column = 11 }},
+						locations = { { line = 7, column = 11 } },
 					},
 				})
 			end)
@@ -103,31 +107,40 @@ return function()
 			local expectErrors = assertion.expectErrors
 
 			it("ignores arguments that are not deprecated", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						normalField(normalArg: "")
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("ignores unknown arguments", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						someField(unknownArg: "")
 						unknownField(deprecatedArg: "")
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("reports error when a deprecated argument is used", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           someField(deprecatedArg: "")
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Field "Query.someField" argument "deprecatedArg" is deprecated. Some arg reason.',
-						locations = {{ line = 3, column = 21 }},
+						locations = { { line = 3, column = 21 } },
 					},
 				})
 			end)
@@ -148,31 +161,40 @@ return function()
 			local expectErrors = assertion.expectErrors
 
 			it("ignores arguments that are not deprecated", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						someField @someDirective(normalArg: "")
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("ignores unknown arguments", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						someField @someDirective(unknownArg: "")
 						someField @unknownDirective(deprecatedArg: "")
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("reports error when a deprecated argument is used", function()
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           someField @someDirective(deprecatedArg: "")
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Directive "@someDirective" argument "deprecatedArg" is deprecated. Some arg reason.',
-						locations = {{ line = 3, column = 36 }},
+						locations = { { line = 3, column = 36 } },
 					},
 				})
 			end)
@@ -195,17 +217,22 @@ return function()
 			local expectErrors = assertion.expectErrors
 
 			it("ignores input fields that are not deprecated", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						someField(
 							someArg: { normalField: "" }
 						) @someDirective(someArg: { normalField: "" })
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("ignores unknown input fields", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						someField(
 							someArg: { unknownField: "" }
@@ -219,26 +246,30 @@ return function()
 							unknownArg: { unknownField: "" }
 						)
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("reports error when a deprecated input field is used", function()
 				local message = "The input field InputType.deprecatedField is deprecated. Some input field reason."
 
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         {
           someField(
             someArg: { deprecatedField: "" }
           ) @someDirective(someArg: { deprecatedField: "" })
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = message,
-						locations = {{ line = 4, column = 24 }},
+						locations = { { line = 4, column = 24 } },
 					},
 					{
 						message = message,
-						locations = {{ line = 5, column = 39 }},
+						locations = { { line = 5, column = 39 } },
 					},
 				})
 			end)
@@ -259,15 +290,20 @@ return function()
 			local expectErrors = assertion.expectErrors
 
 			it("ignores enum values that are not deprecated", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					{
 						normalField(enumArg: NORMAL_VALUE)
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("ignores unknown enum values", function()
-				expectValid(expect, [[
+				expectValid(
+					expect,
+					[[
 					query (
 						$unknownValue: EnumType = UNKNOWN_VALUE
 						$unknownType: UnknownType = UNKNOWN_VALUE
@@ -280,26 +316,30 @@ return function()
 					fragment SomeFragment on Query {
 						someField(enumArg: UNKNOWN_VALUE)
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("reports error when a deprecated enum value is used", function()
 				local message = 'The enum value "EnumType.DEPRECATED_VALUE" is deprecated. Some enum reason.'
 
-				expectErrors(expect, [[
+				expectErrors(
+					expect,
+					[[
         query (
           $variable: EnumType = DEPRECATED_VALUE
         ) {
           someField(enumArg: DEPRECATED_VALUE)
         }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = message,
-						locations = {{ line = 3, column = 33 }},
+						locations = { { line = 3, column = 33 } },
 					},
 					{
 						message = message,
-						locations = {{ line = 5, column = 30 }},
+						locations = { { line = 5, column = 30 } },
 					},
 				})
 			end)

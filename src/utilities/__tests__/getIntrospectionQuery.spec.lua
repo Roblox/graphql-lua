@@ -13,7 +13,6 @@ local function stringFindAll(str, pattern)
 end
 
 return function()
-
 	local function expectIntrospectionQuery(options)
 		local query = getIntrospectionQuery(options)
 		-- ROBLOX Deviation: move the position of toRegExp to the top as they cannot appear after a return statement
@@ -41,11 +40,10 @@ return function()
 				expect(index).to.never.be.ok()
 			end,
 		}
-
 	end
 
 	describe("getIntrospectionQuery", function()
-		it("skip all \"description\" fields", function()
+		it('skip all "description" fields', function()
 			expectIntrospectionQuery().toMatch("description", 5)
 
 			expectIntrospectionQuery({ descriptions = true }).toMatch("description", 5)
@@ -53,7 +51,7 @@ return function()
 			expectIntrospectionQuery({ descriptions = false }).toNotMatch("description")
 		end)
 
-		it("include \"isRepeatable\" field on directives", function()
+		it('include "isRepeatable" field on directives', function()
 			expectIntrospectionQuery().toNotMatch("isRepeatable")
 
 			expectIntrospectionQuery({ directiveIsRepeatable = true }).toMatch("isRepeatable")
@@ -61,7 +59,7 @@ return function()
 			expectIntrospectionQuery({ directiveIsRepeatable = false }).toNotMatch("isRepeatable")
 		end)
 
-		it("include \"description\" field on schema", function()
+		it('include "description" field on schema', function()
 			expectIntrospectionQuery().toMatch("description", 5)
 
 			expectIntrospectionQuery({ schemaDescription = false }).toMatch("description", 5)
@@ -73,7 +71,7 @@ return function()
 			}).toNotMatch("description")
 		end)
 
-		it("include \"specifiedByUrl\" field", function()
+		it('include "specifiedByUrl" field', function()
 			expectIntrospectionQuery().toNotMatch("specifiedByUrl")
 
 			expectIntrospectionQuery({ specifiedByUrl = true }).toMatch("specifiedByUrl")
@@ -81,7 +79,7 @@ return function()
 			expectIntrospectionQuery({ specifiedByUrl = false }).toNotMatch("specifiedByUrl")
 		end)
 
-		it("include \"isDeprecated\" field on input values", function()
+		it('include "isDeprecated" field on input values', function()
 			expectIntrospectionQuery().toMatch("isDeprecated", 2)
 
 			expectIntrospectionQuery({ inputValueDeprecation = true }).toMatch("isDeprecated", 3)
@@ -89,7 +87,7 @@ return function()
 			expectIntrospectionQuery({ inputValueDeprecation = false }).toMatch("isDeprecated", 2)
 		end)
 
-		it("include \"deprecationReason\" field on input values", function()
+		it('include "deprecationReason" field on input values', function()
 			expectIntrospectionQuery().toMatch("deprecationReason", 2)
 
 			expectIntrospectionQuery({ inputValueDeprecation = true }).toMatch("deprecationReason", 3)

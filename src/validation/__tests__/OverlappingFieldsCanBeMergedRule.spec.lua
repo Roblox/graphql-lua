@@ -5,8 +5,8 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local OverlappingFieldsCanBeMergedRule = require(validationWorkspace.rules.OverlappingFieldsCanBeMergedRule)
-		.OverlappingFieldsCanBeMergedRule
+	local OverlappingFieldsCanBeMergedRule =
+		require(validationWorkspace.rules.OverlappingFieldsCanBeMergedRule).OverlappingFieldsCanBeMergedRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 	local expectValidationErrorsWithSchema = harness.expectValidationErrorsWithSchema
@@ -26,12 +26,7 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectValidationErrorsWithSchema(
-			expect_,
-			schema,
-			OverlappingFieldsCanBeMergedRule,
-			"\n" .. queryStr
-		)
+		return expectValidationErrorsWithSchema(expect_, schema, OverlappingFieldsCanBeMergedRule, "\n" .. queryStr)
 	end
 
 	local function expectValidWithSchema(expect_, schema, queryStr)
@@ -40,78 +35,102 @@ return function()
 
 	describe("Validate: Overlapping fields can be merged", function()
 		it("unique fields", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment uniqueFields on Dog {
 					name
 					nickname
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("identical fields", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment mergeIdenticalFields on Dog {
 					name
 					name
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("identical fields with identical args", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment mergeIdenticalFieldsWithIdenticalArgs on Dog {
 					doesKnowCommand(dogCommand: SIT)
 					doesKnowCommand(dogCommand: SIT)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("identical fields with identical directives", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment mergeSameFieldsWithSameDirectives on Dog {
 					name @include(if: true)
 					name @include(if: true)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("different args with different aliases", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment differentArgsWithDifferentAliases on Dog {
 					knowsSit: doesKnowCommand(dogCommand: SIT)
 					knowsDown: doesKnowCommand(dogCommand: DOWN)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("different directives with different aliases", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment differentDirectivesWithDifferentAliases on Dog {
 					nameIfTrue: name @include(if: true)
 					nameIfFalse: name @include(if: false)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("different skip/include directives accepted", function()
 			-- // Note: Differing skip/include directives don't create an ambiguous return
 			-- // value and are acceptable in conditions where differing runtime values
 			-- // may have the same desired effect of including or skipping a field.
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment differentDirectivesWithDifferentAliases on Dog {
 					name @include(if: true)
 					name @include(if: false)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("Same aliases with different field targets", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment sameAliasesWithDifferentFieldTargets on Dog {
         fido: name
         fido: nickname
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fields "fido" conflict because "name" and "nickname" are different fields. Use different aliases on the fields to fetch both if this was intentional.',
 					locations = {
@@ -125,7 +144,9 @@ return function()
 		it("Same aliases allowed on non-overlapping fields", function()
 			-- // This is valid since no object can be both a "Dog" and a "Cat", thus
 			-- // these fields can never overlap.
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment sameAliasesWithDifferentFieldTargets on Pet {
 					... on Dog {
 						name
@@ -134,16 +155,20 @@ return function()
 						name: nickname
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("Alias masking direct field access", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment aliasMaskingDirectFieldAccess on Dog {
         name: nickname
         name
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fields "name" conflict because "nickname" and "name" are different fields. Use different aliases on the fields to fetch both if this was intentional.',
 					locations = {
@@ -155,12 +180,15 @@ return function()
 		end)
 
 		it("different args, second adds an argument", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment conflictingArgs on Dog {
         doesKnowCommand
         doesKnowCommand(dogCommand: HEEL)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fields "doesKnowCommand" conflict because they have differing arguments. Use different aliases on the fields to fetch both if this was intentional.',
 					locations = {
@@ -172,12 +200,15 @@ return function()
 		end)
 
 		it("different args, second missing an argument", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment conflictingArgs on Dog {
         doesKnowCommand(dogCommand: SIT)
         doesKnowCommand
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fields "doesKnowCommand" conflict because they have differing arguments. Use different aliases on the fields to fetch both if this was intentional.',
 					locations = {
@@ -189,12 +220,15 @@ return function()
 		end)
 
 		it("conflicting arg values", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment conflictingArgs on Dog {
         doesKnowCommand(dogCommand: SIT)
         doesKnowCommand(dogCommand: HEEL)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fields "doesKnowCommand" conflict because they have differing arguments. Use different aliases on the fields to fetch both if this was intentional.',
 					locations = {
@@ -206,12 +240,15 @@ return function()
 		end)
 
 		it("conflicting arg names", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment conflictingArgs on Dog {
         isAtLocation(x: 0)
         isAtLocation(y: 0)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fields "isAtLocation" conflict because they have differing arguments. Use different aliases on the fields to fetch both if this was intentional.',
 					locations = {
@@ -225,7 +262,9 @@ return function()
 		it("allows different args where no conflict is possible", function()
 			-- // This is valid since no object can be both a "Dog" and a "Cat", thus
 			-- // these fields can never overlap.
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment conflictingArgs on Pet {
 					... on Dog {
 						name(surname: true)
@@ -234,11 +273,14 @@ return function()
 						name
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("encounters conflict in fragments", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         ...A
         ...B
@@ -249,7 +291,8 @@ return function()
       fragment B on Type {
         x: b
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fields "x" conflict because "a" and "b" are different fields. Use different aliases on the fields to fetch both if this was intentional.',
 					locations = {
@@ -261,7 +304,9 @@ return function()
 		end)
 
 		it("reports each conflict once", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         f1 {
           ...A
@@ -283,7 +328,8 @@ return function()
       fragment B on Type {
         x: b
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fields "x" conflict because "a" and "b" are different fields. Use different aliases on the fields to fetch both if this was intentional.',
 					locations = {
@@ -309,7 +355,9 @@ return function()
 		end)
 
 		it("deep conflict", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         field {
           x: a
@@ -318,7 +366,8 @@ return function()
           x: b
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fields "field" conflict because subfields "x" conflict because "a" and "b" are different fields. Use different aliases on the fields to fetch both if this was intentional.',
 					locations = {
@@ -332,7 +381,9 @@ return function()
 		end)
 
 		it("deep conflict with multiple issues", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         field {
           x: a
@@ -343,7 +394,8 @@ return function()
           y: d
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fields "field" conflict because subfields "x" conflict because "a" and "b" are different fields and subfields "y" conflict because "c" and "d" are different fields. Use different aliases on the fields to fetch both if this was intentional.',
 					locations = {
@@ -359,7 +411,9 @@ return function()
 		end)
 
 		it("very deep conflict", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         field {
           deepField {
@@ -372,7 +426,8 @@ return function()
           }
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fields "field" conflict because subfields "deepField" conflict because subfields "x" conflict because "a" and "b" are different fields. Use different aliases on the fields to fetch both if this was intentional.',
 					locations = {
@@ -388,7 +443,9 @@ return function()
 		end)
 
 		it("reports deep conflict to nearest common ancestor", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         field {
           deepField {
@@ -404,7 +461,8 @@ return function()
           }
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fields "deepField" conflict because subfields "x" conflict because "a" and "b" are different fields. Use different aliases on the fields to fetch both if this was intentional.',
 					locations = {
@@ -418,7 +476,9 @@ return function()
 		end)
 
 		it("reports deep conflict to nearest common ancestor in fragments", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         field {
           ...F
@@ -442,7 +502,8 @@ return function()
           }
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fields "deeperField" conflict because subfields "x" conflict because "a" and "b" are different fields. Use different aliases on the fields to fetch both if this was intentional.',
 					locations = {
@@ -456,7 +517,9 @@ return function()
 		end)
 
 		it("reports deep conflict in nested fragments", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         field {
           ...F
@@ -479,7 +542,8 @@ return function()
       fragment J on T {
         x: b
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fields "field" conflict because subfields "x" conflict because "a" and "b" are different fields and subfields "y" conflict because "c" and "d" are different fields. Use different aliases on the fields to fetch both if this was intentional.',
 					locations = {
@@ -495,7 +559,9 @@ return function()
 		end)
 
 		it("ignores unknown fragments", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field
 					...Unknown
@@ -506,7 +572,8 @@ return function()
 					field
 					...OtherUnknown
 				}
-			]])
+			]]
+			)
 		end)
 
 		describe("return types must be unambiguous", function()
@@ -574,7 +641,10 @@ return function()
 			]])
 
 			it("conflicting return types which potentially overlap", function()
-				expectErrorsWithSchema(expect, schema, [[
+				expectErrorsWithSchema(
+					expect,
+					schema,
+					[[
           {
             someBox {
               ...on IntBox {
@@ -585,7 +655,8 @@ return function()
               }
             }
           }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Fields "scalar" conflict because they return conflicting types "Int" and "String!". Use different aliases on the fields to fetch both if this was intentional.',
 						locations = {
@@ -600,7 +671,10 @@ return function()
 				-- // In this case `deepBox` returns `SomeBox` in the first usage, and
 				-- // `StringBox` in the second usage. These return types are not the same!
 				-- // however this is valid because the return *shapes* are compatible.
-				expectValidWithSchema(expect, schema, [[
+				expectValidWithSchema(
+					expect,
+					schema,
+					[[
 					{
 						someBox {
 							... on SomeBox {
@@ -615,11 +689,15 @@ return function()
 							}
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("disallows differing return types despite no overlap", function()
-				expectErrorsWithSchema(expect, schema, [[
+				expectErrorsWithSchema(
+					expect,
+					schema,
+					[[
           {
             someBox {
               ... on IntBox {
@@ -630,7 +708,8 @@ return function()
               }
             }
           }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Fields "scalar" conflict because they return conflicting types "Int" and "String". Use different aliases on the fields to fetch both if this was intentional.',
 						locations = {
@@ -642,7 +721,10 @@ return function()
 			end)
 
 			it("reports correctly when a non-exclusive follows an exclusive", function()
-				expectErrorsWithSchema(expect, schema, [[
+				expectErrorsWithSchema(
+					expect,
+					schema,
+					[[
           {
             someBox {
               ... on IntBox {
@@ -685,7 +767,8 @@ return function()
           fragment Y on SomeBox {
             scalar: unrelatedField
           }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Fields "other" conflict because subfields "scalar" conflict because "scalar" and "unrelatedField" are different fields. Use different aliases on the fields to fetch both if this was intentional.',
 						locations = {
@@ -699,7 +782,10 @@ return function()
 			end)
 
 			it("disallows differing return type nullability despite no overlap", function()
-				expectErrorsWithSchema(expect, schema, [[
+				expectErrorsWithSchema(
+					expect,
+					schema,
+					[[
           {
             someBox {
               ... on NonNullStringBox1 {
@@ -710,7 +796,8 @@ return function()
               }
             }
           }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Fields "scalar" conflict because they return conflicting types "String!" and "String". Use different aliases on the fields to fetch both if this was intentional.',
 						locations = {
@@ -722,7 +809,10 @@ return function()
 			end)
 
 			it("disallows differing return type list despite no overlap", function()
-				expectErrorsWithSchema(expect, schema, [[
+				expectErrorsWithSchema(
+					expect,
+					schema,
+					[[
           {
             someBox {
               ... on IntBox {
@@ -737,7 +827,8 @@ return function()
               }
             }
           }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Fields "box" conflict because they return conflicting types "[StringBox]" and "StringBox". Use different aliases on the fields to fetch both if this was intentional.',
 						locations = {
@@ -746,7 +837,10 @@ return function()
 						},
 					},
 				})
-				expectErrorsWithSchema(expect, schema, [[
+				expectErrorsWithSchema(
+					expect,
+					schema,
+					[[
           {
             someBox {
               ... on IntBox {
@@ -761,7 +855,8 @@ return function()
               }
             }
           }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Fields "box" conflict because they return conflicting types "StringBox" and "[StringBox]". Use different aliases on the fields to fetch both if this was intentional.',
 						locations = {
@@ -773,7 +868,10 @@ return function()
 			end)
 
 			it("disallows differing subfields", function()
-				expectErrorsWithSchema(expect, schema, [[
+				expectErrorsWithSchema(
+					expect,
+					schema,
+					[[
           {
             someBox {
               ... on IntBox {
@@ -789,7 +887,8 @@ return function()
               }
             }
           }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Fields "val" conflict because "scalar" and "unrelatedField" are different fields. Use different aliases on the fields to fetch both if this was intentional.',
 						locations = {
@@ -801,7 +900,10 @@ return function()
 			end)
 
 			it("disallows differing deep return types despite no overlap", function()
-				expectErrorsWithSchema(expect, schema, [[
+				expectErrorsWithSchema(
+					expect,
+					schema,
+					[[
           {
             someBox {
               ... on IntBox {
@@ -816,7 +918,8 @@ return function()
               }
             }
           }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Fields "box" conflict because subfields "scalar" conflict because they return conflicting types "String" and "Int". Use different aliases on the fields to fetch both if this was intentional.',
 						locations = {
@@ -830,7 +933,10 @@ return function()
 			end)
 
 			it("allows non-conflicting overlapping types", function()
-				expectValidWithSchema(expect, schema, [[
+				expectValidWithSchema(
+					expect,
+					schema,
+					[[
 					{
 						someBox {
 							... on IntBox {
@@ -841,11 +947,15 @@ return function()
 							}
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("same wrapped scalar return types", function()
-				expectValidWithSchema(expect, schema, [[
+				expectValidWithSchema(
+					expect,
+					schema,
+					[[
 					{
 						someBox {
 							...on NonNullStringBox1 {
@@ -856,22 +966,30 @@ return function()
 							}
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("allows inline fragments without type condition", function()
-				expectValidWithSchema(expect, schema, [[
+				expectValidWithSchema(
+					expect,
+					schema,
+					[[
 					{
 						a
 						... {
 							a
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("compares deep types including list", function()
-				expectErrorsWithSchema(expect, schema, [[
+				expectErrorsWithSchema(
+					expect,
+					schema,
+					[[
           {
             connection {
               ...edgeID
@@ -890,7 +1008,8 @@ return function()
               }
             }
           }
-				]]).toEqual({
+				]]
+				).toEqual({
 					{
 						message = 'Fields "edges" conflict because subfields "node" conflict because subfields "id" conflict because "name" and "id" are different fields. Use different aliases on the fields to fetch both if this was intentional.',
 						locations = {
@@ -906,7 +1025,10 @@ return function()
 			end)
 
 			it("ignores unknown types", function()
-				expectValidWithSchema(expect, schema, [[
+				expectValidWithSchema(
+					expect,
+					schema,
+					[[
 					{
 						someBox {
 							...on UnknownType {
@@ -917,7 +1039,8 @@ return function()
 							}
 						}
 					}
-				]])
+				]]
+				)
 			end)
 
 			it("works for field names that are JS keywords", function()
@@ -931,44 +1054,60 @@ return function()
 					}
 				]])
 
-				expectValidWithSchema(expect, schemaWithKeywords, [[
+				expectValidWithSchema(
+					expect,
+					schemaWithKeywords,
+					[[
 					{
 						foo {
 							constructor
 						}
 					}
-				]])
+				]]
+				)
 			end)
 		end)
 
 		it("does not infinite loop on recursive fragment", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment fragA on Human { name, relatives { name, ...fragA } }
-			]])
+			]]
+			)
 		end)
 
 		it("does not infinite loop on immediately recursive fragment", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment fragA on Human { name, ...fragA }
-			]])
+			]]
+			)
 		end)
 
 		it("does not infinite loop on transitively recursive fragment", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment fragA on Human { name, ...fragB }
 				fragment fragB on Human { name, ...fragC }
 				fragment fragC on Human { name, ...fragA }
-			]])
+			]]
+			)
 		end)
 
 		it("finds invalid case even with immediately recursive fragment", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment sameAliasesWithDifferentFieldTargets on Dog {
         ...sameAliasesWithDifferentFieldTargets
         fido: name
         fido: nickname
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fields "fido" conflict because "name" and "nickname" are different fields. Use different aliases on the fields to fetch both if this was intentional.',
 					locations = {

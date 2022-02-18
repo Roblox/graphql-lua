@@ -29,11 +29,7 @@ exports.NoDeprecatedCustomRule = function(context)
 				invariant(parentType ~= nil)
 				context:reportError(
 					GraphQLError.new(
-						('The field %s.%s is deprecated. %s'):format(
-							parentType.name,
-							fieldDef.name,
-							deprecationReason
-						),
+						("The field %s.%s is deprecated. %s"):format(parentType.name, fieldDef.name, deprecationReason),
 						node
 					)
 				)
@@ -83,7 +79,7 @@ exports.NoDeprecatedCustomRule = function(context)
 				if deprecationReason ~= nil then
 					context:reportError(
 						GraphQLError.new(
-							('The input field %s.%s is deprecated. %s'):format(
+							("The input field %s.%s is deprecated. %s"):format(
 								inputObjectDef.name,
 								inputFieldDef.name,
 								deprecationReason

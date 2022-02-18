@@ -6,5 +6,5 @@ local function invariant(condition: any, message: string | nil)
 end
 
 return {
-	invariant = invariant
+	invariant = invariant,
 }

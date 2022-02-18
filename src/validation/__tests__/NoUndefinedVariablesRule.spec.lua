@@ -2,8 +2,8 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local NoUndefinedVariablesRule = require(validationWorkspace.rules.NoUndefinedVariablesRule)
-		.NoUndefinedVariablesRule
+	local NoUndefinedVariablesRule =
+		require(validationWorkspace.rules.NoUndefinedVariablesRule).NoUndefinedVariablesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -20,15 +20,20 @@ return function()
 
 	describe("Validate: No undefined variables", function()
 		it("all variables defined", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo($a: String, $b: String, $c: String) {
 					field(a: $a, b: $b, c: $c)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("all variables deeply defined", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo($a: String, $b: String, $c: String) {
 					field(a: $a) {
 						field(b: $b) {
@@ -36,11 +41,14 @@ return function()
 						}
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("all variables deeply in inline fragments defined", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo($a: String, $b: String, $c: String) {
 					... on Type {
 						field(a: $a) {
@@ -52,11 +60,14 @@ return function()
 						}
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("all variables in fragments deeply defined", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo($a: String, $b: String, $c: String) {
 					...FragA
 				}
@@ -73,11 +84,14 @@ return function()
 				fragment FragC on Type {
 					field(c: $c)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("variable within single fragment defined in multiple operations", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo($a: String) {
 					...FragA
 				}
@@ -87,11 +101,14 @@ return function()
 				fragment FragA on Type {
 					field(a: $a)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("variable within fragments defined in operations", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo($a: String) {
 					...FragA
 				}
@@ -104,11 +121,14 @@ return function()
 				fragment FragB on Type {
 					field(b: $b)
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("variable within recursive fragment defined", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo($a: String) {
 					...FragA
 				}
@@ -117,15 +137,19 @@ return function()
 						...FragA
 					}
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("variable not defined", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($a: String, $b: String, $c: String) {
         field(a: $a, b: $b, c: $c, d: $d)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$d" is not defined by operation "Foo".',
 					locations = {
@@ -137,11 +161,14 @@ return function()
 		end)
 
 		it("variable not defined by un-named query", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         field(a: $a)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$a" is not defined.',
 					locations = {
@@ -153,11 +180,14 @@ return function()
 		end)
 
 		it("multiple variables not defined", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($b: String) {
         field(a: $a, b: $b, c: $c)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$a" is not defined by operation "Foo".',
 					locations = {
@@ -176,14 +206,17 @@ return function()
 		end)
 
 		it("variable in fragment not defined by un-named query", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         ...FragA
       }
       fragment FragA on Type {
         field(a: $a)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$a" is not defined.',
 					locations = {
@@ -195,7 +228,9 @@ return function()
 		end)
 
 		it("variable in fragment not defined by operation", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($a: String, $b: String) {
         ...FragA
       }
@@ -212,7 +247,8 @@ return function()
       fragment FragC on Type {
         field(c: $c)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$c" is not defined by operation "Foo".',
 					locations = {
@@ -224,7 +260,9 @@ return function()
 		end)
 
 		it("multiple variables in fragments not defined", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($b: String) {
         ...FragA
       }
@@ -241,7 +279,8 @@ return function()
       fragment FragC on Type {
         field(c: $c)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$a" is not defined by operation "Foo".',
 					locations = {
@@ -260,7 +299,9 @@ return function()
 		end)
 
 		it("single variable in fragment not defined by multiple operations", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($a: String) {
         ...FragAB
       }
@@ -270,7 +311,8 @@ return function()
       fragment FragAB on Type {
         field(a: $a, b: $b)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$b" is not defined by operation "Foo".',
 					locations = {
@@ -289,7 +331,9 @@ return function()
 		end)
 
 		it("variables in fragment not defined by multiple operations", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($b: String) {
         ...FragAB
       }
@@ -299,7 +343,8 @@ return function()
       fragment FragAB on Type {
         field(a: $a, b: $b)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$a" is not defined by operation "Foo".',
 					locations = {
@@ -318,7 +363,9 @@ return function()
 		end)
 
 		it("variable in fragment used by other operation", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($b: String) {
         ...FragA
       }
@@ -331,7 +378,8 @@ return function()
       fragment FragB on Type {
         field(b: $b)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$a" is not defined by operation "Foo".',
 					locations = {
@@ -350,7 +398,9 @@ return function()
 		end)
 
 		it("multiple undefined variables produce multiple errors", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo($b: String) {
         ...FragAB
       }
@@ -365,7 +415,8 @@ return function()
       fragment FragC on Type {
         field2(c: $c)
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Variable "$a" is not defined by operation "Foo".',
 					locations = {

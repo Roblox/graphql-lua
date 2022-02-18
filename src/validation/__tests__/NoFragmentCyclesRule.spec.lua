@@ -2,8 +2,7 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local NoFragmentCyclesRule = require(validationWorkspace.rules.NoFragmentCyclesRule)
-		.NoFragmentCyclesRule
+	local NoFragmentCyclesRule = require(validationWorkspace.rules.NoFragmentCyclesRule).NoFragmentCyclesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -20,29 +19,40 @@ return function()
 
 	describe("Validate: No circular fragment spreads", function()
 		it("single reference is valid", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment fragA on Dog { ...fragB }
 				fragment fragB on Dog { name }
-			]])
+			]]
+			)
 		end)
 
 		it("spreading twice is not circular", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment fragA on Dog { ...fragB, ...fragB }
 				fragment fragB on Dog { name }
-			]])
+			]]
+			)
 		end)
 
 		it("spreading twice indirectly is not circular", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment fragA on Dog { ...fragB, ...fragC }
 				fragment fragB on Dog { ...fragC }
 				fragment fragC on Dog { name }
-			]])
+			]]
+			)
 		end)
 
 		it("double spread within abstract types", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment nameFragment on Pet {
 					... on Dog { name }
 					... on Cat { name }
@@ -52,59 +62,75 @@ return function()
 					... on Dog { ...nameFragment }
 					... on Cat { ...nameFragment }
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("does not false positive on unknown fragment", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				fragment nameFragment on Pet {
 					...UnknownFragment
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("spreading recursively within field fails", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment fragA on Human { relatives { ...fragA } },
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot spread fragment "fragA" within itself.',
-					locations = {{ line = 2, column = 45 }},
+					locations = { { line = 2, column = 45 } },
 				},
 			})
 		end)
 
 		it("no spreading itself directly", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment fragA on Dog { ...fragA }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot spread fragment "fragA" within itself.',
-					locations = {{ line = 2, column = 31 }},
+					locations = { { line = 2, column = 31 } },
 				},
 			})
 		end)
 
 		it("no spreading itself directly within inline fragment", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment fragA on Pet {
         ... on Dog {
           ...fragA
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot spread fragment "fragA" within itself.',
-					locations = {{ line = 4, column = 11 }},
+					locations = { { line = 4, column = 11 } },
 				},
 			})
 		end)
 
 		it("no spreading itself indirectly", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment fragA on Dog { ...fragB }
       fragment fragB on Dog { ...fragA }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot spread fragment "fragA" within itself via "fragB".',
 					locations = {
@@ -116,10 +142,13 @@ return function()
 		end)
 
 		it("no spreading itself indirectly reports opposite order", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment fragB on Dog { ...fragA }
       fragment fragA on Dog { ...fragB }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot spread fragment "fragB" within itself via "fragA".',
 					locations = {
@@ -131,7 +160,9 @@ return function()
 		end)
 
 		it("no spreading itself indirectly within inline fragment", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment fragA on Pet {
         ... on Dog {
           ...fragB
@@ -142,7 +173,8 @@ return function()
           ...fragA
         }
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot spread fragment "fragA" within itself via "fragB".',
 					locations = {
@@ -154,7 +186,9 @@ return function()
 		end)
 
 		it("no spreading itself deeply", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment fragA on Dog { ...fragB }
       fragment fragB on Dog { ...fragC }
       fragment fragC on Dog { ...fragO }
@@ -163,7 +197,8 @@ return function()
       fragment fragZ on Dog { ...fragO }
       fragment fragO on Dog { ...fragP }
       fragment fragP on Dog { ...fragA, ...fragX }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot spread fragment "fragA" within itself via "fragB", "fragC", "fragO", "fragP".',
 					locations = {
@@ -188,11 +223,14 @@ return function()
 		end)
 
 		it("no spreading itself deeply two paths", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment fragA on Dog { ...fragB, ...fragC }
       fragment fragB on Dog { ...fragA }
       fragment fragC on Dog { ...fragA }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot spread fragment "fragA" within itself via "fragB".',
 					locations = {
@@ -211,11 +249,14 @@ return function()
 		end)
 
 		it("no spreading itself deeply two paths -- alt traverse order", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment fragA on Dog { ...fragC }
       fragment fragB on Dog { ...fragC }
       fragment fragC on Dog { ...fragA, ...fragB }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot spread fragment "fragA" within itself via "fragC".',
 					locations = {
@@ -234,14 +275,17 @@ return function()
 		end)
 
 		it("no spreading itself deeply and immediately", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       fragment fragA on Dog { ...fragB }
       fragment fragB on Dog { ...fragB, ...fragC }
       fragment fragC on Dog { ...fragA, ...fragB }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Cannot spread fragment "fragB" within itself.',
-					locations = {{ line = 3, column = 31 }},
+					locations = { { line = 3, column = 31 } },
 				},
 				{
 					message = 'Cannot spread fragment "fragA" within itself via "fragB", "fragC".',

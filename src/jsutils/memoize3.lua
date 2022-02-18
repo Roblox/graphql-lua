@@ -24,10 +24,7 @@ end
 --[[
  * Memoizes the provided three-argument function.
  ]]
-local function memoize3<A1, A2, A3, R>(
-	fn: (A1, A2, A3) -> R
-): (A1, A2, A3) -> R
-
+local function memoize3<A1, A2, A3, R>(fn: (A1, A2, A3) -> R): (A1, A2, A3) -> R
 	local cache0
 
 	return function(a1, a2, a3)

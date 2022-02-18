@@ -1,8 +1,6 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/__tests__/lexicographicSortSchema-test.js
 
-
 return function()
-
 	local srcWorkspace = script.Parent.Parent.Parent
 	local utilitiesWorkspace = script.Parent.Parent
 

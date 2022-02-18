@@ -19,15 +19,11 @@ local isNode = require(script.Parent.ast).isNode
  ]]
 export type ASTVisitor = Visitor<ASTKindToNode>
 -- ROBLOX deviation: Luau doesn't support the equivalent of $Value or default type args
+-- ROBLOX FIXME StyLua: bug filed here: https://github.com/JohnnyMorganz/StyLua/issues/372
 -- export type Visitor<KindToNode, Nodes = $Values<KindToNode>> =
 export type Visitor<KindToNode, Nodes = any> =
-	EnterLeave<
-		VisitFn<Nodes>
-		| ShapeMap<KindToNode, <Node>(Node) -> VisitFn<Nodes, Node>>
-	>
-	| ShapeMap<
-		KindToNode,
-		<Node>(Node) -> VisitFn<Nodes, Node> | EnterLeave<VisitFn<Nodes, Node>>>
+	EnterLeave<VisitFn<Nodes> | ShapeMap<KindToNode, <Node>(Node) -> VisitFn<Nodes, Node>>>
+	| ShapeMap<KindToNode, <Node>(Node) -> VisitFn<Nodes, Node> | EnterLeave<VisitFn<Nodes, Node>>>
 type EnterLeave<T> = { enter: T?, leave: T? }
 -- ROBLOX deviation: Luau doesn't have $Shape, so manually mark fields optional
 -- ROBLOX deviation: Luau doesn't have $ObjMap type util, so marking indexer type as string | number
@@ -57,9 +53,9 @@ export type VisitFn<TAnyNode, TVisitedNode = TAnyNode> = (
 --[[*
  * A KeyMap describes each the traversable properties of each kind of node.
  ]]
-export type VisitorKeyMap<KindToNode> = ObjMap<KindToNode, -- ROBLOX TODO: Luau doesn't support function generics or $Keys
---  <T>(T) -> Array<$Keys<T>>,
-(any) -> Array<any>>
+
+-- ROBLOX deviation: no $Keys, so we just do Array<string>
+export type VisitorKeyMap<KindToNode> = ObjMap<KindToNode, <T>(T) -> Array<string>>
 
 local QueryDocumentKeys: VisitorKeyMap<ASTKindToNode> = {
 	Name = {},
@@ -246,11 +242,7 @@ local getVisitFn
 --  *       }
 --  *     })
 --  */
-local function visit(
-	root: ASTNode,
-	visitor: Visitor<ASTKindToNode>,
-	visitorKeys_: VisitorKeyMap<ASTKindToNode>?
-): any
+local function visit(root: ASTNode, visitor: Visitor<ASTKindToNode>, visitorKeys_: VisitorKeyMap<ASTKindToNode>?): any
 	local visitorKeys: VisitorKeyMap<ASTKindToNode> = visitorKeys_ or QueryDocumentKeys
 
 	local stack: any = nil
@@ -407,9 +399,7 @@ local function visit(
 	return newRoot
 end
 
-function visitInParallel(
-	visitors: Array<Visitor<ASTKindToNode>>
-): Visitor<ASTKindToNode>
+function visitInParallel(visitors: Array<Visitor<ASTKindToNode>>): Visitor<ASTKindToNode>
 	-- ROBLOX deviation: no predefined Array length
 	local skipping = {}
 
@@ -462,11 +452,7 @@ function visitInParallel(
 	}
 end
 
-function getVisitFn(
-	visitor: Visitor<any>,
-	kind: string,
-	isLeaving: boolean
-): VisitFn<any>?
+function getVisitFn(visitor: Visitor<any>, kind: string, isLeaving: boolean): VisitFn<any>?
 	-- ROBLOX TODO Luau? not sure how we can match this typecheck, or if it's even provably valid
 	local kindVisitor = (visitor :: any)[kind]
 	if kindVisitor then

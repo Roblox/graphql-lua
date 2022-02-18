@@ -29,12 +29,12 @@ exports.NoUndefinedVariablesRule = function(context)
 						context:reportError(
 							GraphQLError.new(
 								operation.name
-									and ('Variable "$%s" is not defined by operation "%s".'):format(
-										varName,
-										operation.name.value
-									)
+										and ('Variable "$%s" is not defined by operation "%s".'):format(
+											varName,
+											operation.name.value
+										)
 									or ('Variable "$%s" is not defined.'):format(varName),
-								{node, operation}
+								{ node, operation }
 							)
 						)
 					end

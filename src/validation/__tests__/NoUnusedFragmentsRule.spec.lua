@@ -2,8 +2,7 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local NoUnusedFragmentsRule = require(validationWorkspace.rules.NoUnusedFragmentsRule)
-		.NoUnusedFragmentsRule
+	local NoUnusedFragmentsRule = require(validationWorkspace.rules.NoUnusedFragmentsRule).NoUnusedFragmentsRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -20,7 +19,9 @@ return function()
 
 	describe("Validate: No unused fragments", function()
 		it("all fragment names are used", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					human(id: 4) {
 						...HumanFields1
@@ -39,11 +40,14 @@ return function()
 				fragment HumanFields3 on Human {
 					name
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("all fragment names are used by multiple operations", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				query Foo {
 					human(id: 4) {
 						...HumanFields1
@@ -64,11 +68,14 @@ return function()
 				fragment HumanFields3 on Human {
 					name
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("contains unknown fragments", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo {
         human(id: 4) {
           ...HumanFields1
@@ -95,20 +102,23 @@ return function()
       fragment Unused2 on Human {
         name
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment "Unused1" is never used.',
-					locations = {{ line = 22, column = 7 }},
+					locations = { { line = 22, column = 7 } },
 				},
 				{
 					message = 'Fragment "Unused2" is never used.',
-					locations = {{ line = 25, column = 7 }},
+					locations = { { line = 25, column = 7 } },
 				},
 			})
 		end)
 
 		it("contains unknown fragments with ref cycle", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo {
         human(id: 4) {
           ...HumanFields1
@@ -137,20 +147,23 @@ return function()
         name
         ...Unused1
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment "Unused1" is never used.',
-					locations = {{ line = 22, column = 7 }},
+					locations = { { line = 22, column = 7 } },
 				},
 				{
 					message = 'Fragment "Unused2" is never used.',
-					locations = {{ line = 26, column = 7 }},
+					locations = { { line = 26, column = 7 } },
 				},
 			})
 		end)
 
 		it("contains unknown and undef fragments", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       query Foo {
         human(id: 4) {
           ...bar
@@ -159,10 +172,11 @@ return function()
       fragment foo on Human {
         name
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'Fragment "foo" is never used.',
-					locations = {{ line = 7, column = 7 }},
+					locations = { { line = 7, column = 7 } },
 				},
 			})
 		end)

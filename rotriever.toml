@@ -13,7 +13,7 @@ content_root = "src"
 [dependencies]
 RegExp = "github.com/Roblox/luau-regexp@0.2.0"
 LuauPolyfill = "github.com/Roblox/luau-polyfill@0.3.0"
-Promise = { git = "https://github.com/evaera/roblox-lua-promise.git", tag = "v3.0.1" }
+Promise = "github.com/Roblox/roblox-lua-promise@3.2.1"
 
 [dev_dependencies]
 JestGlobals = "github.com/roblox/jest-roblox@2.3.0"

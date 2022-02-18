@@ -24,11 +24,13 @@ return function()
 
 	describe("printBlockString", function()
 		it("correctly print random strings", function()
-			for fuzzStr in genFuzzStrings({
-				allowedChars = { "\n", "\t", " ", "\"", "a", "\\" },
-				maxLength = 7,
-			}) do
-				local testStr = "\"\"\"" .. fuzzStr .. "\"\"\""
+			for fuzzStr in
+				genFuzzStrings({
+					allowedChars = { "\n", "\t", " ", '"', "a", "\\" },
+					maxLength = 7,
+				})
+			do
+				local testStr = '"""' .. fuzzStr .. '"""'
 
 				local testValue
 				local _ok = pcall(function()
@@ -45,14 +47,15 @@ return function()
 
 				invariant(
 					testValue == printedValue,
-					dedent("Expected lexValue(printBlockString(" ..
-						inspectStr(testValue) ..
-						"))\n" ..
-						"to equal " ..
-						inspectStr(testValue) ..
-						"\n" ..
-						"but got  " ..
-						inspectStr(printedValue)
+					dedent(
+						"Expected lexValue(printBlockString("
+							.. inspectStr(testValue)
+							.. "))\n"
+							.. "to equal "
+							.. inspectStr(testValue)
+							.. "\n"
+							.. "but got  "
+							.. inspectStr(printedValue)
 					)
 				)
 
@@ -60,20 +63,18 @@ return function()
 
 				invariant(
 					testValue == printedMultilineString,
-					dedent("Expected lexValue(printBlockString(" ..
-						inspectStr(testValue) ..
-						", ' ', true))\n" ..
-						"to equal " ..
-						inspectStr(testValue) ..
-						"\n" ..
-						"but got  " ..
-						inspectStr(printedMultilineString)
+					dedent(
+						"Expected lexValue(printBlockString("
+							.. inspectStr(testValue)
+							.. ", ' ', true))\n"
+							.. "to equal "
+							.. inspectStr(testValue)
+							.. "\n"
+							.. "but got  "
+							.. inspectStr(printedMultilineString)
 					)
-
 				)
-
 			end
-
 		end)
 	end)
 end

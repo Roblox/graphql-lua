@@ -5,8 +5,7 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local UniqueTypeNamesRule = require(validationWorkspace.rules.UniqueTypeNamesRule)
-		.UniqueTypeNamesRule
+	local UniqueTypeNamesRule = require(validationWorkspace.rules.UniqueTypeNamesRule).UniqueTypeNamesRule
 	local harness = require(script.Parent.harness)
 	local expectSDLValidationErrors = harness.expectSDLValidationErrors
 
@@ -23,37 +22,51 @@ return function()
 
 	describe("Validate: Unique type names", function()
 		it("no types", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				directive @test on SCHEMA
-			]])
+			]]
+			)
 		end)
 
 		it("one type", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				type Foo
-			]])
+			]]
+			)
 		end)
 
 		it("many types", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				type Foo
 				type Bar
 				type Baz
-			]])
+			]]
+			)
 		end)
 
 		it("type and non-type definitions named the same", function()
-			expectValidSDL(expect, [[
+			expectValidSDL(
+				expect,
+				[[
 				query Foo { __typename }
 				fragment Foo on Query { __typename }
 				directive @Foo on SCHEMA
 
 				type Foo
-			]])
+			]]
+			)
 		end)
 
 		it("types named the same", function()
-			expectSDLErrors(expect, [[
+			expectSDLErrors(
+				expect,
+				[[
       type Foo
 
       scalar Foo
@@ -62,7 +75,8 @@ return function()
       union Foo
       enum Foo
       input Foo
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'There can be only one type named "Foo".',
 					locations = {
@@ -134,27 +148,27 @@ return function()
 			expectSDLErrors(expect, sdl, schema).toEqual({
 				{
 					message = 'Type "Foo" already exists in the schema. It cannot also be defined in this type definition.',
-					locations = {{ line = 2, column = 14 }},
+					locations = { { line = 2, column = 14 } },
 				},
 				{
 					message = 'Type "Foo" already exists in the schema. It cannot also be defined in this type definition.',
-					locations = {{ line = 3, column = 12 }},
+					locations = { { line = 3, column = 12 } },
 				},
 				{
 					message = 'Type "Foo" already exists in the schema. It cannot also be defined in this type definition.',
-					locations = {{ line = 4, column = 17 }},
+					locations = { { line = 4, column = 17 } },
 				},
 				{
 					message = 'Type "Foo" already exists in the schema. It cannot also be defined in this type definition.',
-					locations = {{ line = 5, column = 13 }},
+					locations = { { line = 5, column = 13 } },
 				},
 				{
 					message = 'Type "Foo" already exists in the schema. It cannot also be defined in this type definition.',
-					locations = {{ line = 6, column = 12 }},
+					locations = { { line = 6, column = 12 } },
 				},
 				{
 					message = 'Type "Foo" already exists in the schema. It cannot also be defined in this type definition.',
-					locations = {{ line = 7, column = 13 }},
+					locations = { { line = 7, column = 13 } },
 				},
 			})
 		end)

@@ -21,7 +21,7 @@ return function()
 			end)
 
 			it("parses String value", function()
-				local result = parseValue("\"abc\"")
+				local result = parseValue('"abc"')
 
 				expect(toJSONDeep(result)).toEqual({
 					kind = Kind.STRING,

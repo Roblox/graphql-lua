@@ -2,8 +2,8 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local UniqueInputFieldNamesRule = require(validationWorkspace.rules.UniqueInputFieldNamesRule)
-		.UniqueInputFieldNamesRule
+	local UniqueInputFieldNamesRule =
+		require(validationWorkspace.rules.UniqueInputFieldNamesRule).UniqueInputFieldNamesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -20,31 +20,42 @@ return function()
 
 	describe("Validate: Unique input field names", function()
 		it("input object with fields", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field(arg: { f: true })
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("same input object within two args", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field(arg1: { f: true }, arg2: { f: true })
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("multiple input object fields", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field(arg: { f1: "value", f2: "value", f3: "value" })
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("allows for nested input objects with similar fields", function()
-			expectValid(expect, [[
+			expectValid(
+				expect,
+				[[
 				{
 					field(arg: {
 						deep: {
@@ -56,15 +67,19 @@ return function()
 						id: 1
 					})
 				}
-			]])
+			]]
+			)
 		end)
 
 		it("duplicate input object fields", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         field(arg: { f1: "value", f1: "value" })
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'There can be only one input field named "f1".',
 					locations = {
@@ -76,11 +91,14 @@ return function()
 		end)
 
 		it("many duplicate input object fields", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         field(arg: { f1: "value", f1: "value", f1: "value" })
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'There can be only one input field named "f1".',
 					locations = {
@@ -99,11 +117,14 @@ return function()
 		end)
 
 		it("nested duplicate input object fields", function()
-			expectErrors(expect, [[
+			expectErrors(
+				expect,
+				[[
       {
         field(arg: { f1: {f2: "value", f2: "value" }})
       }
-			]]).toEqual({
+			]]
+			).toEqual({
 				{
 					message = 'There can be only one input field named "f2".',
 					locations = {

@@ -1,6 +1,4 @@
 -- ROBLOX upstream: https://github.com/graphql/graphql-js/blob/7b3241329e1ff49fb647b043b80568f0cf9e1a7c/src/validation/validate.js
---!nonstrict
--- ROBLOX FIXME Luau: if this file is strict, Luau analyze hangs, needs CLI-50589
 local validationWorkspace = script.Parent
 local root = validationWorkspace.Parent
 local PackagesWorkspace = root.Parent
@@ -27,6 +25,7 @@ local visitInParallel = visitorExports.visitInParallel
 local assertValidSchema = require(root.type.validate).assertValidSchema
 local TypeInfoExports = require(root.utilities.TypeInfo)
 local TypeInfo = TypeInfoExports.TypeInfo
+type TypeInfo = TypeInfoExports.TypeInfo
 local visitWithTypeInfo = TypeInfoExports.visitWithTypeInfo
 local specifiedRulesImport = require(validationWorkspace.specifiedRules)
 local specifiedRules = specifiedRulesImport.specifiedRules
@@ -59,20 +58,14 @@ local exports = {}
 exports.validate = function(
 	schema: GraphQLSchema,
 	documentAST: DocumentNode,
-	rules: Array<ValidationRule>,
-	options: { maxErrors: number? },
+	_rules: Array<ValidationRule>?,
+	_options: { maxErrors: number? }?,
 	-- @deprecate will be removed in 17.0.0
-	typeInfo
+	_typeInfo: TypeInfo?
 ): Array<GraphQLError>
-	if rules == nil then
-		rules = specifiedRules
-	end
-	if options == nil then
-		options = { maxErrors = nil }
-	end
-	if typeInfo == nil then
-		typeInfo = TypeInfo.new(schema)
-	end
+	local rules = if _rules then _rules else specifiedRules
+	local options = if _options then _options else { maxErrors = nil }
+	local typeInfo = if _typeInfo then _typeInfo else TypeInfo.new(schema)
 
 	devAssert(documentAST, "Must provide document.")
 	-- // If the schema used for validation is invalid, throw an error.
@@ -118,11 +111,9 @@ exports.validateSDL = function(
 	documentAST: DocumentNode,
 	schemaToExtend: GraphQLSchema?,
 	-- ROBLOX deviation: typed arguments can't have default values
-	rules: Array<SDLValidationRule>?
+	_rules: Array<SDLValidationRule>?
 ): Array<GraphQLError>
-	if rules == nil then
-		rules = specifiedSDLRules
-	end
+	local rules = if _rules then _rules else specifiedSDLRules
 	local errors = {}
 	local context = SDLValidationContext.new(documentAST, schemaToExtend, function(error_)
 		table.insert(errors, error_)

@@ -142,7 +142,7 @@ return function()
 
 			-- istanbul ignore next (Not reachable. All possible types have been considered)
 			invariant(false)
-            return -- ROBLOX deviation: no implicit return
+			return -- ROBLOX deviation: no implicit return
 		end,
 	})
 
@@ -305,7 +305,7 @@ return function()
 		end)
 
 		it("executes using union types", function()
-            -- NOTE: This is an *invalid* query, but it should be an *executable* query.
+			-- NOTE: This is an *invalid* query, but it should be an *executable* query.
 			local document = parse([[
       {
         __typename
@@ -345,7 +345,7 @@ return function()
 		end)
 
 		it("executes union types with inline fragments", function()
-            -- This is the valid version of the query in the above test.
+			-- This is the valid version of the query in the above test.
 			local document = parse([[
       {
         __typename
@@ -389,7 +389,7 @@ return function()
 		end)
 
 		it("executes using interface types", function()
-            -- NOTE: This is an *invalid* query, but it should be an *executable* query.
+			-- NOTE: This is an *invalid* query, but it should be an *executable* query.
 			local document = parse([[
       {
         __typename
@@ -427,7 +427,7 @@ return function()
 		end)
 
 		it("executes interface types with inline fragments", function()
-            -- This is the valid version of the query in the above test.
+			-- This is the valid version of the query in the above test.
 			local document = parse([[
       {
         __typename

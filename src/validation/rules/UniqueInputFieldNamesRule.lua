@@ -42,7 +42,7 @@ exports.UniqueInputFieldNamesRule = function(context: ASTValidationContext): AST
 				context:reportError(
 					GraphQLError.new(
 						('There can be only one input field named "%s".'):format(fieldName),
-						{knownNames[fieldName], node.name}
+						{ knownNames[fieldName], node.name }
 					)
 				)
 			else

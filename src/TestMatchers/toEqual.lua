@@ -5,9 +5,7 @@ local function toEqual(a: any, b: any)
 
 	local message
 	if not success then
-		message = innerMessageTemplate
-			:gsub("{1}", "received")
-			:gsub("{2}", "expected")
+		message = innerMessageTemplate:gsub("{1}", "received"):gsub("{2}", "expected")
 	else
 		message = ("expected: not %s\nreceived:     %s"):format(tostring(b), tostring(a))
 	end
