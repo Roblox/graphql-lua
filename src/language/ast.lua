@@ -108,7 +108,14 @@ local Token = {}
 Token.__index = Token
 
 function Token.new(
-	kind: TokenKindEnum,
+	--[[
+		ROBLOX FIXME Luau:
+		for some reason roblox-cli forces us to put string type here
+		and doesn't work with union of singleton string types
+		should be:
+		kind: TokenKindEnum,
+	]]
+	kind: string,
 	start: number,
 	-- ROBLOX FIXME: rename `_end` to `end_`
 	_end: number,

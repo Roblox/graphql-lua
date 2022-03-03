@@ -1,5 +1,5 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1951bce42092123e844763b6a8e985a8a3327511/src/language/__tests__/printer-test.js
---!strict
+
 local languageWorkspace = script.Parent.Parent
 local srcWorkspace = languageWorkspace.Parent
 local Packages = srcWorkspace.Parent

@@ -22,7 +22,8 @@ return function()
 
 	-- ROBLOX deviation: expect cannot be called unless inside of an it
 	-- ROBLOX deviation: pass expect into this function and use local scope
-	local function checkVisitorFnArgs(expect_, ast, args, isEdited)
+	-- ROBLOX FIXME: Typing`expect_` as `any` because key 'toBeOneOf' not found in table 'Expectation'
+	local function checkVisitorFnArgs(expect_: any, ast, args, isEdited: boolean?)
 		local node, key, parent, path, ancestors = table.unpack(args)
 
 		expect_(node).to.be.a("table")
@@ -79,32 +80,37 @@ return function()
 				enter = function(self, ...)
 					local _node, _key, _parent, path = ...
 					checkVisitorFnArgs(expect, ast, { ... })
-					table.insert(visited, { "enter", Array.slice(path) })
+					-- ROBLOX FIXME Luau: roblox-cli doesn't allow mixed arrays
+					table.insert(visited, { "enter" :: any, Array.slice(path) })
 				end,
 				leave = function(self, ...)
 					local _node, _key, _parent, path = ...
 					checkVisitorFnArgs(expect, ast, { ... })
-					table.insert(visited, { "leave", Array.slice(path) })
+					-- ROBLOX FIXME Luau: roblox-cli doesn't allow mixed arrays
+					table.insert(visited, { "leave" :: any, Array.slice(path) })
 				end,
-			})
+			});
 
-			expect(visited).toEqual({
-				{ "enter", {} },
-				{ "enter", { "definitions", 1 } },
-				{ "enter", { "definitions", 1, "selectionSet" } },
-				{ "enter", { "definitions", 1, "selectionSet", "selections", 1 } },
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(visited).toEqual({
+				-- ROBLOX FIXME Luau START: roblox-cli doesn't allow mixed arrays
+				{ "enter" :: any, {} },
+				{ "enter" :: any, { "definitions" :: any, 1 } },
+				{ "enter" :: any, { "definitions" :: any, 1, "selectionSet" } },
+				{ "enter" :: any, { "definitions" :: any, 1, "selectionSet", "selections", 1 } },
 				{
-					"enter",
-					{ "definitions", 1, "selectionSet", "selections", 1, "name" },
+					"enter" :: any,
+					{ "definitions" :: any, 1, "selectionSet", "selections", 1, "name" },
 				},
 				{
-					"leave",
-					{ "definitions", 1, "selectionSet", "selections", 1, "name" },
+					"leave" :: any,
+					{ "definitions" :: any, 1, "selectionSet", "selections", 1, "name" },
 				},
-				{ "leave", { "definitions", 1, "selectionSet", "selections", 1 } },
-				{ "leave", { "definitions", 1, "selectionSet" } },
-				{ "leave", { "definitions", 1 } },
-				{ "leave", {} },
+				{ "leave" :: any, { "definitions" :: any, 1, "selectionSet", "selections", 1 } },
+				{ "leave" :: any, { "definitions" :: any, 1, "selectionSet" } },
+				{ "leave" :: any, { "definitions" :: any, 1 } },
+				{ "leave" :: any, {} },
+				-- ROBLOX FIXME Luau END
 			})
 		end)
 
@@ -121,13 +127,15 @@ return function()
 					end
 					table.insert(visitedNodes, node)
 
-					local expectedAncestors = Array.slice(visitedNodes, 1, -1)
-					expect(ancestors).toEqual(expectedAncestors)
+					local expectedAncestors = Array.slice(visitedNodes, 1, -1);
+					-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+					(expect :: any)(ancestors).toEqual(expectedAncestors)
 				end,
 				leave = function(self, ...)
 					local _node, key, _parent, _path, ancestors = ...
-					local expectedAncestors = Array.slice(visitedNodes, 1, -1)
-					expect(ancestors).toEqual(expectedAncestors)
+					local expectedAncestors = Array.slice(visitedNodes, 1, -1);
+					-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+					(expect :: any)(ancestors).toEqual(expectedAncestors)
 
 					local inArray = typeof(key) == "number"
 					if inArray then
@@ -153,9 +161,9 @@ return function()
 						table.insert(visited, { "leave", node.kind })
 					end,
 				},
-			})
-
-			expect(visited).toEqual({
+			});
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(visited).toEqual({
 				{ "enter", "Field" },
 				{ "leave", "Field" },
 			})
@@ -194,9 +202,9 @@ return function()
 						})
 					end,
 				},
-			})
-
-			expect(editedAST).toEqual(Object.assign({}, ast, {
+			});
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(editedAST).toEqual(Object.assign({}, ast, {
 				definitions = {
 					Object.assign({}, ast.definitions[1], {
 						didEnter = true,
@@ -235,9 +243,9 @@ return function()
 						})
 					end,
 				},
-			})
-
-			expect(editedAST).toEqual(Object.assign({}, ast, {
+			});
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(editedAST).toEqual(Object.assign({}, ast, {
 				didEnter = true,
 				didLeave = true,
 			}))
@@ -254,11 +262,11 @@ return function()
 					end
 					return -- ROBLOX deviation: no implicit returns
 				end,
-			})
-
-			expect(ast).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }))
-
-			expect(editedAST).toEqual(parse("{ a,    c { a,    c } }", { noLocation = true }))
+			});
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(ast).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }));
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(editedAST).toEqual(parse("{ a,    c { a,    c } }", { noLocation = true }))
 		end)
 
 		it("allows for editing on leave", function()
@@ -277,11 +285,11 @@ return function()
 					end
 					return -- ROBLOX deviation: no implicit returns
 				end,
-			})
-
-			expect(ast).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }))
-
-			expect(editedAST).toEqual(parse("{ a,    c { a,    c } }", { noLocation = true }))
+			});
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(ast).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }));
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(editedAST).toEqual(parse("{ a,    c { a,    c } }", { noLocation = true }))
 		end)
 
 		it("ignores false returned on leave", function()
@@ -290,9 +298,9 @@ return function()
 				leave = function()
 					return false
 				end,
-			})
-
-			expect(returnedAST).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }))
+			});
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(returnedAST).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }))
 		end)
 
 		it("visits edited node", function()
@@ -352,9 +360,9 @@ return function()
 					checkVisitorFnArgs(expect, ast, { ... })
 					table.insert(visited, { "leave", node.kind, getValue(node) })
 				end,
-			})
-
-			expect(visited).toEqual({
+			});
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(visited).toEqual({
 				{ "enter", "Document" },
 				{ "enter", "OperationDefinition" },
 				{ "enter", "SelectionSet" },
@@ -392,9 +400,9 @@ return function()
 					checkVisitorFnArgs(expect, ast, { ... })
 					table.insert(visited, { "leave", node.kind, getValue(node) })
 				end,
-			})
-
-			expect(visited).toEqual({
+			});
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(visited).toEqual({
 				{ "enter", "Document" },
 				{ "enter", "OperationDefinition" },
 				{ "enter", "SelectionSet" },
@@ -430,9 +438,9 @@ return function()
 					end
 					return -- ROBLOX deviation: no implicit returns
 				end,
-			})
-
-			expect(visited).toEqual({
+			});
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(visited).toEqual({
 				{ "enter", "Document" },
 				{ "enter", "OperationDefinition" },
 				{ "enter", "SelectionSet" },
@@ -472,9 +480,9 @@ return function()
 						table.insert(visited, { "leave", node.kind, getValue(node) })
 					end,
 				},
-			})
-
-			expect(visited).toEqual({
+			});
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(visited).toEqual({
 				{ "enter", "SelectionSet" },
 				{ "enter", "Name", "a" },
 				{ "enter", "Name", "b" },
@@ -504,9 +512,9 @@ return function()
 					checkVisitorFnArgs(expect, ast, { ... })
 					table.insert(visited, { "leave", node.kind, getValue(node) })
 				end,
-			})
-
-			expect(visited).toEqual({
+			});
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(visited).toEqual({
 				{ "enter", "Document" },
 				{ "enter", "FragmentDefinition" },
 				{ "enter", "Name", "a" },
@@ -520,8 +528,10 @@ return function()
 				{ "enter", "Name", "Boolean" },
 				{ "leave", "Name", "Boolean" },
 				{ "leave", "NamedType" },
-				{ "enter", "BooleanValue", false },
-				{ "leave", "BooleanValue", false },
+				-- ROBLOX FIXME Luau START: roblox-cli doesn't allow mixed arrays
+				{ "enter" :: any, "BooleanValue", false },
+				{ "leave" :: any, "BooleanValue", false },
+				-- ROBLOX FIXME Luau END
 				{ "leave", "VariableDefinition" },
 				{ "enter", "NamedType" },
 				{ "enter", "Name", "t" },
@@ -547,7 +557,8 @@ return function()
 				enter = function(self, ...)
 					local node, key, parent = ...
 					table.insert(visited, {
-						"enter",
+						-- ROBLOX FIXME Luau: roblox-cli doesn't allow mixed arrays
+						"enter" :: any,
 						node.kind,
 						key,
 						(parent and parent.kind) ~= nil and parent.kind or nil,
@@ -559,23 +570,26 @@ return function()
 				leave = function(self, ...)
 					local node, key, parent = ...
 					table.insert(visited, {
-						"leave",
+						-- ROBLOX FIXME Luau: roblox-cli doesn't allow mixed arrays
+						"leave" :: any,
 						node.kind,
 						key,
 						(parent and parent.kind) ~= nil and parent.kind or nil,
-					})
-
-					expect(table.remove(argsStack)).toEqual({ ... })
+					});
+					-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+					(expect :: any)(table.remove(argsStack)).toEqual({ ... })
 				end,
-			})
-
-			expect(argsStack).toEqual({})
-			expect(visited).toEqual({
+			});
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(argsStack).toEqual({});
+			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+			(expect :: any)(visited).toEqual({
+				-- ROBLOX FIXME Luau START: roblox-cli doesn't allow mixed arrays
 				{ "enter", "Document" },
-				{ "enter", "OperationDefinition", 1 },
+				{ "enter" :: any, "OperationDefinition", 1 },
 				{ "enter", "Name", "name", "OperationDefinition" },
 				{ "leave", "Name", "name", "OperationDefinition" },
-				{ "enter", "VariableDefinition", 1 },
+				{ "enter" :: any, "VariableDefinition", 1 },
 				{ "enter", "Variable", "variable", "VariableDefinition" },
 				{ "enter", "Name", "name", "Variable" },
 				{ "leave", "Name", "name", "Variable" },
@@ -584,8 +598,8 @@ return function()
 				{ "enter", "Name", "name", "NamedType" },
 				{ "leave", "Name", "name", "NamedType" },
 				{ "leave", "NamedType", "type", "VariableDefinition" },
-				{ "leave", "VariableDefinition", 1 },
-				{ "enter", "VariableDefinition", 2 },
+				{ "leave" :: any, "VariableDefinition", 1 },
+				{ "enter" :: any, "VariableDefinition", 2 },
 				{ "enter", "Variable", "variable", "VariableDefinition" },
 				{ "enter", "Name", "name", "Variable" },
 				{ "leave", "Name", "name", "Variable" },
@@ -596,176 +610,176 @@ return function()
 				{ "leave", "NamedType", "type", "VariableDefinition" },
 				{ "enter", "EnumValue", "defaultValue", "VariableDefinition" },
 				{ "leave", "EnumValue", "defaultValue", "VariableDefinition" },
-				{ "leave", "VariableDefinition", 2 },
-				{ "enter", "Directive", 1 },
+				{ "leave" :: any, "VariableDefinition", 2 },
+				{ "enter" :: any, "Directive", 1 },
 				{ "enter", "Name", "name", "Directive" },
 				{ "leave", "Name", "name", "Directive" },
-				{ "leave", "Directive", 1 },
+				{ "leave" :: any, "Directive", 1 },
 				{ "enter", "SelectionSet", "selectionSet", "OperationDefinition" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "alias", "Field" },
 				{ "leave", "Name", "alias", "Field" },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
-				{ "enter", "Argument", 1 },
+				{ "enter" :: any, "Argument", 1 },
 				{ "enter", "Name", "name", "Argument" },
 				{ "leave", "Name", "name", "Argument" },
 				{ "enter", "ListValue", "value", "Argument" },
-				{ "enter", "IntValue", 1 },
-				{ "leave", "IntValue", 1 },
-				{ "enter", "IntValue", 2 },
-				{ "leave", "IntValue", 2 },
+				{ "enter" :: any, "IntValue", 1 },
+				{ "leave" :: any, "IntValue", 1 },
+				{ "enter" :: any, "IntValue", 2 },
+				{ "leave" :: any, "IntValue", 2 },
 				{ "leave", "ListValue", "value", "Argument" },
-				{ "leave", "Argument", 1 },
+				{ "leave" :: any, "Argument", 1 },
 				{ "enter", "SelectionSet", "selectionSet", "Field" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
-				{ "leave", "Field", 1 },
-				{ "enter", "InlineFragment", 2 },
+				{ "leave" :: any, "Field", 1 },
+				{ "enter" :: any, "InlineFragment", 2 },
 				{ "enter", "NamedType", "typeCondition", "InlineFragment" },
 				{ "enter", "Name", "name", "NamedType" },
 				{ "leave", "Name", "name", "NamedType" },
 				{ "leave", "NamedType", "typeCondition", "InlineFragment" },
-				{ "enter", "Directive", 1 },
+				{ "enter" :: any, "Directive", 1 },
 				{ "enter", "Name", "name", "Directive" },
 				{ "leave", "Name", "name", "Directive" },
-				{ "leave", "Directive", 1 },
+				{ "leave" :: any, "Directive", 1 },
 				{ "enter", "SelectionSet", "selectionSet", "InlineFragment" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
 				{ "enter", "SelectionSet", "selectionSet", "Field" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
-				{ "leave", "Field", 1 },
-				{ "enter", "Field", 2 },
+				{ "leave" :: any, "Field", 1 },
+				{ "enter" :: any, "Field", 2 },
 				{ "enter", "Name", "alias", "Field" },
 				{ "leave", "Name", "alias", "Field" },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
-				{ "enter", "Argument", 1 },
+				{ "enter" :: any, "Argument", 1 },
 				{ "enter", "Name", "name", "Argument" },
 				{ "leave", "Name", "name", "Argument" },
 				{ "enter", "IntValue", "value", "Argument" },
 				{ "leave", "IntValue", "value", "Argument" },
-				{ "leave", "Argument", 1 },
-				{ "enter", "Argument", 2 },
+				{ "leave" :: any, "Argument", 1 },
+				{ "enter" :: any, "Argument", 2 },
 				{ "enter", "Name", "name", "Argument" },
 				{ "leave", "Name", "name", "Argument" },
 				{ "enter", "Variable", "value", "Argument" },
 				{ "enter", "Name", "name", "Variable" },
 				{ "leave", "Name", "name", "Variable" },
 				{ "leave", "Variable", "value", "Argument" },
-				{ "leave", "Argument", 2 },
-				{ "enter", "Directive", 1 },
+				{ "leave" :: any, "Argument", 2 },
+				{ "enter" :: any, "Directive", 1 },
 				{ "enter", "Name", "name", "Directive" },
 				{ "leave", "Name", "name", "Directive" },
-				{ "enter", "Argument", 1 },
+				{ "enter" :: any, "Argument", 1 },
 				{ "enter", "Name", "name", "Argument" },
 				{ "leave", "Name", "name", "Argument" },
 				{ "enter", "Variable", "value", "Argument" },
 				{ "enter", "Name", "name", "Variable" },
 				{ "leave", "Name", "name", "Variable" },
 				{ "leave", "Variable", "value", "Argument" },
-				{ "leave", "Argument", 1 },
-				{ "leave", "Directive", 1 },
+				{ "leave" :: any, "Argument", 1 },
+				{ "leave" :: any, "Directive", 1 },
 				{ "enter", "SelectionSet", "selectionSet", "Field" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
-				{ "leave", "Field", 1 },
-				{ "enter", "FragmentSpread", 2 },
+				{ "leave" :: any, "Field", 1 },
+				{ "enter" :: any, "FragmentSpread", 2 },
 				{ "enter", "Name", "name", "FragmentSpread" },
 				{ "leave", "Name", "name", "FragmentSpread" },
-				{ "enter", "Directive", 1 },
+				{ "enter" :: any, "Directive", 1 },
 				{ "enter", "Name", "name", "Directive" },
 				{ "leave", "Name", "name", "Directive" },
-				{ "leave", "Directive", 1 },
-				{ "leave", "FragmentSpread", 2 },
+				{ "leave" :: any, "Directive", 1 },
+				{ "leave" :: any, "FragmentSpread", 2 },
 				{ "leave", "SelectionSet", "selectionSet", "Field" },
-				{ "leave", "Field", 2 },
+				{ "leave" :: any, "Field", 2 },
 				{ "leave", "SelectionSet", "selectionSet", "Field" },
-				{ "leave", "Field", 1 },
+				{ "leave" :: any, "Field", 1 },
 				{ "leave", "SelectionSet", "selectionSet", "InlineFragment" },
-				{ "leave", "InlineFragment", 2 },
-				{ "enter", "InlineFragment", 3 },
-				{ "enter", "Directive", 1 },
+				{ "leave" :: any, "InlineFragment", 2 },
+				{ "enter" :: any, "InlineFragment", 3 },
+				{ "enter" :: any, "Directive", 1 },
 				{ "enter", "Name", "name", "Directive" },
 				{ "leave", "Name", "name", "Directive" },
-				{ "enter", "Argument", 1 },
+				{ "enter" :: any, "Argument", 1 },
 				{ "enter", "Name", "name", "Argument" },
 				{ "leave", "Name", "name", "Argument" },
 				{ "enter", "Variable", "value", "Argument" },
 				{ "enter", "Name", "name", "Variable" },
 				{ "leave", "Name", "name", "Variable" },
 				{ "leave", "Variable", "value", "Argument" },
-				{ "leave", "Argument", 1 },
-				{ "leave", "Directive", 1 },
+				{ "leave" :: any, "Argument", 1 },
+				{ "leave" :: any, "Directive", 1 },
 				{ "enter", "SelectionSet", "selectionSet", "InlineFragment" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
-				{ "leave", "Field", 1 },
+				{ "leave" :: any, "Field", 1 },
 				{ "leave", "SelectionSet", "selectionSet", "InlineFragment" },
-				{ "leave", "InlineFragment", 3 },
-				{ "enter", "InlineFragment", 4 },
+				{ "leave" :: any, "InlineFragment", 3 },
+				{ "enter" :: any, "InlineFragment", 4 },
 				{ "enter", "SelectionSet", "selectionSet", "InlineFragment" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
-				{ "leave", "Field", 1 },
+				{ "leave" :: any, "Field", 1 },
 				{ "leave", "SelectionSet", "selectionSet", "InlineFragment" },
-				{ "leave", "InlineFragment", 4 },
+				{ "leave" :: any, "InlineFragment", 4 },
 				{ "leave", "SelectionSet", "selectionSet", "Field" },
-				{ "leave", "Field", 1 },
+				{ "leave" :: any, "Field", 1 },
 				{ "leave", "SelectionSet", "selectionSet", "OperationDefinition" },
-				{ "leave", "OperationDefinition", 1 },
-				{ "enter", "OperationDefinition", 2 },
+				{ "leave" :: any, "OperationDefinition", 1 },
+				{ "enter" :: any, "OperationDefinition", 2 },
 				{ "enter", "Name", "name", "OperationDefinition" },
 				{ "leave", "Name", "name", "OperationDefinition" },
-				{ "enter", "Directive", 1 },
+				{ "enter" :: any, "Directive", 1 },
 				{ "enter", "Name", "name", "Directive" },
 				{ "leave", "Name", "name", "Directive" },
-				{ "leave", "Directive", 1 },
+				{ "leave" :: any, "Directive", 1 },
 				{ "enter", "SelectionSet", "selectionSet", "OperationDefinition" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
-				{ "enter", "Argument", 1 },
+				{ "enter" :: any, "Argument", 1 },
 				{ "enter", "Name", "name", "Argument" },
 				{ "leave", "Name", "name", "Argument" },
 				{ "enter", "IntValue", "value", "Argument" },
 				{ "leave", "IntValue", "value", "Argument" },
-				{ "leave", "Argument", 1 },
-				{ "enter", "Directive", 1 },
+				{ "leave" :: any, "Argument", 1 },
+				{ "enter" :: any, "Directive", 1 },
 				{ "enter", "Name", "name", "Directive" },
 				{ "leave", "Name", "name", "Directive" },
-				{ "leave", "Directive", 1 },
+				{ "leave" :: any, "Directive", 1 },
 				{ "enter", "SelectionSet", "selectionSet", "Field" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
 				{ "enter", "SelectionSet", "selectionSet", "Field" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
-				{ "enter", "Directive", 1 },
+				{ "enter" :: any, "Directive", 1 },
 				{ "enter", "Name", "name", "Directive" },
 				{ "leave", "Name", "name", "Directive" },
-				{ "leave", "Directive", 1 },
-				{ "leave", "Field", 1 },
+				{ "leave" :: any, "Directive", 1 },
+				{ "leave" :: any, "Field", 1 },
 				{ "leave", "SelectionSet", "selectionSet", "Field" },
-				{ "leave", "Field", 1 },
+				{ "leave" :: any, "Field", 1 },
 				{ "leave", "SelectionSet", "selectionSet", "Field" },
-				{ "leave", "Field", 1 },
+				{ "leave" :: any, "Field", 1 },
 				{ "leave", "SelectionSet", "selectionSet", "OperationDefinition" },
-				{ "leave", "OperationDefinition", 2 },
-				{ "enter", "OperationDefinition", 3 },
+				{ "leave" :: any, "OperationDefinition", 2 },
+				{ "enter" :: any, "OperationDefinition", 3 },
 				{ "enter", "Name", "name", "OperationDefinition" },
 				{ "leave", "Name", "name", "OperationDefinition" },
-				{ "enter", "VariableDefinition", 1 },
+				{ "enter" :: any, "VariableDefinition", 1 },
 				{ "enter", "Variable", "variable", "VariableDefinition" },
 				{ "enter", "Name", "name", "Variable" },
 				{ "leave", "Name", "name", "Variable" },
@@ -774,151 +788,153 @@ return function()
 				{ "enter", "Name", "name", "NamedType" },
 				{ "leave", "Name", "name", "NamedType" },
 				{ "leave", "NamedType", "type", "VariableDefinition" },
-				{ "leave", "VariableDefinition", 1 },
-				{ "enter", "Directive", 1 },
+				{ "leave" :: any, "VariableDefinition", 1 },
+				{ "enter" :: any, "Directive", 1 },
 				{ "enter", "Name", "name", "Directive" },
 				{ "leave", "Name", "name", "Directive" },
-				{ "leave", "Directive", 1 },
+				{ "leave" :: any, "Directive", 1 },
 				{ "enter", "SelectionSet", "selectionSet", "OperationDefinition" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
-				{ "enter", "Argument", 1 },
+				{ "enter" :: any, "Argument", 1 },
 				{ "enter", "Name", "name", "Argument" },
 				{ "leave", "Name", "name", "Argument" },
 				{ "enter", "Variable", "value", "Argument" },
 				{ "enter", "Name", "name", "Variable" },
 				{ "leave", "Name", "name", "Variable" },
 				{ "leave", "Variable", "value", "Argument" },
-				{ "leave", "Argument", 1 },
+				{ "leave" :: any, "Argument", 1 },
 				{ "enter", "SelectionSet", "selectionSet", "Field" },
-				{ "enter", "Field", 1 },
-				{ "enter", "Name", "name", "Field" },
-				{ "leave", "Name", "name", "Field" },
-				{ "enter", "SelectionSet", "selectionSet", "Field" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
 				{ "enter", "SelectionSet", "selectionSet", "Field" },
-				{ "enter", "Field", 1 },
-				{ "enter", "Name", "name", "Field" },
-				{ "leave", "Name", "name", "Field" },
-				{ "leave", "Field", 1 },
-				{ "leave", "SelectionSet", "selectionSet", "Field" },
-				{ "leave", "Field", 1 },
-				{ "enter", "Field", 2 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
 				{ "enter", "SelectionSet", "selectionSet", "Field" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
-				{ "leave", "Field", 1 },
+				{ "leave" :: any, "Field", 1 },
 				{ "leave", "SelectionSet", "selectionSet", "Field" },
-				{ "leave", "Field", 2 },
+				{ "leave" :: any, "Field", 1 },
+				{ "enter" :: any, "Field", 2 },
+				{ "enter", "Name", "name", "Field" },
+				{ "leave", "Name", "name", "Field" },
+				{ "enter", "SelectionSet", "selectionSet", "Field" },
+				{ "enter" :: any, "Field", 1 },
+				{ "enter", "Name", "name", "Field" },
+				{ "leave", "Name", "name", "Field" },
+				{ "leave" :: any, "Field", 1 },
 				{ "leave", "SelectionSet", "selectionSet", "Field" },
-				{ "leave", "Field", 1 },
+				{ "leave" :: any, "Field", 2 },
 				{ "leave", "SelectionSet", "selectionSet", "Field" },
-				{ "leave", "Field", 1 },
+				{ "leave" :: any, "Field", 1 },
+				{ "leave", "SelectionSet", "selectionSet", "Field" },
+				{ "leave" :: any, "Field", 1 },
 				{ "leave", "SelectionSet", "selectionSet", "OperationDefinition" },
-				{ "leave", "OperationDefinition", 3 },
-				{ "enter", "FragmentDefinition", 4 },
+				{ "leave" :: any, "OperationDefinition", 3 },
+				{ "enter" :: any, "FragmentDefinition", 4 },
 				{ "enter", "Name", "name", "FragmentDefinition" },
 				{ "leave", "Name", "name", "FragmentDefinition" },
 				{ "enter", "NamedType", "typeCondition", "FragmentDefinition" },
 				{ "enter", "Name", "name", "NamedType" },
 				{ "leave", "Name", "name", "NamedType" },
 				{ "leave", "NamedType", "typeCondition", "FragmentDefinition" },
-				{ "enter", "Directive", 1 },
+				{ "enter" :: any, "Directive", 1 },
 				{ "enter", "Name", "name", "Directive" },
 				{ "leave", "Name", "name", "Directive" },
-				{ "leave", "Directive", 1 },
+				{ "leave" :: any, "Directive", 1 },
 				{ "enter", "SelectionSet", "selectionSet", "FragmentDefinition" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
-				{ "enter", "Argument", 1 },
+				{ "enter" :: any, "Argument", 1 },
 				{ "enter", "Name", "name", "Argument" },
 				{ "leave", "Name", "name", "Argument" },
 				{ "enter", "Variable", "value", "Argument" },
 				{ "enter", "Name", "name", "Variable" },
 				{ "leave", "Name", "name", "Variable" },
 				{ "leave", "Variable", "value", "Argument" },
-				{ "leave", "Argument", 1 },
-				{ "enter", "Argument", 2 },
+				{ "leave" :: any, "Argument", 1 },
+				{ "enter" :: any, "Argument", 2 },
 				{ "enter", "Name", "name", "Argument" },
 				{ "leave", "Name", "name", "Argument" },
 				{ "enter", "Variable", "value", "Argument" },
 				{ "enter", "Name", "name", "Variable" },
 				{ "leave", "Name", "name", "Variable" },
 				{ "leave", "Variable", "value", "Argument" },
-				{ "leave", "Argument", 2 },
-				{ "enter", "Argument", 3 },
+				{ "leave" :: any, "Argument", 2 },
+				{ "enter" :: any, "Argument", 3 },
 				{ "enter", "Name", "name", "Argument" },
 				{ "leave", "Name", "name", "Argument" },
 				{ "enter", "ObjectValue", "value", "Argument" },
-				{ "enter", "ObjectField", 1 },
+				{ "enter" :: any, "ObjectField", 1 },
 				{ "enter", "Name", "name", "ObjectField" },
 				{ "leave", "Name", "name", "ObjectField" },
 				{ "enter", "StringValue", "value", "ObjectField" },
 				{ "leave", "StringValue", "value", "ObjectField" },
-				{ "leave", "ObjectField", 1 },
-				{ "enter", "ObjectField", 2 },
+				{ "leave" :: any, "ObjectField", 1 },
+				{ "enter" :: any, "ObjectField", 2 },
 				{ "enter", "Name", "name", "ObjectField" },
 				{ "leave", "Name", "name", "ObjectField" },
 				{ "enter", "StringValue", "value", "ObjectField" },
 				{ "leave", "StringValue", "value", "ObjectField" },
-				{ "leave", "ObjectField", 2 },
+				{ "leave" :: any, "ObjectField", 2 },
 				{ "leave", "ObjectValue", "value", "Argument" },
-				{ "leave", "Argument", 3 },
-				{ "leave", "Field", 1 },
+				{ "leave" :: any, "Argument", 3 },
+				{ "leave" :: any, "Field", 1 },
 				{ "leave", "SelectionSet", "selectionSet", "FragmentDefinition" },
-				{ "leave", "FragmentDefinition", 4 },
-				{ "enter", "OperationDefinition", 5 },
+				{ "leave" :: any, "FragmentDefinition", 4 },
+				{ "enter" :: any, "OperationDefinition", 5 },
 				{ "enter", "SelectionSet", "selectionSet", "OperationDefinition" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
-				{ "enter", "Argument", 1 },
+				{ "enter" :: any, "Argument", 1 },
 				{ "enter", "Name", "name", "Argument" },
 				{ "leave", "Name", "name", "Argument" },
 				{ "enter", "BooleanValue", "value", "Argument" },
 				{ "leave", "BooleanValue", "value", "Argument" },
-				{ "leave", "Argument", 1 },
-				{ "enter", "Argument", 2 },
+				{ "leave" :: any, "Argument", 1 },
+				{ "enter" :: any, "Argument", 2 },
 				{ "enter", "Name", "name", "Argument" },
 				{ "leave", "Name", "name", "Argument" },
 				{ "enter", "BooleanValue", "value", "Argument" },
 				{ "leave", "BooleanValue", "value", "Argument" },
-				{ "leave", "Argument", 2 },
-				{ "enter", "Argument", 3 },
+				{ "leave" :: any, "Argument", 2 },
+				{ "enter" :: any, "Argument", 3 },
 				{ "enter", "Name", "name", "Argument" },
 				{ "leave", "Name", "name", "Argument" },
 				{ "enter", "NullValue", "value", "Argument" },
 				{ "leave", "NullValue", "value", "Argument" },
-				{ "leave", "Argument", 3 },
-				{ "leave", "Field", 1 },
-				{ "enter", "Field", 2 },
+				{ "leave" :: any, "Argument", 3 },
+				{ "leave" :: any, "Field", 1 },
+				{ "enter" :: any, "Field", 2 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
-				{ "leave", "Field", 2 },
+				{ "leave" :: any, "Field", 2 },
 				{ "leave", "SelectionSet", "selectionSet", "OperationDefinition" },
-				{ "leave", "OperationDefinition", 5 },
-				{ "enter", "OperationDefinition", 6 },
+				{ "leave" :: any, "OperationDefinition", 5 },
+				{ "enter" :: any, "OperationDefinition", 6 },
 				{ "enter", "SelectionSet", "selectionSet", "OperationDefinition" },
-				{ "enter", "Field", 1 },
+				{ "enter" :: any, "Field", 1 },
 				{ "enter", "Name", "name", "Field" },
 				{ "leave", "Name", "name", "Field" },
-				{ "leave", "Field", 1 },
+				{ "leave" :: any, "Field", 1 },
 				{ "leave", "SelectionSet", "selectionSet", "OperationDefinition" },
-				{ "leave", "OperationDefinition", 6 },
+				{ "leave" :: any, "OperationDefinition", 6 },
 				{ "leave", "Document" },
+				-- ROBLOX FIXME Luau END
 			})
 		end)
 
 		describe("Support for custom AST nodes", function()
 			local customAST = parse("{ a }")
-			table.insert(customAST.definitions[1].selectionSet.selections, {
+			-- ROBLOX deviation: can't narrow type of customAST.definitions[1]
+			table.insert((customAST.definitions[1] :: any).selectionSet.selections, {
 				kind = "CustomField",
 				name = {
 					kind = "Name",
@@ -947,9 +963,9 @@ return function()
 					leave = function(self, node)
 						table.insert(visited, { "leave", node.kind, getValue(node) })
 					end,
-				})
-
-				expect(visited).toEqual({
+				});
+				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+				(expect :: any)(visited).toEqual({
 					{ "enter", "Document" },
 					{ "enter", "OperationDefinition" },
 					{ "enter", "SelectionSet" },
@@ -966,8 +982,12 @@ return function()
 			end)
 
 			it("does traverse unknown node kinds with visitor keys", function()
-				local customQueryDocumentKeys = Object.assign({}, QueryDocumentKeys)
-				customQueryDocumentKeys.CustomField = { "name", "selectionSet" }
+				local customQueryDocumentKeys = Object.assign(
+					{},
+					QueryDocumentKeys
+				)
+				-- ROBLOX FIXME: casting to any because of some weird type issue
+				customQueryDocumentKeys.CustomField = { "name", "selectionSet" } :: any
 
 				local visited = {}
 				local visitor = {
@@ -978,9 +998,9 @@ return function()
 						table.insert(visited, { "leave", node.kind, getValue(node) })
 					end,
 				}
-				visit(customAST, visitor, customQueryDocumentKeys)
-
-				expect(visited).toEqual({
+				visit(customAST, visitor, customQueryDocumentKeys);
+				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+				(expect :: any)(visited).toEqual({
 					{ "enter", "Document" },
 					{ "enter", "OperationDefinition" },
 					{ "enter", "SelectionSet" },
@@ -1033,9 +1053,9 @@ return function()
 							end,
 						},
 					})
-				)
-
-				expect(visited).toEqual({
+				);
+				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+				(expect :: any)(visited).toEqual({
 					{ "enter", "Document" },
 					{ "enter", "OperationDefinition" },
 					{ "enter", "SelectionSet" },
@@ -1094,9 +1114,9 @@ return function()
 							end,
 						},
 					})
-				)
-
-				expect(visited).toEqual({
+				);
+				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+				(expect :: any)(visited).toEqual({
 					{ "no-a", "enter", "Document" },
 					{ "no-b", "enter", "Document" },
 					{ "no-a", "enter", "OperationDefinition" },
@@ -1160,9 +1180,9 @@ return function()
 							end,
 						},
 					})
-				)
-
-				expect(visited).toEqual({
+				);
+				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+				(expect :: any)(visited).toEqual({
 					{ "enter", "Document" },
 					{ "enter", "OperationDefinition" },
 					{ "enter", "SelectionSet" },
@@ -1218,9 +1238,9 @@ return function()
 							end,
 						},
 					})
-				)
-
-				expect(visited).toEqual({
+				);
+				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+				(expect :: any)(visited).toEqual({
 					{ "break-a", "enter", "Document" },
 					{ "break-b", "enter", "Document" },
 					{ "break-a", "enter", "OperationDefinition" },
@@ -1270,9 +1290,9 @@ return function()
 							end,
 						},
 					})
-				)
-
-				expect(visited).toEqual({
+				);
+				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+				(expect :: any)(visited).toEqual({
 					{ "enter", "Document" },
 					{ "enter", "OperationDefinition" },
 					{ "enter", "SelectionSet" },
@@ -1330,9 +1350,9 @@ return function()
 							end,
 						},
 					})
-				)
-
-				expect(visited).toEqual({
+				);
+				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+				(expect :: any)(visited).toEqual({
 					{ "break-a", "enter", "Document" },
 					{ "break-b", "enter", "Document" },
 					{ "break-a", "enter", "OperationDefinition" },
@@ -1407,13 +1427,13 @@ return function()
 							end,
 						},
 					})
-				)
-
-				expect(ast).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }))
-
-				expect(editedAST).toEqual(parse("{ a,    c { a,    c } }", { noLocation = true }))
-
-				expect(visited).toEqual({
+				);
+				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+				(expect :: any)(ast).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }));
+				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+				(expect :: any)(editedAST).toEqual(parse("{ a,    c { a,    c } }", { noLocation = true }));
+				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+				(expect :: any)(visited).toEqual({
 					{ "enter", "Document" },
 					{ "enter", "OperationDefinition" },
 					{ "enter", "SelectionSet" },
@@ -1481,13 +1501,13 @@ return function()
 							end,
 						},
 					})
-				)
-
-				expect(ast).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }))
-
-				expect(editedAST).toEqual(parse("{ a,    c { a,    c } }", { noLocation = true }))
-
-				expect(visited).toEqual({
+				);
+				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+				(expect :: any)(ast).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }));
+				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+				(expect :: any)(editedAST).toEqual(parse("{ a,    c { a,    c } }", { noLocation = true }));
+				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
+				(expect :: any)(visited).toEqual({
 					{ "enter", "Document" },
 					{ "enter", "OperationDefinition" },
 					{ "enter", "SelectionSet" },

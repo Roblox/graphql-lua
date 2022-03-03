@@ -1,3 +1,4 @@
+--!nocheck
 -- ROBLOX deviation: no upstream tests
 
 return function()
