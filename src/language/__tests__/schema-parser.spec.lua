@@ -1,3 +1,4 @@
+--!nocheck
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/language/__tests__/schema-parser-test.js
 
 return function()

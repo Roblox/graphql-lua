@@ -338,7 +338,8 @@ function Parser.parseOperationDefinition(self: Parser): OperationDefinitionNode
 			loc = self:loc(start),
 		}
 	end
-	local operation = self:parseOperationType()
+	-- ROBLOX FIXME Luau: without that Luau isn't properly inferring the type
+	local operation: OperationTypeNode = self:parseOperationType()
 	local name
 	if self:peek(TokenKind.NAME) then
 		name = self:parseName()
@@ -357,7 +358,7 @@ end
 --[[*
 --  * OperationType : one of query mutation subscription
 --  *]]
-function Parser:parseOperationType()
+function Parser:parseOperationType() : OperationTypeNode
 	local operationToken = self:expectToken(TokenKind.NAME)
 
 	if operationToken.value == "query" then
@@ -892,7 +893,7 @@ end
 --[[*
 --  * OperationTypeDefinition : OperationType : NamedType
 --  *]]
-function Parser:parseOperationTypeDefinition()
+function Parser:parseOperationTypeDefinition(): OperationTypeDefinitionNode
 	local start = self._lexer.token
 	local operation = self:parseOperationType()
 	self:expectToken(TokenKind.COLON)

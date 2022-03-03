@@ -16,7 +16,7 @@ return function()
 
 			local firstLocation = printSourceLocation(minifiedSource, {
 				line = 1,
-				column = string.find(minifiedSource.body, "FIRST_ERROR_HERE", 1, true),
+				column = string.find(minifiedSource.body, "FIRST_ERROR_HERE", 1, true) :: number,
 			})
 			expect(firstLocation .. "\n").to.equal(dedent([[
 				GraphQL request:1:53
@@ -27,7 +27,7 @@ return function()
 
 			local secondLocation = printSourceLocation(minifiedSource, {
 				line = 1,
-				column = string.find(minifiedSource.body, "SECOND_ERROR_HERE", 1, true),
+				column = string.find(minifiedSource.body, "SECOND_ERROR_HERE", 1, true) :: number,
 			})
 			expect(secondLocation .. "\n").to.equal(dedent([[
 				GraphQL request:1:114
@@ -39,7 +39,7 @@ return function()
 
 			local thirdLocation = printSourceLocation(minifiedSource, {
 				line = 1,
-				column = string.find(minifiedSource.body, "THIRD_ERROR_HERE", 1, true),
+				column = string.find(minifiedSource.body, "THIRD_ERROR_HERE", 1, true) :: number,
 			})
 			expect("\n" .. thirdLocation .. "\n").to.equal("\n" .. dedent([[
 				GraphQL request:1:166
