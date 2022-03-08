@@ -150,6 +150,7 @@ return function()
 			local ast = parse("{ a }", { noLocation = true })
 			local visited = {}
 
+			-- ROBLOX FIXME Luau: needs unification
 			visit(ast, {
 				enter = {
 					Field = function(self, node)
@@ -161,7 +162,7 @@ return function()
 						table.insert(visited, { "leave", node.kind })
 					end,
 				},
-			});
+			} :: any);
 			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
 			(expect :: any)(visited).toEqual({
 				{ "enter", "Field" },
