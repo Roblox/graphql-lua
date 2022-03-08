@@ -461,7 +461,8 @@ printDocASTReducer = {
 		local fields = node.fields
 		return join({ "extend input", name, join(directives, " "), block(fields) }, " ")
 	end,
-}
+	-- ROBLOX FIXME Luau: needs unification
+} :: any
 
 --[[**
 --  * Given maybeArray, print an empty string if it is null or empty, otherwise
