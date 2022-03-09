@@ -1,14 +1,16 @@
 [package]
 name = "GraphQL"
-version = "0.1.0"
+version = "15.5.0"
+author = "Roblox"
 authors = [
+	"Chris Trześniewski <k.trzesniewski@gmail.com>",
+	"Ignacio Falk <flakolefluk@gmail.com>",
     "Kyle Mitofsky <kylemit@gmail.com>",
 	"Matt Hargett <plaztiksyke@gmail.com>",
 	"Olivier Trepanier <otrepanier@roblox.com>",
-	"Ignacio Falk <flakolefluk@gmail.com>",
-	"Chris Trześniewski <k.trzesniewski@gmail.com>",
 ]
 content_root = "src"
+default_alias = "graphql"
 
 [dependencies]
 RegExp = "github.com/Roblox/luau-regexp@0.2.0"
@@ -16,5 +18,5 @@ LuauPolyfill = "github.com/Roblox/luau-polyfill@0.3.0"
 Promise = "github.com/Roblox/roblox-lua-promise@3.2.1"
 
 [dev_dependencies]
-JestGlobals = "github.com/roblox/jest-roblox@2.3.0"
+JestGlobals = "github.com/roblox/jest-roblox@2.3.1"
 

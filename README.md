@@ -1,8 +1,8 @@
-# GraphQL.lua
+# GraphQL-Lua
 
 The Roblox Lua reference implementation for GraphQL, a query language for APIs created by Facebook.
 
-[![Build Status](https://github.com/Roblox/graphql-lua/workflows/CI/badge.svg?branch=master)](https://github.com/Roblox/graphql-lua/actions?query=branch%3Amaster)
+[![Build Status](https://github.com/Roblox/graphql-lua/workflows/ci/badge.svg?branch=master)](https://github.com/Roblox/graphql-lua/actions?query=branch%3Amaster)
 [![Coverage Status](https://codecov.io/gh/Roblox/graphql-lua/branch/master/graph/badge.svg)](https://codecov.io/gh/Roblox/graphql-lua)
 
 See more complete documentation at https://graphql.org/ and
@@ -13,27 +13,42 @@ Looking for help? Find resources [from the community](https://graphql.org/commun
 ## Getting Started
 
 A general overview of GraphQL is available in the
-[README](https://github.com/graphql/graphql-spec/blob/master/README.md) for the
+[README](https://github.com/graphql/graphql-spec/blob/main/README.md) for the
 [Specification for GraphQL](https://github.com/graphql/graphql-spec). That overview
-describes a simple set of GraphQL examples that __will__ exist as [tests](src/__tests__)
+describes a simple set of GraphQL examples that exist as [tests](src/__tests__)
 in this repository. A good way to get started with this repository is to walk
 through that README and the corresponding tests in parallel.
 
-### Using GraphQL.lua
+### Using GraphQL-Lua
 
-This repository is currently under construction, with the goal of having an integration-tested GraphQL implementation written in Roblox Lua. See the README.md in each src subdirectory for current status, and run the tests using `scripts/ci.sh` to see the progress.
+This repository contains an integration-tested GraphQL implementation, with complete unit and
+integration tests, written in Roblox Lua that is aligned to the same major.minor version as
+upstream. See the README.md in each src subdirectory for current status, and run the tests using
+`scripts/ci.sh` to see the progress.
 
-GraphQL.lua provides two important capabilities: building a type schema and
+GraphQL-Lua provides two important capabilities: building a type schema and
 serving queries against that type schema.
 
-First, build a GraphQL type schema which maps to your codebase.
+* In a new project, you can consume this library by adding this line to your rotriever.toml
+  * `GraphQL = "github.com/roblox/graphql-lua@15.5.0"`
+* Make sure you are using the latest [rotriever](https://github.com/Roblox/rotriever/releases) 0.5.1 (or later) release
+  * you can download the release binary, or add it to your `foreman.toml`: ```rotrieve = { source = "roblox/rotriever", version = "0.5.1" }```
+
+
+You'll need [rotriever](https://github.com/Roblox/rotriever) 0.5.1 (or later), so hop over there
+and make sure you have the latest released version specified in your `foreman.toml`, or have the
+latest rotriever version in your PATH. See the rotriever repo for more details on how to install
+and use rotriever.
+
+The first thing you'll do in GraphQL-Lua is build a GraphQL type schema which maps to your services.
 
 ```lua
 local Workspace = Script.Parent.Parent
-local graphql = require(Workspace.graphql)
-local GraphQLSchema = graphql.GraphQLSchema
-local GraphQLObjectType = graphql.GraphQLObjectType
-local GraphQLString = graphql.GraphQLString
+local GraphQLModule = require(Workspace.Packages.GraphQL)
+local graphql = GraphQLModule.graphql
+local GraphQLSchema = GraphQLModule.GraphQLSchema
+local GraphQLObjectType = GraphQLModule.GraphQLObjectType
+local GraphQLString = GraphQLModule.GraphQLString
 
 local schema = GraphQLSchema.new({
   query = GraphQLObjectType.new({
@@ -47,57 +62,57 @@ local schema = GraphQLSchema.new({
       },
     },
   }),
-});
+})
 ```
 
 This defines a simple schema, with one type and one field, that resolves
 to a fixed value. The `resolve` function can return a value, a promise,
-or an array of promises. A more complex example __will be__ included in the top-level [tests](src/__tests__) directory.
+or an array of promises. (Lua Note: You'll need to use a Promise library 
+compatible with https://github.com/evaera/roblox-lua-promise .) A more complex 
+example, with a Star Wars theme, is included in the top-level [tests](src/__tests__) directory.
 
 Then, serve the result of a query against that type schema.
 
 ```lua
-local query = '{ hello }';
+local source = '{ hello }'
 
-graphql(schema, query).then(function (result)
-  --[[ Prints
-    {
-      data: { hello: "world" }
-    }
+graphql({schema = schema, source = source}):andThen(function (result)
+  --[[ Prints:
+    world
   ]]
-  print(tostring(result));
+  print(tostring(result.data.hello))
 end)
 ```
+
+Note: If you're using the [luau-polyfill](https://github.com/Roblox/luau-polyfill) library,
+you can use the `inspect` function it exports to pretty-print results and errors.
 
 This runs a query fetching the one field defined. The `graphql` function will
 first ensure the query is syntactically and semantically valid before executing
 it, reporting errors otherwise.
 
 ```lua
-var query = '{ BoyHowdy }';
+local source = '{ BoyHowdy }'
 
-graphql(schema, query).then(function(result) 
-  --[[ Prints
-    {
-      errors = {
-        { message = 'Cannot query field BoyHowdy on RootQueryType',
-          locations = { { line = 1, column = 3 } } }
-      }
-    }
+graphql({schema = schema, source = source}):andThen(function (result)
+  --[[ Prints:
+    Cannot query field "BoyHowdy" on type "MyRootQueryType".
   ]]
-  print(tostring(result));
+  print(tostring(result.errors[1].message))
 end)
 ```
 
-**Note**: Please don't forget to set `_G.__DEV__` to false (the default) if you are running a production server. It will disable some checks that can be useful during development but will significantly improve performance.
-
-### Want to ride the bleeding edge?
-
-When this repository is ready for consumption, we will include instructions about how to reference it with rotriever and other appropriate tooling here. For now, pull the code and run the tests :)
+**Note**: Please don't forget to disable the global `_G.__DEV__` (the default) if you are running a
+production server. Enabling `_G.__DEV__` has some runtime checks that can provide useful feedback
+during development, but those extra runtime checks can degrade performance.
 
 ### Using with GraphiQL and similar tooling
 
-We are too early to document this, but will update this documentation with examples of integration with commodity GQL tooling in the future.
+We have ported [Apollo GraphQL Client](https://github.com/Roblox/apollo-client-lua) and have both
+end-to-end tests and benchmarks in that repository that deeply exercises this GraphQL
+implementation (and its strong Luau types).
+
+Other tooling will likely 'just work', but we will update this documentation with examples of other screenshots of integration with commodity GQL tooling in the future.
 
 ### Contributing
 
@@ -109,7 +124,7 @@ Changes are tracked as [GitHub releases](https://github.com/Roblox/graphql-lua/r
 
 ### License
 
-GraphQL.lua is [MIT-licensed](./LICENSE).
+GraphQL-Lua is [MIT-licensed](./LICENSE).
 
 ### Credits
 

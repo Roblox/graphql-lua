@@ -281,8 +281,36 @@ export type GraphQLInputType =
 	GraphQLScalarType
 	| GraphQLEnumType
 	| GraphQLInputObjectType
-	| GraphQLList< --[[ ROBLOX deviation: Luau doesn't allow self-recursive generic types, so inline one level before going to 'any']]GraphQLScalarType | GraphQLEnumType | GraphQLInputObjectType | GraphQLList<any> | GraphQLNonNull<GraphQLScalarType | GraphQLEnumType | GraphQLInputObjectType | GraphQLList< --[[ROBLOX deviation: Luau doesn't allow self-recursive generic types, so inline one level before going to 'any']]GraphQLScalarType | GraphQLEnumType | GraphQLInputObjectType | GraphQLList<any> | GraphQLNonNull<GraphQLScalarType | GraphQLEnumType | GraphQLInputObjectType>>>>
-	| GraphQLNonNull<GraphQLScalarType | GraphQLEnumType | GraphQLInputObjectType | GraphQLList< --[[ ROBLOX deviation: Luau doesn't allow self-recursive generic types, so inline one level before going to 'any']]GraphQLScalarType | GraphQLEnumType | GraphQLInputObjectType | GraphQLList<any> | GraphQLNonNull<GraphQLScalarType | GraphQLEnumType | GraphQLInputObjectType>>>
+	| GraphQLList< --[[ ROBLOX deviation: Luau doesn't allow self-recursive generic types, so inline one level before going to 'any']]
+		GraphQLScalarType
+		| GraphQLEnumType
+		| GraphQLInputObjectType
+		| GraphQLList<any>
+		| GraphQLNonNull<
+			GraphQLScalarType
+			| GraphQLEnumType
+			| GraphQLInputObjectType
+			| GraphQLList< --[[ROBLOX deviation: Luau doesn't allow self-recursive generic types, so inline one level before going to 'any']]
+				GraphQLScalarType
+				| GraphQLEnumType
+				| GraphQLInputObjectType
+				| GraphQLList<any>
+				| GraphQLNonNull<GraphQLScalarType | GraphQLEnumType | GraphQLInputObjectType>
+			>
+		>
+	>
+	| GraphQLNonNull<
+		GraphQLScalarType
+		| GraphQLEnumType
+		| GraphQLInputObjectType
+		| GraphQLList< --[[ ROBLOX deviation: Luau doesn't allow self-recursive generic types, so inline one level before going to 'any']]
+			GraphQLScalarType
+			| GraphQLEnumType
+			| GraphQLInputObjectType
+			| GraphQLList<any>
+			| GraphQLNonNull<GraphQLScalarType | GraphQLEnumType | GraphQLInputObjectType>
+		>
+	>
 
 function isInputType(type_: any): boolean
 	return isScalarType(type_)
@@ -309,7 +337,14 @@ export type GraphQLOutputType =
 	| GraphQLUnionType
 	| GraphQLEnumType
 	| GraphQLList<GraphQLOutputType>
-	| GraphQLNonNull<GraphQLScalarType | GraphQLObjectType | GraphQLInterfaceType | GraphQLUnionType | GraphQLEnumType | GraphQLList<GraphQLOutputType>>
+	| GraphQLNonNull<
+		GraphQLScalarType
+		| GraphQLObjectType
+		| GraphQLInterfaceType
+		| GraphQLUnionType
+		| GraphQLEnumType
+		| GraphQLList<GraphQLOutputType>
+	>
 
 function isOutputType(type_): boolean
 	return isScalarType(type_)

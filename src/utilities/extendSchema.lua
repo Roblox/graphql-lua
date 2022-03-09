@@ -471,7 +471,12 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 	end
 
 	function buildFieldMap(
-		nodes: Array<InterfaceTypeDefinitionNode | InterfaceTypeExtensionNode | ObjectTypeDefinitionNode | ObjectTypeExtensionNode>
+		nodes: Array<
+			InterfaceTypeDefinitionNode
+			| InterfaceTypeExtensionNode
+			| ObjectTypeDefinitionNode
+			| ObjectTypeExtensionNode
+		>
 	): GraphQLFieldConfigMap<any, any>
 		-- ROBLOX deviation: use Map
 		local fieldConfigMap = Map.new()
@@ -561,7 +566,12 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 	end
 
 	function buildInterfaces(
-		nodes: Array<InterfaceTypeDefinitionNode | InterfaceTypeExtensionNode | ObjectTypeDefinitionNode | ObjectTypeExtensionNode>
+		nodes: Array<
+			InterfaceTypeDefinitionNode
+			| InterfaceTypeExtensionNode
+			| ObjectTypeDefinitionNode
+			| ObjectTypeExtensionNode
+		>
 	): Array<GraphQLInterfaceType>
 		local interfaces = {}
 		for _, node in ipairs(nodes) do

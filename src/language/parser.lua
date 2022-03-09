@@ -90,7 +90,7 @@ export type ParseOptions = {
   ]]
 	noLocation: boolean?,
 	--[[
-   * EXPERIMENTAL:
+   * @deprecated will be removed in 17.0.0
    *
    * If enabled, the parser will understand and parse variable definitions
    * contained in a fragment definition. They'll be represented in the
@@ -102,8 +102,6 @@ export type ParseOptions = {
    *     ...
    *   }
    *
-   * Note: this feature is experimental and may change or be removed in the
-   * future.
    *]]
 	experimentalFragmentVariables: boolean?,
 }
@@ -358,7 +356,7 @@ end
 --[[*
 --  * OperationType : one of query mutation subscription
 --  *]]
-function Parser:parseOperationType() : OperationTypeNode
+function Parser:parseOperationType(): OperationTypeNode
 	local operationToken = self:expectToken(TokenKind.NAME)
 
 	if operationToken.value == "query" then
