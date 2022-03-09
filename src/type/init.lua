@@ -153,18 +153,27 @@ export type GraphQLFieldConfig<TSource, TContext, TArgs> = definitionModule.Grap
 export type GraphQLFieldConfigArgumentMap = definitionModule.GraphQLFieldConfigArgumentMap
 export type GraphQLFieldConfigMap<TSource, TContext> = definitionModule.GraphQLFieldConfigMap<TSource, TContext>
 export type GraphQLFieldMap<TSource, TContext> = definitionModule.GraphQLFieldMap<TSource, TContext>
-export type GraphQLFieldResolver<TSource, TContext, TArgs> =
-	definitionModule.GraphQLFieldResolver<TSource, TContext, TArgs>
+export type GraphQLFieldResolver<TSource, TContext, TArgs> = definitionModule.GraphQLFieldResolver<
+	TSource,
+	TContext,
+	TArgs
+>
 export type GraphQLInputField = definitionModule.GraphQLInputField
 export type GraphQLInputFieldConfig = definitionModule.GraphQLInputFieldConfig
 export type GraphQLInputFieldConfigMap = definitionModule.GraphQLInputFieldConfigMap
 export type GraphQLInputFieldMap = definitionModule.GraphQLInputFieldMap
 export type GraphQLInputObjectTypeConfig = definitionModule.GraphQLInputObjectTypeConfig
-export type GraphQLInterfaceTypeConfig<TSource, TContext> = definitionModule.GraphQLInterfaceTypeConfig<TSource, TContext>
+export type GraphQLInterfaceTypeConfig<TSource, TContext> = definitionModule.GraphQLInterfaceTypeConfig<
+	TSource,
+	TContext
+>
 export type GraphQLIsTypeOfFn<TSource, TContext> = definitionModule.GraphQLIsTypeOfFn<TSource, TContext>
 export type GraphQLObjectTypeConfig<TSource, TContext> = definitionModule.GraphQLObjectTypeConfig<TSource, TContext>
 export type GraphQLResolveInfo = definitionModule.GraphQLResolveInfo
-export type GraphQLScalarTypeConfig<TInternal, TExternal> = definitionModule.GraphQLScalarTypeConfig<TInternal, TExternal>
+export type GraphQLScalarTypeConfig<TInternal, TExternal> = definitionModule.GraphQLScalarTypeConfig<
+	TInternal,
+	TExternal
+>
 export type GraphQLTypeResolver<TSource, TContext> = definitionModule.GraphQLTypeResolver<TSource, TContext>
 export type GraphQLUnionTypeConfig<TSource, TContext> = definitionModule.GraphQLUnionTypeConfig<TSource, TContext>
 export type GraphQLScalarSerializer<TExternal> = definitionModule.GraphQLScalarSerializer<TExternal>

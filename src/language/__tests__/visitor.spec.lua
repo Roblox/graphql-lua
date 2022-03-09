@@ -983,10 +983,7 @@ return function()
 			end)
 
 			it("does traverse unknown node kinds with visitor keys", function()
-				local customQueryDocumentKeys = Object.assign(
-					{},
-					QueryDocumentKeys
-				)
+				local customQueryDocumentKeys = Object.assign({}, QueryDocumentKeys)
 				-- ROBLOX FIXME: casting to any because of some weird type issue
 				customQueryDocumentKeys.CustomField = { "name", "selectionSet" } :: any
 

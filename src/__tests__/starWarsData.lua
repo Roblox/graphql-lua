@@ -127,7 +127,7 @@ local droidData: { [string]: Droid } = {
  * Helper function to get a character by ID.
  ]]
 local function getCharacter(id: string): Promise<Character | nil>
-	-- Returning a promise just to illustrate that GraphQL.lua supports it.
+	-- Returning a promise just to illustrate that GraphQL-Lua supports it.
 	return Promise.resolve(humanData[id] or droidData[id])
 end
 

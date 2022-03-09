@@ -286,17 +286,23 @@ export type IntrospectionNonNullTypeRef<
 export type IntrospectionTypeRef =
 	IntrospectionNamedTypeRef<IntrospectionTypeRef> -- ROBLOX deviation: Luau doesn't support default type args for `<>`, so inline
 	| IntrospectionListTypeRef<IntrospectionTypeRef>
-	| IntrospectionNonNullTypeRef<IntrospectionNamedTypeRef<IntrospectionTypeRef> | IntrospectionListTypeRef<IntrospectionTypeRef>>
+	| IntrospectionNonNullTypeRef<
+		IntrospectionNamedTypeRef<IntrospectionTypeRef> | IntrospectionListTypeRef<IntrospectionTypeRef>
+	>
 
 export type IntrospectionOutputTypeRef =
 	IntrospectionNamedTypeRef<IntrospectionOutputType>
 	| IntrospectionListTypeRef<IntrospectionOutputTypeRef>
-	| IntrospectionNonNullTypeRef<IntrospectionNamedTypeRef<IntrospectionOutputType> | IntrospectionListTypeRef<IntrospectionOutputTypeRef>>
+	| IntrospectionNonNullTypeRef<
+		IntrospectionNamedTypeRef<IntrospectionOutputType> | IntrospectionListTypeRef<IntrospectionOutputTypeRef>
+	>
 
 export type IntrospectionInputTypeRef =
 	IntrospectionNamedTypeRef<IntrospectionInputType>
 	| IntrospectionListTypeRef<IntrospectionInputTypeRef>
-	| IntrospectionNonNullTypeRef<IntrospectionNamedTypeRef<IntrospectionInputType> | IntrospectionListTypeRef<IntrospectionInputTypeRef>>
+	| IntrospectionNonNullTypeRef<
+		IntrospectionNamedTypeRef<IntrospectionInputType> | IntrospectionListTypeRef<IntrospectionInputTypeRef>
+	>
 
 export type IntrospectionNamedTypeRef<
 	T -- ROBLOX TODO: Luau doesn't support generic constraints or default types: IntrospectionType = IntrospectionType,

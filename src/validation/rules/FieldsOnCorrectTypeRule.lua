@@ -8,6 +8,7 @@ local Array = LuauPolyfill.Array
 
 local didYouMean = require(jsutils.didYouMean).didYouMean
 local suggestionList = require(jsutils.suggestionList).suggestionList
+local naturalCompare = require(jsutils.naturalCompare).naturalCompare
 local GraphQLError = require(root.error.GraphQLError).GraphQLError
 local definition = require(root.type.definition)
 local isObjectType = definition.isObjectType
@@ -118,14 +119,7 @@ function getSuggestedTypeNames(schema, type_, fieldName)
 			return 1
 		end
 
-		-- ROBLOX deviation: Lua doesn't have an easy locale-aware string comparison
-		-- return typeA.name.localeCompare(typeB.name)
-		if typeA.name < typeB.name then
-			return -1
-		elseif typeA.name > typeB.name then
-			return 1
-		end
-		return 0
+		return naturalCompare(typeA.name, typeB.name)
 	end)
 	return Array.map(suggestions, function(x)
 		return x.name

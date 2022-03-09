@@ -124,7 +124,7 @@ function getDirectiveLocationForOperation(operation)
 
 	-- // istanbul ignore next (Not reachable. All possible types have been considered)
 	invariant(false, "Unexpected operation: " .. inspect(operation))
-	-- ROBLOX TODO: add explicit return until Luau surfaces no-return? from invariant()
+	-- ROBLOX FIXME Luau: add explicit return until Luau surfaces no-return? from invariant()
 	return nil
 end
 

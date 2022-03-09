@@ -352,6 +352,7 @@ export type FragmentDefinitionNode = {
 	name: NameNode,
 	-- Note: fragment variable definitions are experimental and may be changed
 	-- or removed in the future.
+	-- @deprecated will be removed in 17.0.0
 	variableDefinitions: Array<VariableDefinitionNode>?,
 	typeCondition: NamedTypeNode,
 	directives: Array<DirectiveNode>?,
