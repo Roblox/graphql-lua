@@ -50,7 +50,7 @@ local function memoize3<A1, A2, A3, R>(fn: (A1, A2, A3) -> R): (A1, A2, A3) -> R
 					-- deviation: since we store nil as NULL
 					-- we need to check for it
 					if cachedValue == NULL then
-						-- ROBLOX FIXME Luau: Type 'nil' could not be converted into 'R'
+						-- ROBLOX FIXME Luau: Type 'nil' could not be converted into 'R', upstream GQL 16 has potential fix
 						return nil :: any
 					end
 					return cachedValue

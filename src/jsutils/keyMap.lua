@@ -29,13 +29,12 @@ type ObjMap<T> = ObjMapModule.ObjMap<T>
  *     const jennyEntry = entriesByName['Jenny']
  *
  ]]
-local function keyMap(list: Array<any>, keyFn: (any) -> string): ObjMap<any>
-	local map = {}
-	for i = 1, #list do
-		local item = list[i]
-		map[keyFn(item)] = item
+local function keyMap<T>(list: Array<T>, keyFn: (item: T) -> string): ObjMap<T>
+	local result: ObjMap<T> = {}
+	for _, item in ipairs(list) do
+		result[keyFn(item)] = item
 	end
-	return map
+	return result
 end
 
 return {

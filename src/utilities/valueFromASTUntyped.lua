@@ -68,9 +68,9 @@ local function valueFromASTUntyped(
 	end
 
 	-- istanbul ignore next (Not reachable. All possible value nodes have been considered)
-	invariant(false, "Unexpected value node: " + inspect(valueNode))
+	invariant(false, "Unexpected value node: " .. inspect(valueNode))
 	-- ROBLOX deviation: should never reach here, but need to convince analyzer
-	error("Unexpected value node: " + inspect(valueNode))
+	error("Unexpected value node: " .. inspect(valueNode))
 end
 
 return {

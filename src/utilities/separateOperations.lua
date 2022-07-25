@@ -14,6 +14,7 @@ type ObjMap<T> = ObjMapModule.ObjMap<T>
 local languageAstModule = require(srcWorkspace.language.ast)
 type DocumentNode = languageAstModule.DocumentNode
 type OperationDefinitionNode = languageAstModule.OperationDefinitionNode
+type FragmentDefinitionNode = languageAstModule.FragmentDefinitionNode
 type SelectionSetNode = languageAstModule.SelectionSetNode
 
 local Kind = require(srcWorkspace.language.kinds).Kind
@@ -36,9 +37,13 @@ local function separateOperations(documentAST: DocumentNode): ObjMap<DocumentNod
 	for _, definitionNode in pairs(documentAST.definitions) do
 		local definitionNodeKind = definitionNode.kind
 		if definitionNodeKind == Kind.OPERATION_DEFINITION then
-			table.insert(operations, definitionNode)
+			-- ROBLOX FIXME Luau: Luau should narrow definitionNode based on this branch
+			table.insert(operations, definitionNode :: OperationDefinitionNode)
 		elseif definitionNodeKind == Kind.FRAGMENT_DEFINITION then
-			depGraph[definitionNode.name.value] = collectDependencies(definitionNode.selectionSet)
+			-- ROBLOX FIXME Luau: Luau should narrow definitionNode based on this branch
+			depGraph[(definitionNode :: FragmentDefinitionNode).name.value] = collectDependencies(
+				(definitionNode :: FragmentDefinitionNode).selectionSet
+			)
 		end
 	end
 
@@ -81,7 +86,7 @@ type DepGraph = ObjMap<Array<string>>
 
 -- From a dependency graph, collects a list of transitive dependencies by
 -- recursing through a dependency graph.
-function collectTransitiveDependencies(collected: Set<string>, depGraph: DepGraph, fromName: string)
+function collectTransitiveDependencies(collected: Set<string>, depGraph: DepGraph, fromName: string): ()
 	if not collected:has(fromName) then
 		collected:add(fromName)
 
@@ -95,7 +100,7 @@ function collectTransitiveDependencies(collected: Set<string>, depGraph: DepGrap
 end
 
 function collectDependencies(selectionSet: SelectionSetNode): Array<string>
-	local dependencies = {}
+	local dependencies: Array<string> = {}
 
 	visit(selectionSet, {
 		FragmentSpread = function(_self, node)

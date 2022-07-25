@@ -1,5 +1,5 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/056fac955b7172e55b33e0a1b35b4ddb8951a99c/src/type/introspection.js
---!nonstrict
+--!strict
 local srcWorkspace = script.Parent.Parent
 local jsutilsWorkspace = srcWorkspace.jsutils
 local languageWorkspace = srcWorkspace.language
@@ -7,6 +7,7 @@ local Packages = srcWorkspace.Parent
 
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
+type Array<T> = LuauPolyfill.Array<T>
 local Map = LuauPolyfill.Map
 local Object = LuauPolyfill.Object
 
@@ -18,6 +19,8 @@ local invariant = require(jsutilsWorkspace.invariant).invariant
 local print_ = require(languageWorkspace.printer).print
 local DirectiveLocation = require(languageWorkspace.directiveLocation).DirectiveLocation
 local astFromValue = require(srcWorkspace.utilities.astFromValue).astFromValue
+local astImport = require(srcWorkspace.language.ast)
+type ValueNode = astImport.ValueNode
 
 local scalarsModule = require(script.Parent.scalars)
 local GraphQLString = scalarsModule.GraphQLString
@@ -27,8 +30,7 @@ type GraphQLType = definitionModule.GraphQLType
 type GraphQLNamedType = definitionModule.GraphQLNamedType
 type GraphQLInputField = definitionModule.GraphQLInputField
 type GraphQLEnumValue = definitionModule.GraphQLEnumValue
--- ROBLOX TODO: Luau doesn't support default type args, so inline any
-type GraphQLField<TSource, TContext> = definitionModule.GraphQLField<TSource, TContext, any>
+type GraphQLField<TSource, TContext> = definitionModule.GraphQLField<TSource, TContext>
 type GraphQLFieldConfigMap<TSource, TContext> = definitionModule.GraphQLFieldConfigMap<TSource, TContext>
 
 local GraphQLList = definitionModule.GraphQLList
@@ -45,11 +47,19 @@ local isListType = definitionModule.isListType
 local isNonNullType = definitionModule.isNonNullType
 local isAbstractType = definitionModule.isAbstractType
 
--- ROBLOX FIXME: remove any type annotation from exports when Luau can
--- analyze the exports table correctly
-local exports: any = {}
+local TypeKind: {
+	SCALAR: "SCALAR",
+	OBJECT: "OBJECT",
+	INTERFACE: "INTERFACE",
+	UNION: "UNION",
+	ENUM: "ENUM",
+	INPUT_OBJECT: "INPUT_OBJECT",
+	LIST: "LIST",
+	NON_NULL: "NON_NULL",
+}
+local __TypeKind, __Directive, __DirectiveLocation, __Type, __Field, __InputValue, __EnumValue
 
-exports.__Schema = GraphQLObjectType.new({
+local __Schema = GraphQLObjectType.new({
 	name = "__Schema",
 	description = "A GraphQL Schema defines the capabilities of a GraphQL server. It exposes all available types and directives on the server, as well as the entry points for query, mutation, and subscription operations.",
 	fields = function()
@@ -62,63 +72,63 @@ exports.__Schema = GraphQLObjectType.new({
 						return schema.description
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"types",
 				{
 					description = "A list of all types supported by this server.",
-					type = GraphQLNonNull.new(GraphQLList.new(GraphQLNonNull.new(exports.__Type))),
+					type = GraphQLNonNull.new(GraphQLList.new(GraphQLNonNull.new(__Type))),
 					resolve = function(schema)
 						-- ROBLOX deviation: use Map type
 						return schema:getTypeMap():values()
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"queryType",
 				{
 					description = "The type that query operations will be rooted at.",
-					type = GraphQLNonNull.new(exports.__Type),
+					type = GraphQLNonNull.new(__Type),
 					resolve = function(schema)
 						return schema:getQueryType()
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"mutationType",
 				{
 					description = "If this server supports mutation, the type that mutation operations will be rooted at.",
-					type = exports.__Type,
+					type = __Type,
 					resolve = function(schema)
 						return schema:getMutationType()
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"subscriptionType",
 				{
 					description = "If this server support subscription, the type that subscription operations will be rooted at.",
-					type = exports.__Type,
+					type = __Type,
 					resolve = function(schema)
 						return schema:getSubscriptionType()
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"directives",
 				{
 					description = "A list of all directives supported by this server.",
-					type = GraphQLNonNull.new(GraphQLList.new(GraphQLNonNull.new(exports.__Directive))),
+					type = GraphQLNonNull.new(GraphQLList.new(GraphQLNonNull.new(__Directive))),
 					resolve = function(schema)
 						return schema:getDirectives()
 					end,
 				},
-			},
+			} :: Array<any>,
 		})
 	end,
 })
 
-exports.__Directive = GraphQLObjectType.new({
+__Directive = GraphQLObjectType.new({
 	name = "__Directive",
 	description = "A Directive provides a way to describe alternate runtime execution and type validation behavior in a GraphQL document.\n\nIn some cases, you need to provide options to alter GraphQL's execution behavior in ways field arguments will not suffice, such as conditionally including or skipping a field. Directives provide this by describing additional information to the executor.",
 	fields = function()
@@ -131,7 +141,7 @@ exports.__Directive = GraphQLObjectType.new({
 						return directive.name
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"description",
 				{
@@ -140,7 +150,7 @@ exports.__Directive = GraphQLObjectType.new({
 						return directive.description
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"isRepeatable",
 				{
@@ -149,30 +159,30 @@ exports.__Directive = GraphQLObjectType.new({
 						return directive.isRepeatable
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"locations",
 				{
-					type = GraphQLNonNull.new(GraphQLList.new(GraphQLNonNull.new(exports.__DirectiveLocation))),
+					type = GraphQLNonNull.new(GraphQLList.new(GraphQLNonNull.new(__DirectiveLocation))),
 					resolve = function(directive)
 						return directive.locations
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"args",
 				{
-					type = GraphQLNonNull.new(GraphQLList.new(GraphQLNonNull.new(exports.__InputValue))),
+					type = GraphQLNonNull.new(GraphQLList.new(GraphQLNonNull.new(__InputValue))),
 					resolve = function(directive)
 						return directive.args
 					end,
 				},
-			},
+			} :: Array<any>,
 		})
 	end,
 })
 
-exports.__DirectiveLocation = GraphQLEnumType.new({
+__DirectiveLocation = GraphQLEnumType.new({
 	name = "__DirectiveLocation",
 	description = "A Directive can be adjacent to many parts of the GraphQL language, a __DirectiveLocation describes one such possible adjacencies.",
 	values = Map.new({
@@ -182,137 +192,137 @@ exports.__DirectiveLocation = GraphQLEnumType.new({
 				value = DirectiveLocation.QUERY,
 				description = "Location adjacent to a query operation.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"MUTATION",
 			{
 				value = DirectiveLocation.MUTATION,
 				description = "Location adjacent to a mutation operation.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"SUBSCRIPTION",
 			{
 				value = DirectiveLocation.SUBSCRIPTION,
 				description = "Location adjacent to a subscription operation.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"FIELD",
 			{
 				value = DirectiveLocation.FIELD,
 				description = "Location adjacent to a field.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"FRAGMENT_DEFINITION",
 			{
 				value = DirectiveLocation.FRAGMENT_DEFINITION,
 				description = "Location adjacent to a fragment definition.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"FRAGMENT_SPREAD",
 			{
 				value = DirectiveLocation.FRAGMENT_SPREAD,
 				description = "Location adjacent to a fragment spread.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"INLINE_FRAGMENT",
 			{
 				value = DirectiveLocation.INLINE_FRAGMENT,
 				description = "Location adjacent to an inline fragment.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"VARIABLE_DEFINITION",
 			{
 				value = DirectiveLocation.VARIABLE_DEFINITION,
 				description = "Location adjacent to a variable definition.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"SCHEMA",
 			{
 				value = DirectiveLocation.SCHEMA,
 				description = "Location adjacent to a schema definition.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"SCALAR",
 			{
 				value = DirectiveLocation.SCALAR,
 				description = "Location adjacent to a scalar definition.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"OBJECT",
 			{
 				value = DirectiveLocation.OBJECT,
 				description = "Location adjacent to an object type definition.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"FIELD_DEFINITION",
 			{
 				value = DirectiveLocation.FIELD_DEFINITION,
 				description = "Location adjacent to a field definition.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"ARGUMENT_DEFINITION",
 			{
 				value = DirectiveLocation.ARGUMENT_DEFINITION,
 				description = "Location adjacent to an argument definition.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"INTERFACE",
 			{
 				value = DirectiveLocation.INTERFACE,
 				description = "Location adjacent to an interface definition.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"UNION",
 			{
 				value = DirectiveLocation.UNION,
 				description = "Location adjacent to a union definition.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"ENUM",
 			{
 				value = DirectiveLocation.ENUM,
 				description = "Location adjacent to an enum definition.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"ENUM_VALUE",
 			{
 				value = DirectiveLocation.ENUM_VALUE,
 				description = "Location adjacent to an enum value definition.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"INPUT_OBJECT",
 			{
 				value = DirectiveLocation.INPUT_OBJECT,
 				description = "Location adjacent to an input object type definition.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"INPUT_FIELD_DEFINITION",
 			{
 				value = DirectiveLocation.INPUT_FIELD_DEFINITION,
 				description = "Location adjacent to an input object field definition.",
 			},
-		},
+		} :: Array<any>,
 	}),
 })
 
-exports.__Type = GraphQLObjectType.new({
+__Type = GraphQLObjectType.new({
 	name = "__Type",
 	description = "The fundamental unit of any GraphQL Schema is the type. There are many kinds of types in GraphQL as represented by the `__TypeKind` enum.\n\nDepending on the kind of a type, certain fields describe information about that type. Scalar types provide no information beyond a name, description and optional `specifiedByUrl`, while Enum types provide their values. Object and Interface types provide the fields they describe. Abstract types, Union and Interface, provide the Object types possible at runtime. List and NonNull types compose other types.",
 	fields = function()
@@ -320,86 +330,71 @@ exports.__Type = GraphQLObjectType.new({
 			{
 				"kind",
 				{
-					type = GraphQLNonNull.new(exports.__TypeKind),
+					type = GraphQLNonNull.new(__TypeKind),
 					resolve = function(type_)
 						if isScalarType(type_) then
-							return exports.TypeKind.SCALAR
+							return TypeKind.SCALAR
 						end
 						if isObjectType(type_) then
-							return exports.TypeKind.OBJECT
+							return TypeKind.OBJECT
 						end
 						if isInterfaceType(type_) then
-							return exports.TypeKind.INTERFACE
+							return TypeKind.INTERFACE
 						end
 						if isUnionType(type_) then
-							return exports.TypeKind.UNION
+							return TypeKind.UNION
 						end
 						if isEnumType(type_) then
-							return exports.TypeKind.ENUM
+							return TypeKind.ENUM
 						end
 						if isInputObjectType(type_) then
-							return exports.TypeKind.INPUT_OBJECT
+							return TypeKind.INPUT_OBJECT
 						end
 						if isListType(type_) then
-							return exports.TypeKind.LIST
+							return TypeKind.LIST
 						end
 						-- // istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
 						if isNonNullType(type_) then
-							return exports.TypeKind.NON_NULL
+							return TypeKind.NON_NULL
 						end
 
 						-- // istanbul ignore next (Not reachable. All possible types have been considered)
 						invariant(false, ('Unexpected type: "%s".'):format(inspect(type_)))
-						return nil
+						assert(false)
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"name",
 				{
 					type = GraphQLString,
 					resolve = function(type_)
-						return (function()
-							if type_.name ~= nil then
-								return type_.name
-							end
-							return nil
-						end)()
+						return if type_.name ~= nil then type_.name else nil
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"description",
 				{
 					type = GraphQLString,
 					resolve = function(type_)
-						return (function()
-							if type_.description ~= nil then
-								return type_.description
-							end
-							return nil
-						end)()
+						return if type_.description ~= nil then type_.description else nil
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"specifiedByUrl",
 				{
 					type = GraphQLString,
 					resolve = function(obj)
-						return (function()
-							if obj.specifiedByUrl ~= nil then
-								return obj.specifiedByUrl
-							end
-							return nil
-						end)()
+						return if obj.specifiedByUrl ~= nil then obj.specifiedByUrl else nil
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"fields",
 				{
-					type = GraphQLList.new(GraphQLNonNull.new(exports.__Field)),
+					type = GraphQLList.new(GraphQLNonNull.new(__Field)),
 					args = {
 						includeDeprecated = {
 							type = GraphQLBoolean,
@@ -419,11 +414,11 @@ exports.__Type = GraphQLObjectType.new({
 						return
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"interfaces",
 				{
-					type = GraphQLList.new(GraphQLNonNull.new(exports.__Type)),
+					type = GraphQLList.new(GraphQLNonNull.new(__Type)),
 					resolve = function(type_)
 						if isObjectType(type_) or isInterfaceType(type_) then
 							return type_:getInterfaces()
@@ -431,11 +426,11 @@ exports.__Type = GraphQLObjectType.new({
 						return
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"possibleTypes",
 				{
-					type = GraphQLList.new(GraphQLNonNull.new(exports.__Type)),
+					type = GraphQLList.new(GraphQLNonNull.new(__Type)),
 					resolve = function(type_, _args, _context, _ref)
 						local schema = _ref.schema
 
@@ -445,11 +440,11 @@ exports.__Type = GraphQLObjectType.new({
 						return nil
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"enumValues",
 				{
-					type = GraphQLList.new(GraphQLNonNull.new(exports.__EnumValue)),
+					type = GraphQLList.new(GraphQLNonNull.new(__EnumValue)),
 					args = {
 						includeDeprecated = {
 							type = GraphQLBoolean,
@@ -470,11 +465,11 @@ exports.__Type = GraphQLObjectType.new({
 						return
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"inputFields",
 				{
-					type = GraphQLList.new(GraphQLNonNull.new(exports.__InputValue)),
+					type = GraphQLList.new(GraphQLNonNull.new(__InputValue)),
 					args = {
 						includeDeprecated = {
 							type = GraphQLBoolean,
@@ -496,27 +491,21 @@ exports.__Type = GraphQLObjectType.new({
 						return
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"ofType",
 				{
-					type = exports.__Type,
+					type = __Type,
 					resolve = function(type_)
-						return (function()
-							if type_.ofType ~= nil then
-								return type_.ofType
-							end
-
-							return nil
-						end)()
+						return if type_.ofType ~= nil then type_.ofType else nil
 					end,
 				},
-			},
+			} :: Array<any>,
 		})
 	end,
 })
 
-exports.__Field = GraphQLObjectType.new({
+__Field = GraphQLObjectType.new({
 	name = "__Field",
 	description = "Object and Interface types are described by a list of Fields, each of which has a name, potentially a list of arguments, and a return type.",
 	fields = function()
@@ -529,7 +518,7 @@ exports.__Field = GraphQLObjectType.new({
 						return field.name
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"description",
 				{
@@ -538,11 +527,11 @@ exports.__Field = GraphQLObjectType.new({
 						return field.description
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"args",
 				{
-					type = GraphQLNonNull.new(GraphQLList.new(GraphQLNonNull.new(exports.__InputValue))),
+					type = GraphQLNonNull.new(GraphQLList.new(GraphQLNonNull.new(__InputValue))),
 					args = {
 						includeDeprecated = {
 							type = GraphQLBoolean,
@@ -552,27 +541,23 @@ exports.__Field = GraphQLObjectType.new({
 					resolve = function(field, args)
 						local includeDeprecated = args.includeDeprecated
 
-						return (function()
-							if includeDeprecated then
-								return field.args
-							end
-
-							return Array.filter(field.args, function(arg)
+						return if includeDeprecated
+							then field.args
+							else Array.filter(field.args, function(arg)
 								return arg.deprecationReason == nil
 							end)
-						end)()
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"type",
 				{
-					type = GraphQLNonNull.new(exports.__Type),
+					type = GraphQLNonNull.new(__Type),
 					resolve = function(field)
 						return field.type
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"isDeprecated",
 				{
@@ -581,7 +566,7 @@ exports.__Field = GraphQLObjectType.new({
 						return isNotNillish(field.deprecationReason)
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"deprecationReason",
 				{
@@ -590,12 +575,12 @@ exports.__Field = GraphQLObjectType.new({
 						return field.deprecationReason
 					end,
 				},
-			},
+			} :: Array<any>,
 		})
 	end,
 })
 
-exports.__InputValue = GraphQLObjectType.new({
+__InputValue = GraphQLObjectType.new({
 	name = "__InputValue",
 	description = "Arguments provided to Fields or Directives and the input fields of an InputObject are represented as Input Values which describe their type and optionally a default value.",
 	fields = function()
@@ -608,7 +593,7 @@ exports.__InputValue = GraphQLObjectType.new({
 						return inputValue.name
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"description",
 				{
@@ -617,16 +602,16 @@ exports.__InputValue = GraphQLObjectType.new({
 						return inputValue.description
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"type",
 				{
-					type = GraphQLNonNull.new(exports.__Type),
+					type = GraphQLNonNull.new(__Type),
 					resolve = function(inputValue)
 						return inputValue.type
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"defaultValue",
 				{
@@ -635,15 +620,11 @@ exports.__InputValue = GraphQLObjectType.new({
 					resolve = function(inputValue)
 						local type_, defaultValue = inputValue.type, inputValue.defaultValue
 						local valueAST = astFromValue(defaultValue, type_)
-						return (function()
-							if valueAST then
-								return print_(valueAST)
-							end
-							return nil
-						end)()
+						-- ROBLOX FIXME Luau: should narrow valueAST to be non-nil within the if-expression
+						return if valueAST then print_(valueAST :: ValueNode) else nil
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"isDeprecated",
 				{
@@ -652,7 +633,7 @@ exports.__InputValue = GraphQLObjectType.new({
 						return isNotNillish(field.deprecationReason)
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"deprecationReason",
 				{
@@ -661,12 +642,12 @@ exports.__InputValue = GraphQLObjectType.new({
 						return obj.deprecationReason
 					end,
 				},
-			},
+			} :: Array<any>,
 		})
 	end,
 })
 
-exports.__EnumValue = GraphQLObjectType.new({
+__EnumValue = GraphQLObjectType.new({
 	name = "__EnumValue",
 	description = "One possible value for a given Enum. Enum values are unique values, not a placeholder for a string or numeric value. However an Enum value is returned in a JSON response as a string.",
 	fields = function()
@@ -679,7 +660,7 @@ exports.__EnumValue = GraphQLObjectType.new({
 						return enumValue.name
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"description",
 				{
@@ -688,7 +669,7 @@ exports.__EnumValue = GraphQLObjectType.new({
 						return enumValue.description
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"isDeprecated",
 				{
@@ -697,7 +678,7 @@ exports.__EnumValue = GraphQLObjectType.new({
 						return isNotNillish(enumValue.deprecationReason)
 					end,
 				},
-			},
+			} :: Array<any>,
 			{
 				"deprecationReason",
 				{
@@ -706,82 +687,82 @@ exports.__EnumValue = GraphQLObjectType.new({
 						return enumValue.deprecationReason
 					end,
 				},
-			},
+			} :: Array<any>,
 		})
 	end,
 })
 
-exports.TypeKind = Object.freeze({
-	SCALAR = "SCALAR",
-	OBJECT = "OBJECT",
-	INTERFACE = "INTERFACE",
-	UNION = "UNION",
-	ENUM = "ENUM",
-	INPUT_OBJECT = "INPUT_OBJECT",
-	LIST = "LIST",
-	NON_NULL = "NON_NULL",
+TypeKind = Object.freeze({
+	SCALAR = "SCALAR" :: "SCALAR",
+	OBJECT = "OBJECT" :: "OBJECT",
+	INTERFACE = "INTERFACE" :: "INTERFACE",
+	UNION = "UNION" :: "UNION",
+	ENUM = "ENUM" :: "ENUM",
+	INPUT_OBJECT = "INPUT_OBJECT" :: "INPUT_OBJECT",
+	LIST = "LIST" :: "LIST",
+	NON_NULL = "NON_NULL" :: "NON_NULL",
 })
 
-exports.__TypeKind = GraphQLEnumType.new({
+__TypeKind = GraphQLEnumType.new({
 	name = "__TypeKind",
 	description = "An enum describing what kind of type a given `__Type` is.",
 	values = Map.new({
 		{
 			"SCALAR",
 			{
-				value = exports.TypeKind.SCALAR,
+				value = TypeKind.SCALAR,
 				description = "Indicates this type is a scalar.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"OBJECT",
 			{
-				value = exports.TypeKind.OBJECT,
+				value = TypeKind.OBJECT,
 				description = "Indicates this type is an object. `fields` and `interfaces` are valid fields.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"INTERFACE",
 			{
-				value = exports.TypeKind.INTERFACE,
+				value = TypeKind.INTERFACE,
 				description = "Indicates this type is an interface. `fields`, `interfaces`, and `possibleTypes` are valid fields.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"UNION",
 			{
-				value = exports.TypeKind.UNION,
+				value = TypeKind.UNION,
 				description = "Indicates this type is a union. `possibleTypes` is a valid field.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"ENUM",
 			{
-				value = exports.TypeKind.ENUM,
+				value = TypeKind.ENUM,
 				description = "Indicates this type is an enum. `enumValues` is a valid field.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"INPUT_OBJECT",
 			{
-				value = exports.TypeKind.INPUT_OBJECT,
+				value = TypeKind.INPUT_OBJECT,
 				description = "Indicates this type is an input object. `inputFields` is a valid field.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"LIST",
 			{
-				value = exports.TypeKind.LIST,
+				value = TypeKind.LIST,
 				description = "Indicates this type is a list. `ofType` is a valid field.",
 			},
-		},
+		} :: Array<any>,
 		{
 			"NON_NULL",
 			{
-				value = exports.TypeKind.NON_NULL,
+				value = TypeKind.NON_NULL,
 				description = "Indicates this type is a non-null. `ofType` is a valid field.",
 			},
-		},
+		} :: Array<any>,
 	}),
 })
 
@@ -792,7 +773,7 @@ exports.__TypeKind = GraphQLEnumType.new({
 
 local SchemaMetaFieldDef: GraphQLField<any, any> = {
 	name = "__schema",
-	type = GraphQLNonNull.new(exports.__Schema),
+	type = GraphQLNonNull.new(__Schema),
 	description = "Access the current type schema of this server.",
 	args = {},
 	resolve = function(_source, _args, _context, _ref)
@@ -804,11 +785,10 @@ local SchemaMetaFieldDef: GraphQLField<any, any> = {
 	extensions = nil,
 	astNode = nil,
 }
-exports.SchemaMetaFieldDef = SchemaMetaFieldDef
 
 local TypeMetaFieldDef: GraphQLField<any, any> = {
 	name = "__type",
-	type = exports.__Type,
+	type = __Type,
 	description = "Request the type information of a single type.",
 	args = {
 		{
@@ -831,7 +811,6 @@ local TypeMetaFieldDef: GraphQLField<any, any> = {
 	extensions = nil,
 	astNode = nil,
 }
-exports.TypeMetaFieldDef = TypeMetaFieldDef
 
 local TypeNameMetaFieldDef: GraphQLField<any, any> = {
 	name = "__typename",
@@ -847,27 +826,38 @@ local TypeNameMetaFieldDef: GraphQLField<any, any> = {
 	extensions = nil,
 	astNode = nil,
 }
-exports.TypeNameMetaFieldDef = TypeNameMetaFieldDef
 
-exports.introspectionTypes = Object.freeze({
-	exports.__Schema,
-	exports.__Directive,
-	exports.__DirectiveLocation,
-	exports.__Type,
-	exports.__Field,
-	exports.__InputValue,
-	exports.__EnumValue,
-	exports.__TypeKind,
+local introspectionTypes: Array<GraphQLNamedType> = Object.freeze({
+	__Schema,
+	__Directive,
+	__DirectiveLocation,
+	__Type,
+	__Field,
+	__InputValue,
+	__EnumValue,
+	__TypeKind,
 })
 
-function exports.isIntrospectionType(
-	type_ --[[: GraphQLNamedType ]]
-)
-	return Array.some(exports.introspectionTypes, function(currentType_)
+local function isIntrospectionType(type_: GraphQLNamedType): boolean
+	return Array.some(introspectionTypes, function(currentType_)
 		local name = currentType_.name
-		-- ROBLOX deviation: Lua doesn't allow indexing into a function
-		return typeof(type_) == "table" and type_.name == name
+		return type_.name == name
 	end)
 end
 
-return exports
+return {
+	introspectionTypes = introspectionTypes,
+	isIntrospectionType = isIntrospectionType,
+	TypeNameMetaFieldDef = TypeNameMetaFieldDef,
+	TypeMetaFieldDef = TypeMetaFieldDef,
+	SchemaMetaFieldDef = SchemaMetaFieldDef,
+	TypeKind = TypeKind,
+	__TypeKind = __TypeKind,
+	__Schema = __Schema,
+	__Directive = __Directive,
+	__DirectiveLocation = __DirectiveLocation,
+	__Type = __Type,
+	__Field = __Field,
+	__InputValue = __InputValue,
+	__EnumValue = __EnumValue,
+}

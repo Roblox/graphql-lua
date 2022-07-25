@@ -28,18 +28,14 @@ local NULL = require(srcWorkspace.luaUtils.null)
 -- ROBLOX deviation: predeclare functions
 local isMissingVariable
 
-local function valueFromAST(
-	-- ROBLOX FIXME Luau: should be optional, but narrowing isn't working with guard below
-	valueNode: ValueNode,
-	type_: GraphQLInputType,
-	variables: ObjMap<any>?
-): any | void
+local function valueFromAST(valueNode: ValueNode?, type_: GraphQLInputType, variables: ObjMap<any>?): any | void
 	if not valueNode then
 		-- When there is no node, then there is also no value.
 		-- Importantly, this is different from returning the value null.
 		return
 	end
-	if valueNode.kind == Kind.VARIABLE then
+	-- ROBLOX FIXME Luau: should be optional, but narrowing isn't working with guard below
+	if (valueNode :: ValueNode).kind == Kind.VARIABLE then
 		-- ROBLOX TODO: add singleton type to Node 'kind', which should then narrow this properly
 		local variableName = (valueNode :: VariableNode).name.value
 		if variables == nil or variables[variableName] == nil then
@@ -47,7 +43,7 @@ local function valueFromAST(
 			return
 		end
 
-		-- ROBLOX FIXME Luau: Luau doesn't understand the guard above
+		-- ROBLOX FIXME Luau: Luau doesn't understand the guard above, needs type states
 		local variableValue = (variables :: ObjMap<any>)[variableName]
 
 		if variableValue == NULL and isNonNullType(type_) then
@@ -60,20 +56,20 @@ local function valueFromAST(
 		return variableValue
 	end
 	if isNonNullType(type_) then
-		if valueNode.kind == Kind.NULL then
+		if (valueNode :: ValueNode).kind == Kind.NULL then
 			return -- Invalid: intentionally return no value.
 		end
 		return valueFromAST(valueNode, type_.ofType, variables)
 	end
 
-	if valueNode.kind == Kind.NULL then
+	if (valueNode :: ValueNode).kind == Kind.NULL then
 		-- This is explicitly returning the value null.
 		return NULL
 	end
 
 	if isListType(type_) then
 		local itemType = type_.ofType
-		if valueNode.kind == Kind.LIST then
+		if (valueNode :: ValueNode).kind == Kind.LIST then
 			local coercedValues = {}
 			-- ROBLOX TODO: add singleton type to Node 'kind', which should then narrow this properly
 			for _, itemNode in ipairs((valueNode :: ListValueNode).values) do
@@ -103,7 +99,7 @@ local function valueFromAST(
 	end
 
 	if isInputObjectType(type_) then
-		if valueNode.kind ~= Kind.OBJECT then
+		if (valueNode :: ValueNode).kind ~= Kind.OBJECT then
 			return -- Invalid: intentionally return no value.
 		end
 		-- ROBLOX deviation: no Object.create in Lua but not needed in this use case
@@ -140,7 +136,7 @@ local function valueFromAST(
 		local result
 
 		local ok_ = pcall(function()
-			result = type_:parseLiteral(valueNode, variables)
+			result = type_:parseLiteral(valueNode :: ValueNode, variables)
 		end)
 
 		if not ok_ then
@@ -156,12 +152,12 @@ local function valueFromAST(
 
 	-- istanbul ignore next (Not reachable. All possible input types have been considered)
 	invariant(false, "Unexpected input type: " .. inspect(type_))
-	return -- ROBLOX deviation: no implicit returns
+	return -- ROBLOX Luau TODO: Luau should see invariant is noreturn
 end
 
 -- Returns true if the provided valueNode is a variable which is not defined
 -- in the set of variables.
-function isMissingVariable(valueNode, variables)
+function isMissingVariable(valueNode: ValueNode, variables: ObjMap<any>?): boolean
 	return valueNode.kind == Kind.VARIABLE and (variables == nil or variables[valueNode.name.value] == nil)
 end
 

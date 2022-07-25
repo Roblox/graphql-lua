@@ -7,6 +7,7 @@ local luaUtilsWorkspace = srcWorkspace.luaUtils
 
 local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
 local Array = LuauPolyfill.Array
+type Array<T> = LuauPolyfill.Array<T>
 local Object = LuauPolyfill.Object
 
 local inspect = require(jsutilsWorkspace.inspect).inspect
@@ -15,7 +16,9 @@ local didYouMean = require(jsutilsWorkspace.didYouMean).didYouMean
 local isObjectLike = require(jsutilsWorkspace.isObjectLike).isObjectLike
 local suggestionList = require(jsutilsWorkspace.suggestionList).suggestionList
 local printPathArray = require(jsutilsWorkspace.printPathArray).printPathArray
-local addPath = require(jsutilsWorkspace.Path).addPath
+local pathImport = require(jsutilsWorkspace.Path)
+local addPath = pathImport.addPath
+type Path = pathImport.Path
 local instanceOf = require(jsutilsWorkspace.instanceOf)
 local NULL = require(luaUtilsWorkspace.null)
 local isNillishModule = require(luaUtilsWorkspace.isNillish)
@@ -24,8 +27,11 @@ local isNotNillish = isNillishModule.isNotNillish
 
 local pathToArray = require(jsutilsWorkspace.Path).pathToArray
 local isIteratableObject = require(jsutilsWorkspace.isIteratableObject).isIteratableObject
-local GraphQLError = require(srcWorkspace.error.GraphQLError).GraphQLError
+local graphQLErrorImport = require(srcWorkspace.error.GraphQLError)
+local GraphQLError = graphQLErrorImport.GraphQLError
+type GraphQLError = graphQLErrorImport.GraphQLError
 local definition = require(srcWorkspace.type.definition)
+type GraphQLInputType = definition.GraphQLInputType
 
 local isLeafType = definition.isLeafType
 local isInputObjectType = definition.isInputObjectType
@@ -35,15 +41,17 @@ local isNonNullType = definition.isNonNullType
 local coerceInputValueImpl
 local defaultOnError
 
+type OnErrorCB = (path: Array<string | number>, invalidValue: any, error: GraphQLError) -> ()
+
 --[[**
 	* Coerces a JavaScript value given a GraphQL Input Type_.
 	*]]
-local function coerceInputValue(inputValue, type_, onError_)
-	local onError = onError_ or defaultOnError
+local function coerceInputValue(inputValue: any, type_: GraphQLInputType, onError_: OnErrorCB?): any
+	local onError = if onError_ then onError_ else defaultOnError
 	return coerceInputValueImpl(inputValue, type_, onError)
 end
 
-function defaultOnError(path, invalidValue, error_)
+function defaultOnError(path: Array<string | number>, invalidValue: any, error_: GraphQLError): ()
 	local errorPrefix = "Invalid value " .. inspect(invalidValue)
 	if #path > 0 then
 		errorPrefix = errorPrefix .. ' at "value' .. printPathArray(path) .. '"'
@@ -52,7 +60,7 @@ function defaultOnError(path, invalidValue, error_)
 	error(error_)
 end
 
-function coerceInputValueImpl(inputValue, type_, onError, path)
+function coerceInputValueImpl(inputValue: any, type_: GraphQLInputType, onError: OnErrorCB, path: Path | nil): any
 	if isNonNullType(type_) then
 		if isNotNillish(inputValue) then
 			return coerceInputValueImpl(inputValue, type_.ofType, onError, path)
@@ -151,11 +159,10 @@ function coerceInputValueImpl(inputValue, type_, onError, path)
 		-- Scalars and Enums determine if a input value is valid via parseValue(),
 		-- which can throw to indicate failure. If it throws, maintain a reference
 		-- to the original error.
-		local ok, thrownError = pcall(function()
-			parseResult = type_:parseValue(inputValue)
-		end)
+		local ok, result = pcall(type_.parseValue, type_, inputValue)
 
 		if not ok then
+			local thrownError = result
 			if instanceOf(thrownError, GraphQLError) then
 				onError(pathToArray(path), inputValue, thrownError)
 			else
@@ -173,6 +180,8 @@ function coerceInputValueImpl(inputValue, type_, onError, path)
 				)
 			end
 			return
+		else
+			parseResult = result
 		end
 
 		if parseResult == nil then

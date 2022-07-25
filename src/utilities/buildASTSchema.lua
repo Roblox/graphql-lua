@@ -58,11 +58,14 @@ local buildASTSchema = function(
 	if config.astNode == nil then
 		for _, type_ in ipairs(config.types) do
 			if type_.name == "Query" then
-				config.query = type_
+				-- @ts-expect-error validated in `validateSchema`
+				config.query = type_ :: any
 			elseif type_.name == "Mutation" then
-				config.mutation = type_
+				-- @ts-expect-error validated in `validateSchema`
+				config.mutation = type_ :: any
 			elseif type_.name == "Subscription" then
-				config.subscription = type_
+				-- @ts-expect-error validated in `validateSchema`
+				config.subscription = type_ :: any
 			end
 		end
 	end
@@ -80,35 +83,15 @@ local buildASTSchema = function(
 	return GraphQLSchema.new(config)
 end
 
-local function buildSchema(source: string | Source, options: { BuildSchemaOptions & ParseOptions }): GraphQLSchema
+local function buildSchema(source: string | Source, options: (BuildSchemaOptions & ParseOptions)?): GraphQLSchema
 	local document = parse(source, {
-		noLocation = (function()
-			if options ~= nil then
-				return options.noLocation
-			end
-			return options
-		end)(),
-		experimentalFragmentVariables = (function()
-			if options ~= nil then
-				return options.experimentalFragmentVariables
-			end
-			return options
-		end)(),
+		noLocation = if options then options.noLocation else nil,
+		experimentalFragmentVariables = if options then options.experimentalFragmentVariables else nil,
 	})
 
 	return buildASTSchema(document, {
-		assumeValidSDL = (function()
-			if options ~= nil then
-				return options.assumeValidSDL
-			end
-			return options
-		end)(),
-		assumeValid = (function()
-			if options ~= nil then
-				return options.assumeValid
-			end
-			return options
-		end)(),
+		assumeValidSDL = if options then options.assumeValidSDL else nil,
+		assumeValid = if options then options.assumeValid else nil,
 	})
 end
 

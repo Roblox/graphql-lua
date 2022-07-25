@@ -5,6 +5,7 @@ local Packages = srcWorkspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 type Array<T> = LuauPolyfill.Array<T>
+type Object = LuauPolyfill.Object
 local Map = LuauPolyfill.Map
 type Map<T, V> = LuauPolyfill.Map<T, V>
 
@@ -63,13 +64,15 @@ type VariableUsage = {
 --  * allowing access to commonly useful contextual information from within a
 --  * validation rule.
 --  */
--- ROBLOX TODO: add proper type
 export type ASTValidationContext = {
 	_ast: DocumentNode,
-	_onError: (GraphQLError) -> (),
+	_onError: (error: GraphQLError) -> (),
 	_fragments: ObjMap<FragmentDefinitionNode>?,
 	_fragmentSpreads: Map<SelectionSetNode, Array<FragmentSpreadNode>>,
 	_recursivelyReferencedFragments: Map<OperationDefinitionNode, Array<FragmentDefinitionNode>>,
+	-- ROBLOX FIXME Luau: when inheriting methods (ctor and otherwise), Luau does a union per ordinal argument rather than a union of the total signature.
+	-- ROBLOX FIXME Luau: this leads to errors like "Type '(GraphQLSchema, DocumentNode, TypeInfo, (GraphQLError) -> ()) -> t1 [...] could not be converted into '(DocumentNode, (GraphQLError) -> ()) -> ASTValidationContext' [...] Table type 'DocumentNode' not compatible with type 'GraphQLSchema' because the former is missing fields"
+	-- new: (ast: DocumentNode, onError: (GraphQLError) -> ()) -> ASTValidationContext,
 	reportError: (self: ASTValidationContext, GraphQLError) -> (),
 	getDocument: (self: ASTValidationContext) -> DocumentNode,
 	getFragment: (self: ASTValidationContext, string) -> FragmentDefinitionNode?,
@@ -80,17 +83,24 @@ export type ASTValidationContext = {
 	) -> Array<FragmentDefinitionNode>,
 }
 
-local ASTValidationContext = {}
+type ASTValidationContextStatics = {
+	new: (...any) -> ASTValidationContext,
+}
+
+local ASTValidationContext: ASTValidationContext & ASTValidationContextStatics =
+	({} :: any) :: ASTValidationContext & ASTValidationContextStatics
 local ASTValidationContextMetatable = { __index = ASTValidationContext }
 
-function ASTValidationContext.new(ast: DocumentNode, onError: (GraphQLError) -> ()) -- ROBLOX TODO: Luau doesn't think this metatable is convertible to: ASTValidationContext
-	return setmetatable({
-		_ast = ast,
-		_fragments = nil,
-		_fragmentSpreads = {},
-		_recursivelyReferencedFragments = {},
-		_onError = onError,
-	}, ASTValidationContextMetatable)
+function ASTValidationContext.new(ast: DocumentNode, onError: (GraphQLError) -> ()): ASTValidationContext
+	return (
+		setmetatable({
+			_ast = ast,
+			_fragments = nil,
+			_fragmentSpreads = {},
+			_recursivelyReferencedFragments = {},
+			_onError = onError,
+		}, ASTValidationContextMetatable) :: any
+	) :: ASTValidationContext
 end
 
 function ASTValidationContext:reportError(error_: GraphQLError): ()
@@ -102,32 +112,34 @@ function ASTValidationContext:getDocument(): DocumentNode
 end
 
 function ASTValidationContext:getFragment(name: string): FragmentDefinitionNode?
-	local fragments = self._fragments
-	if not fragments then
-		fragments = Array.reduce(self:getDocument().definitions, function(frags, statement)
-			if statement.kind == Kind.FRAGMENT_DEFINITION then
-				frags[statement.name.value] = statement
+	local fragments: ObjMap<FragmentDefinitionNode>
+	if self._fragments then
+		fragments = self._fragments
+	else
+		fragments = {}
+		for _, defNode in ipairs(self:getDocument().definitions) do
+			if defNode.kind == Kind.FRAGMENT_DEFINITION then
+				fragments[defNode.name.value] = defNode
 			end
-			return frags
-		end, {})
+		end
 		self._fragments = fragments
 	end
 	return fragments[name]
 end
 
 function ASTValidationContext:getFragmentSpreads(node: SelectionSetNode): Array<FragmentSpreadNode>
-	local spreads = self._fragmentSpreads[node]
-	if not spreads then
-		spreads = {}
+	-- ROBLOX FIXME Luau: workaround analysis issue until Deferred Constraint Resolution lands
+	local spreads = self._fragmentSpreads[node] or {}
+	if not self._fragmentSpreads[node] then
 		local setsToVisit: Array<SelectionSetNode> = { node }
 		while #setsToVisit ~= 0 do
 			-- ROBLOX FIXME Luau: Luau doesn't understand that # ~= 0 means table.remove return will be non-nil
 			local set = table.remove(setsToVisit) :: SelectionSetNode
 			for _, selection in ipairs(set.selections) do
-				-- ROBLOX TODO Luau: when kind is a singleton type, the casts below shouldn't be necessary
+				-- ROBLOX FIXME Luau: kind is a singleton type, so else branch should narrow: Key 'selectionSet' is missing from 'FragmentSpreadNode' in the type 'FieldNode | FragmentSpreadNode | InlineFragmentNode'
 				if selection.kind == Kind.FRAGMENT_SPREAD then
-					table.insert(spreads, selection :: FragmentSpreadNode)
-					-- ROBLOX FIXME Luau: bad narrowing: TypeError: Type 'SelectionSetNode?' could not be converted into 'SelectionSetNode'
+					-- ROBLOX FIXME Luau: TypeError: Cannot cast 'nil' into 'Array<FragmentSpreadNode>' because the types are unrelated
+					table.insert(spreads :: Array<FragmentSpreadNode>, selection)
 				elseif (selection :: FieldNode | InlineFragmentNode).selectionSet then
 					table.insert(
 						setsToVisit,
@@ -144,13 +156,14 @@ end
 function ASTValidationContext:getRecursivelyReferencedFragments(
 	operation: OperationDefinitionNode
 ): Array<FragmentDefinitionNode>
-	local fragments = self._recursivelyReferencedFragments[operation]
-	if not fragments then
-		fragments = {}
+	-- ROBLOX FIXME Luau: workaround analysis issue until Deferred Constraint Resolution lands
+	local fragments = self._recursivelyReferencedFragments[operation] or {}
+	if not self._recursivelyReferencedFragments[operation] then
 		local collectedNames = {}
 		local nodesToVisit = { operation.selectionSet }
 		while #nodesToVisit ~= 0 do
-			local node = table.remove(nodesToVisit)
+			-- ROBLOX FIXME Luau: Needs type states to understand that #x ~= 0 means table.remove(x) won't be nil
+			local node = table.remove(nodesToVisit) :: SelectionSetNode
 			for _, spread in ipairs(self:getFragmentSpreads(node)) do
 				local fragName = spread.name.value
 				if collectedNames[fragName] ~= true then
@@ -173,10 +186,11 @@ export type ASTValidationRule = (ASTValidationContext) -> ASTVisitor
 export type SDLValidationContext = ASTValidationContext & {
 	_schema: GraphQLSchema?,
 
-	-- ROBLOX deviation: add argument for self
-	getSchema: () -> GraphQLSchema?,
+	new: (...any) -> SDLValidationContext,
+
+	getSchema: (self: SDLValidationContext) -> GraphQLSchema?,
 }
-local SDLValidationContext = setmetatable({}, { __index = ASTValidationContext })
+local SDLValidationContext: SDLValidationContext = setmetatable({}, { __index = ASTValidationContext }) :: any
 local SDLValidationContextMetatable = { __index = SDLValidationContext }
 
 function SDLValidationContext.new(
@@ -185,8 +199,7 @@ function SDLValidationContext.new(
 	onError: (GraphQLError) -> ()
 ): SDLValidationContext
 	local self = (ASTValidationContext.new(ast, onError) :: any) :: SDLValidationContext
-	-- ROBLOX FIXME Luau: needs normalization: Type 'GraphQLSchema?' could not be converted into 'GraphQLSchema & nil'
-	self._schema = schema :: any
+	self._schema = schema
 	return (setmetatable(self, SDLValidationContextMetatable) :: any) :: SDLValidationContext
 end
 
@@ -201,21 +214,28 @@ export type ValidationContext = ASTValidationContext & {
 	_typeInfo: TypeInfo,
 	_variableUsages: Map<NodeWithSelectionSet, Array<VariableUsage>>,
 	_recursiveVariableUsages: Map<OperationDefinitionNode, Array<VariableUsage>>,
+	new: (
+		schema: GraphQLSchema,
+		ast: DocumentNode,
+		typeInfo: TypeInfo,
+		onError: (GraphQLError) -> ()
+	) -> ValidationContext,
 	-- ROBLOX deviation: add argument for self
-	getSchema: (any) -> GraphQLSchema,
-	getVariableUsages: (any, NodeWithSelectionSet) -> Array<VariableUsage>,
-	getRecursiveVariableUsages: (any, OperationDefinitionNode) -> Array<VariableUsage>,
-	getType: (any) -> GraphQLOutputType?,
-	getParentType: (any) -> GraphQLCompositeType?,
-	getInputType: (any) -> GraphQLInputType?,
-	getParentInputType: (any) -> GraphQLInputType?,
-	getFieldDef: (any) -> GraphQLField<any, any>?,
-	getDirective: (any) -> GraphQLDirective?,
-	getArgument: (any) -> GraphQLArgument?,
-	getEnumValue: (any) -> GraphQLEnumValue?,
+	getSchema: (self: ValidationContext) -> GraphQLSchema,
+	getVariableUsages: (self: ValidationContext, NodeWithSelectionSet) -> Array<VariableUsage>,
+	getRecursiveVariableUsages: (self: ValidationContext, OperationDefinitionNode) -> Array<VariableUsage>,
+	getType: (self: ValidationContext) -> GraphQLOutputType?,
+	getParentType: (self: ValidationContext) -> GraphQLCompositeType?,
+	getInputType: (self: ValidationContext) -> GraphQLInputType?,
+	getParentInputType: (self: ValidationContext) -> GraphQLInputType?,
+	getFieldDef: (self: ValidationContext) -> GraphQLField<any, any>?,
+	getDirective: (self: ValidationContext) -> GraphQLDirective?,
+	getArgument: (self: ValidationContext) -> GraphQLArgument?,
+	getEnumValue: (self: ValidationContext) -> GraphQLEnumValue?,
 }
 
-local ValidationContext = setmetatable({}, { __index = ASTValidationContext })
+-- ROBLOX TODO Luau: can't strongly type this table due to inactionable analyze message: Not all intersection parts are compatible. Type 'ASTValidationContext & ...
+local ValidationContext = (setmetatable({}, { __index = ASTValidationContext }) :: any) :: ValidationContext
 local ValidationContextMetatable = { __index = ValidationContext }
 
 function ValidationContext.new(

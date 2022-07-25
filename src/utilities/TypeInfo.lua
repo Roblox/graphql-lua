@@ -5,6 +5,9 @@ local Packages = srcWorkspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 type Array<T> = LuauPolyfill.Array<T>
+local luaUtilsWorkspace = srcWorkspace.luaUtils
+local NULL = require(luaUtilsWorkspace.null)
+type NULL = typeof(NULL)
 
 local language = srcWorkspace.language
 local typeWorkspace = srcWorkspace.type
@@ -14,17 +17,18 @@ local astImport = require(language.ast)
 -- ROBLOX deviation: Luau can't do default type args, so we inline here
 type Visitor<T> = visitorImport.Visitor<T, any>
 -- ROBLOX TODO: looks like a type violation in upstream, not all members of ASTNode union have 'name' or 'value' fields
+type DirectiveNode = astImport.DirectiveNode
+type OperationDefinitionNode = astImport.OperationDefinitionNode
+type InlineFragmentNode = astImport.InlineFragmentNode
+type FragmentDefinitionNode = astImport.FragmentDefinitionNode
+type VariableDefinitionNode = astImport.VariableDefinitionNode
+type ArgumentNode = astImport.ArgumentNode
+type ObjectFieldNode = astImport.ObjectFieldNode
+type EnumValueNode = astImport.EnumValueNode
 type TypeNode = astImport.TypeNode
 type NameNode = astImport.NameNode
 type NamedTypeNode = astImport.NamedTypeNode
-type ASTNode = {
-	kind: string,
-	name: NameNode,
-	value: string,
-	operation: any,
-	typeCondition: NamedTypeNode,
-	type: TypeNode,
-} -- astImport.ASTNode
+type ASTNode = astImport.ASTNode
 type ASTKindToNode = astImport.ASTKindToNode
 type FieldNode = astImport.FieldNode
 local Kind = require(language.kinds).Kind
@@ -38,6 +42,8 @@ type GraphQLDirective = _directivesImport.GraphQLDirective
 local definitionImport = require(typeWorkspace.definition)
 type GraphQLType = definitionImport.GraphQLType
 type GraphQLInputType = definitionImport.GraphQLInputType
+type GraphQLNamedType = definitionImport.GraphQLNamedType
+type GraphQLObjectType = definitionImport.GraphQLObjectType
 type GraphQLOutputType = definitionImport.GraphQLOutputType
 type GraphQLCompositeType = definitionImport.GraphQLCompositeType
 -- ROBLOX deviation: Luau can't do default type args, so we inline here
@@ -64,12 +70,12 @@ local typeFromAST = require(srcWorkspace.utilities.typeFromAST).typeFromAST
 
 -- ROBLOX deviation: use the following table as a symbol to represent
 -- a `null` value within the arrays
-local NULL = {}
-local function unwrapNull(value)
+local function unwrapNull<T>(value: T | NULL): T?
+	-- ROBLOX FIXME Luau: type states should narrow this and not require the hard cast
 	if value == NULL then
 		return nil
 	end
-	return value
+	return value :: T
 end
 
 -- /**
@@ -77,16 +83,13 @@ end
 --  * of the current field and type definitions at any point in a GraphQL document
 --  * AST during a recursive descent by calling `enter(node)` and `leave(node)`.
 --  */
-local TypeInfo = {}
-local TypeInfoMetatable = { __index = TypeInfo }
-
 export type TypeInfo = {
 	_schema: GraphQLSchema,
-	_typeStack: Array<GraphQLOutputType?>,
-	_parentTypeStack: Array<GraphQLCompositeType?>,
-	_inputTypeStack: Array<GraphQLInputType?>,
-	_fieldDefStack: Array<GraphQLField<any, any>?>,
-	_defaultValueStack: Array<any?>,
+	_typeStack: Array<GraphQLOutputType? | NULL>,
+	_parentTypeStack: Array<GraphQLCompositeType? | NULL>,
+	_inputTypeStack: Array<GraphQLInputType? | NULL>,
+	_fieldDefStack: Array<GraphQLField<any, any>? | NULL>,
+	_defaultValueStack: Array<any? | NULL>,
 	_directive: GraphQLDirective?,
 	_argument: GraphQLArgument?,
 	_enumValue: GraphQLEnumValue?,
@@ -103,7 +106,19 @@ export type TypeInfo = {
 	getEnumValue: (self: TypeInfo) -> GraphQLEnumValue?,
 	enter: (self: TypeInfo, ASTNode) -> (),
 	leave: (self: TypeInfo, ASTNode) -> (),
+
+	new: (
+		schema: GraphQLSchema,
+		-- @deprecated will be removed in 17.0.0
+		getFieldDefFn: ((GraphQLSchema, GraphQLType, FieldNode) -> GraphQLField<any, any>?)?,
+		-- // Initial type may be provided in rare cases to facilitate traversals
+		-- // beginning somewhere other than documents.
+		--[[* @deprecated will be removed in 17.0.0 ]]
+		initialType: GraphQLType?
+	) -> TypeInfo,
 }
+local TypeInfo: TypeInfo = {} :: TypeInfo
+local TypeInfoMetatable = { __index = TypeInfo }
 
 -- ROBLOX deviation: pre-declare variables
 local getFieldDef
@@ -130,14 +145,15 @@ function TypeInfo.new(
 	self._getFieldDef = getFieldDefFn or getFieldDef
 
 	if initialType then
+		-- ROBLOX TODO Luau: need return constraints so we can narrow: isUnionType(type: unknown): type is GraphQLUnionType
 		if isInputType(initialType) then
-			table.insert(self._inputTypeStack, initialType)
+			table.insert(self._inputTypeStack, initialType :: GraphQLInputType)
 		end
 		if isCompositeType(initialType) then
-			table.insert(self._parentTypeStack, initialType)
+			table.insert(self._parentTypeStack, initialType :: GraphQLCompositeType)
 		end
 		if isOutputType(initialType) then
-			table.insert(self._typeStack, initialType)
+			table.insert(self._typeStack, initialType :: GraphQLOutputType)
 		end
 	end
 
@@ -207,35 +223,30 @@ function TypeInfo:enter(node: ASTNode)
 	local nodeKind = node.kind
 	if nodeKind == Kind.SELECTION_SET then
 		local namedType = getNamedType(self:getType())
-		table.insert(
-			self._parentTypeStack,
-			(function()
-				if isCompositeType(namedType) then
-					return namedType
-				end
-				return NULL
-			end)()
-		)
+		table.insert(self._parentTypeStack, if isCompositeType(namedType) then namedType else NULL)
 		return
 	elseif nodeKind == Kind.FIELD then
 		local parentType = self:getParentType()
 		local fieldDef
 		local fieldType
 		if parentType then
-			fieldDef = self._getFieldDef(schema, parentType, node)
+			-- ROBLOX TODO Luau: singleton field + type states should narrow node to FieldNode based on nodeKind branch above
+			fieldDef = self._getFieldDef(schema, parentType, node :: FieldNode)
 			if fieldDef then
 				fieldType = fieldDef.type
 			end
 		end
 		table.insert(self._fieldDefStack, if fieldDef then fieldDef else NULL)
-		table.insert(self._typeStack, if isOutputType(fieldType) then fieldType else NULL)
+		-- ROBLOX TODO Luau: need return constraints so we can narrow based on isOutputType and not need manual annotation
+		table.insert(self._typeStack, if isOutputType(fieldType) then fieldType :: GraphQLOutputType else NULL)
 		return
 	elseif nodeKind == Kind.DIRECTIVE then
-		self._directive = schema:getDirective(node.name.value)
+		self._directive = schema:getDirective((node :: DirectiveNode).name.value)
 		return
 	elseif nodeKind == Kind.OPERATION_DEFINITION then
-		local type_
-		local nodeOperation = node.operation
+		-- ROBLOX TODO Luau: we shouldn't need to manually annotate this variable once type states feature is available
+		local type_: GraphQLObjectType? | NULL
+		local nodeOperation = (node :: OperationDefinitionNode).operation
 		if nodeOperation == "query" then
 			type_ = schema:getQueryType()
 		elseif nodeOperation == "mutation" then
@@ -243,35 +254,30 @@ function TypeInfo:enter(node: ASTNode)
 		elseif nodeOperation == "subscription" then
 			type_ = schema:getSubscriptionType()
 		end
-		table.insert(self._typeStack, if isObjectType(type_) then type_ else NULL)
+		-- ROBLOX TODO Luau: need return constraints so we can narrow: isUnionType(type: unknown): type is GraphQLUnionType
+		table.insert(self._typeStack, if isObjectType(type_) then type_ :: GraphQLObjectType else NULL)
 		return
 	elseif nodeKind == Kind.INLINE_FRAGMENT or nodeKind == Kind.FRAGMENT_DEFINITION then
-		local typeConditionAST = node.typeCondition
-		local outputType = (function()
-			if typeConditionAST then
-				return typeFromAST(schema, typeConditionAST)
-			end
-			return getNamedType(self:getType())
-		end)()
-		table.insert(self._typeStack, if isOutputType(outputType) then outputType else NULL)
+		local typeConditionAST = (node :: InlineFragmentNode | FragmentDefinitionNode).typeCondition
+		local outputType = if typeConditionAST
+			then typeFromAST(schema, typeConditionAST)
+			else getNamedType(self:getType())
+		-- ROBLOX TODO Luau: need return constraints so we can narrow: isOutputType
+		table.insert(self._typeStack, if isOutputType(outputType) then outputType :: GraphQLOutputType else NULL)
 		return
 	elseif nodeKind == Kind.VARIABLE_DEFINITION then
-		local inputType = typeFromAST(schema, node.type)
-		table.insert(self._inputTypeStack, if isInputType(inputType) then inputType else NULL)
+		local inputType = typeFromAST(schema, (node :: VariableDefinitionNode).type)
+		-- ROBLOX TODO Luau: need return constraints so we can narrow: isUnionType(type: unknown): type is GraphQLUnionType
+		table.insert(self._inputTypeStack, if isInputType(inputType) then inputType :: GraphQLInputType else NULL)
 		return
 	elseif nodeKind == Kind.ARGUMENT then
 		local argDef
 		local argType
-		local fieldOrDirective = (function()
-			local _ref = self:getDirective()
-			if _ref == nil then
-				_ref = self:getFieldDef()
-			end
-			return _ref
-		end)()
+		local _ref = self:getDirective()
+		local fieldOrDirective = if _ref then _ref else self:getFieldDef()
 		if fieldOrDirective then
 			argDef = Array.find(fieldOrDirective.args, function(arg)
-				return arg.name == node.name.value
+				return arg.name == (node :: ArgumentNode).name.value
 			end)
 			if argDef then
 				argType = argDef.type
@@ -294,7 +300,7 @@ function TypeInfo:enter(node: ASTNode)
 		local inputField
 		if isInputObjectType(objectType) then
 			-- ROBLOX deviation: use Map
-			inputField = objectType:getFields():get(node.name.value)
+			inputField = objectType:getFields():get((node :: ObjectFieldNode).name.value)
 			if inputField then
 				inputFieldType = inputField.type
 			end
@@ -306,7 +312,7 @@ function TypeInfo:enter(node: ASTNode)
 		local enumType = getNamedType(self:getInputType())
 		local enumValue
 		if isEnumType(enumType) then
-			enumValue = enumType:getValue(node.value)
+			enumValue = enumType:getValue((node :: EnumValueNode).value)
 		end
 		self._enumValue = enumValue
 		return

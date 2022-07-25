@@ -59,7 +59,9 @@ local isRequiredArgument = definitionModule.isRequiredArgument
 local isRequiredInputField = definitionModule.isRequiredInputField
 
 local SchemaValidationContext
-local validateRootTypes, validateDirectives, getOperationTypeNode, getAllSubNodes, getAllNodes, getAllImplementsInterfaceNodes, getDeprecatedDirectiveNode, getUnionMemberTypeNodes, validateEnumValues, validateName, validateFields, validateTypeImplementsAncestors, validateTypes, validateTypeImplementsInterface, validateInterfaces
+local validateRootTypes, validateDirectives, getOperationTypeNode
+local getAllSubNodes: <T, K, L>(object: SDLDefinedObject<T, K>, getter: (T | K) -> (L | Array<L>)?) -> Array<L>
+local getAllNodes, getAllImplementsInterfaceNodes, getDeprecatedDirectiveNode, getUnionMemberTypeNodes, validateEnumValues, validateName, validateFields, validateTypeImplementsAncestors, validateTypes, validateTypeImplementsInterface, validateInterfaces
 --[[*
  * Implements the "Type Validation" sub-sections of the specification's
  * "Type System" section.
@@ -118,16 +120,16 @@ type SchemaValidationContext = {
 	getErrors: (SchemaValidationContext) -> Array<GraphQLError>,
 	new: (schema: GraphQLSchema) -> SchemaValidationContext,
 }
-SchemaValidationContext = {} :: any;
+SchemaValidationContext = {} :: SchemaValidationContext;
 (SchemaValidationContext :: any).__index = SchemaValidationContext
 
 function SchemaValidationContext.new(schema: GraphQLSchema): SchemaValidationContext
-	local self = setmetatable({}, SchemaValidationContext)
+	local self = (setmetatable({}, SchemaValidationContext) :: any) :: SchemaValidationContext
 
 	self._errors = {}
 	self.schema = schema
 
-	return (self :: any) :: SchemaValidationContext
+	return self
 end
 
 function SchemaValidationContext:reportError(message: string, nodes: Array<ASTNode?> | ASTNode?): ()
@@ -169,7 +171,6 @@ function validateRootTypes(context: SchemaValidationContext): ()
 		local ref = getOperationTypeNode(schema, "mutation")
 		context:reportError(
 			"Mutation root type must be Object type if provided, it cannot be " .. ("%s."):format(inspect(mutationType)),
-			-- ROBLOX FIXME Luau: Value of type 'GraphQLObjectType?' could be nil
 			if ref then ref else (mutationType :: any).astNode
 		)
 	end
@@ -182,14 +183,12 @@ function validateRootTypes(context: SchemaValidationContext): ()
 		context:reportError(
 			"Subscription root type must be Object type if provided, it cannot be "
 				.. ("%s."):format(inspect(subscriptionType)),
-			-- ROBLOX FIXME Luau: Value of type 'GraphQLObjectType?' could be nil
 			if ref then ref else (subscriptionType :: any).astNode
 		)
 	end
 end
 function getOperationTypeNode(schema: GraphQLSchema, operation: OperationTypeNode): ASTNode?
-	-- ROBLOX FIXME Luau: this feels like a huge bug: Value of type '{| operationTypes: (Array<{| operation: any, type: (ArgumentNode | BooleanValueNode... <TRUNCATED>' could be nil
-	local operationNodes = getAllSubNodes(schema, function(node: any)
+	local operationNodes = getAllSubNodes(schema, function(node)
 		return node.operationTypes
 	end)
 
@@ -236,9 +235,8 @@ function validateDirectives(context: SchemaValidationContext): ()
 					("Required argument @%s(%s:) cannot be deprecated."):format(directive.name, arg.name),
 					{
 						getDeprecatedDirectiveNode(arg.astNode),
-						-- ROBLOX FIXME Luau: bizarre messages: Value of type 'InputValueDefinitionNode?' could be nil
-						if arg.astNode ~= nil then (arg :: any).astNode.type else nil,
-					}
+						if arg.astNode ~= nil then arg.astNode.type else nil,
+					} :: Array<any> -- ROBLOX FIXME Luau: need to support mixed arrays
 				)
 			end
 		end
@@ -330,13 +328,8 @@ function validateFields(context: SchemaValidationContext, type_: GraphQLObjectTy
 			context:reportError(
 				("The type of %s.%s must be Output Type "):format(type_.name, field.name)
 					.. ("but got: %s."):format(inspect(field.type)),
-				(function()
-					if field.astNode ~= nil then
-						-- istanbul ignore next (TODO need to write coverage tests)
-						return field.astNode.type
-					end
-					return nil
-				end)()
+				-- istanbul ignore next (TODO need to write coverage tests)
+				if field.astNode ~= nil then field.astNode.type else nil
 			)
 		end
 
@@ -352,13 +345,8 @@ function validateFields(context: SchemaValidationContext, type_: GraphQLObjectTy
 				context:reportError(
 					("The type of %s.%s(%s:) must be Input "):format(type_.name, field.name, argName)
 						.. ("Type but got: %s."):format(inspect(arg.type)),
-					(function()
-						if arg.astNode ~= nil then
-							-- istanbul ignore next (TODO need to write coverage tests)
-							return arg.astNode.type
-						end
-						return nil
-					end)()
+					-- istanbul ignore next (TODO need to write coverage tests)
+					if arg.astNode ~= nil then arg.astNode.type else nil
 				)
 			end
 			if isRequiredArgument(arg) and isNotNillish(arg.deprecationReason) then
@@ -366,14 +354,9 @@ function validateFields(context: SchemaValidationContext, type_: GraphQLObjectTy
 					("Required argument %s.%s(%s:) cannot be deprecated."):format(type_.name, field.name, argName),
 					{
 						getDeprecatedDirectiveNode(arg.astNode),
-						(function()
-							if arg.astNode ~= nil then
-								-- istanbul ignore next (TODO need to write coverage tests)
-								return arg.astNode.type
-							end
-							return nil
-						end)(),
-					}
+						-- istanbul ignore next (TODO need to write coverage tests)
+						if arg.astNode ~= nil then arg.astNode.type else nil,
+					} :: Array<any>
 				)
 			end
 		end
@@ -548,20 +531,16 @@ function validateTypeImplementsAncestors(
 	for _, transitive in ipairs(iface:getInterfaces()) do
 		if Array.indexOf(ifaceInterfaces, transitive) == -1 then
 			context:reportError(
-				(function()
-					if transitive == type_ then
-						return ("Type %s cannot implement %s because it would create a circular reference."):format(
-							type_.name,
-							iface.name
-						)
-					end
-
-					return ("Type %s must implement %s because it is implemented by %s."):format(
+				if transitive == type_
+					then ("Type %s cannot implement %s because it would create a circular reference."):format(
+						type_.name,
+						iface.name
+					)
+					else ("Type %s must implement %s because it is implemented by %s."):format(
 						type_.name,
 						transitive.name,
 						iface.name
-					)
-				end)(),
+					),
 				Array.concat(
 					getAllImplementsInterfaceNodes(iface, transitive),
 					getAllImplementsInterfaceNodes(type_, iface)
@@ -755,13 +734,12 @@ end
 -- ROBLOX TODO Luau: needs constraints
 -- function getAllSubNodes<T: ASTNode, K: ASTNode, L: ASTNode>(
 function getAllSubNodes<T, K, L>(object: SDLDefinedObject<T, K>, getter: (T | K) -> (L | Array<L>)?): Array<L>
-	local subNodes = {}
+	local subNodes: Array<L> = {}
 
-	-- ROBLOX FIXME Luau: this hard cast shouldn't be necessary, it duplicates the explicit return annotation
-	for _, node in ipairs(getAllNodes(object) :: Array<K | T>) do
+	for _, node in ipairs(getAllNodes(object)) do
 		-- istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
 		-- ROBLOX TODO Luau: needs null coalescing or similar to do `getter(node) ?? {}`
-		local ref = getter(node)
+		local ref = (getter(node) :: any) :: ASTNode
 		subNodes = Array.concat(subNodes, if ref then ref else {})
 	end
 
@@ -773,8 +751,7 @@ function getAllImplementsInterfaceNodes(
 	iface: GraphQLInterfaceType
 ): Array<NamedTypeNode>
 	return Array.filter(
-		-- ROBLOX FIXME Luau: TypeError: Value of type '{| interfaces: (Array<NamedTypeNode> | NamedTypeNode)? |}?' could be nil
-		getAllSubNodes(type_, function(typeNode: any)
+		getAllSubNodes(type_, function(typeNode)
 			return typeNode.interfaces :: Array<NamedTypeNode> | NamedTypeNode
 		end),
 		function(ifaceNode)
@@ -785,8 +762,7 @@ end
 
 function getUnionMemberTypeNodes(union: GraphQLUnionType, typeName: string): Array<NamedTypeNode>
 	return Array.filter(
-		-- ROBLOX FIXME Luau: TypeError: Value of type '{| interfaces: (Array<NamedTypeNode> | NamedTypeNode)? |}?' could be nil
-		getAllSubNodes(union, function(unionNode: any)
+		getAllSubNodes(union, function(unionNode)
 			return unionNode.types :: Array<NamedTypeNode> | NamedTypeNode
 		end),
 		function(typeNode)

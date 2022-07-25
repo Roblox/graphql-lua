@@ -1,7 +1,11 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1611bbb08a88f734e9490b14cfe6afea11a838e0/src/__tests__/starWarsIntrospection-test.js
 local Packages = script.Parent.Parent.Parent
-local Object = require(Packages.LuauPolyfill).Object
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Object = LuauPolyfill.Object
+type Array<T> = LuauPolyfill.Array<T>
 local NULL = require(script.Parent.Parent.luaUtils.null)
+local objMap = require(script.Parent.Parent.jsutils.ObjMap)
+type ObjMap<T> = objMap.ObjMap<T>
 local graphql = require(script.Parent.Parent.graphql)
 local graphqlSync = graphql.graphqlSync
 local starWarsSchema = require(script.Parent.starWarsSchema)
@@ -9,7 +13,7 @@ local StarWarsSchema = starWarsSchema.StarWarsSchema
 
 return function()
 	-- ROBLOX deviation: must pass in expect in testEZ
-	local function queryStarWars(expect_, source)
+	local function queryStarWars(expect_, source: string)
 		local result = graphqlSync({
 			schema = StarWarsSchema,
 			source = source,
@@ -19,7 +23,8 @@ return function()
 			"data",
 		})
 
-		return result.data
+		-- ROBLOX FIXME: technically narrowed above, but we need this to pass analysis due to the deviations in the asserts below
+		return result.data :: ObjMap<any>
 	end
 
 	describe("Star Wars Introspection Tests", function()
@@ -390,7 +395,7 @@ return function()
 										},
 									},
 								},
-							},
+							} :: Array<any>,
 						},
 					},
 				})

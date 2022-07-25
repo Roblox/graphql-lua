@@ -4,6 +4,7 @@ local Packages = rootWorkspace.Parent
 
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Error = LuauPolyfill.Error
+local Map = LuauPolyfill.Map
 type Array<T> = LuauPolyfill.Array<T>
 
 local _invariant = require(rootWorkspace.jsutils.invariant).invariant
@@ -86,20 +87,20 @@ local droidType: GraphQLObjectType
 local episodeEnum = GraphQLEnumType.new({
 	name = "Episode",
 	description = "One of the films in the Star Wars Trilogy",
-	values = {
-		NEW_HOPE = {
+	values = Map.new({
+		{ "NEW_HOPE", {
 			value = 4,
 			description = "Released in 1977.",
-		},
-		EMPIRE = {
+		} } :: Array<any>,
+		{ "EMPIRE", {
 			value = 5,
 			description = "Released in 1980.",
-		},
-		JEDI = {
+		} } :: Array<any>,
+		{ "JEDI", {
 			value = 6,
 			description = "Released in 1983.",
-		},
-	},
+		} } :: Array<any>,
+	}),
 })
 
 --[[*
@@ -118,28 +119,40 @@ characterInterface = GraphQLInterfaceType.new({
 	name = "Character",
 	description = "A character in the Star Wars Trilogy",
 	fields = function()
-		return {
-			id = {
-				type = GraphQLNonNull.new(GraphQLString),
-				description = "The id of the character.",
-			},
-			name = {
+		return Map.new({
+			{
+				"id",
+				{
+					type = GraphQLNonNull.new(GraphQLString),
+					description = "The id of the character.",
+				},
+			} :: Array<any>,
+			{ "name", {
 				type = GraphQLString,
 				description = "The name of the character.",
+			} },
+			{
+				"friends",
+				{
+					type = GraphQLList.new(characterInterface),
+					description = "The friends of the character, or an empty list if they have none.",
+				},
 			},
-			friends = {
-				type = GraphQLList.new(characterInterface),
-				description = "The friends of the character, or an empty list if they have none.",
+			{
+				"appearsIn",
+				{
+					type = GraphQLList.new(episodeEnum),
+					description = "Which movies they appear in.",
+				},
 			},
-			appearsIn = {
-				type = GraphQLList.new(episodeEnum),
-				description = "Which movies they appear in.",
+			{
+				"secretBackstory",
+				{
+					type = GraphQLString,
+					description = "All secrets about their past.",
+				},
 			},
-			secretBackstory = {
-				type = GraphQLString,
-				description = "All secrets about their past.",
-			},
-		}
+		})
 	end,
 	resolveType = function(character)
 		if character.type == "Human" then
@@ -171,38 +184,50 @@ humanType = GraphQLObjectType.new({
 	name = "Human",
 	description = "A humanoid creature in the Star Wars universe.",
 	fields = function()
-		return {
-			id = {
+		return Map.new({
+			{ "id", {
 				type = GraphQLNonNull.new(GraphQLString),
 				description = "The id of the human.",
-			},
-			name = {
+			} } :: Array<any>,
+			{ "name", {
 				type = GraphQLString,
 				description = "The name of the human.",
+			} },
+			{
+				"friends",
+				{
+					type = GraphQLList.new(characterInterface),
+					description = "The friends of the human, or an empty list if they have none.",
+					resolve = function(human)
+						return getFriends(human)
+					end,
+				},
 			},
-			friends = {
-				type = GraphQLList.new(characterInterface),
-				description = "The friends of the human, or an empty list if they have none.",
-				resolve = function(human)
-					return getFriends(human)
-				end,
+			{
+				"appearsIn",
+				{
+					type = GraphQLList.new(episodeEnum),
+					description = "Which movies they appear in.",
+				},
 			},
-			appearsIn = {
-				type = GraphQLList.new(episodeEnum),
-				description = "Which movies they appear in.",
+			{
+				"homePlanet",
+				{
+					type = GraphQLString,
+					description = "The home planet of the human, or null if unknown.",
+				},
 			},
-			homePlanet = {
-				type = GraphQLString,
-				description = "The home planet of the human, or null if unknown.",
+			{
+				"secretBackstory",
+				{
+					type = GraphQLString,
+					description = "Where are they from and how they came to be who they are.",
+					resolve = function()
+						error(Error("secretBackstory is secret."))
+					end,
+				},
 			},
-			secretBackstory = {
-				type = GraphQLString,
-				description = "Where are they from and how they came to be who they are.",
-				resolve = function()
-					error(Error("secretBackstory is secret."))
-				end,
-			},
-		}
+		})
 	end,
 	interfaces = { characterInterface },
 })
@@ -224,38 +249,50 @@ droidType = GraphQLObjectType.new({
 	name = "Droid",
 	description = "A mechanical creature in the Star Wars universe.",
 	fields = function()
-		return {
-			id = {
+		return Map.new({
+			{ "id", {
 				type = GraphQLNonNull.new(GraphQLString),
 				description = "The id of the droid.",
-			},
-			name = {
+			} } :: Array<any>,
+			{ "name", {
 				type = GraphQLString,
 				description = "The name of the droid.",
-			},
-			friends = {
-				type = GraphQLList.new(characterInterface),
-				description = "The friends of the droid, or an empty list if they have none.",
-				resolve = function(droid)
-					return getFriends(droid)
-				end,
-			},
-			appearsIn = {
-				type = GraphQLList.new(episodeEnum),
-				description = "Which movies they appear in.",
-			},
-			secretBackstory = {
-				type = GraphQLString,
-				description = "Construction date and the name of the designer.",
-				resolve = function()
-					error(Error("secretBackstory is secret."))
-				end,
-			},
-			primaryFunction = {
-				type = GraphQLString,
-				description = "The primary function of the droid.",
-			},
-		}
+			} } :: Array<any>,
+			{
+				"friends",
+				{
+					type = GraphQLList.new(characterInterface),
+					description = "The friends of the droid, or an empty list if they have none.",
+					resolve = function(droid)
+						return getFriends(droid)
+					end,
+				},
+			} :: Array<any>,
+			{
+				"appearsIn",
+				{
+					type = GraphQLList.new(episodeEnum),
+					description = "Which movies they appear in.",
+				},
+			} :: Array<any>,
+			{
+				"secretBackstory",
+				{
+					type = GraphQLString,
+					description = "Construction date and the name of the designer.",
+					resolve = function()
+						error(Error("secretBackstory is secret."))
+					end,
+				},
+			} :: Array<any>,
+			{
+				"primaryFunction",
+				{
+					type = GraphQLString,
+					description = "The primary function of the droid.",
+				},
+			} :: Array<any>,
+		})
 	end,
 	interfaces = { characterInterface },
 })
@@ -277,44 +314,53 @@ droidType = GraphQLObjectType.new({
 local queryType = GraphQLObjectType.new({
 	name = "Query",
 	fields = function()
-		return {
-			hero = {
-				type = characterInterface,
-				args = {
-					episode = {
-						description = "If omitted, returns the hero of the whole saga. If provided, returns the hero of that particular episode.",
-						type = episodeEnum,
+		return Map.new({
+			{
+				"hero",
+				{
+					type = characterInterface,
+					args = {
+						episode = {
+							description = "If omitted, returns the hero of the whole saga. If provided, returns the hero of that particular episode.",
+							type = episodeEnum,
+						},
 					},
+					resolve = function(_source, arg)
+						return getHero(arg.episode)
+					end,
 				},
-				resolve = function(_source, arg)
-					return getHero(arg.episode)
-				end,
-			},
-			human = {
-				type = humanType,
-				args = {
-					id = {
-						description = "id of the human",
-						type = GraphQLNonNull.new(GraphQLString),
+			} :: Array<any>,
+			{
+				"human",
+				{
+					type = humanType,
+					args = {
+						id = {
+							description = "id of the human",
+							type = GraphQLNonNull.new(GraphQLString),
+						},
 					},
+					resolve = function(_source, arg)
+						return getHuman(arg.id)
+					end,
 				},
-				resolve = function(_source, arg)
-					return getHuman(arg.id)
-				end,
-			},
-			droid = {
-				type = droidType,
-				args = {
-					id = {
-						description = "id of the droid",
-						type = GraphQLNonNull.new(GraphQLString),
+			} :: Array<any>,
+			{
+				"droid",
+				{
+					type = droidType,
+					args = {
+						id = {
+							description = "id of the droid",
+							type = GraphQLNonNull.new(GraphQLString),
+						},
 					},
+					resolve = function(_source, arg)
+						return getDroid(arg.id)
+					end,
 				},
-				resolve = function(_source, arg)
-					return getDroid(arg.id)
-				end,
-			},
-		}
+			} :: Array<any>,
+		})
 	end,
 })
 

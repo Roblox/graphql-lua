@@ -5,7 +5,8 @@ return function()
 	local suggestionList = require(jsutils.suggestionList).suggestionList
 
 	describe("suggestionList", function()
-		local function expectSuggestions(input, options)
+		-- ROBLOX TODO: TestEZ extensions aren't tracked by Luau hard-coded defs, this goes away when we move to jest
+		local function expectSuggestions(input, options): any
 			return expect(suggestionList(input, options))
 		end
 

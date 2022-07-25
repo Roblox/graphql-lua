@@ -22,11 +22,11 @@ type Map<T, V> = LuauPolyfill.Map<T, V>
  *     )
  *
  ]]
--- ROBLOX deviation: Returning a Map instead of ObjMap
+-- ROBLOX deviation START: Returning a Map instead of ObjMap
 local function keyValMap<T, V>(list: Array<T>, keyFn: (T) -> string, valFn: (T) -> V): Map<string, V>
+	-- ROBLOX deviation END
 	local map = Map.new() :: Map<string, V>
-	for i = 1, #list do
-		local item = list[i]
+	for _, item in ipairs(list) do
 		map:set(keyFn(item), valFn(item))
 	end
 	return map

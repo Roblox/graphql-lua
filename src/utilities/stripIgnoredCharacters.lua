@@ -7,6 +7,7 @@ local String = require(Packages.LuauPolyfill).String
 
 local sourceImport = require(languageWorkspace.source)
 local Source = sourceImport.Source
+type Source = sourceImport.Source
 local isSource = sourceImport.isSource
 local TokenKind = require(languageWorkspace.tokenKind).TokenKind
 local lexerImport = require(languageWorkspace.lexer)
@@ -71,13 +72,8 @@ local dedentBlockString
 --  *
 --  * """Type description""" type Foo{"""Field description""" bar:String}
 --  *]]
-local function stripIgnoredCharacters(source: string | any): string
-	local sourceObj
-	if isSource(source) then
-		sourceObj = source
-	else
-		sourceObj = Source.new(source)
-	end
+local function stripIgnoredCharacters(source: string | Source): string
+	local sourceObj = if isSource(source) then source :: Source else Source.new(source :: string)
 
 	local body = sourceObj.body
 	local lexer = Lexer.new(sourceObj)
@@ -122,7 +118,9 @@ function dedentBlockString(blockStr: string): string
 		body = "\n" .. body
 	end
 
-	local lastChar = String.slice(body, utf8.len(body))
+	local bodyLength = utf8.len(body)
+	assert(bodyLength ~= nil, "invalid utf8 detected: " .. body)
+	local lastChar = String.slice(body, bodyLength)
 	local hasTrailingQuote = lastChar == '"' and String.slice(body, -4) ~= '\\"""'
 	if hasTrailingQuote or lastChar == "\\" then
 		body ..= "\n"

@@ -22,10 +22,13 @@ export type Source = {
 	body: string,
 	name: string,
 	locationOffset: Location,
+
+	new: (body: string, _name: string?, _locationOffset: Location?) -> Source,
+	__tostring: (Source) -> string,
 }
 
-local Source = {}
-Source.__index = Source
+local Source: Source = {} :: Source;
+(Source :: any).__index = Source
 
 function Source.new(body: string, _name: string?, _locationOffset: Location?): Source
 	local name = _name or "GraphQL request"
@@ -43,7 +46,7 @@ function Source.new(body: string, _name: string?, _locationOffset: Location?): S
 	return (setmetatable(self, Source) :: any) :: Source
 end
 
-function Source:__tostring()
+function Source:__tostring(): string
 	-- ROBLOX: deviation for idiomatic lua representation of "object"
 	return "{table Source}"
 end

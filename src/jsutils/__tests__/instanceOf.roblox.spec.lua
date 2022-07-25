@@ -5,25 +5,31 @@ return function()
 	local instanceOf = require(jsutils.instanceOf)
 
 	describe("instanceOf", function()
-		local ParentClass = {}
-		ParentClass.__index = ParentClass
+		type ParentClass = {
+			name: string,
+			message: string,
+			new: (message: string) -> ParentClass,
+		}
+		local ParentClass = {} :: ParentClass;
+		(ParentClass :: any).__index = ParentClass
 
-		function ParentClass.new(message)
+		function ParentClass.new(message: string): ParentClass
 			local self = {}
 			self.name = "Parent"
 			self.message = message
 
-			return setmetatable(self, ParentClass)
+			return (setmetatable(self, ParentClass) :: any) :: ParentClass
 		end
 
-		local ChildClass = setmetatable({}, { __index = ParentClass })
-		ChildClass.__index = ChildClass
+		type ChildClass = ParentClass & {}
+		local ChildClass = (setmetatable({}, { __index = ParentClass }) :: any) :: ChildClass;
+		(ChildClass :: any).__index = ChildClass
 
-		function ChildClass.new(message)
+		function ChildClass.new(message: string): ChildClass
 			local self = ParentClass.new(message)
 			self.name = "Child"
 
-			return setmetatable(self, ChildClass)
+			return (setmetatable(self, ChildClass) :: any) :: ChildClass
 		end
 
 		it("returns false when passed nil", function()

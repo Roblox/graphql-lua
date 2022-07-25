@@ -24,12 +24,10 @@ return function()
 		it("strips ignored characters inside random block strings", function()
 			-- Testing with length >7 is taking exponentially more time. However it is
 			-- highly recommended to test with increased limit if you make any change.
-			for fuzzStr in
-				genFuzzStrings({
-					allowedChars = { "\n", "\t", " ", '"', "a", "\\" },
-					maxLength = 7,
-				})
-			do
+			for fuzzStr in genFuzzStrings({
+				allowedChars = { "\n", "\t", " ", '"', "a", "\\" },
+				maxLength = 7,
+			}) do
 				local testStr = '"""' .. fuzzStr .. '"""'
 
 				local testValue

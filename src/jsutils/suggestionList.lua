@@ -8,7 +8,18 @@ type Array<T> = LuauPolyfill.Array<T>
 
 local naturalCompare = require(script.Parent.naturalCompare).naturalCompare
 
-local LexicalDistance = {}
+type LexicalDistance = {
+	_input: string,
+	_inputLowerCase: string,
+	_inputArray: Array<number>,
+	_rows: { Array<number> },
+
+	new: (input: string) -> LexicalDistance,
+
+	measure: (self: LexicalDistance, option: string, threshold: number) -> number | nil,
+}
+
+local LexicalDistance: LexicalDistance = {} :: LexicalDistance
 
 --[[
  * Given an invalid input string and a list of valid options, returns a filtered
@@ -40,7 +51,7 @@ local function suggestionList(input: string, options: Array<string>): Array<stri
 	return keys
 end
 
-local stringToArray
+local stringToArray;
 
 --[[
  * Computes the lexical distance between strings A and B.
@@ -56,10 +67,10 @@ local stringToArray
  *
  * This distance can be useful for detecting typos in input or sorting
  ]]
-LexicalDistance.__index = LexicalDistance
+(LexicalDistance :: any).__index = LexicalDistance
 
 function LexicalDistance.new(input: string)
-	local self = setmetatable({}, LexicalDistance)
+	local self = (setmetatable({}, LexicalDistance) :: any) :: LexicalDistance
 	self._input = input
 	self._inputLowerCase = input:lower()
 	self._inputArray = stringToArray(self._inputLowerCase)

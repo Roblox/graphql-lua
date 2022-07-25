@@ -15,6 +15,8 @@ type Set<T> = LuauPolyfill.Set<T>
 local isNillishModule = require(luaUtilsWorkspace.isNillish)
 local isNillish = isNillishModule.isNillish
 local isNotNillish = isNillishModule.isNotNillish
+local NULL = require(luaUtilsWorkspace.null)
+type NULL = typeof(NULL)
 
 local jsutilsWorkspace = srcWorkspace.jsutils
 local inspect = require(jsutilsWorkspace.inspect).inspect
@@ -46,6 +48,7 @@ local definitionModule = require(script.Parent.definition)
 type GraphQLType = definitionModule.GraphQLType
 type GraphQLNamedType = definitionModule.GraphQLNamedType
 type GraphQLAbstractType = definitionModule.GraphQLAbstractType
+type GraphQLUnionType = definitionModule.GraphQLUnionType
 type GraphQLObjectType = definitionModule.GraphQLObjectType
 type GraphQLInterfaceType = definitionModule.GraphQLInterfaceType
 
@@ -56,7 +59,7 @@ local isInputObjectType = definitionModule.isInputObjectType
 local getNamedType = definitionModule.getNamedType
 
 -- ROBLOX deviation: pre-declare variables
-local GraphQLSchema
+local GraphQLSchema: GraphQLSchema
 local collectReferencedTypes
 
 -- /**
@@ -142,9 +145,9 @@ export type GraphQLSchema = {
 	astNode: SchemaDefinitionNode?,
 	extensionASTNodes: Array<SchemaExtensionNode>?,
 
-	_queryType: GraphQLObjectType?,
-	_mutationType: GraphQLObjectType?,
-	_subscriptionType: GraphQLObjectType?,
+	_queryType: GraphQLObjectType? | NULL,
+	_mutationType: GraphQLObjectType? | NULL,
+	_subscriptionType: GraphQLObjectType? | NULL,
 	_directives: Array<GraphQLDirective>,
 	_typeMap: TypeMap,
 	_subTypeMap: Map<string, ObjMap<boolean>>,
@@ -157,27 +160,33 @@ export type GraphQLSchema = {
 	__validationErrors: Array<GraphQLError>?,
 
 	-- method definitions
-	getQueryType: (GraphQLSchema) -> GraphQLObjectType?,
-	toConfig: (GraphQLSchema) -> GraphQLSchemaNormalizedConfig,
-	getMutationType: (GraphQLSchema) -> GraphQLObjectType?,
-	getSubscriptionType: (GraphQLSchema) -> GraphQLObjectType?,
-	getTypeMap: (GraphQLSchema) -> TypeMap,
-	getType: (GraphQLSchema, any) -> GraphQLNamedType?,
-	getPossibleTypes: (GraphQLSchema, GraphQLAbstractType) -> Array<GraphQLObjectType>,
+	getQueryType: (self: GraphQLSchema) -> GraphQLObjectType? | NULL,
+	toConfig: (self: GraphQLSchema) -> GraphQLSchemaNormalizedConfig,
+	getMutationType: (self: GraphQLSchema) -> GraphQLObjectType? | NULL,
+	getSubscriptionType: (self: GraphQLSchema) -> GraphQLObjectType? | NULL,
+	getTypeMap: (self: GraphQLSchema) -> TypeMap,
+	getType: (self: GraphQLSchema, name: string) -> GraphQLNamedType?,
+	getPossibleTypes: (self: GraphQLSchema, abstractType: GraphQLAbstractType) -> Array<GraphQLObjectType>,
 	getImplementations: (
-		GraphQLSchema,
-		GraphQLInterfaceType
+		self: GraphQLSchema,
+		interfaceType: GraphQLInterfaceType
 	) -> {
 		objects: Array<GraphQLObjectType>,
 		interfaces: Array<GraphQLInterfaceType>,
 	},
-	isSubType: (GraphQLSchema, GraphQLAbstractType, GraphQLObjectType | GraphQLInterfaceType) -> boolean,
-	getDirectives: (GraphQLSchema) -> Array<GraphQLDirective>,
-	getDirective: (GraphQLSchema, any) -> GraphQLDirective?,
+	isSubType: (
+		self: GraphQLSchema,
+		abstractType: GraphQLAbstractType,
+		maybeSubType: GraphQLObjectType | GraphQLInterfaceType
+	) -> boolean,
+	getDirectives: (self: GraphQLSchema) -> Array<GraphQLDirective>,
+	getDirective: (self: GraphQLSchema, any) -> GraphQLDirective?,
+	__tostring: (self: GraphQLSchema) -> string,
+	new: (config: GraphQLSchemaConfig) -> GraphQLSchema,
 }
 
-GraphQLSchema = {}
-GraphQLSchema.__index = GraphQLSchema
+GraphQLSchema = {} :: GraphQLSchema;
+(GraphQLSchema :: any).__index = GraphQLSchema
 
 function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 	local self = (setmetatable({}, GraphQLSchema) :: any) :: GraphQLSchema
@@ -324,15 +333,15 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 	return self
 end
 
-function GraphQLSchema:getQueryType(): GraphQLObjectType?
+function GraphQLSchema:getQueryType(): GraphQLObjectType? | NULL
 	return self._queryType
 end
 
-function GraphQLSchema:getMutationType(): GraphQLObjectType?
+function GraphQLSchema:getMutationType(): GraphQLObjectType? | NULL
 	return self._mutationType
 end
 
-function GraphQLSchema:getSubscriptionType(): GraphQLObjectType?
+function GraphQLSchema:getSubscriptionType(): GraphQLObjectType? | NULL
 	return self._subscriptionType
 end
 
@@ -340,15 +349,16 @@ function GraphQLSchema:getTypeMap(): TypeMap
 	return self._typeMap
 end
 
-function GraphQLSchema:getType(name): GraphQLNamedType?
-	return self:getTypeMap():get(name)
+function GraphQLSchema:getType(name: string): GraphQLNamedType?
+	return self:getTypeMap()[name]
 end
 
 function GraphQLSchema:getPossibleTypes(abstractType: GraphQLAbstractType): Array<GraphQLObjectType>
+	-- ROBLOX TODO Luau: need return constraints so we can narrow: isUnionType(type: unknown): type is GraphQLUnionType
 	if isUnionType(abstractType) then
-		return abstractType:getTypes()
+		return (abstractType :: GraphQLUnionType):getTypes()
 	else
-		return self:getImplementations(abstractType).objects
+		return self:getImplementations(abstractType :: GraphQLInterfaceType).objects
 	end
 end
 
@@ -366,16 +376,17 @@ function GraphQLSchema:isSubType(
 	abstractType: GraphQLAbstractType,
 	maybeSubType: GraphQLObjectType | GraphQLInterfaceType
 ): boolean
-	local map = self._subTypeMap:get(abstractType.name)
+	-- ROBLOX FIXME Luau: type states should narrow map to non-nil based on nil check+assign
+	local map: ObjMap<boolean> = self._subTypeMap[abstractType.name] :: ObjMap<boolean>
 	if map == nil then
 		map = {}
 
 		if isUnionType(abstractType) then
-			for _, type_ in ipairs(abstractType:getTypes()) do
+			for _, type_ in ipairs((abstractType :: GraphQLUnionType):getTypes()) do
 				map[type_.name] = true
 			end
 		else
-			local implementations = self:getImplementations(abstractType)
+			local implementations = self:getImplementations(abstractType :: GraphQLInterfaceType)
 			for _, type_ in ipairs(implementations.objects) do
 				map[type_.name] = true
 			end
@@ -416,7 +427,7 @@ function GraphQLSchema:toConfig(): GraphQLSchemaNormalizedConfig
 	}
 end
 
-function GraphQLSchema:__tostring()
+function GraphQLSchema:__tostring(): string
 	return "GraphQLSchema"
 end
 
@@ -436,9 +447,9 @@ export type GraphQLSchemaValidationOptions = {
 
 export type GraphQLSchemaConfig = {
 	description: string?,
-	query: GraphQLObjectType?,
-	mutation: GraphQLObjectType?,
-	subscription: GraphQLObjectType?,
+	query: GraphQLObjectType? | NULL,
+	mutation: GraphQLObjectType? | NULL,
+	subscription: GraphQLObjectType? | NULL,
 	types: Array<GraphQLNamedType>?,
 	directives: Array<GraphQLDirective>?,
 	extensions: ObjMapLike<any>?,

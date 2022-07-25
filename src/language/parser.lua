@@ -51,8 +51,8 @@ type InputObjectTypeDefinitionNode = AstModule.InputObjectTypeDefinitionNode
 type TypeSystemExtensionNode = AstModule.TypeSystemExtensionNode
 type SchemaExtensionNode = AstModule.SchemaExtensionNode
 type ScalarTypeExtensionNode = AstModule.ScalarTypeExtensionNode
-type ObjectTypeExtensionNode = AstModule.ObjectTypeDefinitionNode
-type InterfaceTypeExtensionNode = AstModule.InterfaceTypeDefinitionNode
+type ObjectTypeExtensionNode = AstModule.ObjectTypeExtensionNode
+type InterfaceTypeExtensionNode = AstModule.InterfaceTypeExtensionNode
 type UnionTypeExtensionNode = AstModule.UnionTypeExtensionNode
 type EnumTypeExtensionNode = AstModule.EnumTypeExtensionNode
 type InputObjectTypeExtensionNode = AstModule.InputObjectTypeExtensionNode
@@ -113,6 +113,8 @@ local getTokenKindDesc
 type Parser = {
 	_options: ParseOptions?,
 	_lexer: Lexer,
+
+	new: (source: string | Source, options: ParseOptions?) -> Parser,
 
 	parseName: (self: Parser) -> NameNode,
 	parseDocument: (self: Parser) -> DocumentNode,
@@ -178,14 +180,24 @@ type Parser = {
 	expectKeyword: (self: Parser, value: string) -> (),
 	expectOptionalKeyword: (self: Parser, value: string) -> boolean,
 	unexpected: (self: Parser, atToken: Token?) -> GraphQLError,
-	any: <T>(openKind: TokenKindEnum, parseFn: () -> T, closeKind: TokenKindEnum) -> Array<T>,
-	optionalMany: <T>(openKind: TokenKindEnum, parseFn: () -> T, closeKind: TokenKindEnum) -> Array<T>,
-	many: <T>(openKind: TokenKindEnum, parseFn: () -> T, closeKind: TokenKindEnum) -> Array<T>,
-	delimitedMany: <T>(self: Parser, delimiterKind: TokenKindEnum, parseFn: () -> T) -> Array<T>,
+	any: <T>(self: Parser, openKind: TokenKindEnum, parseFn: (self: Parser) -> T, closeKind: TokenKindEnum) -> Array<T>,
+	optionalMany: <T>(
+		self: Parser,
+		openKind: TokenKindEnum,
+		parseFn: (self: Parser) -> T,
+		closeKind: TokenKindEnum
+	) -> Array<T>,
+	many: <T>(
+		self: Parser,
+		openKind: TokenKindEnum,
+		parseFn: (self: Parser) -> T,
+		closeKind: TokenKindEnum
+	) -> Array<T>,
+	delimitedMany: <T>(self: Parser, delimiterKind: TokenKindEnum, parseFn: (self: Parser) -> T) -> Array<T>,
 }
 
-local Parser = {}
-Parser.__index = Parser
+local Parser: Parser = {} :: Parser;
+(Parser :: any).__index = Parser
 
 --[[*
 --  * Given a GraphQL source, parses it into a Document.
@@ -284,8 +296,7 @@ end
 --  *   - FragmentDefinition
 --  *]]
 
--- ROBLOX FIXME Luau: this is a workaround for CLI-50709, remove the workaround once that PR is merged and deployed
-function Parser.parseDefinition(self: Parser): DefinitionNode
+function Parser:parseDefinition(): DefinitionNode
 	if self:peek(TokenKind.NAME) then
 		local tokenValue = self._lexer.token.value
 		if tokenValue == "query" or tokenValue == "mutation" or tokenValue == "subscription" then
@@ -322,8 +333,7 @@ end
 --  *  - SelectionSet
 --  *  - OperationType Name? VariableDefinitions? Directives? SelectionSet
 --  *]]
--- ROBLOX FIXME Luau: this is a workaround for CLI-50709, remove the workaround once that PR is merged and deployed
-function Parser.parseOperationDefinition(self: Parser): OperationDefinitionNode
+function Parser:parseOperationDefinition(): OperationDefinitionNode
 	local start = self._lexer.token
 	if self:peek(TokenKind.BRACE_L) then
 		return {
@@ -336,8 +346,8 @@ function Parser.parseOperationDefinition(self: Parser): OperationDefinitionNode
 			loc = self:loc(start),
 		}
 	end
-	-- ROBLOX FIXME Luau: without that Luau isn't properly inferring the type
-	local operation: OperationTypeNode = self:parseOperationType()
+	-- ROBLOX FIXME Luau: both casts are needed to prevent singleton string union from widening to plain string type
+	local operation: OperationTypeNode = self:parseOperationType() :: OperationTypeNode
 	local name
 	if self:peek(TokenKind.NAME) then
 		name = self:parseName()
@@ -373,29 +383,23 @@ end
 --[[*
 --  * VariableDefinitions : ( VariableDefinition+ )
 --  *]]
-function Parser:parseVariableDefinitions()
+function Parser:parseVariableDefinitions(): Array<VariableDefinitionNode>
 	return self:optionalMany(TokenKind.PAREN_L, self.parseVariableDefinition, TokenKind.PAREN_R)
 end
 
 --[[*
 --  * VariableDefinition : Variable : Type DefaultValue? Directives[Const]?
 --  *]]
-function Parser:parseVariableDefinition()
+function Parser:parseVariableDefinition(): VariableDefinitionNode
 	local start = self._lexer.token
+	local _ref0 = self:parseVariable()
+	self:expectToken(TokenKind.COLON)
+	local _ref1 = self:parseTypeReference()
 	return {
 		kind = Kind.VARIABLE_DEFINITION,
-		variable = self:parseVariable(),
-		type = (function()
-			self:expectToken(TokenKind.COLON)
-			return self:parseTypeReference()
-		end)(),
-		defaultValue = (function()
-			if self:expectOptionalToken(TokenKind.EQUALS) then
-				return self:parseValueLiteral(true)
-			else
-				return nil
-			end
-		end)(),
+		variable = _ref0,
+		type = _ref1,
+		defaultValue = (if self:expectOptionalToken(TokenKind.EQUALS) then self:parseValueLiteral(true) else nil),
 		directives = self:parseDirectives(true),
 		loc = self:loc(start),
 	}
@@ -404,7 +408,7 @@ end
 --[[*
 --  * Variable : $ Name
 --  *]]
-function Parser:parseVariable()
+function Parser:parseVariable(): VariableNode
 	local start = self._lexer.token
 	self:expectToken(TokenKind.DOLLAR)
 	return {
@@ -417,7 +421,7 @@ end
 --[[*
 --  * SelectionSet : { Selection+ }
 --  *]]
-function Parser:parseSelectionSet()
+function Parser:parseSelectionSet(): SelectionSetNode
 	local start = self._lexer.token
 	return {
 		kind = Kind.SELECTION_SET,
@@ -432,7 +436,7 @@ end
 --  *   - FragmentSpread
 --  *   - InlineFragment
 --  *]]
-function Parser:parseSelection()
+function Parser:parseSelection(): SelectionNode
 	if self:peek(TokenKind.SPREAD) then
 		return self:parseFragment()
 	else
@@ -445,11 +449,12 @@ end
 --  *
 --  * Alias : Name :
 --  *]]
-function Parser:parseField()
+function Parser:parseField(): FieldNode
 	local start = self._lexer.token
 
 	local nameOrAlias = self:parseName()
 	local alias
+	-- ROBLOX FIXME Luau: Luau infers `NameNode?` here because without type states it doesn't understand both branches assign NameNode to the variable?
 	local name
 	if self:expectOptionalToken(TokenKind.COLON) then
 		alias = nameOrAlias
@@ -472,7 +477,7 @@ end
 --[[*
 --  * Arguments[Const] : ( Argument[?Const]+ )
 --  *]]
-function Parser:parseArguments(isConst)
+function Parser:parseArguments(isConst: boolean): Array<ArgumentNode>
 	local item
 	if isConst then
 		item = self.parseConstArgument
@@ -485,7 +490,7 @@ end
 --[[*
 --  * Argument[Const] : Name : Value[?Const]
 --  *]]
-function Parser:parseArgument()
+function Parser:parseArgument(): ArgumentNode
 	local start = self._lexer.token
 	local name = self:parseName()
 
@@ -498,15 +503,15 @@ function Parser:parseArgument()
 	}
 end
 
-function Parser:parseConstArgument()
+function Parser:parseConstArgument(): ArgumentNode
 	local start = self._lexer.token
+	local _ref0 = self:parseName()
+	self:expectToken(TokenKind.COLON)
+	local _ref1 = self:parseValueLiteral(true)
 	return {
 		kind = Kind.ARGUMENT,
-		name = self:parseName(),
-		value = (function()
-			self:expectToken(TokenKind.COLON)
-			return self:parseValueLiteral(true)
-		end)(),
+		name = _ref0,
+		value = _ref1,
 		loc = self:loc(start),
 	}
 end
@@ -535,13 +540,7 @@ function Parser:parseFragment(): FragmentSpreadNode | InlineFragmentNode
 	end
 	return {
 		kind = Kind.INLINE_FRAGMENT,
-		typeCondition = (function()
-			if hasTypeCondition then
-				return self:parseNamedType()
-			else
-				return nil
-			end
-		end)(),
+		typeCondition = if hasTypeCondition then self:parseNamedType() else nil,
 		directives = self:parseDirectives(false),
 		selectionSet = self:parseSelectionSet(),
 		loc = self:loc(start),
@@ -764,10 +763,9 @@ end
 --  *   - ListType
 --  *   - NonNullType
 --  *]]
--- ROBLOX FIXME Luau: this is a workaround for CLI-50709, remove the workaround once that PR is merged and deployed
-function Parser.parseTypeReference(self: Parser): TypeNode
+function Parser:parseTypeReference(): TypeNode
 	local start = self._lexer.token
-	-- ROBLOX FIXME Luau: Luau should infer this annotation
+	-- ROBLOX FIXME Luau: Luau should infer this annotation, needs type states
 	local type_: ListTypeNode | NamedTypeNode
 	if self:expectOptionalToken(TokenKind.BRACKET_L) then
 		local innerType = self:parseTypeReference()
@@ -798,7 +796,7 @@ end
 --[[*
 --  * NamedType : Name
 --  *]]
-function Parser:parseNamedType()
+function Parser:parseNamedType(): NamedTypeNode
 	local start = self._lexer.token
 	return {
 		kind = Kind.NAMED_TYPE,
@@ -823,13 +821,7 @@ end
 --  *]]
 function Parser:parseTypeSystemDefinition()
 	-- Many definitions begin with a description and require a lookahead.
-	local keywordToken = (function()
-		if self:peekDescription() then
-			return self._lexer:lookahead()
-		else
-			return self._lexer.token
-		end
-	end)()
+	local keywordToken = if self:peekDescription() then self._lexer:lookahead() else self._lexer.token
 
 	if keywordToken.kind == TokenKind.NAME then
 		local tokenValue = keywordToken.value
@@ -855,8 +847,7 @@ function Parser:parseTypeSystemDefinition()
 	error(self:unexpected(keywordToken))
 end
 
--- ROBLOX FIXME Luau: this is a workaround for CLI-50709, remove the workaround once that PR is merged and deployed
-function Parser.peekDescription(self: Parser): boolean
+function Parser:peekDescription(): boolean
 	return self:peek(TokenKind.STRING) or self:peek(TokenKind.BLOCK_STRING)
 end
 
@@ -893,7 +884,8 @@ end
 --  *]]
 function Parser:parseOperationTypeDefinition(): OperationTypeDefinitionNode
 	local start = self._lexer.token
-	local operation = self:parseOperationType()
+	-- ROBLOX FIXME Luau: both casts are needed to prevent singleton string union from widening to plain string type
+	local operation: OperationTypeNode = self:parseOperationType() :: OperationTypeNode
 	self:expectToken(TokenKind.COLON)
 	local type_ = self:parseNamedType()
 	return {
@@ -1071,8 +1063,7 @@ end
 --  *   - = `|`? NamedType
 --  *   - UnionMemberTypes | NamedType
 --  *]]
--- ROBLOX FIXME Luau: this is a workaround for CLI-50709, remove the workaround once that PR is merged and deployed
-function Parser.parseUnionMemberTypes(self: Parser): Array<NamedTypeNode>
+function Parser:parseUnionMemberTypes(): Array<NamedTypeNode>
 	local types = {}
 	if self:expectOptionalToken(TokenKind.EQUALS) then
 		--   // Optional leading pipe
@@ -1246,7 +1237,7 @@ end
 --  *  - extend type Name ImplementsInterfaces? Directives[Const]
 --  *  - extend type Name ImplementsInterfaces
 --  *]]
-function Parser:parseObjectTypeExtension()
+function Parser:parseObjectTypeExtension(): ObjectTypeExtensionNode
 	local start = self._lexer.token
 	self:expectKeyword("extend")
 	self:expectKeyword("type")
@@ -1273,7 +1264,7 @@ end
 --  *  - extend interface Name ImplementsInterfaces? Directives[Const]
 --  *  - extend interface Name ImplementsInterfaces
 --  *]]
-function Parser:parseInterfaceTypeExtension()
+function Parser:parseInterfaceTypeExtension(): InterfaceTypeExtensionNode
 	local start = self._lexer.token
 	self:expectKeyword("extend")
 	self:expectKeyword("interface")
@@ -1299,7 +1290,7 @@ end
 --  *   - extend union Name Directives[Const]? UnionMemberTypes
 --  *   - extend union Name Directives[Const]
 --  *]]
-function Parser:parseUnionTypeExtension()
+function Parser:parseUnionTypeExtension(): UnionTypeExtensionNode
 	local start = self._lexer.token
 	self:expectKeyword("extend")
 	self:expectKeyword("union")
@@ -1323,7 +1314,7 @@ end
 --  *   - extend enum Name Directives[Const]? EnumValuesDefinition
 --  *   - extend enum Name Directives[Const]
 --  *]]
-function Parser:parseEnumTypeExtension()
+function Parser:parseEnumTypeExtension(): EnumTypeExtensionNode
 	local start = self._lexer.token
 	self:expectKeyword("extend")
 	self:expectKeyword("enum")
@@ -1347,7 +1338,7 @@ end
 --  *   - extend input Name Directives[Const]? InputFieldsDefinition
 --  *   - extend input Name Directives[Const]
 --  *]]
-function Parser:parseInputObjectTypeExtension()
+function Parser:parseInputObjectTypeExtension(): InputObjectTypeExtensionNode
 	local start = self._lexer.token
 	self:expectKeyword("extend")
 	self:expectKeyword("input")
@@ -1370,7 +1361,7 @@ end
 --  * DirectiveDefinition :
 --  *   - Description? directive @ Name ArgumentsDefinition? `repeatable`? on DirectiveLocations
 --  *]]
-function Parser:parseDirectiveDefinition()
+function Parser:parseDirectiveDefinition(): DirectiveDefinitionNode
 	local start = self._lexer.token
 	local description = self:parseDescription()
 	self:expectKeyword("directive")
@@ -1396,7 +1387,7 @@ end
 --  *   - `|`? DirectiveLocation
 --  *   - DirectiveLocations | DirectiveLocation
 --  *]]
-function Parser:parseDirectiveLocations()
+function Parser:parseDirectiveLocations(): Array<NameNode>
 	-- Optional leading pipe
 	self:expectOptionalToken(TokenKind.PIPE)
 	local locations = {}
@@ -1529,7 +1520,7 @@ end
 --  * Helper function for creating an error when an unexpected lexed token
 --  * is encountered.
 --  *]]
-function Parser:unexpected(atToken: Token?)
+function Parser:unexpected(atToken: Token?): GraphQLError
 	local token = atToken ~= nil and atToken or self._lexer.token
 	return syntaxError(self._lexer.source, token.start, "Unexpected " .. getTokenDesc(token) .. ".")
 end
@@ -1540,12 +1531,12 @@ end
 --  * and ends with a lex token of closeKind. Advances the parser
 --  * to the next lex token after the closing token.
 --  *]]
-function Parser:any(
+function Parser:any<T>(
 	openKind: TokenKindEnum,
 	-- ROBLOX deviation: we pass 1 arg here to account for self
-	parseFn: (any) -> any,
+	parseFn: (self: Parser) -> T,
 	closeKind: TokenKindEnum
-)
+): Array<T>
 	self:expectToken(openKind)
 	local nodes = {}
 	while not self:expectOptionalToken(closeKind) do
@@ -1561,12 +1552,12 @@ end
 --  * with a lex token of closeKind. Advances the parser to the next lex token
 --  * after the closing token.
 --  *]]
-function Parser:optionalMany(
+function Parser:optionalMany<T>(
 	openKind: TokenKindEnum,
 	-- ROBLOX deviation: we pass 1 arg here to account for self
-	parseFn: (any) -> any,
+	parseFn: (self: Parser) -> T,
 	closeKind: TokenKindEnum
-)
+): Array<T>
 	if self:expectOptionalToken(openKind) then
 		local nodes = {}
 		repeat
@@ -1583,12 +1574,12 @@ end
 --  * and ends with a lex token of closeKind. Advances the parser
 --  * to the next lex token after the closing token.
 --  *]]
-function Parser:many(
+function Parser:many<T>(
 	openKind: TokenKindEnum,
 	-- ROBLOX deviation: we pass 1 arg here to account for self
-	parseFn: (any) -> any,
+	parseFn: (self: Parser) -> T,
 	closeKind: TokenKindEnum
-)
+): Array<T>
 	self:expectToken(openKind)
 	local nodes = {}
 	repeat
@@ -1602,7 +1593,11 @@ end
 * This list may begin with a lex token of delimiterKind followed by items separated by lex tokens of tokenKind.
 * Advances the parser to the next lex token after last item in the list.
 ]]
-function Parser:delimitedMany(delimiterKind, parseFn: (any) -> any): Array<any>
+function Parser:delimitedMany<T>(
+	delimiterKind: TokenKindEnum,
+	-- ROBLOX deviation: we pass 1 arg here to account for self
+	parseFn: (self: Parser) -> T
+): Array<T>
 	self:expectOptionalToken(delimiterKind)
 
 	local nodes = {}
@@ -1615,7 +1610,7 @@ end
 --[[*
 --  * A helper function to describe a token as a string for debugging
 --  *]]
-function getTokenDesc(token): string
+function getTokenDesc(token: Token): string
 	local value = token.value
 	return getTokenKindDesc(token.kind) .. (value ~= nil and ' "' .. value .. '"' or "")
 end
@@ -1623,7 +1618,7 @@ end
 --[[*
 --  * A helper function to describe a token kind as a string for debugging
 --  *]]
-function getTokenKindDesc(kind): string
+function getTokenKindDesc(kind: TokenKindEnum): string
 	return isPunctuatorTokenKind(kind) and '"' .. kind .. '"' or kind
 end
 

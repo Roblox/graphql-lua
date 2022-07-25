@@ -2,7 +2,9 @@
 
 local srcWorkspace = script.Parent.Parent
 local devAssert = require(srcWorkspace.jsutils.devAssert).devAssert
-local GraphQLError = require(srcWorkspace.error.GraphQLError).GraphQLError
+local graphqlErrorImport = require(srcWorkspace.error.GraphQLError)
+local GraphQLError = graphqlErrorImport.GraphQLError
+type GraphQLError = graphqlErrorImport.GraphQLError
 
 local isValidNameError
 local assertValidName
@@ -23,7 +25,7 @@ end
 --[[**
 	* Returns an Error if a name is invalid.
 	*]]
-function isValidNameError(name: string)
+function isValidNameError(name: string): GraphQLError | nil
 	devAssert(type(name) == "string", "Expected name to be a string.")
 	if string.len(name) > 1 and name:sub(1, 1) == "_" and name:sub(2, 2) == "_" then
 		return GraphQLError.new(
@@ -37,7 +39,7 @@ function isValidNameError(name: string)
 		return GraphQLError.new('Names must match [_%a][_%a%d]* but "' .. name .. '" does not.')
 	end
 
-	return
+	return nil
 end
 
 return {

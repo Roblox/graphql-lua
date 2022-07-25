@@ -18,13 +18,16 @@ local naturalCompare = require(jsutils.naturalCompare).naturalCompare
 local language = srcWorkspace.language
 local print_ = require(language.printer).print
 local visit = require(language.visitor).visit
+local astModule = require(language.ast)
+type ObjectValueNode = astModule.ObjectValueNode
+type ValueNode = astModule.ValueNode
 
 local typeDir = srcWorkspace.type
 local schemaModule = require(typeDir.schema)
 type GraphQLSchema = schemaModule.GraphQLSchema
 local definition = require(typeDir.definition)
--- ROBLOX TODO: Luau doesn't support default type args, so we inline `any` here
-type GraphQLField<TSource, TContext> = definition.GraphQLField<TSource, TContext, any>
+-- ROBLOX FIXME Luau: doesn't correctly replicate default type args, so we inline `any` here
+type GraphQLField<TSource, TContext, TValue = any> = definition.GraphQLField<TSource, TContext, TValue>
 type GraphQLType = definition.GraphQLType
 type GraphQLInputType = definition.GraphQLInputType
 type GraphQLNamedType = definition.GraphQLNamedType
@@ -554,8 +557,10 @@ function stringifyValue(value: any, type_: GraphQLInputType): string
 
 	invariant(ast ~= nil)
 
-	local sortedAST = visit(ast, {
-		ObjectValue = function(self, objectNode)
+	-- ROBLOX TODO Luau: doesn't narrow based on invariant noreturn/throws
+	local sortedAST = visit(ast :: ValueNode, {
+		-- ROBLOX TODO Luau: The Visitor<> annotation visit() uses complex TS/flowtype features, so we manually annotate for now
+		ObjectValue = function(_, objectNode: ObjectValueNode)
 			-- Make a copy since sort mutates array
 			local fields = Array.concat({}, objectNode.fields)
 

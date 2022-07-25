@@ -10,13 +10,16 @@ local MAX_SUGGESTIONS = 5
 --[[
  * Given [ A, B, C ] return ' Did you mean A, B, or C?'.
  ]]
-local function didYouMean(firstArg: string, secondArg: Array<string>): string
-	local subMessage
+-- ROBLOX TODO Luau: need support for overloads
+local function didYouMean(firstArg: Array<string> | string, secondArg: Array<string>?): string
+	local subMessage: string?
 	-- ROBLOX TODO? some weird switcheroos here that make type analysis hard to figure
-	local suggestionsArg: any = firstArg
-	if typeof(firstArg) == "string" then
-		subMessage = firstArg
+	local suggestionsArg: Array<string>
+	if secondArg then
+		subMessage = firstArg :: string
 		suggestionsArg = secondArg
+	else
+		suggestionsArg = firstArg :: Array<string>
 	end
 
 	local message = " Did you mean "

@@ -36,6 +36,7 @@ local isObjectLike = require(jsUtilsWorkspace.isObjectLike).isObjectLike
 local promiseReduce = require(jsUtilsWorkspace.promiseReduce).promiseReduce
 local promiseForObject = require(jsUtilsWorkspace.promiseForObject).promiseForObject
 local pathImport = require(jsUtilsWorkspace.Path)
+type Path = pathImport.Path
 local addPath = pathImport.addPath
 local pathToArray = pathImport.pathToArray
 local isIteratableObject = require(jsUtilsWorkspace.isIteratableObject).isIteratableObject
@@ -55,6 +56,7 @@ type FieldNode = astImport.FieldNode
 type FragmentSpreadNode = astImport.FragmentSpreadNode
 type InlineFragmentNode = astImport.InlineFragmentNode
 type FragmentDefinitionNode = astImport.FragmentDefinitionNode
+type NamedTypeNode = astImport.NamedTypeNode
 local Kind = require(srcWorkspace.language.kinds).Kind
 
 local schemaImport = require(typeWorkspace.schema)
@@ -64,12 +66,18 @@ type GraphQLType = definitionImport.GraphQLType
 type GraphQLObjectType = definitionImport.GraphQLObjectType
 type GraphQLOutputType = definitionImport.GraphQLOutputType
 type GraphQLLeafType = definitionImport.GraphQLLeafType
+type GraphQLScalarType = definitionImport.GraphQLScalarType
+type GraphQLEnumType = definitionImport.GraphQLEnumType
 type GraphQLAbstractType = definitionImport.GraphQLAbstractType
+type GraphQLNamedType = definitionImport.GraphQLNamedType
+type GraphQLInterfaceType = definitionImport.GraphQLInterfaceType
+type GraphQLUnionType = definitionImport.GraphQLUnionType
 type GraphQLField<Source, TContext> = definitionImport.GraphQLField<Source, TContext>
 type GraphQLFieldResolver<T, V> = definitionImport.GraphQLFieldResolver<T, V>
 type GraphQLResolveInfo = definitionImport.GraphQLResolveInfo
 type GraphQLTypeResolver<T, V> = definitionImport.GraphQLTypeResolver<T, V>
 type GraphQLList<T> = definitionImport.GraphQLList<T>
+type GraphQLNonNull<T> = definitionImport.GraphQLNonNull<T>
 local assertValidSchema = require(typeWorkspace.validate).assertValidSchema
 local introspectionImport = require(typeWorkspace.introspection)
 local SchemaMetaFieldDef = introspectionImport.SchemaMetaFieldDef
@@ -175,13 +183,17 @@ local executeOperation
 local executeFieldsSerially
 local executeFields
 local shouldIncludeNode
-local doesFragmentConditionMatch
+local doesFragmentConditionMatch: (
+	exeContext: ExecutionContext,
+	fragment: FragmentDefinitionNode | InlineFragmentNode,
+	type_: GraphQLObjectType
+) -> boolean
 local getFieldEntryKey
 local resolveField
 local handleFieldError
 local completeValue
 local completeListValue
-local completeLeafValue
+local completeLeafValue: (returnType: GraphQLLeafType, result: any) -> any
 local completeAbstractValue
 local ensureValidRuntimeType
 local completeObjectValue
@@ -227,8 +239,7 @@ function execute(args: ExecutionArgs): PromiseOrValue<ExecutionResult>
 	)
 
 	-- Return early errors if execution context failed.
-	-- ROBLOX FIXME Luau: Luau should narrow the union based on this, since ExecutionContext.schema can't be falsey
-	if not (exeContext :: any).schema then
+	if Array.isArray(exeContext) or not (exeContext :: ExecutionContext).schema then
 		-- ROBLOX FIXME Luau: Luau shouldn't need this ExecutionResult annotation, probably needs normalization
 		return { errors = exeContext :: Array<GraphQLError> } :: ExecutionResult
 	end
@@ -411,27 +422,26 @@ function executeOperation(
 	-- Errors from sub-fields of a NonNull type may propagate to the top level,
 	-- at which point we still log the error and null the parent field, which
 	-- in this case is the entire response.
-	local ok, resultOrError = pcall(function()
-		local result
-		if operation.operation == "mutation" then
-			result = executeFieldsSerially(exeContext, type_, rootValue, path, fields)
-		else
-			result = executeFields(exeContext, type_, rootValue, path, fields)
-		end
-		if isPromise(result) then
-			return result:andThen(nil, function(error_)
-				table.insert(exeContext.errors, error_)
-				return Promise.resolve(NULL)
-			end)
-		end
-		return result
-	end)
+	-- ROBLOX deviation START: instead of wrapping entire block in try, only wrap specific calls that could fail
+	local ok: boolean, result: any
+	if operation.operation == "mutation" then
+		ok, result = pcall(executeFieldsSerially, exeContext, type_, rootValue, path, fields)
+	else
+		ok, result = pcall(executeFields, exeContext, type_, rootValue, path, fields)
+	end
+	-- ROBLOX deviation END
+	if isPromise(result) then
+		return result:andThen(nil, function(error_)
+			table.insert(exeContext.errors, error_)
+			return Promise.resolve(NULL)
+		end)
+	end
 
 	if not ok then
-		table.insert(exeContext.errors, resultOrError)
+		table.insert(exeContext.errors, result)
 		return NULL
 	end
-	return resultOrError
+	return result
 end
 
 --[[*
@@ -448,15 +458,15 @@ function executeFieldsSerially(
 	return promiseReduce(
 		-- ROBLOX deviation: use Map
 		fields:keys(),
-		function(results, responseName)
+		function(results, responseName: string)
 			-- ROBLOX TODO: this is a type bug in upstream, which should also need annotation
 			local fieldNodes = fields[responseName] :: Array<FieldNode>
-			-- ROBLOX FIXME Luau: Type 'Path?' could not be converted into 'Path?'
-			local fieldPath = addPath(path :: any, responseName, parentType.name)
-			local result = resolveField(exeContext, parentType, sourceValue, fieldNodes, fieldPath :: any)
+			local fieldPath = addPath(path, responseName, parentType.name)
+			local result = resolveField(exeContext, parentType, sourceValue, fieldNodes, fieldPath)
 
 			if result == nil then
-				return results
+				-- ROBLOX FIXME Luau: with promiseReduce forwarding types correctly, this now emits a Type contains a self-recursive construct that cannot be resolved
+				return results :: any
 			end
 			if isPromise(result) then
 				-- ROBLOX FIXME: couldn't figure out typing for this Promise<T> that returns a Promise<R>
@@ -493,9 +503,8 @@ function executeFields(
 	for _, responseName in ipairs(fields:keys()) do
 		-- ROBLOX TODO: this is a type bug in upstream, which should also need annotation
 		local fieldNodes = fields[responseName] :: Array<FieldNode>
-		-- ROBLOX FIXME Luau: Type 'Path?' could not be converted into 'Path?'
-		local fieldPath = addPath(path :: any, responseName, parentType.name)
-		local result = resolveField(exeContext, parentType, sourceValue, fieldNodes, fieldPath :: any)
+		local fieldPath = addPath(path, responseName, parentType.name)
+		local result = resolveField(exeContext, parentType, sourceValue, fieldNodes, fieldPath)
 
 		if result ~= nil then
 			results[responseName] = result
@@ -607,13 +616,18 @@ function doesFragmentConditionMatch(
 		return true
 	end
 
-	local conditionalType = typeFromAST(exeContext.schema, typeConditionNode)
+	-- ROBLOX FIXME Luau: Luau does not narrow to non-nil based on branch above
+	local conditionalType = typeFromAST(exeContext.schema, typeConditionNode :: NamedTypeNode) :: GraphQLNamedType
 
 	if conditionalType == type_ then
 		return true
 	end
 	if isAbstractType(conditionalType) then
-		return exeContext.schema:isSubType(conditionalType, type_)
+		-- ROBLOX TODO Luau: need return type constraint feature to not need manual annotation here. TS does some cool, fancy narrowing here.
+		return exeContext.schema:isSubType(
+			conditionalType :: GraphQLInterfaceType | GraphQLUnionType,
+			type_ :: GraphQLObjectType
+		)
 	end
 
 	return false
@@ -623,13 +637,7 @@ end
 --  * Implements the logic to compute the key of a given field's entry
 --  *]]
 function getFieldEntryKey(node: FieldNode): string
-	return (function()
-		if node.alias then
-			return node.alias.value
-		end
-
-		return node.name.value
-	end)()
+	return if node.alias then node.alias.value else node.name.value
 end
 
 --[[*
@@ -660,14 +668,14 @@ function resolveField(
 		then (fieldDef :: GraphQLField<any, any>).resolve :: GraphQLFieldResolver<any, any>
 		else exeContext.fieldResolver
 
-	local info = buildResolveInfo(exeContext, (fieldDef :: GraphQLField<any, any>), fieldNodes, parentType, path)
+	local info = buildResolveInfo(exeContext, fieldDef :: GraphQLField<any, any>, fieldNodes, parentType, path)
 
 	-- Get the resolve function, regardless of if its result is normal or abrupt (error).
 	local ok, resultOrError = pcall(function()
 		-- Build a JS object of arguments from the field.arguments AST, using the
 		-- variables scope to fulfill any variable references.
 		-- TODO: find a way to memoize, in case this field is within a List type.
-		local args = getArgumentValues((fieldDef :: GraphQLField<any, any>), fieldNodes[1], exeContext.variableValues)
+		local args = getArgumentValues(fieldDef :: GraphQLField<any, any>, fieldNodes[1], exeContext.variableValues)
 
 		-- The resolve function's optional third argument is a context value that
 		-- is provided to every resolve function within an execution. It is commonly
@@ -690,8 +698,7 @@ function resolveField(
 			-- Note: we don't rely on a `catch` method, but we do expect "thenable"
 			-- to take a second callback for the error case.
 			return completed:andThen(nil, function(rawError)
-				-- ROBLOX FIXME Luau: Type 'Path' could not be converted into 'Path'
-				local error_ = locatedError(rawError, fieldNodes, pathToArray(path :: any))
+				local error_ = locatedError(rawError, fieldNodes, pathToArray(path))
 				return handleFieldError(error_, returnType, exeContext)
 			end)
 		end
@@ -700,8 +707,7 @@ function resolveField(
 
 	if not ok then
 		local rawError = resultOrError
-		-- ROBLOX FIXME Luau: Type 'Path' could not be converted into 'Path'
-		local error_ = locatedError(rawError, fieldNodes, pathToArray(path :: any))
+		local error_ = locatedError(rawError, fieldNodes, pathToArray(path))
 		return handleFieldError(error_, returnType, exeContext)
 	end
 
@@ -774,12 +780,12 @@ end
 --  *]]
 function completeValue(
 	exeContext: ExecutionContext,
-	returnType: any, -- ROBLOX deviation: Luau doesn't have predicates GraphQLOutputType,
+	returnType: GraphQLOutputType,
 	fieldNodes: Array<FieldNode>,
 	info: GraphQLResolveInfo,
 	path: Path,
 	result: any
-): PromiseOrValue<any>? -- ROBLOX TODO: add nilability here because Luau doesn't understand invariant
+): PromiseOrValue<any>
 	-- If result is an Error, throw a located error.
 	if instanceof(result, Error) then
 		error(result)
@@ -788,7 +794,15 @@ function completeValue(
 	-- If field type is NonNull, complete for inner type, and throw field error
 	-- if result is null.
 	if isNonNullType(returnType) then
-		local completed = completeValue(exeContext, returnType.ofType, fieldNodes, info, path, result)
+		-- ROBLOX TODO Luau: need return constraints so we can narrow: isNonNullType(type: unknown): type is GraphQLUnionType
+		local completed = completeValue(
+			exeContext,
+			(returnType :: GraphQLNonNull<typeof(returnType)>).ofType,
+			fieldNodes,
+			info,
+			path,
+			result
+		)
 
 		-- ROBLOX deviation: checks for concrete nil or NULL sentinel
 		if isNillish(completed) then
@@ -809,29 +823,43 @@ function completeValue(
 
 	-- If field type is List, complete each item in the list with the inner type
 	if isListType(returnType) then
-		return completeListValue(exeContext, returnType, fieldNodes, info, path, result)
+		-- ROBLOX TODO Luau: need return constraints so we can narrow: isNonNullType(type: unknown): type is GraphQLUnionType
+		return completeListValue(
+			exeContext,
+			returnType :: GraphQLList<typeof(returnType)>,
+			fieldNodes,
+			info,
+			path,
+			result
+		)
 	end
 
 	-- If field type is a leaf type, Scalar or Enum, serialize to a valid value,
 	-- returning null if serialization is not possible.
 	if isLeafType(returnType) then
-		return completeLeafValue(returnType, result)
+		-- ROBLOX TODO Luau: need return constraints so we can narrow: isNonNullType(type: unknown): type is GraphQLUnionType
+		return completeLeafValue(returnType :: GraphQLLeafType, result)
 	end
 
 	-- If field type is an abstract type, Interface or Union, determine the
 	-- runtime Object type and complete for that type.
 	if isAbstractType(returnType) then
-		return completeAbstractValue(exeContext, returnType, fieldNodes, info, path, result)
+		-- ROBLOX TODO Luau: need return constraints so we can narrow: isNonNullType(type: unknown): type is GraphQLUnionType
+		return completeAbstractValue(exeContext, returnType :: GraphQLAbstractType, fieldNodes, info, path, result)
 	end
 
 	-- If field type is Object, execute and complete all sub-selections.
 	-- istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
+	-- ROBLOX TODO Luau: need return constraints so we can narrow: isUnionType(type: unknown): type is GraphQLUnionType
 	if isObjectType(returnType) then
-		return completeObjectValue(exeContext, returnType, fieldNodes, info, path, result)
+		-- ROBLOX TODO Luau: need return constraints so we can narrow: isNonNullType(type: unknown): type is GraphQLUnionType
+		return completeObjectValue(exeContext, returnType :: GraphQLObjectType, fieldNodes, info, path, result)
 	end
 
 	invariant(false, "Cannot complete value of unexpected output type: " .. inspect(returnType))
-	return nil -- ROBLOX deviation: no implicit return
+	-- ROBLOX deviation START: Luau doesn't propagate noreturn/throws from invariant
+	assert(false, "Cannot complete value of unexpected output type: " .. inspect(returnType))
+	-- ROBLOX deviation END
 end
 
 --[[*
@@ -873,8 +901,7 @@ function completeListValue(
 	local completedResults = Array.from(result, function(item, index)
 		-- No need to modify the info object containing the path,
 		-- since from here on it is not ever accessed by resolver functions.
-		-- ROBLOX FIXME Luau: Type 'Path' could not be converted into 'Path'
-		local itemPath = addPath(path :: any, index, nil) :: any
+		local itemPath = addPath(path, index, nil)
 
 		local ok, resultOrError = pcall(function()
 			local completedItem
@@ -907,28 +934,16 @@ function completeListValue(
 		return resultOrError
 	end)
 
-	return (function()
-		if containsPromise then
-			return Promise.all(completedResults)
-		end
-
-		return completedResults
-	end)()
+	return if containsPromise then Promise.all(completedResults) else completedResults
 end
 
 --[[*
 --  * Complete a Scalar or Enum by serializing to a valid value, returning
 --  * null if serialization is not possible.
 --  *]]
--- ROBLOX FIXME: this type is a workaround for Luau type narrowing gap
-type ROBLOX_Luau_workaround = {
-	serialize: (any, any) -> string?,
-}
-function completeLeafValue(
-	returnType: ROBLOX_Luau_workaround, -- ROBLOX FIXME: shoud be GraphQLLeafType, see above
-	result: any
-)
-	local serializedResult = returnType:serialize(result)
+function completeLeafValue(returnType: GraphQLLeafType, result: any): any
+	-- ROBLOX FIXME: besides normalization not unifying two callable fields as callable, see TODO in definition file around GraphQLScalarSerializer<> not including self param
+	local serializedResult = (returnType :: any):serialize(result)
 
 	if serializedResult == nil then
 		error(
@@ -954,12 +969,16 @@ function completeAbstractValue(
 	path: Path,
 	result: any
 ): PromiseOrValue<ObjMap<any>>
-	local resolveTypeFn = returnType.resolveType or exeContext.typeResolver
+	-- ROBLOX FIXME Luau: lack of ?? operator and `or` not unifying/normalizing means we take the runtime hit of the table lookup twice
+	local resolveTypeFn =
+		(if returnType.resolveType then returnType.resolveType else exeContext.typeResolver) :: GraphQLTypeResolver<any, any>
 	local contextValue = exeContext.contextValue
 	local runtimeType = resolveTypeFn(result, contextValue, info, returnType)
 
+	-- ROBLOX TODO Luau: needs return type constraints to not need manual cast to Promise<>
+	-- ROBLOX FIXME Luau: note that we can't do Promise<string?> correctly here, because our Promise type can't capture generics for andThen correctly
 	if isPromise(runtimeType) then
-		return runtimeType:andThen(function(resolvedRuntimeType)
+		return (runtimeType :: Promise<any>):andThen(function(resolvedRuntimeType)
 			return completeObjectValue(
 				exeContext,
 				ensureValidRuntimeType(resolvedRuntimeType, exeContext, returnType, fieldNodes, info, result),
@@ -971,9 +990,10 @@ function completeAbstractValue(
 		end)
 	end
 
+	-- ROBLOX TODO Luau: needs return type constraints and type states to understand false branch of isPromise() above to not need manual cast to string?
 	return completeObjectValue(
 		exeContext,
-		ensureValidRuntimeType(runtimeType, exeContext, returnType, fieldNodes, info, result),
+		ensureValidRuntimeType(runtimeType :: string?, exeContext, returnType, fieldNodes, info, result),
 		fieldNodes,
 		info,
 		path,
@@ -1044,12 +1064,12 @@ function ensureValidRuntimeType(
 		)
 	end
 
-	-- ROBLOX TODO: how does upstream know this is safe?
-	if not exeContext.schema:isSubType(returnType, runtimeType :: any) then
+	-- ROBLOX TODO Luau: manually narrowing runtimeType here since Luau doesn't support constraint syntax
+	if not exeContext.schema:isSubType(returnType, runtimeType :: GraphQLObjectType) then
 		error(
 			GraphQLError.new(
 				('Runtime Object type "%s" is not a possible type for "%s".'):format(
-					(runtimeType :: any).name,
+					(runtimeType :: GraphQLObjectType).name,
 					returnType.name
 				),
 				fieldNodes
@@ -1057,7 +1077,7 @@ function ensureValidRuntimeType(
 		)
 	end
 
-	return runtimeType :: any
+	return runtimeType :: GraphQLObjectType
 end
 
 --[[*

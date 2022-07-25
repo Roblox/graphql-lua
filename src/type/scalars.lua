@@ -10,8 +10,15 @@ local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
+type Array<T> = LuauPolyfill.Array<T>
 local Number = LuauPolyfill.Number
 local Object = LuauPolyfill.Object
+
+local ast = require(script.Parent.Parent.language.ast)
+type IntValueNode = ast.IntValueNode
+type FloatValueNode = ast.FloatValueNode
+type StringValueNode = ast.StringValueNode
+type BooleanValueNode = ast.BooleanValueNode
 
 local inspect = require(script.Parent.Parent.jsutils.inspect).inspect
 local isObjectLike = require(script.Parent.Parent.jsutils.isObjectLike).isObjectLike
@@ -22,6 +29,10 @@ local GraphQLError = require(script.Parent.Parent.error.GraphQLError).GraphQLErr
 local DefinitionModule = require(script.Parent.definition)
 type GraphQLNamedType = DefinitionModule.GraphQLNamedType
 local GraphQLScalarType = DefinitionModule.GraphQLScalarType
+type GraphQLScalarType<TInternal = any, TExternal = TInternal> = DefinitionModule.GraphQLScalarType<
+	TInternal,
+	TExternal
+>
 
 -- As per the GraphQL Spec, Integers are only treated as valid when a valid
 -- 32-bit signed integer, providing the broadest support across platforms.
@@ -32,19 +43,14 @@ local MAX_INT = 2147483647
 local MIN_INT = -2147483648
 
 -- ROBLOX deviation: predeclare functions
-local serializeObject, serializeID, serializeFloat, serializeBoolean, serializeString, isSpecifiedScalarType
+local serializeObject: (any) -> any
+local serializeID, serializeFloat, serializeBoolean, serializeString, isSpecifiedScalarType
 
 function serializeInt(outputValue): number
 	local coercedValue = serializeObject(outputValue)
 
 	if typeof(coercedValue) == "boolean" then
-		return (function()
-			if coercedValue then
-				return 1
-			end
-
-			return 0
-		end)()
+		return if coercedValue then 1 else 0
 	end
 
 	local num = coercedValue
@@ -55,12 +61,11 @@ function serializeInt(outputValue): number
 	if typeof(num) ~= "number" or not Number.isInteger(num) then
 		error(GraphQLError.new(("Int cannot represent non-integer value: %s"):format(inspect(coercedValue))))
 	end
-	-- ROBLOX FIXME Luau: Luau should know num is number based on error() branch above
-	if (num :: number) > MAX_INT or (num :: number) < MIN_INT then
+	if num > MAX_INT or num < MIN_INT then
 		error(GraphQLError.new("Int cannot represent non 32-bit signed integer value: " .. inspect(coercedValue)))
 	end
 
-	return num :: number
+	return num
 end
 function coerceInt(inputValue)
 	if typeof(inputValue) ~= "number" or not Number.isInteger(inputValue) then
@@ -73,7 +78,7 @@ function coerceInt(inputValue)
 	return inputValue
 end
 
-local GraphQLInt = GraphQLScalarType.new({
+local GraphQLInt: GraphQLScalarType<number, number> = GraphQLScalarType.new({
 	name = "Int",
 	description = "The `Int` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.",
 	serialize = serializeInt,
@@ -83,19 +88,22 @@ local GraphQLInt = GraphQLScalarType.new({
 			error(GraphQLError.new(("Int cannot represent non-integer value: %s"):format(print_(valueNode)), valueNode))
 		end
 
-		local num = parseInt(valueNode.value, 10)
+		-- ROBLOX FIXME Luau: kind comparison above should narrow valueNode
+		local num = parseInt((valueNode :: IntValueNode).value, 10)
 
 		-- ROBLOX TODO Luau: when singleton types are used for kind, the casts below should go away
 		if (num :: number) > MAX_INT or (num :: number) < MIN_INT then
 			error(
 				GraphQLError.new(
-					("Int cannot represent non 32-bit signed integer value: %s"):format(valueNode.value),
+					("Int cannot represent non 32-bit signed integer value: %s"):format(
+						(valueNode :: IntValueNode).value
+					),
 					valueNode
 				)
 			)
 		end
 
-		return (num :: number)
+		return num :: number
 	end,
 })
 
@@ -103,13 +111,7 @@ function serializeFloat(outputValue)
 	local coercedValue = serializeObject(outputValue)
 
 	if typeof(coercedValue) == "boolean" then
-		return (function()
-			if coercedValue then
-				return 1
-			end
-
-			return 0
-		end)()
+		return if coercedValue then 1 else 0
 	end
 
 	local num = coercedValue
@@ -121,8 +123,7 @@ function serializeFloat(outputValue)
 		error(GraphQLError.new(("Float cannot represent non numeric value: %s"):format(inspect(coercedValue))))
 	end
 
-	-- ROBLOX FIXME Luau: Luau should know num is number based on error branch above
-	return (num :: number)
+	return num
 end
 function coerceFloat(inputValue)
 	if typeof(inputValue) ~= "number" or not NumberisFinite(inputValue) then
@@ -132,7 +133,7 @@ function coerceFloat(inputValue)
 	return inputValue
 end
 
-local GraphQLFloat = GraphQLScalarType.new({
+local GraphQLFloat: GraphQLScalarType<number> = GraphQLScalarType.new({
 	name = "Float",
 	description = "The `Float` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point).",
 	serialize = serializeFloat,
@@ -144,14 +145,16 @@ local GraphQLFloat = GraphQLScalarType.new({
 			)
 		end
 
-		return parseFloat(valueNode.value)
+		-- ROBLOX TODO Luau: when singleton types are used for kind, the casts below should go away
+		return parseFloat((valueNode :: FloatValueNode).value)
 	end,
 })
 
 -- Support serializing objects with custom valueOf() or toJSON() functions -
 -- a common way to represent a complex value which can be represented as
 -- a string (ex: MongoDB id objects).
-function serializeObject(outputValue)
+-- ROBLOX Luau FIXME? upstream types this as (any) -> any, but without that with 0.524: Generic subtype escaping scope
+function serializeObject(outputValue: any): any
 	if isObjectLike(outputValue) then
 		if typeof(outputValue.valueOf) == "function" then
 			local valueOfResult = outputValue:valueOf()
@@ -177,13 +180,7 @@ function serializeString(outputValue): string
 		return coercedValue
 	end
 	if typeof(coercedValue) == "boolean" then
-		return (function()
-			if coercedValue then
-				return "true"
-			end
-
-			return "false"
-		end)()
+		return if coercedValue then "true" else "false"
 	end
 	if typeof(coercedValue) == "number" and NumberisFinite(coercedValue) then
 		return tostring(coercedValue)
@@ -199,7 +196,7 @@ function coerceString(inputValue): string
 	return inputValue
 end
 
-local GraphQLString = GraphQLScalarType.new({
+local GraphQLString: GraphQLScalarType<string> = GraphQLScalarType.new({
 	name = "String",
 	description = "The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.",
 	serialize = serializeString,
@@ -214,7 +211,8 @@ local GraphQLString = GraphQLScalarType.new({
 			)
 		end
 
-		return valueNode.value
+		-- ROBLOX TODO Luau: when singleton types are used for kind, the casts below should go away
+		return (valueNode :: StringValueNode).value
 	end,
 })
 
@@ -240,7 +238,7 @@ function coerceBoolean(inputValue): boolean
 	return inputValue
 end
 
-local GraphQLBoolean = GraphQLScalarType.new({
+local GraphQLBoolean: GraphQLScalarType<boolean> = GraphQLScalarType.new({
 	name = "Boolean",
 	description = "The `Boolean` scalar type represents `true` or `false`.",
 	serialize = serializeBoolean,
@@ -255,7 +253,8 @@ local GraphQLBoolean = GraphQLScalarType.new({
 			)
 		end
 
-		return valueNode.value
+		-- ROBLOX TODO Luau: when singleton types are used for kind, the casts below should go away
+		return (valueNode :: BooleanValueNode).value
 	end,
 })
 
@@ -283,7 +282,7 @@ function coerceID(inputValue): string
 	error(GraphQLError.new(("ID cannot represent value: %s"):format(inspect(inputValue))))
 end
 
-local GraphQLID = GraphQLScalarType.new({
+local GraphQLID: GraphQLScalarType<string> = GraphQLScalarType.new({
 	name = "ID",
 	description = 'The `ID` scalar type represents a unique identifier, often used to refetch an object or as key for a cache. The ID type appears in a JSON response as a String; however, it is not intended to be human-readable. When expected as an input type, any string (such as `"4"`) or integer (such as `4`) input value will be accepted as an ID.',
 	serialize = serializeID,
@@ -298,16 +297,17 @@ local GraphQLID = GraphQLScalarType.new({
 			)
 		end
 
-		return valueNode.value
+		-- ROBLOX TODO Luau: when singleton types are used for kind, the casts below should go away
+		return (valueNode :: StringValueNode | IntValueNode).value
 	end,
 })
-local specifiedScalarTypes = Object.freeze({
+local specifiedScalarTypes: Array<GraphQLScalarType> = Object.freeze({
 	GraphQLString,
 	GraphQLInt,
 	GraphQLFloat,
 	GraphQLBoolean,
 	GraphQLID,
-})
+} :: Array<GraphQLScalarType>)
 
 function isSpecifiedScalarType(type_: GraphQLNamedType): boolean
 	return Array.some(specifiedScalarTypes, function(scalarType)

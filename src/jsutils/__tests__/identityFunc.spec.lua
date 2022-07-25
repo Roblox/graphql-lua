@@ -5,8 +5,10 @@ return function()
 
 	describe("identityFunc", function()
 		it("returns the first argument it receives", function()
-			expect(identityFunc()).to.equal(nil)
+			-- ROBLOX deviation START: empty param violates type spec, no difference in null vs undefined in Lua
+			expect((identityFunc :: any)()).to.equal(nil)
 			expect(identityFunc(nil)).to.equal(nil)
+			-- ROBLOX deviation END
 
 			local obj = {}
 			expect(identityFunc(obj)).to.equal(obj)

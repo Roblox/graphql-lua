@@ -49,29 +49,29 @@ function printSourceLocation(source, sourceLocation): string
 			table.insert(subLines, String.slice(locationLine, i, i + 80))
 		end
 		return (
-				locationStr
-				.. printPrefixedLines(Array.concat(
-					{ { tostring(lineNum), subLines[1] } },
-					Array.map(Array.slice(subLines, 2, subLineIndex + 1), function(subLine)
-						return { "", subLine }
-					end),
-					{ { " ", whitespace(subLineColumnNum - 1) .. "^" } },
-					{ { "", subLines[subLineIndex + 1] } }
-				))
-			)
+			locationStr
+			.. printPrefixedLines(Array.concat(
+				{ { tostring(lineNum), subLines[1] } },
+				Array.map(Array.slice(subLines, 2, subLineIndex + 1), function(subLine)
+					return { "", subLine }
+				end),
+				{ { " ", whitespace(subLineColumnNum - 1) .. "^" } },
+				{ { "", subLines[subLineIndex + 1] } }
+			))
+		)
 	end
 
 	return (
-			locationStr
-			.. printPrefixedLines({
-				-- // Lines specified like this: ["prefix", "string"],
-				-- ROBLOX Luau TODO: Luau doesn't understand packed array types
-				{ lineNum - 1, lines[lineIndex - 1] } :: Array<any>,
-				{ lineNum, locationLine } :: Array<any>,
-				{ "", whitespace(columnNum - 1) .. "^" },
-				{ lineNum + 1, lines[lineIndex + 1] } :: Array<any>,
-			})
-		)
+		locationStr
+		.. printPrefixedLines({
+			-- // Lines specified like this: ["prefix", "string"],
+			-- ROBLOX Luau TODO: Luau doesn't understand packed array types
+			{ lineNum - 1, lines[lineIndex - 1] } :: Array<any>,
+			{ lineNum, locationLine } :: Array<any>,
+			{ "", whitespace(columnNum - 1) .. "^" },
+			{ lineNum + 1, lines[lineIndex + 1] } :: Array<any>,
+		})
+	)
 end
 
 function printPrefixedLines(lines): string

@@ -40,7 +40,7 @@ local function introspectionFromSchema(schema: GraphQLSchema, options: Introspec
 	local result = executeSync({ schema = schema, document = document })
 	invariant(not result.errors and result.data)
 
-	return result.data
+	return result.data :: any
 end
 
 return {

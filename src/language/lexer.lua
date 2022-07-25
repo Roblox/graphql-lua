@@ -57,6 +57,8 @@ export type Lexer = {
    ]]
 	lineStart: number,
 
+	new: (source: Source) -> Lexer,
+
 	--[[*
    * Advances the token stream to the next non-ignored token.
    ]]
@@ -115,7 +117,7 @@ end
  [_A-Za-z][_0-9A-Za-z]*
 ]]
 --
-local function readName(source, start: number, line, col, prev): Token
+local function readName(source, start: number, line: number, col: number, prev): Token
 	local body = source.body
 	local bodyLength = string.len(body)
 	local position = start + 1
@@ -160,7 +162,7 @@ end
  -- #[\u0009\u0020-\uFFFF]*
 ]]
 --
-local function readComment(source, start: number, line, col, prev): Token
+local function readComment(source, start: number, line: number, col: number, prev): Token
 	local body = source.body
 	local code
 	local position = start
@@ -212,7 +214,7 @@ end
  Report a message that an unexpected character was encountered.
 ]]
 --
-function unexpectedCharacterMessage(code)
+function unexpectedCharacterMessage(code: number): string
 	if code < 0x0020 and code ~= 0x0009 and code ~= 0x000a and code ~= 0x000d then
 		return "Cannot contain the invalid character " .. printCharCode(code) .. "."
 	end
@@ -226,7 +228,7 @@ function unexpectedCharacterMessage(code)
 end
 
 -- _ A-Z a-z
-function isNameStart(code)
+function isNameStart(code: number): boolean
 	local firstCondition = code == 95
 	local secondCondition = code >= 65 and code <= 90
 	local thirdCondition = code >= 97 and code <= 122
@@ -241,7 +243,7 @@ end
  * Float: -?(0|[1-9][0-9]*)(\.[0-9]+)?((E|e)(+|-)?[0-9]+)?
 ]]
 --
-function readNumber(source, start: number, firstCode, line, col, prev)
+function readNumber(source, start: number, firstCode: number, line: number, col: number, prev): Token
 	local body = source.body
 	local code = firstCode
 	local position: number = start
@@ -313,7 +315,7 @@ function readNumber(source, start: number, firstCode, line, col, prev)
 	)
 end
 
-local function readToken(lexer: Lexer, prev)
+local function readToken(lexer: Lexer, prev: Token): Token
 	local source = lexer.source
 	local body = source.body
 	local bodyLength = utf8.len(body)
@@ -503,10 +505,10 @@ local function readToken(lexer: Lexer, prev)
 	return Token.new(TokenKind.EOF, bodyLength + 1, bodyLength + 1, line, col, prev)
 end
 
-local Lexer = {}
-Lexer.__index = Lexer
+local Lexer: Lexer = {} :: Lexer;
+(Lexer :: any).__index = Lexer
 
-function Lexer.new(source): Lexer
+function Lexer.new(source: Source): Lexer
 	local startOfFileToken = Token.new(TokenKind.SOF, 1, 1, 0, 0, nil)
 
 	local self = {}
@@ -641,25 +643,32 @@ end
 --
 function readString(source, start, line, col, prev)
 	local body = source.body
+	local bodyLength = utf8.len(body)
+	assert(bodyLength ~= nil, "invalid utf8 sequence detected")
 	local position = start + 1
 	local chunkStart = position
-	local code = 0
 	local value = ""
 
-	--code = String.charCodeAt(body, position)
-	while
-		position <= string.len(body)
-		and not isNaN((function()
-			code = String.charCodeAt(body, position)
-			return code
-		end)())
-		and code ~= 0x000a
-		and code ~= 0x000d
-	do
+	while position <= bodyLength do
+		local code = String.charCodeAt(body, position)
+
+		-- ROBLOX deviation? can't find this in upstream
+		if isNaN(code) then
+			break
+		end
+
 		-- Closing Quote (")
 		if code == 34 then
 			value = value .. String.slice(body, chunkStart, position)
 			return Token.new(TokenKind.STRING, start, position + 1, line, col, prev, value)
+		end
+
+		-- Escape sequence (\)
+		-- ROBLOX TODO: this is slightly different in upstream 16.x.x
+
+		-- LineTerminator (\n | \r)
+		if code == 0x000a or code == 0x000d then
+			break
 		end
 
 		-- SourceCharacter
