@@ -1,5 +1,9 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/1611bbb08a88f734e9490b14cfe6afea11a838e0/src/__tests__/starWarsQuery-test.js
 local NULL = require(script.Parent.Parent.luaUtils.null)
+local Packages = script.Parent.Parent.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
+type Array<T> = LuauPolyfill.Array<T>
+
 local graphql = require(script.Parent.Parent.graphql).graphql
 local starWarsSchema = require(script.Parent.starWarsSchema)
 local schema = starWarsSchema.StarWarsSchema
@@ -463,18 +467,20 @@ return function()
 							secretBackstory = NULL,
 						},
 					},
-				})
-				expect(result.errors[1]).toObjectContain({
-					message = "secretBackstory is secret.",
-					locations = {
+					errors = {
 						{
-							line = 5,
-							column = 13,
+							message = "secretBackstory is secret.",
+							locations = {
+								{
+									line = 5,
+									column = 13,
+								},
+							},
+							path = {
+								"hero",
+								"secretBackstory",
+							},
 						},
-					},
-					path = {
-						"hero",
-						"secretBackstory",
 					},
 				})
 			end)
@@ -517,54 +523,55 @@ return function()
 							},
 						},
 					},
-				})
-				expect(result.errors[1]).toObjectContain({
-					message = "secretBackstory is secret.",
-					locations = {
+					errors = {
 						{
-							line = 7,
-							column = 15,
+							message = "secretBackstory is secret.",
+							locations = {
+								{
+									line = 7,
+									column = 15,
+								},
+							},
+							path = {
+								"hero",
+								"friends",
+								-- ROBLOX deviation: this starts at 0 upstream, some kind of index?
+								1,
+								"secretBackstory",
+							} :: Array<any>,
 						},
-					},
-					path = {
-						"hero",
-						"friends",
-						-- ROBLOX deviation: this starts at 0 upstream, some kind of index?
-						1,
-						"secretBackstory",
-					},
-				})
-
-				expect(result.errors[2]).toObjectContain({
-					message = "secretBackstory is secret.",
-					locations = {
 						{
-							line = 7,
-							column = 15,
+							message = "secretBackstory is secret.",
+							locations = {
+								{
+									line = 7,
+									column = 15,
+								},
+							},
+							path = {
+								"hero",
+								"friends",
+								-- ROBLOX deviation: this starts at 0 upstream, some kind of index?
+								2,
+								"secretBackstory",
+							} :: Array<any>,
 						},
-					},
-					path = {
-						"hero",
-						"friends",
-						-- ROBLOX deviation: this starts at 0 upstream, some kind of index?
-						2,
-						"secretBackstory",
-					},
-				})
-				expect(result.errors[3]).toObjectContain({
-					message = "secretBackstory is secret.",
-					locations = {
 						{
-							line = 7,
-							column = 15,
+							message = "secretBackstory is secret.",
+							locations = {
+								{
+									line = 7,
+									column = 15,
+								},
+							},
+							path = {
+								"hero",
+								"friends",
+								-- ROBLOX deviation: this starts at 0 upstream, some kind of index?
+								3,
+								"secretBackstory",
+							} :: Array<any>,
 						},
-					},
-					path = {
-						"hero",
-						"friends",
-						-- ROBLOX deviation: this starts at 0 upstream, some kind of index?
-						3,
-						"secretBackstory",
 					},
 				})
 			end)
@@ -591,18 +598,20 @@ return function()
 							story = NULL,
 						},
 					},
-				})
-				expect(result.errors[1]).toObjectContain({
-					message = "secretBackstory is secret.",
-					locations = {
+					errors = {
 						{
-							line = 5,
-							column = 13,
+							message = "secretBackstory is secret.",
+							locations = {
+								{
+									line = 5,
+									column = 13,
+								},
+							},
+							path = {
+								"mainHero",
+								"story",
+							},
 						},
-					},
-					path = {
-						"mainHero",
-						"story",
 					},
 				})
 			end)

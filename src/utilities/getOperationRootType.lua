@@ -2,16 +2,28 @@
 
 local GraphQLError = require(script.Parent.Parent.error.GraphQLError).GraphQLError
 
+local astImport = require(script.Parent.Parent.language.ast)
+type OperationDefinitionNode = astImport.OperationDefinitionNode
+type OperationTypeDefinitionNode = astImport.OperationTypeDefinitionNode
+local definitionImport = require(script.Parent.Parent.type.definition)
+type GraphQLObjectType = definitionImport.GraphQLObjectType
+local schemaImport = require(script.Parent.Parent.type.schema)
+type GraphQLSchema = schemaImport.GraphQLSchema
+
 --[[*
 --  * Extracts the root type of the operation from the schema.
 --  *]]
-local function getOperationRootType(schema, operation)
+local function getOperationRootType(
+	schema: GraphQLSchema,
+	operation: OperationDefinitionNode | OperationTypeDefinitionNode
+): GraphQLObjectType
 	if operation.operation == "query" then
 		local queryType = schema:getQueryType()
 		if not queryType then
 			error(GraphQLError.new("Schema does not define the required query root type.", operation))
 		end
-		return queryType
+		-- ROBLOX FIXME Luau: Luau should narrow based on branch above
+		return queryType :: GraphQLObjectType
 	end
 
 	if operation.operation == "mutation" then
@@ -19,7 +31,8 @@ local function getOperationRootType(schema, operation)
 		if not mutationType then
 			error(GraphQLError.new("Schema is not configured for mutations.", operation))
 		end
-		return mutationType
+		-- ROBLOX FIXME Luau: Luau should narrow based on branch above
+		return mutationType :: GraphQLObjectType
 	end
 
 	if operation.operation == "subscription" then
@@ -27,7 +40,8 @@ local function getOperationRootType(schema, operation)
 		if not subscriptionType then
 			error(GraphQLError.new("Schema is not configured for subscriptions.", operation))
 		end
-		return subscriptionType
+		-- ROBLOX FIXME Luau: Luau should narrow based on branch above
+		return subscriptionType :: GraphQLObjectType
 	end
 
 	error(GraphQLError.new("Can only have query, mutation and subscription operations.", operation))

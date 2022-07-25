@@ -38,7 +38,7 @@ local findConflict
 local sameArguments
 local doTypesConflict
 local subfieldConflicts
-local PairSet
+local PairSet: PairSet
 
 local function reasonMessage(reason): string
 	if Array.isArray(reason) then
@@ -688,12 +688,7 @@ function _collectFieldsAndFragmentNames(context, parentType, selectionSet, nodeA
 				local fields = parentType:getFields()
 				fieldDef = fields:get(fieldName)
 			end
-			local responseName = (function()
-				if selection.alias then
-					return selection.alias.value
-				end
-				return fieldName
-			end)()
+			local responseName = if selection.alias then selection.alias.value else fieldName
 			if not nodeAndDefs[responseName] then
 				nodeAndDefs[responseName] = {}
 			end
@@ -748,16 +743,24 @@ end
 --  * A way to keep track of pairs of things when the ordering of the pair does
 --  * not matter. We do this by maintaining a sort of double adjacency sets.
 --  */
-PairSet = {}
+type PairSet = {
+	_data: Map<string, Map<string, boolean>>,
+	new: () -> PairSet,
+	has: (self: PairSet, a: string, b: string, areMutuallyExclusive: boolean) -> boolean,
+	add: (self: PairSet, a: string, b: string, areMutuallyExclusive: boolean) -> (),
+	_pairSetAdd: (self: PairSet, a: string, b: string, areMutuallyExclusive: boolean) -> (),
+}
+
+PairSet = {} :: PairSet
 local PairSetMetatable = { __index = PairSet }
 
-function PairSet.new()
-	local self = setmetatable({}, PairSetMetatable)
+function PairSet.new(): PairSet
+	local self = (setmetatable({}, PairSetMetatable) :: any) :: PairSet
 	self._data = {}
 	return self
 end
 
-function PairSet:has(a, b, areMutuallyExclusive)
+function PairSet:has(a: string, b: string, areMutuallyExclusive: boolean): boolean
 	local first = self._data[a]
 	local result = first and first[b]
 	if result == nil then
@@ -772,12 +775,12 @@ function PairSet:has(a, b, areMutuallyExclusive)
 	return true
 end
 
-function PairSet:add(a, b, areMutuallyExclusive)
+function PairSet:add(a: string, b: string, areMutuallyExclusive: boolean): ()
 	self:_pairSetAdd(a, b, areMutuallyExclusive)
 	self:_pairSetAdd(b, a, areMutuallyExclusive)
 end
 
-function PairSet:_pairSetAdd(a, b, areMutuallyExclusive)
+function PairSet:_pairSetAdd(a: string, b: string, areMutuallyExclusive: boolean): ()
 	local map = self._data[a]
 
 	if not map then

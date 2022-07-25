@@ -82,7 +82,7 @@ export type GraphQLArgs = {
 }
 
 -- ROBLOX deviation: pre-declare variables
-local graphqlImpl
+local graphqlImpl: (args: GraphQLArgs) -> PromiseOrValue<ExecutionResult>
 
 exports.graphql = function(args: GraphQLArgs): Promise<ExecutionResult>
 	-- Always return a Promise for a consistent API.
@@ -105,7 +105,9 @@ exports.graphqlSync = function(args: GraphQLArgs): ExecutionResult
 		error(Error.new("GraphQL execution failed to complete synchronously."))
 	end
 
-	return result
+	-- ROBLOX deviation START: required since we can't put %checks onto isPromise
+	return result :: ExecutionResult
+	-- ROBLOX deviation END
 end
 
 function graphqlImpl(args: GraphQLArgs): PromiseOrValue<ExecutionResult>

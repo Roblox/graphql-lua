@@ -14,6 +14,9 @@ local invariant = require(srcWorkspace.jsutils.invariant).invariant
 local isObjectLike = require(srcWorkspace.jsutils.isObjectLike).isObjectLike
 local isIteratableObject = require(srcWorkspace.jsutils.isIteratableObject).isIteratableObject
 
+local astImport = require(srcWorkspace.language.ast)
+type ValueNode = astImport.ValueNode
+type ObjectFieldNode = astImport.ObjectFieldNode
 local Kind = require(srcWorkspace.language.kinds).Kind
 
 local scalarsImport = require(srcWorkspace.type.scalars)
@@ -24,6 +27,7 @@ local isEnumType = definitionImport.isEnumType
 local isInputObjectType = definitionImport.isInputObjectType
 local isListType = definitionImport.isListType
 local isNonNullType = definitionImport.isNonNullType
+type GraphQLInputType = definitionImport.GraphQLInputType
 
 local NULL = require(luaUtilsWorkspace.null)
 local isNillishModule = require(luaUtilsWorkspace.isNillish)
@@ -57,11 +61,12 @@ local integerStringRegExp: RegExp
  * passing nil will return nil
  * passing NULL will return Kind.NULL
  *]]
-local function astFromValue(value, type_)
+local function astFromValue(value: any, type_: GraphQLInputType): ValueNode | nil | typeof(NULL)
 	if isNonNullType(type_) then
 		local astValue = astFromValue(value, type_.ofType)
 
-		if (astValue and astValue.kind) == Kind.NULL then
+		-- ROBLOX FIXME Luau: Luau not narrowing astValue based on nil compares
+		if (astValue ~= nil and astValue ~= NULL and (astValue :: ValueNode).kind) == Kind.NULL then
 			return NULL
 		end
 
@@ -94,7 +99,8 @@ local function astFromValue(value, type_)
 				local itemNode = astFromValue(item, itemType)
 
 				if isNotNillish(itemNode) then
-					table.insert(valuesNodes, itemNode)
+					-- ROBLOX TODO Luau: need support for constraint side-effects
+					table.insert(valuesNodes, itemNode :: ValueNode)
 				end
 			end
 
@@ -120,7 +126,8 @@ local function astFromValue(value, type_)
 			local fieldValue = astFromValue(value[field.name], field.type)
 
 			if isNotNillish(fieldValue) then
-				table.insert(fieldNodes, {
+				-- ROBLOX TODO Luau: need support for constraint side-effects
+				table.insert(fieldNodes :: ObjectFieldNode, {
 					kind = Kind.OBJECT_FIELD,
 					name = {
 						kind = Kind.NAME,
@@ -158,19 +165,15 @@ local function astFromValue(value, type_)
 		if typeof(serialized) == "number" and Number.isFinite(serialized) then
 			local stringNum = tostring(serialized)
 
-			return (function()
-				if integerStringRegExp:test(stringNum) then
-					return {
-						kind = Kind.INT,
-						value = stringNum,
-					}
-				end
-
-				return {
+			return if integerStringRegExp:test(stringNum)
+				then {
+					kind = Kind.INT,
+					value = stringNum,
+				}
+				else {
 					kind = Kind.FLOAT,
 					value = stringNum,
 				}
-			end)()
 		end
 		if typeof(serialized) == "string" then
 			-- Enum types use Enum literals.
@@ -200,7 +203,8 @@ local function astFromValue(value, type_)
 	end
 
 	-- istanbul ignore next (Not reachable. All possible input types have been considered)
-	invariant(false, "Unexpected input type: " + inspect(type_))
+	-- ROBLOX TODO: get this covered with a unit test upstream and here
+	invariant(false, "Unexpected input type: " .. inspect(type_))
 	return
 end
 

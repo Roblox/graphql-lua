@@ -1,5 +1,8 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/getOperationAST.js
 
+local astImport = require(script.Parent.Parent.language.ast)
+type DocumentNode = astImport.DocumentNode
+type OperationDefinitionNode = astImport.OperationDefinitionNode
 local Kind = require(script.Parent.Parent.language.kinds).Kind
 
 local exports = {}
@@ -9,9 +12,9 @@ local exports = {}
 --  * name. If a name is not provided, an operation is only returned if only one is
 --  * provided in the document.
 --  *]]
-exports.getOperationAST = function(documentAST, operationName)
+local function getOperationAST(documentAST: DocumentNode, operationName: string?): OperationDefinitionNode?
 	local operation = nil
-	for key, definition in pairs(documentAST.definitions) do
+	for _, definition in pairs(documentAST.definitions) do
 		if definition.kind == Kind.OPERATION_DEFINITION then
 			if operationName == nil then
 				-- If no operation name was provided, only return an Operation if there
@@ -28,5 +31,5 @@ exports.getOperationAST = function(documentAST, operationName)
 	end
 	return operation
 end
-
+exports.getOperationAST = getOperationAST
 return exports

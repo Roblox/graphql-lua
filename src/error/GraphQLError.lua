@@ -18,6 +18,7 @@ local isObjectLike = require(srcWorkspace.jsutils.isObjectLike).isObjectLike
 
 local _astModule = require(languageWorkspace.ast)
 type ASTNode = _astModule.ASTNode
+type Location = _astModule.Location
 local _sourceModule = require(languageWorkspace.source)
 type Source = _sourceModule.Source
 local locationModule = require(languageWorkspace.location)
@@ -28,11 +29,14 @@ local printLocation = printLocationModule.printLocation
 local printSourceLocation = printLocationModule.printSourceLocation
 
 -- ROBLOX deviation: pre-declare functions
-local printError, undefinedIfEmpty
+local printError: (error_: GraphQLError) -> string
+local undefinedIfEmpty
 
-local GraphQLError = setmetatable({}, { __index = Error })
-GraphQLError.__index = GraphQLError
-GraphQLError.__tostring = function(self)
+local GraphQLError: GraphQLError = setmetatable({}, {
+	__index = Error,
+}) :: GraphQLError;
+(GraphQLError :: any).__index = GraphQLError;
+(GraphQLError :: any).__tostring = function(self)
 	return printError(self)
 end
 
@@ -97,6 +101,18 @@ export type GraphQLError = {
 	--  * Extension fields to add to the formatted error.
 	--  */
 	extensions: { [string]: any }?, -- ROBLOX TODO: missing type varargs from upstream
+
+	new: (
+		message: string,
+		nodes: Array<ASTNode> | ASTNode | void | nil,
+		source: Source?,
+		positions: Array<number>?,
+		path: Array<string | number>?,
+		originalError: (Error & { extensions: any? })?,
+		extensions: { [string]: any }? -- ROBLOX TODO: missing type varargs from upstream
+	) -> GraphQLError,
+	toString: (GraphQLError) -> string,
+	toJSON: (GraphQLError) -> string,
 }
 
 function GraphQLError.new(
@@ -111,25 +127,24 @@ function GraphQLError.new(
 	local self = (Error.new(message) :: any) :: GraphQLError
 
 	self.name = "GraphQLError"
-	-- ROBLOX FIXME Luau: need normalization to eliminate analyze error
-	self.originalError = originalError :: any
+	self.originalError = originalError
 
 	-- Compute list of blame nodes.
 	self.nodes =
 		undefinedIfEmpty(if Array.isArray(nodes) then nodes else if nodes then { nodes } else nil) :: Array<ASTNode> | nil
 
-	local nodeLocations = {}
+	-- ROBLOX FIXME Luau: Luau should normalize here as Array<Location> | nil without annotation
+	local nodeLocations: Array<Location>? = {}
 	-- ROBLOX TODO: upstream this null check
 	if self.nodes then
 		for _, node in ipairs(self.nodes) do
 			local loc = node.loc
 			if loc ~= nil then
-				table.insert(nodeLocations, loc)
+				table.insert(nodeLocations :: Array<Location>, loc)
 			end
 		end
 	end
-	-- ROBLOX FIXME Luau: Luau should normalize here as Array<Location> | nil
-	nodeLocations = undefinedIfEmpty(nodeLocations) :: any
+	nodeLocations = undefinedIfEmpty(nodeLocations)
 
 	-- Compute locations in the source for the given nodes/positions.
 	self.source = if source then source else if nodeLocations == nil then nil else nodeLocations[1].source

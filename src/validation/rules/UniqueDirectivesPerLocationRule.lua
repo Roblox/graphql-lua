@@ -22,12 +22,7 @@ exports.UniqueDirectivesPerLocationRule = function(context)
 	local uniqueDirectiveMap = {}
 
 	local schema = context:getSchema()
-	local definedDirectives = (function()
-		if schema then
-			return schema:getDirectives()
-		end
-		return specifiedDirectives
-	end)()
+	local definedDirectives = if schema then schema:getDirectives() else specifiedDirectives
 	for _, directive in ipairs(definedDirectives) do
 		uniqueDirectiveMap[directive.name] = not directive.isRepeatable
 	end

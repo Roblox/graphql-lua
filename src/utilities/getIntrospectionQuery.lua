@@ -1,5 +1,4 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/getIntrospectionQuery.js
---!nonstrict
 -- ROBLOX note: resolving the default generic arg TODOs in here will require improved support for recursive generic types in Luau
 local rootWorkspace = script.Parent.Parent.Parent
 local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
@@ -40,43 +39,13 @@ function getIntrospectionQuery(options: IntrospectionOptions?): string
 		inputValueDeprecation = false,
 	}, options)
 
-	local descriptions = (function()
-		if optionsWithDefault.descriptions then
-			return "description"
-		else
-			return ""
-		end
-	end)()
-	local specifiedByUrl = (function()
-		if optionsWithDefault.specifiedByUrl then
-			return "specifiedByUrl"
-		else
-			return ""
-		end
-	end)()
-	local directiveIsRepeatable = (function()
-		if optionsWithDefault.directiveIsRepeatable then
-			return "isRepeatable"
-		else
-			return ""
-		end
-	end)()
-	local schemaDescription = (function()
-		if optionsWithDefault.schemaDescription then
-			return descriptions
-		else
-			return ""
-		end
-	end)()
+	local descriptions = if optionsWithDefault.descriptions then "description" else ""
+	local specifiedByUrl = if optionsWithDefault.specifiedByUrl then "specifiedByUrl" else ""
+	local directiveIsRepeatable = if optionsWithDefault.directiveIsRepeatable then "isRepeatable" else ""
+	local schemaDescription = if optionsWithDefault.schemaDescription then descriptions else ""
 
 	local function inputDeprecation(str)
-		return (function()
-			if optionsWithDefault.inputValueDeprecation then
-				return str
-			else
-				return ""
-			end
-		end)()
+		return if optionsWithDefault.inputValueDeprecation then str else ""
 	end
 
 	return ([[
@@ -269,26 +238,22 @@ export type IntrospectionInputObjectType = {
 	inputFields: Array<IntrospectionInputValue>,
 }
 
-export type IntrospectionListTypeRef<
-	T -- ROBLOX TODO: Luau doesn't support generic constraints or default types: IntrospectionTypeRef = IntrospectionTypeRef,
-> = {
+-- ROBLOX TODO Luau: CLI-53241 using upstream default type introduces Recursive type being used with different parameters
+export type IntrospectionListTypeRef<T = any> = {
 	kind: string, -- ROBLOX TODO: Luau doesn't support concrete values as type:  'LIST',
 	ofType: T,
 }
 
-export type IntrospectionNonNullTypeRef<
-	T -- ROBLOX TODO: Luau doesn't support generic constraints or default types: IntrospectionTypeRef = IntrospectionTypeRef,
-> = {
+-- ROBLOX TODO Luau: CLI-53241 using upstream default type introduces Recursive type being used with different parameters
+export type IntrospectionNonNullTypeRef<T = any> = {
 	kind: string, -- ROBLOX TODO: Luau doesn't support concrete values as type: 'NON_NULL',
 	ofType: T,
 }
 
 export type IntrospectionTypeRef =
-	IntrospectionNamedTypeRef<IntrospectionTypeRef> -- ROBLOX deviation: Luau doesn't support default type args for `<>`, so inline
-	| IntrospectionListTypeRef<IntrospectionTypeRef>
-	| IntrospectionNonNullTypeRef<
-		IntrospectionNamedTypeRef<IntrospectionTypeRef> | IntrospectionListTypeRef<IntrospectionTypeRef>
-	>
+	IntrospectionNamedTypeRef
+	| IntrospectionListTypeRef
+	| IntrospectionNonNullTypeRef<IntrospectionNamedTypeRef | IntrospectionListTypeRef>
 
 export type IntrospectionOutputTypeRef =
 	IntrospectionNamedTypeRef<IntrospectionOutputType>
@@ -304,12 +269,10 @@ export type IntrospectionInputTypeRef =
 		IntrospectionNamedTypeRef<IntrospectionInputType> | IntrospectionListTypeRef<IntrospectionInputTypeRef>
 	>
 
-export type IntrospectionNamedTypeRef<
-	T -- ROBLOX TODO: Luau doesn't support generic constraints or default types: IntrospectionType = IntrospectionType,
-> = {
+-- ROBLOX TODO Luau: CLI-53241 using upstream default type introduces Recursive type being used with different parameters
+export type IntrospectionNamedTypeRef<T = any> = {
 	kind: any, -- ROBLOX deviation: Luau doesn't support this type spec: $PropertyType<T, 'kind'>,
 	name: string,
-	ofType: T, -- ROBLOX TODO: this field is missing upstream
 }
 
 export type IntrospectionField = {

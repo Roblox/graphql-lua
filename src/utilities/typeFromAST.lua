@@ -1,13 +1,20 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/typeFromAST.js
 
 local srcWorkspace = script.Parent.Parent
-
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
 local invariant = require(srcWorkspace.jsutils.invariant).invariant
+local languageWorkspace = srcWorkspace.language
+local astImport = require(languageWorkspace.ast)
+type TypeNode = astImport.TypeNode
+
 local Kind = require(srcWorkspace.language.kinds).Kind
 local definitionImport = require(srcWorkspace.type.definition)
 local GraphQLList = definitionImport.GraphQLList
 local GraphQLNonNull = definitionImport.GraphQLNonNull
+type GraphQLType = definitionImport.GraphQLType
+local typeWorkspace = srcWorkspace.type
+local schemaImport = require(typeWorkspace.schema)
+type GraphQLSchema = schemaImport.GraphQLSchema
 
 --[[*
 --  * Given a Schema and an AST node describing a type, return a GraphQLType
@@ -16,7 +23,8 @@ local GraphQLNonNull = definitionImport.GraphQLNonNull
 --  * the type called "User" found in the schema. If a type called "User" is not
 --  * found in the schema, then undefined will be returned.
 --  *]]
-local function typeFromAST(schema, typeNode)
+-- ROBLOX TODO Luau: Luau currently doesn't support overloads, so pick most general one from upstream
+local function typeFromAST(schema: GraphQLSchema, typeNode: TypeNode): GraphQLType | nil
 	local innerType
 	if typeNode.kind == Kind.LIST_TYPE then
 		innerType = typeFromAST(schema, typeNode.type)
@@ -31,9 +39,8 @@ local function typeFromAST(schema, typeNode)
 		return schema:getType(typeNode.name.value)
 	end
 
-	-- istanbul ignore next (Not reachable. All possible type nodes have been considered)
 	invariant(false, "Unexpected type node: " .. inspect(typeNode))
-	return -- ROBLOX deviation: no implicit returns
+	return nil -- ROBLOX deviation: no implicit returns
 end
 
 return {

@@ -9,6 +9,7 @@ local TokenKindModule = require(script.Parent.tokenKind)
 type TokenKindEnum = TokenKindModule.TokenKindEnum
 
 export type Location = {
+	new: (startToken: Token, endToken: Token, source: Source) -> Location,
 	--[[*
 	* The character offset at which this Node begins.
 	]]
@@ -33,10 +34,12 @@ export type Location = {
 	* The Source document the AST represents.
 	]]
 	source: Source,
+
+	toJSON: (self: Location) -> { start: number, _end: number },
 }
 
-local Location = {}
-Location.__index = Location
+local Location: Location = {} :: Location;
+(Location :: any).__index = Location
 
 function Location.new(startToken: Token, endToken: Token, source: Source): Location
 	local self = {}
@@ -65,6 +68,17 @@ end
  * within a Source.
  ]]
 export type Token = {
+	new: (
+		kind: TokenKindEnum,
+		start: number,
+		-- ROBLOX FIXME: rename `_end` to `end_`
+		_end: number,
+		line: number,
+		column: number,
+		prev: Token | nil,
+		value: string?
+	) -> Token,
+
 	--[[*
    * The kind of Token.
    ]]
@@ -93,7 +107,7 @@ export type Token = {
 	--[[*
    * For non-punctuation tokens, represents the interpreted value of the token.
    ]]
-	value: string?,
+	value: string,
 
 	--[[*
    * Tokens exist as nodes in a double-linked-list amongst all tokens
@@ -102,20 +116,19 @@ export type Token = {
    ]]
 	prev: Token?,
 	next: Token?,
+	toJSON: (self: Token) -> {
+		kind: TokenKindEnum,
+		value: string?,
+		line: number,
+		column: number,
+	},
 }
 
-local Token = {}
-Token.__index = Token
+local Token: Token = {} :: Token;
+(Token :: any).__index = Token
 
 function Token.new(
-	--[[
-		ROBLOX FIXME Luau:
-		for some reason roblox-cli forces us to put string type here
-		and doesn't work with union of singleton string types
-		should be:
-		kind: TokenKindEnum,
-	]]
-	kind: string,
+	kind: TokenKindEnum,
 	start: number,
 	-- ROBLOX FIXME: rename `_end` to `end_`
 	_end: number,
@@ -137,7 +150,12 @@ function Token.new(
 	return (setmetatable(self, Token) :: any) :: Token
 end
 
-function Token:toJSON()
+function Token:toJSON(): {
+	kind: TokenKindEnum,
+	value: string?,
+	line: number,
+	column: number,
+}
 	return {
 		kind = self.kind,
 		value = self.value,
@@ -445,8 +463,6 @@ export type NamedTypeNode = {
 	kind: "NamedType",
 	loc: Location?,
 	name: NameNode,
-	-- ROBLOX TODO: upstream is missing this field, causing extendSchema usage to be incorect
-	type: TypeNode,
 }
 
 export type ListTypeNode = {

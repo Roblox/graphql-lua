@@ -2,6 +2,7 @@
 return function()
 	local rootWorkspace = script.Parent.Parent.Parent.Parent
 	local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
+	type Array<T> = LuauPolyfill.Array<T>
 	local NaN = LuauPolyfill.Number.NaN
 
 	local jsutils = script.Parent.Parent
@@ -56,7 +57,7 @@ return function()
 			-- deviation: Lua does not handle nil elements
 			expect(inspect({ true })).to.equal("[true]")
 			expect(inspect({ 1, NaN })).to.equal("[1, NaN]")
-			expect(inspect({ { "a", "b" }, "c" })).to.equal('[["a", "b"], "c"]')
+			expect(inspect({ { "a", "b" }, "c" } :: Array<any>)).to.equal('[["a", "b"], "c"]')
 
 			expect(inspect({ { {} } })).to.equal("[[[]]]")
 			expect(inspect({ { { "a" } } })).to.equal("[[[Array]]]")
@@ -77,7 +78,7 @@ return function()
 			expect(inspect({ a = 1 })).to.equal("{ a: 1 }")
 			expect(inspect({ a = 1, b = 2 })).to.equal("{ a: 1, b: 2 }")
 			-- deviation: avoid sparse array
-			expect(inspect({ array = { false, 0 } })).to.equal("{ array: [false, 0] }")
+			expect(inspect({ array = { false, 0 } :: Array<any> })).to.equal("{ array: [false, 0] }")
 
 			expect(inspect({ a = { b = {} } })).to.equal("{ a: { b: [] } }")
 			expect(inspect({ a = { b = { c = 1 } } })).to.equal("{ a: { b: [Object] } }")

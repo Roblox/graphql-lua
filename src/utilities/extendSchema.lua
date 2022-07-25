@@ -1,5 +1,5 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/4931f93f297511c6f8465d0c8104b20388a517e8/src/utilities/extendSchema.js
-
+--!strict
 local srcWorkspace = script.Parent.Parent
 local Packages = srcWorkspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
@@ -12,23 +12,31 @@ type Array<T> = LuauPolyfill.Array<T>
 type Map<T, V> = LuauPolyfill.Map<T, V>
 
 local mapValueOrdered = require(srcWorkspace.luaUtils.mapValueOrdered).mapValueOrdered
+local NULL = require(srcWorkspace.luaUtils.null)
+type NULL = typeof(NULL)
 
 local jsutils = srcWorkspace.jsutils
 local keyMap = require(jsutils.keyMap).keyMap
 local inspect = require(jsutils.inspect).inspect
 local devAssert = require(jsutils.devAssert).devAssert
+local ObjMapModule = require(jsutils.ObjMap)
+type ObjMap<T> = ObjMapModule.ObjMap<T>
 
 local _astImport = require(srcWorkspace.language.ast)
 type DocumentNode = _astImport.DocumentNode
 type TypeNode = _astImport.TypeNode
+type ListTypeNode = _astImport.ListTypeNode
 type NamedTypeNode = _astImport.NamedTypeNode
+type NonNullTypeNode = _astImport.NonNullTypeNode
 type SchemaDefinitionNode = _astImport.SchemaDefinitionNode
 type SchemaExtensionNode = _astImport.SchemaExtensionNode
 type TypeDefinitionNode = _astImport.TypeDefinitionNode
+type TypeExtensionNode = _astImport.TypeExtensionNode
 type InterfaceTypeDefinitionNode = _astImport.InterfaceTypeDefinitionNode
 type InterfaceTypeExtensionNode = _astImport.InterfaceTypeExtensionNode
 type ObjectTypeDefinitionNode = _astImport.ObjectTypeDefinitionNode
 type ObjectTypeExtensionNode = _astImport.ObjectTypeExtensionNode
+type DefinitionNode = _astImport.DefinitionNode
 type UnionTypeDefinitionNode = _astImport.UnionTypeDefinitionNode
 type UnionTypeExtensionNode = _astImport.UnionTypeExtensionNode
 type FieldDefinitionNode = _astImport.FieldDefinitionNode
@@ -53,6 +61,7 @@ local getDirectiveValues = require(srcWorkspace.execution.values).getDirectiveVa
 
 local typeWorkspace = srcWorkspace.type
 local schemaImport = require(typeWorkspace.schema)
+type GraphQLSchemaNormalizedConfig = schemaImport.GraphQLSchemaNormalizedConfig
 type GraphQLSchemaValidationOptions = schemaImport.GraphQLSchemaValidationOptions
 local assertSchema = schemaImport.assertSchema
 local GraphQLSchema = schemaImport.GraphQLSchema
@@ -105,9 +114,9 @@ type GraphQLInputObjectType = definitionImport.GraphQLInputObjectType
 local valueFromAST = require(script.Parent.valueFromAST).valueFromAST
 
 -- ROBLOX deviation: pre-declare variables
-local stdTypeMap
-local getDeprecationReason
-local getSpecifiedByUrl
+local stdTypeMap: ObjMap<GraphQLScalarType | GraphQLNamedType>
+local getDeprecationReason: (node: EnumValueDefinitionNode | FieldDefinitionNode | InputValueDefinitionNode) -> string?
+local getSpecifiedByUrl: (node: ScalarTypeDefinitionNode | ScalarTypeExtensionNode) -> string?
 
 type Options = GraphQLSchemaValidationOptions & {
 	-- /**
@@ -141,55 +150,54 @@ local function extendSchema(schema, documentAST, options: Options)
 
 	local schemaConfig = schema:toConfig()
 	local extendedConfig = extendSchemaImpl(schemaConfig, documentAST, options)
-	return (function()
-		if schemaConfig == extendedConfig then
-			return schema
-		else
-			return GraphQLSchema.new(extendedConfig)
-		end
-	end)()
+	return if schemaConfig == extendedConfig then schema else GraphQLSchema.new(extendedConfig)
 end
 
 -- /**
 --  * @internal
 --  */
-function extendSchemaImpl(schemaConfig, documentAST, options: Options)
+function extendSchemaImpl(
+	schemaConfig: GraphQLSchemaNormalizedConfig,
+	documentAST: DocumentNode,
+	options: Options?
+): GraphQLSchemaNormalizedConfig
 	-- // Collect the type definitions and extensions found in the document.
-	local typeDefs: Array<any> = {} -- ROBLOX FIXME: use `TypeDefinitionNode` type
+	local typeDefs: Array<TypeDefinitionNode> = {}
 	-- ROBLOX deviation: use Map type
-	local typeExtensionsMap = Map.new()
+	-- ROBLOX TODO: upstream has typeExtensionMap as untyped, contribute this refinement upstream
+	local typeExtensionsMap = Map.new() :: Map<string, Array<TypeExtensionNode>>
 
 	-- // New directives and types are separate because a directives and types can
 	-- // have the same name. For example, a type named "skip".
-	local directiveDefs: Array<any> = {} -- ROBLOX FIXME: use `DirectiveDefinitionNode` type
+	local directiveDefs: Array<DirectiveDefinitionNode> = {}
 
-	local schemaDef
+	local schemaDef: SchemaDefinitionNode?
 	-- // Schema extensions are collected which may add additional operation types.
 	local schemaExtensions: Array<any> = {} -- ROBLOX FIXME: use `SchemaExtensionNode` type
 
 	for _, def in ipairs(documentAST.definitions) do
+		-- ROBLOX FIXME Luau: Luau isn't narrowing the types based on these comparisons to the Kind singleton type
 		if def.kind == Kind.SCHEMA_DEFINITION then
 			schemaDef = def
 		elseif def.kind == Kind.SCHEMA_EXTENSION then
 			table.insert(schemaExtensions, def)
 		elseif isTypeDefinitionNode(def) then
-			table.insert(typeDefs, def)
+			table.insert(typeDefs, def :: TypeDefinitionNode)
 		elseif isTypeExtensionNode(def) then
-			local extendedTypeName = def.name.value
+			local extendedTypeName = (def :: TypeExtensionNode).name.value
 			-- ROBLOX deviation: use Map type
 			local existingTypeExtensions = typeExtensionsMap:get(extendedTypeName)
 			typeExtensionsMap:set(
 				extendedTypeName,
-				(function()
-					if existingTypeExtensions then
-						return Array.concat(existingTypeExtensions, { def })
-					else
-						return { def }
-					end
-				end)()
+				-- ROBLOX performance? optimize this here and upstream by pushing onto existing rather than concat
+				(
+						if existingTypeExtensions
+							then Array.concat(existingTypeExtensions, { def :: TypeExtensionNode })
+							else { def :: TypeExtensionNode }
+					)
 			)
 		elseif def.kind == Kind.DIRECTIVE_DEFINITION then
-			table.insert(directiveDefs, def)
+			table.insert(directiveDefs, def :: DirectiveDefinitionNode)
 		end
 	end
 
@@ -211,7 +219,7 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 	-- pre-declare them like it's usually done. We still need to pre-declare some
 	-- functions in relation to each other, and that is safe to do
 	-- ROBLOX deviation: use Map type
-	local typeMap = Map.new()
+	local typeMap = Map.new() :: Map<string, GraphQLNamedType>
 
 	-- ROBLOX deviation: pre-declare variables
 	local replaceNamedType
@@ -223,13 +231,27 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 	local extendUnionType
 	local extendEnumType
 	local extendInputObjectType
-	local buildInputFieldMap
-	local buildEnumValueMap
-	local buildInterfaces
+	local buildInputFieldMap: (nodes: Array<InputObjectTypeDefinitionNode | InputObjectTypeExtensionNode>) -> GraphQLInputFieldConfigMap
+	local buildEnumValueMap: (nodes: Array<EnumTypeDefinitionNode | EnumTypeExtensionNode>) -> GraphQLEnumValueConfigMap
+	local buildInterfaces: (
+		nodes: Array<
+			InterfaceTypeDefinitionNode
+			| InterfaceTypeExtensionNode
+			| ObjectTypeDefinitionNode
+			| ObjectTypeExtensionNode
+		>
+	) -> Array<GraphQLInterfaceType>
 	local buildUnionTypes
 	local getNamedType
-	local buildArgumentMap
-	local buildFieldMap
+	local buildArgumentMap: (args: Array<InputValueDefinitionNode>?) -> GraphQLFieldConfigArgumentMap
+	local buildFieldMap: (
+		nodes: Array<
+			InterfaceTypeDefinitionNode
+			| InterfaceTypeExtensionNode
+			| ObjectTypeDefinitionNode
+			| ObjectTypeExtensionNode
+		>
+	) -> GraphQLFieldConfigMap<any, any>
 
 	-- // Below are functions used for producing this schema that have closed over
 	-- // this scope and have access to the schema, cache, and newly defined types.
@@ -266,24 +288,25 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 			-- // Builtin types are not extended.
 			return type_
 		end
+		-- ROBLOX TODO Luau: support `type is GraphQLScalarType` functionality and/or codegen into js2lua
 		if isScalarType(type_) then
-			return extendScalarType(type_)
+			return extendScalarType(type_ :: GraphQLScalarType)
 		end
 		if isObjectType(type_) then
-			return extendObjectType(type_)
+			return extendObjectType(type_ :: GraphQLObjectType)
 		end
 		if isInterfaceType(type_) then
-			return extendInterfaceType(type_)
+			return extendInterfaceType(type_ :: GraphQLInterfaceType)
 		end
 		if isUnionType(type_) then
-			return extendUnionType(type_)
+			return extendUnionType(type_ :: GraphQLUnionType)
 		end
 		if isEnumType(type_) then
-			return extendEnumType(type_)
+			return extendEnumType(type_ :: GraphQLEnumType)
 		end
 		-- // istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
 		if isInputObjectType(type_) then
-			return extendInputObjectType(type_)
+			return extendInputObjectType(type_ :: GraphQLInputObjectType)
 		end
 
 		-- // istanbul ignore next (Not reachable. All possible types have been considered)
@@ -294,7 +317,7 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 	function extendInputObjectType(type_: GraphQLInputObjectType): GraphQLInputObjectType
 		local config = type_:toConfig()
 		-- ROBLOX deviation: use Map type
-		local extensions = typeExtensionsMap:get(config.name) or {}
+		local extensions = typeExtensionsMap[config.name] or {}
 
 		return GraphQLInputObjectType.new(Object.assign({}, config, {
 			fields = function()
@@ -302,7 +325,8 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 					mapValueOrdered(coerceToMap(config.fields), function(field)
 						return Object.assign({}, field, { type = replaceType(field.type) })
 					end):entries(),
-					buildInputFieldMap(extensions):entries()
+					-- ROBLOX FIXME Luau: these types *can* be converted: TypeError: Type 'Array<EnumTypeExtensionNode | InputObjectTypeExtensionNode | InterfaceTypeExtensionNode | ObjectTypeExtensionNode | ScalarTypeExtensionNode | UnionTypeExtensionNode> | {  }' could not be converted into 'Array<InputObjectTypeDefinitionNode | InputObjectTypeExtensionNode>'
+					buildInputFieldMap(extensions :: InputObjectTypeExtensionNode):entries()
 				))
 			end,
 			extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
@@ -316,7 +340,13 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 
 		return GraphQLEnumType.new(Object.assign({}, config, {
 			-- ROBLOX deviation: concat Maps instead of regular tables
-			values = Map.new(Array.concat(config.values:entries(), buildEnumValueMap(extensions):entries())),
+			-- ROBLOX TODO: upstream has typeExtensionMap as untyped, contribute this refinement upstream
+			values = Map.new(
+				Array.concat(
+					config.values:entries(),
+					buildEnumValueMap(extensions :: Array<EnumTypeExtensionNode>):entries()
+				)
+			),
 			extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
 		}))
 	end
@@ -344,13 +374,17 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 
 		return GraphQLObjectType.new(Object.assign({}, config, {
 			interfaces = function()
-				return Array.concat(Array.map(type_:getInterfaces(), replaceNamedType), buildInterfaces(extensions))
+				-- ROBLOX TODO: upstream has typeExtensionMap as untyped, contribute this refinement upstream
+				return Array.concat(
+					Array.map(type_:getInterfaces(), replaceNamedType),
+					buildInterfaces(extensions :: Array<ObjectTypeExtensionNode>)
+				)
 			end,
 			fields = function()
 				return Map.new(
 					Array.concat(
 						mapValueOrdered(coerceToMap(config.fields), extendField):entries(),
-						buildFieldMap(extensions):entries()
+						buildFieldMap(extensions :: Array<ObjectTypeExtensionNode>):entries()
 					)
 				)
 			end,
@@ -365,13 +399,17 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 
 		return GraphQLInterfaceType.new(Object.assign({}, config, {
 			interfaces = function()
-				return Array.concat(Array.map(type_:getInterfaces(), replaceNamedType), buildInterfaces(extensions))
+				-- ROBLOX TODO: upstream has typeExtensionMap as untyped, contribute this refinement upstream
+				return Array.concat(
+					Array.map(type_:getInterfaces(), replaceNamedType),
+					buildInterfaces(extensions :: Array<InterfaceTypeExtensionNode>)
+				)
 			end,
 			fields = function()
 				return Map.new(
 					Array.concat(
 						mapValueOrdered(coerceToMap(config.fields), extendField):entries(),
-						buildFieldMap(extensions):entries()
+						buildFieldMap(extensions :: Array<InterfaceTypeExtensionNode>):entries()
 					)
 				)
 			end,
@@ -386,7 +424,11 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 
 		return GraphQLUnionType.new(Object.assign({}, config, {
 			types = function()
-				return Array.concat(Array.map(type_:getTypes(), replaceNamedType), buildUnionTypes(extensions))
+				-- ROBLOX TODO: upstream has typeExtensionMap as untyped, contribute this refinement upstream
+				return Array.concat(
+					Array.map(type_:getTypes(), replaceNamedType),
+					buildUnionTypes(extensions :: Array<UnionTypeExtensionNode>)
+				)
 			end,
 			extensionASTNodes = Array.concat(config.extensionASTNodes, extensions),
 		}))
@@ -396,7 +438,7 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 		return Object.assign({}, field, {
 			type = replaceType(field.type),
 			-- // $FlowFixMe[incompatible-call]
-			args = mapValueOrdered(coerceToMap(field.args), extendArg),
+			args = if field.args then mapValueOrdered(field.args, extendArg) else nil,
 		})
 	end
 
@@ -408,7 +450,7 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 		nodes: Array<SchemaDefinitionNode | SchemaExtensionNode>
 	): {
 		query: GraphQLObjectType?,
-		mutation: GraphQLObjectType?,
+		mutation: GraphQLObjectType? | NULL,
 		subscription: GraphQLObjectType?,
 	}
 		local opTypes = {}
@@ -430,25 +472,24 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 	function getNamedType(node: NamedTypeNode): GraphQLNamedType
 		local name = node.name.value
 		-- ROBLOX deviation: use Map type
-		local type_ = stdTypeMap[name] or typeMap:get(name)
+		local type_ = stdTypeMap[name] or typeMap[name]
 
 		if type_ == nil then
 			error(Error.new(('Unknown type: "%s".'):format(name)))
 		end
-		return type_
+		-- ROBLOX FIXME Luau: needs type states to understand type_ is narrowed to non-nil
+		return type_ :: GraphQLNamedType
 	end
 
 	local function getWrappedType(node: TypeNode): GraphQLType
+		-- ROBLOX FIXME Luau: Luau isn't narrowing based on equality of kind
 		if node.kind == Kind.LIST_TYPE then
-			return GraphQLList.new(getWrappedType(node.type))
+			return GraphQLList.new(getWrappedType((node :: ListTypeNode).type))
 		end
 		if node.kind == Kind.NON_NULL_TYPE then
-			-- ROBLOX FIXME: remove cast to any
-			local nodeAny: any = node
-			-- // $FlowFixMe[incompatible-call]
-			return GraphQLNonNull.new(getWrappedType(nodeAny.type))
+			return GraphQLNonNull.new(getWrappedType((node :: NonNullTypeNode).type))
 		end
-		return getNamedType(node)
+		return getNamedType(node :: NamedTypeNode)
 	end
 
 	local function buildDirective(node: DirectiveDefinitionNode): GraphQLDirective
@@ -459,10 +500,9 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 		-- ROBLOX FIXME: once Luau is able to refine types to support:
 		-- `node.description and node.description.value`, then remove
 		-- cast to any
-		local anyNode: any = node
 		return GraphQLDirective.new({
 			name = node.name.value,
-			description = anyNode.description and anyNode.description.value,
+			description = if node.description then node.description.value else nil,
 			locations = locations,
 			isRepeatable = node.repeatable,
 			args = buildArgumentMap(node.arguments),
@@ -479,15 +519,16 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 		>
 	): GraphQLFieldConfigMap<any, any>
 		-- ROBLOX deviation: use Map
-		local fieldConfigMap = Map.new()
+		local fieldConfigMap = Map.new() :: GraphQLFieldConfigMap<any, any>
 		for _, node in ipairs(nodes) do
 			-- // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
-			local nodeFields = node.fields or {}
+			-- ROBLOX FIXME Luau: this annotation shouldn't be necessary, TS infers this correctly
+			local nodeFields: Array<FieldDefinitionNode> = if node.fields then node.fields else {}
 
 			for _, field in ipairs(nodeFields) do
 				fieldConfigMap:set(field.name.value, {
 					type = getWrappedType(field.type),
-					description = field.description and field.description.value,
+					description = if field.description then field.description.value else nil,
 					args = buildArgumentMap(field.arguments),
 					deprecationReason = getDeprecationReason(field),
 					astNode = field,
@@ -499,10 +540,11 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 
 	function buildArgumentMap(args: Array<InputValueDefinitionNode>?): GraphQLFieldConfigArgumentMap
 		-- // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
-		local argsNodes = args or {}
+		-- ROBLOX FIXME Luau: without this annotation, I get this bizarre error on the map set below: Property 'astNode' is not compatible. Type 'FieldDefinitionNode' could not be converted into 'InputValueDefinitionNode?'
+		local argsNodes: Array<InputValueDefinitionNode> = if args then args else {}
 
 		-- ROBLOX deviation: use Map
-		local argConfigMap = Map.new()
+		local argConfigMap = Map.new() :: GraphQLFieldConfigArgumentMap
 		for _, arg in ipairs(argsNodes) do
 			-- // Note: While this could make assertions to get the correctly typed
 			-- // value, that would throw immediately while type system validation
@@ -511,9 +553,9 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 
 			argConfigMap:set(arg.name.value, {
 				type = type_,
-				description = arg.description and arg.description.value,
+				description = if arg.description then arg.description.value else nil,
 				defaultValue = valueFromAST(arg.defaultValue, type_),
-				deprecationReason = getDeprecationReason(arg),
+				deprecationReason = getDeprecationReason(arg :: InputValueDefinitionNode),
 				astNode = arg,
 			})
 		end
@@ -524,10 +566,11 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 		nodes: Array<InputObjectTypeDefinitionNode | InputObjectTypeExtensionNode>
 	): GraphQLInputFieldConfigMap
 		-- ROBLOX deviation: use Map
-		local inputFieldMap = Map.new()
+		local inputFieldMap = Map.new() :: GraphQLInputFieldConfigMap
 		for _, node in ipairs(nodes) do
 			-- // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
-			local fieldsNodes = node.fields or {}
+			-- ROBLOX FIXME Luau: this annotation shouldn't be necessary, TS infers this correctly
+			local fieldsNodes: Array<InputValueDefinitionNode> = if node.fields then node.fields else {}
 
 			for _, field in ipairs(fieldsNodes) do
 				-- // Note: While this could make assertions to get the correctly typed
@@ -537,7 +580,7 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 
 				inputFieldMap:set(field.name.value, {
 					type = type_,
-					description = field.description and field.description.value,
+					description = if field.description then field.description.value else nil,
 					defaultValue = valueFromAST(field.defaultValue, type_),
 					deprecationReason = getDeprecationReason(field),
 					astNode = field,
@@ -549,14 +592,15 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 
 	function buildEnumValueMap(nodes: Array<EnumTypeDefinitionNode | EnumTypeExtensionNode>): GraphQLEnumValueConfigMap
 		-- ROBLOX deviation: use Map to guarantee order
-		local enumValueMap = Map.new()
+		local enumValueMap = Map.new() :: GraphQLEnumValueConfigMap
 		for _, node in ipairs(nodes) do
 			-- // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
-			local valuesNodes = node.values or {}
+			-- ROBLOX FIXME Luau: this annotation shouldn't be necessary, TS infers this correctly
+			local valuesNodes: Array<EnumValueDefinitionNode> = if node.values then node.values else {}
 
 			for _, value in ipairs(valuesNodes) do
 				enumValueMap:set(value.name.value, {
-					description = value.description and value.description.value,
+					description = if value.description then value.description.value else nil,
 					deprecationReason = getDeprecationReason(value),
 					astNode = value,
 				})
@@ -573,120 +617,125 @@ function extendSchemaImpl(schemaConfig, documentAST, options: Options)
 			| ObjectTypeExtensionNode
 		>
 	): Array<GraphQLInterfaceType>
-		local interfaces = {}
+		local interfaces: Array<GraphQLInterfaceType> = {}
 		for _, node in ipairs(nodes) do
 			-- // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
-			local interfacesNodes = node.interfaces or {}
-
-			for _, type_ in ipairs(interfacesNodes) do
-				-- // Note: While this could make assertions to get the correctly typed
-				-- // values below, that would throw immediately while type system
-				-- // validation with validateSchema() will produce more actionable
-				-- // results.
-				table.insert(interfaces, getNamedType(type_))
+			if node.interfaces then
+				-- ROBLOX FIXME Luau: this annotation shouldn't be necessary, TS infers this correctly
+				for _, type_: NamedTypeNode in ipairs(node.interfaces) do
+					-- // Note: While this could make assertions to get the correctly typed
+					-- // values below, that would throw immediately while type system
+					-- // validation with validateSchema() will produce more actionable
+					-- // results.
+					-- @ts-expect-error
+					table.insert(interfaces, getNamedType(type_) :: any)
+				end
 			end
 		end
 		return interfaces
 	end
 
 	function buildUnionTypes(nodes: Array<UnionTypeDefinitionNode | UnionTypeExtensionNode>): Array<GraphQLObjectType>
-		local types = {}
+		local types: Array<GraphQLObjectType> = {}
 		for _, node in ipairs(nodes) do
 			-- istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
-			local typeNodes = node.types or {}
 
-			for _, type_ in ipairs(typeNodes) do
-				-- // Note: While this could make assertions to get the correctly typed
-				-- // values below, that would throw immediately while type system
-				-- // validation with validateSchema() will produce more actionable
-				-- // results.
-				table.insert(types, getNamedType(type_))
+			if node.types then
+				for _, type_ in ipairs(node.types) do
+					-- // Note: While this could make assertions to get the correctly typed
+					-- // values below, that would throw immediately while type system
+					-- // validation with validateSchema() will produce more actionable
+					-- // results.
+					-- @ts-expect-error
+					table.insert(types, getNamedType(type_) :: any)
+				end
 			end
 		end
 		return types
 	end
 
 	local function buildType(astNode: TypeDefinitionNode): GraphQLNamedType
-		-- ROBLOX deviation: workaround Luau narrowing bug:  (E001) Type 'StringValueNode?' does not have key 'value'
-		local _astNode: any = astNode
 		local name = astNode.name.value
-		-- ROBLOX deviation: use Map type
-		local extensionNodes = typeExtensionsMap:get(name) or {}
-
+		-- ROBLOX deviation START: use Map type, cache kind field access for performance
+		local extensionASTNodes = typeExtensionsMap[name] or {}
 		local astNodeKind = astNode.kind
+		-- ROBLOX deviation END
+
 		if astNodeKind == Kind.OBJECT_TYPE_DEFINITION then
-			local extensionASTNodes: any = extensionNodes
-			local allNodes = Array.concat({ astNode }, extensionASTNodes)
+			local allNodes = Array.concat(astNode, extensionASTNodes)
 
 			return GraphQLObjectType.new({
 				name = name,
-				description = _astNode.description and _astNode.description.value,
+				description = if astNode.description then astNode.description.value else nil,
 				interfaces = function()
 					return buildInterfaces(allNodes)
 				end,
 				fields = function()
 					return buildFieldMap(allNodes)
 				end,
-				astNode = astNode,
-				extensionASTNodes = extensionASTNodes,
+				astNode = astNode :: ObjectTypeDefinitionNode,
+				-- ROBLOX TODO: upstream has typeExtensionMap as untyped, contribute this refinement upstream
+				extensionASTNodes = extensionASTNodes :: Array<ObjectTypeExtensionNode>,
 			})
 		elseif astNodeKind == Kind.INTERFACE_TYPE_DEFINITION then
-			local extensionASTNodes: any = extensionNodes
-			local allNodes = Array.concat({ astNode }, extensionASTNodes)
+			local allNodes = Array.concat(astNode, extensionASTNodes)
 
 			return GraphQLInterfaceType.new({
 				name = name,
-				description = _astNode.description and _astNode.description.value,
+				-- ROBLOX TODO Luau: should narrow astNode based on astNodeKind branch
+				-- ROBLOX FIXME Luau: description nil-ability not removed by if expression. needs type states?
+				description = if (astNode :: InterfaceTypeDefinitionNode).description
+					then (astNode.description :: any).value
+					else nil,
 				interfaces = function()
 					return buildInterfaces(allNodes)
 				end,
 				fields = function()
 					return buildFieldMap(allNodes)
 				end,
-				astNode = astNode,
-				extensionASTNodes = extensionASTNodes,
+				astNode = astNode :: InterfaceTypeDefinitionNode,
+				extensionASTNodes = extensionASTNodes :: Array<InterfaceTypeExtensionNode>,
 			})
 		elseif astNodeKind == Kind.ENUM_TYPE_DEFINITION then
-			local extensionASTNodes: any = extensionNodes
-			local allNodes = Array.concat({ astNode }, extensionASTNodes)
+			local allNodes = Array.concat(astNode, extensionASTNodes)
 
 			return GraphQLEnumType.new({
 				name = name,
-				description = _astNode.description and _astNode.description.value,
+				description = if astNode.description then astNode.description.value else nil,
 				values = buildEnumValueMap(allNodes),
-				astNode = astNode,
-				extensionASTNodes = extensionASTNodes,
+				astNode = astNode :: EnumTypeDefinitionNode,
+				-- ROBLOX TODO: upstream has typeExtensionMap as untyped, contribute this refinement upstream
+				extensionASTNodes = extensionASTNodes :: Array<EnumTypeExtensionNode>,
 			})
 		elseif astNodeKind == Kind.UNION_TYPE_DEFINITION then
-			local extensionASTNodes: any = extensionNodes
-			local allNodes = Array.concat({ astNode }, extensionASTNodes)
+			local allNodes = Array.concat(astNode, extensionASTNodes)
 
 			return GraphQLUnionType.new({
 				name = name,
-				description = _astNode.description and _astNode.description.value,
+				description = if astNode.description then astNode.description.value else nil,
 				types = function()
 					return buildUnionTypes(allNodes)
 				end,
-				astNode = astNode,
-				extensionASTNodes = extensionASTNodes,
+				-- ROBLOX FIXME Luau: should be able to narrow this to the specific type based on node.kind comparison
+				astNode = astNode :: UnionTypeDefinitionNode,
+				extensionASTNodes = extensionASTNodes :: Array<UnionTypeExtensionNode>,
 			})
 		elseif astNodeKind == Kind.SCALAR_TYPE_DEFINITION then
-			local extensionASTNodes: any = extensionNodes
-
 			return GraphQLScalarType.new({
 				name = name,
-				description = _astNode.description and _astNode.description.value,
-				specifiedByUrl = getSpecifiedByUrl(astNode),
-				astNode = astNode,
-				extensionASTNodes = extensionASTNodes,
+				description = if astNode.description then astNode.description.value else nil,
+				-- ROBLOX FIXME Luau: should be able to narrow this to the specific type based on node.kind comparison
+				specifiedByUrl = getSpecifiedByUrl(astNode :: ScalarTypeDefinitionNode),
+				astNode = astNode :: ScalarTypeDefinitionNode,
+				-- ROBLOX TODO: upstream has typeExtensionMap as untyped, contribute this refinement upstream
+				extensionASTNodes = extensionASTNodes :: Array<ScalarTypeExtensionNode>,
 			})
 		elseif astNodeKind == Kind.INPUT_OBJECT_TYPE_DEFINITION then
-			local extensionASTNodes: any = extensionNodes
-			local allNodes = Array.concat({ astNode }, extensionASTNodes)
+			local allNodes = Array.concat(astNode, extensionASTNodes)
 
 			return GraphQLInputObjectType.new({
 				name = name,
-				description = _astNode.description and _astNode.description.value,
+				description = if astNode.description then astNode.description.value else nil,
 				fields = function()
 					return buildInputFieldMap(allNodes)
 				end,

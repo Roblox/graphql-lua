@@ -8,10 +8,13 @@ local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Error = LuauPolyfill.Error
 type Array<T> = LuauPolyfill.Array<T>
+type Map<K, V> = LuauPolyfill.Map<K, V>
 local NULL = require(luaUtilsWorkspace.null)
+type NULL = typeof(NULL)
 local isNillishModule = require(luaUtilsWorkspace.isNillish)
 local isNillish = isNillishModule.isNillish
 local isNotNillish = isNillishModule.isNotNillish
+
 local inspect = require(srcWorkspace.jsutils.inspect).inspect
 local devAssert = require(srcWorkspace.jsutils.devAssert).devAssert
 local keyValMap = require(srcWorkspace.jsutils.keyValMap).keyValMap
@@ -24,6 +27,7 @@ type GraphQLSchemaValidationOptions = GraphQLSchemaModule.GraphQLSchemaValidatio
 local definition = require(srcWorkspace.type.definition)
 type GraphQLType = definition.GraphQLType
 type GraphQLNamedType = definition.GraphQLNamedType
+type GraphQLEnumValueConfig = definition.GraphQLEnumValueConfig
 -- ROBLOX deviation: inlining any here because Luau doesn't support default type args yet
 type GraphQLFieldConfig<TSource, TContext> = definition.GraphQLFieldConfig<TSource, TContext, any>
 type GraphQLFieldConfigMap<TSource, TContext> = definition.GraphQLFieldConfigMap<TSource, TContext>
@@ -66,9 +70,12 @@ type IntrospectionObjectType = getIntrospectionQueryModule.IntrospectionObjectTy
 type IntrospectionInterfaceType = getIntrospectionQueryModule.IntrospectionInterfaceType
 type IntrospectionUnionType = getIntrospectionQueryModule.IntrospectionUnionType
 type IntrospectionEnumType = getIntrospectionQueryModule.IntrospectionEnumType
+type IntrospectionEnumValue = getIntrospectionQueryModule.IntrospectionEnumValue
 type IntrospectionInputObjectType = getIntrospectionQueryModule.IntrospectionInputObjectType
 type IntrospectionTypeRef = getIntrospectionQueryModule.IntrospectionTypeRef
-type IntrospectionNamedTypeRef<T> = getIntrospectionQueryModule.IntrospectionNamedTypeRef<T>
+type IntrospectionListTypeRef = getIntrospectionQueryModule.IntrospectionListTypeRef
+type IntrospectionNonNullTypeRef = getIntrospectionQueryModule.IntrospectionNonNullTypeRef
+type IntrospectionNamedTypeRef<T = any> = getIntrospectionQueryModule.IntrospectionNamedTypeRef<T>
 local valueFromAST = require(script.Parent.valueFromAST).valueFromAST
 
 --[[*
@@ -118,7 +125,8 @@ local function buildClientSchema(
 	-- preferring cached instances before building new instances.
 	function getType(typeRef: IntrospectionTypeRef): GraphQLType
 		if typeRef.kind == TypeKind.LIST then
-			local itemRef = typeRef.ofType
+			-- ROBLOX FIXME Luau: should narrow based on kind comparison to singleton type
+			local itemRef = (typeRef :: IntrospectionListTypeRef).ofType
 			if not itemRef then
 				error(Error.new("Decorated type deeper than introspection query."))
 			end
@@ -126,7 +134,8 @@ local function buildClientSchema(
 			return GraphQLList.new(getType(itemRef))
 		end
 		if typeRef.kind == TypeKind.NON_NULL then
-			local nullableRef = typeRef.ofType
+			-- ROBLOX FIXME Luau: should narrow based on kind comparison to singleton type
+			local nullableRef = (typeRef :: IntrospectionNonNullTypeRef).ofType
 			if not nullableRef then
 				error(Error.new("Decorated type deeper than introspection query."))
 			end
@@ -134,7 +143,7 @@ local function buildClientSchema(
 
 			return GraphQLNonNull.new(assertNullableType(nullableType))
 		end
-		return getNamedType(typeRef)
+		return getNamedType(typeRef :: IntrospectionNamedTypeRef)
 	end
 
 	function getNamedType(typeRef: IntrospectionNamedTypeRef<any>): GraphQLNamedType
@@ -170,18 +179,19 @@ local function buildClientSchema(
 	-- GraphQLType instance.
 	function buildType(type_: IntrospectionType): GraphQLNamedType
 		if isNotNillish(type_) and isNotNillish(type_.name) and isNotNillish(type_.kind) then
+			-- ROBLOX FIXME Luau: should narrow based on kind field comparison
 			if type_.kind == TypeKind.SCALAR then
-				return buildScalarDef(type_)
+				return buildScalarDef(type_ :: IntrospectionScalarType)
 			elseif type_.kind == TypeKind.OBJECT then
-				return buildObjectDef(type_)
+				return buildObjectDef(type_ :: IntrospectionObjectType)
 			elseif type_.kind == TypeKind.INTERFACE then
-				return buildInterfaceDef(type_)
+				return buildInterfaceDef(type_ :: IntrospectionInterfaceType)
 			elseif type_.kind == TypeKind.UNION then
-				return buildUnionDef(type_)
+				return buildUnionDef(type_ :: IntrospectionUnionType)
 			elseif type_.kind == TypeKind.ENUM then
-				return buildEnumDef(type_)
+				return buildEnumDef(type_ :: IntrospectionEnumType)
 			elseif type_.kind == TypeKind.INPUT_OBJECT then
-				return buildInputObjectDef(type_)
+				return buildInputObjectDef(type_ :: IntrospectionInputObjectType)
 			end
 		end
 		local typeStr = inspect(type_)
@@ -274,7 +284,8 @@ local function buildClientSchema(
 				return {
 					description = valueIntrospection.description,
 					deprecationReason = valueIntrospection.deprecationReason,
-				}
+					-- ROBLOX FIXME Luau: CLI-53723 without the cast below, I get 'Map<string, {| deprecationReason: string?, description: string? |}>' could not be converted into 'GraphQLEnumValueConfigMap'
+				} :: GraphQLEnumValueConfig
 			end),
 		})
 	end
@@ -300,7 +311,8 @@ local function buildClientSchema(
 			error(Error.new(("Introspection result missing fields: %s."):format(inspect(typeIntrospection))))
 		end
 
-		return keyValMap(typeIntrospection.fields, function(fieldIntrospection)
+		-- ROBLOX FIXME Luau: shouldn't need to manually annotate the function param here
+		return keyValMap(typeIntrospection.fields, function(fieldIntrospection: IntrospectionField)
 			return fieldIntrospection.name
 		end, buildField)
 	end
@@ -339,12 +351,11 @@ local function buildClientSchema(
 			error(Error.new(("Introspection must provide input type for arguments, but received: %s."):format(typeStr)))
 		end
 
-		local defaultValue = (function()
-			if isNotNillish(inputValueIntrospection.defaultValue) then
-				return valueFromAST(parseValue(inputValueIntrospection.defaultValue), type_)
-			end
-			return nil
-		end)()
+		-- ROBLOX TODO Luau: should narrow type_ based on `not isInputType(type_)` error branch above
+		local defaultValue = if isNotNillish(inputValueIntrospection.defaultValue)
+			then valueFromAST(parseValue(inputValueIntrospection.defaultValue :: string), type_ :: GraphQLInputObjectType)
+			else nil
+
 		return {
 			description = inputValueIntrospection.description,
 			type = type_,
@@ -401,35 +412,24 @@ local function buildClientSchema(
 	end
 
 	-- Get the root Query, Mutation, and Subscription types.
-	local queryType = (function()
-		if isNotNillish(schemaIntrospection.queryType) then
-			return getObjectType(schemaIntrospection.queryType)
-		end
-		return NULL
-	end)()
+	-- ROBLOX TODO Luau: should narrow on isNotNillish narrowing effect on the param
+	local queryType = if isNotNillish(schemaIntrospection.queryType)
+		then getObjectType(schemaIntrospection.queryType :: IntrospectionNamedTypeRef<IntrospectionObjectType>)
+		else NULL
 
-	local mutationType = (function()
-		if isNotNillish(schemaIntrospection.mutationType) then
-			return getObjectType(schemaIntrospection.mutationType)
-		end
-		return NULL
-	end)()
+	local mutationType = if isNotNillish(schemaIntrospection.mutationType)
+		then getObjectType(schemaIntrospection.mutationType :: IntrospectionNamedTypeRef<IntrospectionObjectType>)
+		else NULL
 
-	local subscriptionType = (function()
-		if isNotNillish(schemaIntrospection.subscriptionType) then
-			return getObjectType(schemaIntrospection.subscriptionType)
-		end
-		return NULL
-	end)()
+	local subscriptionType = if isNotNillish(schemaIntrospection.subscriptionType)
+		then getObjectType(schemaIntrospection.subscriptionType :: IntrospectionNamedTypeRef<IntrospectionObjectType>)
+		else NULL
 
 	-- Get the directives supported by Introspection, assuming empty-set if
 	-- directives were not queried for.
-	local directives = (function()
-		if isNotNillish(schemaIntrospection.directives) then
-			return Array.map(schemaIntrospection.directives, buildDirective)
-		end
-		return {}
-	end)()
+	local directives = if isNotNillish(schemaIntrospection.directives)
+		then Array.map(schemaIntrospection.directives, buildDirective)
+		else {}
 
 	-- Then produce and return a Schema with these types.
 	return GraphQLSchema.new({
@@ -440,7 +440,7 @@ local function buildClientSchema(
 		-- ROBLOX deviation: keyValMap returns a Map instead of ObjMap
 		types = typeMap:values(),
 		directives = directives,
-		assumeValid = options and options.assumeValid,
+		assumeValid = if options then options.assumeValid else nil,
 	})
 end
 

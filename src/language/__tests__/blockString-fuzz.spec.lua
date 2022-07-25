@@ -25,12 +25,10 @@ return function()
 
 	describe("printBlockString", function()
 		it("correctly print random strings", function()
-			for fuzzStr in
-				genFuzzStrings({
-					allowedChars = { "\n", "\t", " ", '"', "a", "\\" },
-					maxLength = 7,
-				})
-			do
+			for fuzzStr in genFuzzStrings({
+				allowedChars = { "\n", "\t", " ", '"', "a", "\\" },
+				maxLength = 7,
+			}) do
 				local testStr = '"""' .. fuzzStr .. '"""'
 
 				local testValue

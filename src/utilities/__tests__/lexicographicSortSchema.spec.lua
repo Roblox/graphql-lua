@@ -3,6 +3,9 @@
 return function()
 	local srcWorkspace = script.Parent.Parent.Parent
 	local utilitiesWorkspace = script.Parent.Parent
+	local Packages = srcWorkspace.Parent
+	local JestGlobals = require(Packages.Dev.JestGlobals)
+	local jestExpect = JestGlobals.expect
 
 	local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
 
@@ -43,7 +46,7 @@ return function()
       }
     ]])
 
-			expect(sorted).to.equal(dedent([[
+			jestExpect(sorted).toEqual(dedent([[
 
       input Bar {
         barA: String
@@ -89,7 +92,7 @@ return function()
       }
     ]])
 
-			expect(sorted).to.equal(dedent([[
+			jestExpect(sorted).toEqual(dedent([[
 
       interface FooA {
         dummy: String
@@ -131,7 +134,7 @@ return function()
       }
     ]])
 
-			expect(sorted).to.equal(dedent([[
+			jestExpect(sorted).toEqual(dedent([[
 
       type FooA {
         dummy: String
@@ -167,7 +170,7 @@ return function()
       }
     ]])
 
-			expect(sorted).to.equal(dedent([[
+			jestExpect(sorted).toEqual(dedent([[
 
       enum Foo {
         A
@@ -189,7 +192,7 @@ return function()
       }
     ]])
 
-			expect(sorted).to.equal(dedent([[
+			jestExpect(sorted).toEqual(dedent([[
 
       type Query {
         dummy(argA: String, argB: Int!, argC: [Float]): ID
@@ -229,7 +232,7 @@ return function()
       }
     ]])
 
-			expect(sorted).to.equal(dedent([[
+			jestExpect(sorted).toEqual(dedent([[
 
       scalar FooA
 
@@ -271,7 +274,7 @@ return function()
       }
     ]])
 
-			expect(sorted).to.equal(dedent([[
+			jestExpect(sorted).toEqual(dedent([[
 
       directive @test(argA: String, argB: Int, argC: Float) on FIELD
 
@@ -291,7 +294,7 @@ return function()
       }
     ]])
 
-			expect(sorted).to.equal(dedent([[
+			jestExpect(sorted).toEqual(dedent([[
 
       directive @test(argA: String, argB: Int, argC: Float) on ENUM | FIELD | UNION
 
@@ -315,7 +318,7 @@ return function()
       }
     ]])
 
-			expect(sorted).to.equal(dedent([[
+			jestExpect(sorted).toEqual(dedent([[
 
       directive @fooA on ENUM
 
@@ -355,7 +358,7 @@ return function()
       }
     ]])
 
-			expect(sorted).to.equal(dedent([[
+			jestExpect(sorted).toEqual(dedent([[
 
       type FooA implements FooC {
         fooA: FooA

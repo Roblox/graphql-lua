@@ -21,9 +21,11 @@ type GraphQLError = graphqlErrorImport.GraphQLError
 
 local languageWorkspace = srcWorkspace.language
 local astImport = require(languageWorkspace.ast)
+type ArgumentNode = astImport.ArgumentNode
 type FieldNode = astImport.FieldNode
 type DirectiveNode = astImport.DirectiveNode
 type VariableDefinitionNode = astImport.VariableDefinitionNode
+type ASTNode = astImport.ASTNode
 local Kind = require(languageWorkspace.kinds).Kind
 local print_ = require(languageWorkspace.printer).print
 
@@ -46,7 +48,12 @@ local coerceInputValue = require(srcWorkspace.utilities.coerceInputValue).coerce
 -- ROBLOX deviation: predeclare functions
 local getVariableValues
 local coerceVariableValues
-local getArgumentValues
+local getArgumentValues: (
+	def: GraphQLField<any, any> | GraphQLDirective,
+	node: FieldNode | DirectiveNode,
+	variableValues: ObjMap<any>?
+) -> { [string]: any }
+
 local getDirectiveValues
 local hasOwnProperty
 
@@ -93,7 +100,12 @@ getVariableValues = function(
 	return { errors = errors }
 end
 
-function coerceVariableValues(schema, varDefNodes, inputs, onError)
+function coerceVariableValues(
+	schema: GraphQLSchema,
+	varDefNodes: Array<VariableDefinitionNode>,
+	inputs: { [string]: any },
+	onError: (error: GraphQLError) -> ()
+): { [string]: any }
 	local coercedValues = {}
 	for _, varDefNode in ipairs(varDefNodes) do
 		local varName = varDefNode.variable.name.value
@@ -163,19 +175,16 @@ end
 --  *
 --  * @internal
 --  *]]
-getArgumentValues = function(def, node, variableValues)
-	local coercedValues = {}
+function getArgumentValues(
+	def: GraphQLField<any, any> | GraphQLDirective,
+	node: FieldNode | DirectiveNode,
+	variableValues: ObjMap<any>?
+): { [string]: any }
+	local coercedValues: { [string]: any } = {}
 
 	-- istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
-	local argumentNodes = (function()
-		local _ref = node.arguments
-
-		if _ref == nil then
-			_ref = {}
-		end
-
-		return _ref
-	end)()
+	-- ROBLOX FIXME Luau? node.arguments is correctly typed, the if-expression should narrow it to non-nil, ad I'm not sure why the {} free type overrides the first branch
+	local argumentNodes: Array<ArgumentNode> = if node.arguments then node.arguments else {}
 	local argNodeMap = keyMap(argumentNodes, function(arg)
 		return arg.name.value
 	end)
@@ -183,7 +192,8 @@ getArgumentValues = function(def, node, variableValues)
 	for _, argDef in ipairs(def.args) do
 		local name = argDef.name
 		local argType = argDef.type
-		local argumentNode = argNodeMap[name]
+		-- ROBLOX FIXME Luau **: not sure why this annotation is necessary, type should track through keyMap return value
+		local argumentNode: ArgumentNode = argNodeMap[name]
 
 		if not argumentNode then
 			if argDef.defaultValue ~= nil then
@@ -220,7 +230,8 @@ getArgumentValues = function(def, node, variableValues)
 				end
 				continue
 			end
-			isNull = isNillish(variableValues[variableName])
+			-- ROBLOX FIXME Luau: Luau doesn't understand that continue in nil guard above means variableValues won't be nil
+			isNull = isNillish((variableValues :: ObjMap<any>)[variableName])
 		end
 
 		if isNull and isNonNullType(argType) then
@@ -258,7 +269,7 @@ end
 getDirectiveValues = function(
 	directiveDef: GraphQLDirective,
 	node: { directives: Array<DirectiveNode>? },
-	variableValues: ObjMap<any>
+	variableValues: ObjMap<any>?
 ): void | { [string]: any }
 	-- istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
 	local directiveNode = if node.directives
@@ -275,10 +286,11 @@ getDirectiveValues = function(
 	return nil
 end
 
-function hasOwnProperty(obj, prop)
-	-- ROBLOX FIXME: not sure if this behavior is enough. There's no hasOwnProperty function in Lua
+function hasOwnProperty(obj: any, prop: string): boolean
+	-- ROBLOX deviation START: not sure if this behavior is enough. There's no hasOwnProperty function in Lua
 	return obj[prop] ~= nil
 	-- return Object.prototype.hasOwnProperty.call(obj, prop)
+	-- ROBLOX deviation END
 end
 
 return {

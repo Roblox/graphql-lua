@@ -114,7 +114,7 @@ exports.validateSDL = function(
 	_rules: Array<SDLValidationRule>?
 ): Array<GraphQLError>
 	local rules = if _rules then _rules else specifiedSDLRules
-	local errors = {}
+	local errors: Array<GraphQLError> = {}
 	local context = SDLValidationContext.new(documentAST, schemaToExtend, function(error_)
 		table.insert(errors, error_)
 	end)

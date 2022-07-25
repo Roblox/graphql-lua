@@ -19,10 +19,14 @@ local SchemaModule = require(srcWorkspace.type.schema)
 local GraphQLSchema = SchemaModule.GraphQLSchema
 -- ROBLOX deviation: bring in types separately
 type GraphQLSchema = SchemaModule.GraphQLSchema
-local GraphQLDirective = require(srcWorkspace.type.directives).GraphQLDirective
+local directivesImport = require(srcWorkspace.type.directives)
+local GraphQLDirective = directivesImport.GraphQLDirective
+type GraphQLDirective = directivesImport.GraphQLDirective
 
 local DefinitionModule = require(srcWorkspace.type.definition)
 type GraphQLType = DefinitionModule.GraphQLType
+type GraphQLList<T> = DefinitionModule.GraphQLList<T>
+type GraphQLNonNull<T> = DefinitionModule.GraphQLNonNull<T>
 type GraphQLNamedType = DefinitionModule.GraphQLNamedType
 type GraphQLFieldConfigMap<T, V> = DefinitionModule.GraphQLFieldConfigMap<T, V>
 type GraphQLFieldConfigArgumentMap = DefinitionModule.GraphQLFieldConfigArgumentMap
@@ -33,6 +37,11 @@ type GraphQLInterfaceType = DefinitionModule.GraphQLInterfaceType
 type GraphQLUnionType = DefinitionModule.GraphQLUnionType
 type GraphQLEnumType = DefinitionModule.GraphQLEnumType
 type GraphQLInputObjectType = DefinitionModule.GraphQLInputObjectType
+local _astImport = require(srcWorkspace.language.ast)
+type ListTypeNode = _astImport.ListTypeNode
+type NamedTypeNode = _astImport.NamedTypeNode
+type NonNullTypeNode = _astImport.NonNullTypeNode
+
 -- ROBLOX deviation END
 
 local isIntrospectionType = require(srcWorkspace.type.introspection).isIntrospectionType
@@ -61,34 +70,38 @@ local sortObjMap, sortByName, sortBy
  * This function returns a sorted copy of the given GraphQLSchema.
  *]]
 local function lexicographicSortSchema(schema: GraphQLSchema): GraphQLSchema
-	-- ROBLOX deviation: predeclare variables
-	local typeMap
-
 	-- ROBLOX deviation: predeclare functions
-	local replaceType, replaceNamedType, replaceMaybeType, sortDirective, sortArgs, sortFields, sortInputFields, sortTypes, sortNamedType
+	local typeMap: Map<string, GraphQLNamedType>
+	local replaceNamedType, replaceMaybeType, sortDirective, sortArgs, sortFields, sortInputFields, sortTypes, sortNamedType
+
+	local schemaConfig = schema:toConfig()
 
 	-- ROBLOX deviation hoist all functions to top of scope
-	function replaceType(type_)
+	local function replaceType<T>(type_: T): T
 		if isListType(type_) then
 			-- $FlowFixMe[incompatible-return]
-			return GraphQLList.new(replaceType(type_.ofType))
+			-- ROBLOX TODO Luau: need generic constraints
+			return GraphQLList.new(replaceType(((type_ :: any) :: GraphQLList<GraphQLType>).ofType))
 		elseif isNonNullType(type_) then
 			-- $FlowFixMe[incompatible-return]
-			return GraphQLNonNull.new(replaceType(type_.ofType))
+			-- ROBLOX TODO Luau: need generic constraints
+			return GraphQLNonNull.new(replaceType(((type_ :: any) :: GraphQLNonNull<GraphQLType>).ofType))
 		end
 
 		return replaceNamedType(type_)
 	end
 
-	function replaceNamedType(type_)
-		return typeMap:get(type_.name)
+	function replaceNamedType<T>(type_: T): T
+		-- ROBLOX TODO Luau: cast needed because we don't have generic constraints yet
+		-- ROBLOX TODO Luau: this variation gets " Generic supertype escaping scope": return typeMap[((type_ :: any) :: GraphQLNamedType).name]
+		return (typeMap[((type_ :: any) :: GraphQLNamedType).name] :: any) :: T
 	end
 
-	function replaceMaybeType(maybeType)
-		return maybeType and replaceNamedType(maybeType)
+	function replaceMaybeType<T>(maybeType: T?): T?
+		return if maybeType then replaceNamedType(maybeType) else nil
 	end
 
-	function sortDirective(directive)
+	function sortDirective(directive: GraphQLDirective)
 		local config = directive:toConfig()
 
 		return GraphQLDirective.new(Object.assign({}, config, {
@@ -111,7 +124,7 @@ local function lexicographicSortSchema(schema: GraphQLSchema): GraphQLSchema
 		return sortObjMap(fieldsMap, function(field)
 			return Object.assign({}, field, {
 				type = replaceType(field.type),
-				args = sortArgs(field.args),
+				args = if field.args then sortArgs(field.args) else nil,
 			})
 		end)
 	end
@@ -124,7 +137,7 @@ local function lexicographicSortSchema(schema: GraphQLSchema): GraphQLSchema
 		end)
 	end
 
-	function sortTypes(arr: Array<any>): Array<any>
+	function sortTypes<T>(arr: Array<T>): Array<T>
 		return Array.map(sortByName(arr), replaceNamedType)
 	end
 
@@ -173,7 +186,9 @@ local function lexicographicSortSchema(schema: GraphQLSchema): GraphQLSchema
 			local config = (type_ :: GraphQLEnumType):toConfig()
 
 			return GraphQLEnumType.new(Object.assign({}, config, {
-				values = sortObjMap(config.values),
+				values = sortObjMap(config.values, function(value)
+					return value
+				end),
 			}))
 		end
 		-- istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
@@ -190,13 +205,14 @@ local function lexicographicSortSchema(schema: GraphQLSchema): GraphQLSchema
 
 		-- istanbul ignore next (Not reachable. All possible types have been considered)
 		invariant(false, "Unexpected type: " .. inspect(type_))
-		error("Unexpected type: " .. inspect(type_)) -- ROBLOX deviation: analyze implicit return value
+		error("Unexpected type: " .. inspect(type_)) -- ROBLOX TODO Luau: should understand throw/noreturn property of invariant
 	end
 
-	local schemaConfig = schema:toConfig()
+	-- ROBLOX deviation START: function moved down here so that sortNamedType is defined by the time we get here
 	typeMap = keyValMap(sortByName(schemaConfig.types), function(type_)
 		return type_.name
 	end, sortNamedType)
+	-- ROBLOX deviation END
 
 	return GraphQLSchema.new(Object.assign({}, schemaConfig, {
 		-- ROBLOX deviation: keyValMap returns a Map instead of an object to preserve key order
@@ -207,37 +223,29 @@ local function lexicographicSortSchema(schema: GraphQLSchema): GraphQLSchema
 		subscription = replaceMaybeType(schemaConfig.subscription),
 	}))
 end
-
-function sortObjMap(map: Map<string, any>, sortValueFn: (any) -> any): Map<string, any>
-	local sortedMap = Map.new()
+-- ROBLOX deviation START: using ordered Map instead of ObjMap
+function sortObjMap<T, R>(map: Map<string, T>, sortValueFn: (value: T) -> R): Map<string, R>
+	local sortedMap = Map.new() :: Map<string, R>
+	-- ROBLOX deviation END
 	local sortedKeys = sortBy(map:keys(), function(x)
 		return x
 	end)
 
 	for _, key in ipairs(sortedKeys) do
-		local value = map:get(key)
-		sortedMap:set(
-			key,
-			(function()
-				if sortValueFn ~= nil then
-					return sortValueFn(value)
-				end
-
-				return value
-			end)()
-		)
+		sortedMap[key] = sortValueFn(map[key])
 	end
 
 	return sortedMap
 end
 
-function sortByName(array: Array<any>): Array<any>
+function sortByName<T>(array: Array<T>): Array<T>
 	return sortBy(array, function(obj)
-		return obj.name
+		-- ROBLOX TODO Luau: need generics
+		return ((obj :: any) :: { name: string }).name
 	end)
 end
 
-function sortBy(array: Array<any>, mapToKey: (any) -> string): Array<any>
+function sortBy<T>(array: Array<T>, mapToKey: (item: T) -> string): Array<T>
 	return Array.sort(Array.slice(array), function(obj1, obj2)
 		local key1 = mapToKey(obj1)
 		local key2 = mapToKey(obj2)

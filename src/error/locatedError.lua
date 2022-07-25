@@ -55,8 +55,7 @@ local function locatedError(
 		(originalError :: GraphQLError).source,
 		(originalError :: GraphQLError).positions,
 		path,
-		-- ROBLOX FIXME Luau: needs normalization, otherwise Table type 'Error' not compatible with type '{| extensions: any? |}' because the former is missing field 'extensions'
-		originalError :: any
+		originalError
 	)
 
 	return output

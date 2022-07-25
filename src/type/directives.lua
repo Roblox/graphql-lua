@@ -39,7 +39,7 @@ local argsToArgsConfig = definition.argsToArgsConfig
 local GraphQLNonNull = definition.GraphQLNonNull
 type GraphQLNonNull<T> = definition.GraphQLNonNull<T>
 
-local GraphQLDirective
+local GraphQLDirective: GraphQLDirective
 
 --[[**
  * Test if the given value is a GraphQL directive.
@@ -68,14 +68,15 @@ export type GraphQLDirective = {
 	isRepeatable: boolean,
 	extensions: ObjMap<any>?,
 	astNode: DirectiveDefinitionNode?,
-	-- ROBLOX deviation: add extra parameter for self
-	toConfig: (any) -> GraphQLDirectiveNormalizedConfig,
-	toString: (any) -> string,
-	toJSON: (any) -> string,
+	new: (config: GraphQLDirectiveConfig) -> GraphQLDirective,
+	toConfig: (self: GraphQLDirective) -> GraphQLDirectiveNormalizedConfig,
+	toString: (self: GraphQLDirective) -> string,
+	toJSON: (self: GraphQLDirective) -> string,
+	__tostring: (self: GraphQLDirective) -> string,
 }
 
-GraphQLDirective = {}
-GraphQLDirective.__index = GraphQLDirective
+GraphQLDirective = {} :: GraphQLDirective;
+(GraphQLDirective :: any).__index = GraphQLDirective
 
 function GraphQLDirective.new(config: GraphQLDirectiveConfig): GraphQLDirective
 	local self = {}
@@ -83,15 +84,7 @@ function GraphQLDirective.new(config: GraphQLDirectiveConfig): GraphQLDirective
 	self.name = config.name
 	self.description = config.description
 	self.locations = config.locations
-	self.isRepeatable = (function()
-		local _ref = config.isRepeatable
-
-		if _ref == nil then
-			_ref = false
-		end
-
-		return _ref
-	end)()
+	self.isRepeatable = if config.isRepeatable then true else false
 	self.extensions = config.extensions and toObjMap(config.extensions)
 	self.astNode = config.astNode
 
@@ -177,13 +170,15 @@ local GraphQLIncludeDirective = GraphQLDirective.new({
 		DirectiveLocation.FRAGMENT_SPREAD,
 		DirectiveLocation.INLINE_FRAGMENT,
 	},
-	args = {
-		["if"] = {
-			type = GraphQLNonNull.new(GraphQLBoolean),
-			-- ROBLOX FIXME Luau: without this any cast, we get "Property 'description' is not compatible. Type 'string?' could not be converted into 'string'"
-			description = "Included when true." :: any,
-		},
-	},
+	args = Map.new({
+		{
+			"if",
+			{
+				type = GraphQLNonNull.new(GraphQLBoolean),
+				description = "Included when true.",
+			},
+		} :: Array<any>,
+	}),
 })
 
 --[[**
@@ -197,13 +192,15 @@ local GraphQLSkipDirective = GraphQLDirective.new({
 		DirectiveLocation.FRAGMENT_SPREAD,
 		DirectiveLocation.INLINE_FRAGMENT,
 	},
-	args = {
-		["if"] = {
-			type = GraphQLNonNull.new(GraphQLBoolean),
-			-- ROBLOX FIXME Luau: without this any cast, we get "Property 'description' is not compatible. Type 'string?' could not be converted into 'string'"
-			description = "Skipped when true." :: any,
-		},
-	},
+	args = Map.new({
+		{
+			"if",
+			{
+				type = GraphQLNonNull.new(GraphQLBoolean),
+				description = "Skipped when true.",
+			},
+		} :: Array<any>,
+	}),
 })
 
 --[[**
@@ -223,14 +220,16 @@ local GraphQLDeprecatedDirective = GraphQLDirective.new({
 		DirectiveLocation.INPUT_FIELD_DEFINITION,
 		DirectiveLocation.ENUM_VALUE,
 	},
-	args = {
-		reason = {
-			type = GraphQLString,
-			-- ROBLOX FIXME Luau: both fields need a hard cast to avoid: Property 'defaultValue' is not compatible. Type 'any?' could not be converted into 'string'
-			description = "Explains why this element was deprecated, usually also including a suggestion for how to access supported similar data. Formatted using the Markdown syntax, as specified by [CommonMark](https://commonmark.org/)." :: any,
-			defaultValue = DEFAULT_DEPRECATION_REASON :: any,
-		},
-	},
+	args = Map.new({
+		{
+			"reason",
+			{
+				type = GraphQLString,
+				description = "Explains why this element was deprecated, usually also including a suggestion for how to access supported similar data. Formatted using the Markdown syntax, as specified by [CommonMark](https://commonmark.org/).",
+				defaultValue = DEFAULT_DEPRECATION_REASON,
+			},
+		} :: Array<any>,
+	}),
 })
 
 -- type GraphQLArgumentConfig = {
@@ -244,13 +243,15 @@ local GraphQLSpecifiedByDirective = GraphQLDirective.new({
 	locations = {
 		DirectiveLocation.SCALAR,
 	},
-	args = {
-		url = {
-			type = GraphQLNonNull.new(GraphQLString),
-			-- ROBLOX FIXME Luau: without this any cast, we get "Property 'description' is not compatible. Type 'string?' could not be converted into 'string'"
-			description = "The URL that specifies the behaviour of this scalar." :: any,
-		},
-	},
+	args = Map.new({
+		{
+			"url",
+			{
+				type = GraphQLNonNull.new(GraphQLString),
+				description = "The URL that specifies the behaviour of this scalar.",
+			},
+		} :: Array<any>,
+	}),
 })
 
 --[[**
