@@ -127,10 +127,13 @@ characterInterface = GraphQLInterfaceType.new({
 					description = "The id of the character.",
 				},
 			} :: Array<any>,
-			{ "name", {
-				type = GraphQLString,
-				description = "The name of the character.",
-			} },
+			{
+				"name",
+				{
+					type = GraphQLString,
+					description = "The name of the character.",
+				},
+			},
 			{
 				"friends",
 				{
@@ -185,14 +188,20 @@ humanType = GraphQLObjectType.new({
 	description = "A humanoid creature in the Star Wars universe.",
 	fields = function()
 		return Map.new({
-			{ "id", {
-				type = GraphQLNonNull.new(GraphQLString),
-				description = "The id of the human.",
-			} } :: Array<any>,
-			{ "name", {
-				type = GraphQLString,
-				description = "The name of the human.",
-			} },
+			{
+				"id",
+				{
+					type = GraphQLNonNull.new(GraphQLString),
+					description = "The id of the human.",
+				},
+			} :: Array<any>,
+			{
+				"name",
+				{
+					type = GraphQLString,
+					description = "The name of the human.",
+				},
+			},
 			{
 				"friends",
 				{
@@ -250,14 +259,20 @@ droidType = GraphQLObjectType.new({
 	description = "A mechanical creature in the Star Wars universe.",
 	fields = function()
 		return Map.new({
-			{ "id", {
-				type = GraphQLNonNull.new(GraphQLString),
-				description = "The id of the droid.",
-			} } :: Array<any>,
-			{ "name", {
-				type = GraphQLString,
-				description = "The name of the droid.",
-			} } :: Array<any>,
+			{
+				"id",
+				{
+					type = GraphQLNonNull.new(GraphQLString),
+					description = "The id of the droid.",
+				},
+			} :: Array<any>,
+			{
+				"name",
+				{
+					type = GraphQLString,
+					description = "The name of the droid.",
+				},
+			} :: Array<any>,
 			{
 				"friends",
 				{

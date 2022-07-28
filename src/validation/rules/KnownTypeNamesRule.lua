@@ -72,23 +72,30 @@ exports.KnownTypeNamesRule = function(context)
 				)
 
 				context:reportError(
-					GraphQLError.new(('Unknown type "%s".'):format(typeName) .. didYouMean(suggestedTypes), node)
+					GraphQLError.new(
+						('Unknown type "%s".'):format(typeName) .. didYouMean(suggestedTypes),
+						node
+					)
 				)
 			end
 		end,
 	}
 end
 
-standardTypeNames = Array.map(Array.concat(specifiedScalarTypes, introspectionTypes), function(type_)
-	return type_.name
-end)
+standardTypeNames = Array.map(
+	Array.concat(specifiedScalarTypes, introspectionTypes),
+	function(type_)
+		return type_.name
+	end
+)
 
 function isStandardTypeName(typeName: string): boolean
 	return Array.indexOf(standardTypeNames, typeName) ~= -1
 end
 
 function isSDLNode(value): boolean
-	return not Array.isArray(value) and (isTypeSystemDefinitionNode(value) or isTypeSystemExtensionNode(value))
+	return not Array.isArray(value)
+		and (isTypeSystemDefinitionNode(value) or isTypeSystemExtensionNode(value))
 end
 
 return exports

@@ -427,7 +427,10 @@ return function()
     ]])
 			local extendedTwiceSchema = extendSchema(extendedSchema, secondExtensionAST)
 
-			local extendedInOneGoSchema = extendSchema(schema, concatAST({ firstExtensionAST, secondExtensionAST }))
+			local extendedInOneGoSchema = extendSchema(
+				schema,
+				concatAST({ firstExtensionAST, secondExtensionAST })
+			)
 			expect(printSchema(extendedInOneGoSchema)).to.equal(printSchema(extendedTwiceSchema))
 
 			local query = assertObjectType(extendedTwiceSchema:getType("Query"))
@@ -474,27 +477,43 @@ return function()
 					someInput.extensionASTNodes,
 					someInterface.extensionASTNodes
 				)
-			).toHaveSameMembers(Array.concat(firstExtensionAST.definitions, secondExtensionAST.definitions))
+			).toHaveSameMembers(
+				Array.concat(firstExtensionAST.definitions, secondExtensionAST.definitions)
+			)
 
 			local newField = query:getFields().newField
 			expect(printASTNode(newField)).to.equal("newField(testArg: TestInput): TestEnum")
 			expect(printASTNode(newField.args[1])).to.equal("testArg: TestInput")
-			expect(printASTNode(query:getFields().oneMoreNewField)).to.equal("oneMoreNewField: TestUnion")
+			expect(printASTNode(query:getFields().oneMoreNewField)).to.equal(
+				"oneMoreNewField: TestUnion"
+			)
 
 			expect(printASTNode(someEnum:getValue("NEW_VALUE"))).to.equal("NEW_VALUE")
-			expect(printASTNode(someEnum:getValue("ONE_MORE_NEW_VALUE"))).to.equal("ONE_MORE_NEW_VALUE")
+			expect(printASTNode(someEnum:getValue("ONE_MORE_NEW_VALUE"))).to.equal(
+				"ONE_MORE_NEW_VALUE"
+			)
 
 			expect(printASTNode(someInput:getFields().newField)).to.equal("newField: String")
-			expect(printASTNode(someInput:getFields().oneMoreNewField)).to.equal("oneMoreNewField: String")
+			expect(printASTNode(someInput:getFields().oneMoreNewField)).to.equal(
+				"oneMoreNewField: String"
+			)
 			expect(printASTNode(someInterface:getFields().newField)).to.equal("newField: String")
-			expect(printASTNode(someInterface:getFields().oneMoreNewField)).to.equal("oneMoreNewField: String")
+			expect(printASTNode(someInterface:getFields().oneMoreNewField)).to.equal(
+				"oneMoreNewField: String"
+			)
 
-			expect(printASTNode(testInput:getFields().testInputField)).to.equal("testInputField: TestEnum")
+			expect(printASTNode(testInput:getFields().testInputField)).to.equal(
+				"testInputField: TestEnum"
+			)
 
 			expect(printASTNode(testEnum:getValue("TEST_VALUE"))).to.equal("TEST_VALUE")
 
-			expect(printASTNode(testInterface:getFields().interfaceField)).to.equal("interfaceField: String")
-			expect(printASTNode(testType:getFields().interfaceField)).to.equal("interfaceField: String")
+			expect(printASTNode(testInterface:getFields().interfaceField)).to.equal(
+				"interfaceField: String"
+			)
+			expect(printASTNode(testType:getFields().interfaceField)).to.equal(
+				"interfaceField: String"
+			)
 			expect(printASTNode(testDirective.args[1])).to.equal("arg: Int")
 		end)
 
@@ -1202,7 +1221,9 @@ return function()
 
 			expect(function()
 				return extendSchema(schema, extendAST)
-			end).toThrow('Directive "@include" already exists in the schema. It cannot be redefined.')
+			end).toThrow(
+				'Directive "@include" already exists in the schema. It cannot be redefined.'
+			)
 		end)
 
 		it("does not allow replacing an existing enum value", function()

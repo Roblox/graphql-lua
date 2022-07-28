@@ -5,7 +5,8 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local KnownTypeNamesRule = require(validationWorkspace.rules.KnownTypeNamesRule).KnownTypeNamesRule
+	local KnownTypeNamesRule =
+		require(validationWorkspace.rules.KnownTypeNamesRule).KnownTypeNamesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 	local expectValidationErrorsWithSchema = harness.expectValidationErrorsWithSchema
@@ -22,7 +23,12 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectValidationErrorsWithSchema(expect_, schema, KnownTypeNamesRule, "\n" .. queryStr)
+		return expectValidationErrorsWithSchema(
+			expect_,
+			schema,
+			KnownTypeNamesRule,
+			"\n" .. queryStr
+		)
 	end
 
 	local function expectValid(expect_, queryStr: string)

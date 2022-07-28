@@ -273,7 +273,9 @@ return function()
 							type = GraphQLInputObjectType.new({ name = "Foo", fields = {} }),
 						},
 						argList = {
-							type = GraphQLList.new(GraphQLInputObjectType.new({ name = "Bar", fields = {} })),
+							type = GraphQLList.new(
+								GraphQLInputObjectType.new({ name = "Bar", fields = {} })
+							),
 						},
 					},
 				})
@@ -405,7 +407,9 @@ return function()
 							query = query,
 							types = types,
 						})
-					end).toThrow("One of the provided types for building the Schema is missing a name.")
+					end).toThrow(
+						"One of the provided types for building the Schema is missing a name."
+					)
 				end)
 
 				it("rejects a Schema which defines an object type twice", function()
@@ -427,10 +431,16 @@ return function()
 						name = "Query",
 						fields = {
 							a = {
-								type = GraphQLObjectType.new({ name = "SameName", fields = fields }),
+								type = GraphQLObjectType.new({
+									name = "SameName",
+									fields = fields,
+								}),
 							},
 							b = {
-								type = GraphQLObjectType.new({ name = "SameName", fields = fields }),
+								type = GraphQLObjectType.new({
+									name = "SameName",
+									fields = fields,
+								}),
 							},
 						},
 					})

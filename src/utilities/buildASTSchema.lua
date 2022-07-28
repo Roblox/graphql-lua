@@ -39,7 +39,10 @@ local buildASTSchema = function(
 	documentAST: DocumentNode,
 	options: BuildSchemaOptions -- ROBLOX TODO: this is nilable upstream, working around Luau narrow issues for now
 ): GraphQLSchema
-	devAssert(documentAST ~= nil and documentAST.kind == Kind.DOCUMENT, "Must provide valid Document AST.")
+	devAssert(
+		documentAST ~= nil and documentAST.kind == Kind.DOCUMENT,
+		"Must provide valid Document AST."
+	)
 
 	if options ~= nil and not (options.assumeValid or options.assumeValidSDL) then
 		assertValidSDL(documentAST)
@@ -73,9 +76,11 @@ local buildASTSchema = function(
 	local directives = config.directives
 
 	for _, stdDirective in ipairs(specifiedDirectives) do
-		if Array.every(directives, function(directive)
-			return directive.name ~= stdDirective.name
-		end) then
+		if
+			Array.every(directives, function(directive)
+				return directive.name ~= stdDirective.name
+			end)
+		then
 			table.insert(directives, stdDirective)
 		end
 	end
@@ -83,10 +88,15 @@ local buildASTSchema = function(
 	return GraphQLSchema.new(config)
 end
 
-local function buildSchema(source: string | Source, options: (BuildSchemaOptions & ParseOptions)?): GraphQLSchema
+local function buildSchema(
+	source: string | Source,
+	options: (BuildSchemaOptions & ParseOptions)?
+): GraphQLSchema
 	local document = parse(source, {
 		noLocation = if options then options.noLocation else nil,
-		experimentalFragmentVariables = if options then options.experimentalFragmentVariables else nil,
+		experimentalFragmentVariables = if options
+			then options.experimentalFragmentVariables
+			else nil,
 	})
 
 	return buildASTSchema(document, {

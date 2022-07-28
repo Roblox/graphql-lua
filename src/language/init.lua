@@ -26,7 +26,10 @@ export type ASTVisitor = visitorModule.ASTVisitor
 -- ROBLOX TODO: Luau doesn't current support default type arguments
 export type Visitor<KindToNode, Nodes> = visitorModule.Visitor<KindToNode, Nodes>
 -- ROBLOX TODO: Luau doesn't current support default type arguments
-export type VisitFn<TAnyNode, TVisitedNode = TAnyNode> = visitorModule.VisitFn<TAnyNode, TVisitedNode>
+export type VisitFn<TAnyNode, TVisitedNode = TAnyNode> = visitorModule.VisitFn<
+	TAnyNode,
+	TVisitedNode
+>
 export type VisitorKeyMap<KindToNode> = visitorModule.VisitorKeyMap<KindToNode>
 
 export type ASTNode = astModule.ASTNode

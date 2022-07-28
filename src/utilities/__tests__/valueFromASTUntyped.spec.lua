@@ -8,7 +8,8 @@ return function()
 	local NaN = Number.NaN
 
 	local parseValue = require(srcWorkspace.language.parser).parseValue
-	local valueFromASTUntyped = require(script.Parent.Parent.valueFromASTUntyped).valueFromASTUntyped
+	local valueFromASTUntyped =
+		require(script.Parent.Parent.valueFromASTUntyped).valueFromASTUntyped
 
 	local NULL = require(srcWorkspace.luaUtils.null)
 

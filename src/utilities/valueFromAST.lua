@@ -28,7 +28,11 @@ local NULL = require(srcWorkspace.luaUtils.null)
 -- ROBLOX deviation: predeclare functions
 local isMissingVariable
 
-local function valueFromAST(valueNode: ValueNode?, type_: GraphQLInputType, variables: ObjMap<any>?): any | void
+local function valueFromAST(
+	valueNode: ValueNode?,
+	type_: GraphQLInputType,
+	variables: ObjMap<any>?
+): any | void
 	if not valueNode then
 		-- When there is no node, then there is also no value.
 		-- Importantly, this is different from returning the value null.
@@ -158,7 +162,8 @@ end
 -- Returns true if the provided valueNode is a variable which is not defined
 -- in the set of variables.
 function isMissingVariable(valueNode: ValueNode, variables: ObjMap<any>?): boolean
-	return valueNode.kind == Kind.VARIABLE and (variables == nil or variables[valueNode.name.value] == nil)
+	return valueNode.kind == Kind.VARIABLE
+		and (variables == nil or variables[valueNode.name.value] == nil)
 end
 
 return {

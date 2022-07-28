@@ -214,7 +214,9 @@ return function()
 			it("returns an error for an invalid field", function()
 				local result = coerceValue({ foo = Number.NaN }, TestInputObject)
 				-- ROBLOX deviation: NaN != Number.NaN so we need special test handler
-				expect(result.errors[1].error).toEqual("Int cannot represent non-integer value: NaN")
+				expect(result.errors[1].error).toEqual(
+					"Int cannot represent non-integer value: NaN"
+				)
 				expect(result.errors[1].path).toEqual({ "foo" })
 				expect(result.errors[1].value).toBeNaN()
 			end)
@@ -409,13 +411,20 @@ return function()
 			it("throw error without path", function()
 				expect(function()
 					return coerceInputValue(NULL, GraphQLNonNull.new(GraphQLInt))
-				end).toThrow('Invalid value null: Expected non-nullable type "Int!" not to be null.')
+				end).toThrow(
+					'Invalid value null: Expected non-nullable type "Int!" not to be null.'
+				)
 			end)
 
 			it("throw error with path", function()
 				expect(function()
-					return coerceInputValue({ NULL }, GraphQLList.new(GraphQLNonNull.new(GraphQLInt)))
-				end).toThrow('Invalid value null at "value[1]": Expected non-nullable type "Int!" not to be null.')
+					return coerceInputValue(
+						{ NULL },
+						GraphQLList.new(GraphQLNonNull.new(GraphQLInt))
+					)
+				end).toThrow(
+					'Invalid value null at "value[1]": Expected non-nullable type "Int!" not to be null.'
+				)
 			end)
 		end)
 	end)

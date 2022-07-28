@@ -82,7 +82,11 @@ type GraphQLType = definitionImport.GraphQLType
 type GraphQLNamedType = definitionImport.GraphQLNamedType
 -- ROBLOX TODO: Luau doesn't currently support default type args, so we inline here
 type DefaultGraphQLFieldConfigTArgs = { [string]: any }
-type GraphQLFieldConfig<T, U> = definitionImport.GraphQLFieldConfig<T, U, DefaultGraphQLFieldConfigTArgs>
+type GraphQLFieldConfig<T, U> = definitionImport.GraphQLFieldConfig<
+	T,
+	U,
+	DefaultGraphQLFieldConfigTArgs
+>
 type GraphQLFieldConfigMap<T, V> = definitionImport.GraphQLFieldConfigMap<T, V>
 type GraphQLArgumentConfig = definitionImport.GraphQLArgumentConfig
 type GraphQLFieldConfigArgumentMap = definitionImport.GraphQLFieldConfigArgumentMap
@@ -142,9 +146,15 @@ type Options = GraphQLSchemaValidationOptions & {
 local function extendSchema(schema, documentAST, options: Options)
 	assertSchema(schema)
 
-	devAssert(documentAST ~= nil and documentAST.kind == Kind.DOCUMENT, "Must provide valid Document AST.")
+	devAssert(
+		documentAST ~= nil and documentAST.kind == Kind.DOCUMENT,
+		"Must provide valid Document AST."
+	)
 
-	if (options and options.assumeValid) ~= true and (options and options.assumeValidSDL) ~= true then
+	if
+		(options and options.assumeValid) ~= true
+		and (options and options.assumeValidSDL) ~= true
+	then
 		assertValidSDLExtension(documentAST, schema)
 	end
 
@@ -231,8 +241,12 @@ function extendSchemaImpl(
 	local extendUnionType
 	local extendEnumType
 	local extendInputObjectType
-	local buildInputFieldMap: (nodes: Array<InputObjectTypeDefinitionNode | InputObjectTypeExtensionNode>) -> GraphQLInputFieldConfigMap
-	local buildEnumValueMap: (nodes: Array<EnumTypeDefinitionNode | EnumTypeExtensionNode>) -> GraphQLEnumValueConfigMap
+	local buildInputFieldMap: (
+		nodes: Array<InputObjectTypeDefinitionNode | InputObjectTypeExtensionNode>
+	) -> GraphQLInputFieldConfigMap
+	local buildEnumValueMap: (
+		nodes: Array<EnumTypeDefinitionNode | EnumTypeExtensionNode>
+	) -> GraphQLEnumValueConfigMap
 	local buildInterfaces: (
 		nodes: Array<
 			InterfaceTypeDefinitionNode
@@ -279,7 +293,11 @@ function extendSchemaImpl(
 	local function replaceDirective(directive: GraphQLDirective): GraphQLDirective
 		local config = directive:toConfig()
 		return GraphQLDirective.new(
-			Object.assign({}, config, { args = mapValueOrdered(coerceToMap(config.args), extendArg) })
+			Object.assign(
+				{},
+				config,
+				{ args = mapValueOrdered(coerceToMap(config.args), extendArg) }
+			)
 		)
 	end
 
@@ -563,14 +581,18 @@ function extendSchemaImpl(
 	end
 
 	function buildInputFieldMap(
-		nodes: Array<InputObjectTypeDefinitionNode | InputObjectTypeExtensionNode>
+		nodes: Array<
+			InputObjectTypeDefinitionNode | InputObjectTypeExtensionNode
+		>
 	): GraphQLInputFieldConfigMap
 		-- ROBLOX deviation: use Map
 		local inputFieldMap = Map.new() :: GraphQLInputFieldConfigMap
 		for _, node in ipairs(nodes) do
 			-- // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
 			-- ROBLOX FIXME Luau: this annotation shouldn't be necessary, TS infers this correctly
-			local fieldsNodes: Array<InputValueDefinitionNode> = if node.fields then node.fields else {}
+			local fieldsNodes: Array<InputValueDefinitionNode> = if node.fields
+				then node.fields
+				else {}
 
 			for _, field in ipairs(fieldsNodes) do
 				-- // Note: While this could make assertions to get the correctly typed
@@ -590,13 +612,17 @@ function extendSchemaImpl(
 		return inputFieldMap
 	end
 
-	function buildEnumValueMap(nodes: Array<EnumTypeDefinitionNode | EnumTypeExtensionNode>): GraphQLEnumValueConfigMap
+	function buildEnumValueMap(
+		nodes: Array<EnumTypeDefinitionNode | EnumTypeExtensionNode>
+	): GraphQLEnumValueConfigMap
 		-- ROBLOX deviation: use Map to guarantee order
 		local enumValueMap = Map.new() :: GraphQLEnumValueConfigMap
 		for _, node in ipairs(nodes) do
 			-- // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
 			-- ROBLOX FIXME Luau: this annotation shouldn't be necessary, TS infers this correctly
-			local valuesNodes: Array<EnumValueDefinitionNode> = if node.values then node.values else {}
+			local valuesNodes: Array<EnumValueDefinitionNode> = if node.values
+				then node.values
+				else {}
 
 			for _, value in ipairs(valuesNodes) do
 				enumValueMap:set(value.name.value, {
@@ -635,7 +661,9 @@ function extendSchemaImpl(
 		return interfaces
 	end
 
-	function buildUnionTypes(nodes: Array<UnionTypeDefinitionNode | UnionTypeExtensionNode>): Array<GraphQLObjectType>
+	function buildUnionTypes(
+		nodes: Array<UnionTypeDefinitionNode | UnionTypeExtensionNode>
+	): Array<GraphQLObjectType>
 		local types: Array<GraphQLObjectType> = {}
 		for _, node in ipairs(nodes) do
 			-- istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
@@ -766,7 +794,9 @@ function extendSchemaImpl(
 			-- // Get the extended root operation types.
 			query = schemaConfig.query and replaceNamedType(schemaConfig.query),
 			mutation = schemaConfig.mutation and replaceNamedType(schemaConfig.mutation),
-			subscription = schemaConfig.subscription and replaceNamedType(schemaConfig.subscription),
+			subscription = schemaConfig.subscription and replaceNamedType(
+				schemaConfig.subscription
+			),
 		},
 		-- // Then, incorporate schema definition and all schema extensions.
 		schemaDef and getOperationTypes({ schemaDef }) or {},
@@ -815,7 +845,9 @@ end)
 --  * Given a field or enum value node, returns the string value for the
 --  * deprecation reason.
 --  */
-function getDeprecationReason(node: EnumValueDefinitionNode | FieldDefinitionNode | InputValueDefinitionNode): string?
+function getDeprecationReason(
+	node: EnumValueDefinitionNode | FieldDefinitionNode | InputValueDefinitionNode
+): string?
 	local deprecated = getDirectiveValues(GraphQLDeprecatedDirective, node)
 	return deprecated and deprecated.reason
 end

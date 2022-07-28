@@ -5,7 +5,8 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local UniqueTypeNamesRule = require(validationWorkspace.rules.UniqueTypeNamesRule).UniqueTypeNamesRule
+	local UniqueTypeNamesRule =
+		require(validationWorkspace.rules.UniqueTypeNamesRule).UniqueTypeNamesRule
 	local harness = require(script.Parent.harness)
 	local expectSDLValidationErrors = harness.expectSDLValidationErrors
 

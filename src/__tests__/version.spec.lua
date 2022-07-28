@@ -19,7 +19,12 @@ return function()
 			local expect: any = expect
 
 			expect(versionInfo).to.be.a("table")
-			expect(Object.keys(versionInfo)).toHaveSameMembers({ "major", "minor", "patch", "preReleaseTag" })
+			expect(Object.keys(versionInfo)).toHaveSameMembers({
+				"major",
+				"minor",
+				"patch",
+				"preReleaseTag",
+			})
 
 			local major = versionInfo.major
 			local minor = versionInfo.minor

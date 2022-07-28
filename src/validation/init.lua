@@ -105,5 +105,7 @@ return {
 
 	-- // Optional rules not defined by the GraphQL Specification
 	NoDeprecatedCustomRule = require(validation.rules.custom.NoDeprecatedCustomRule).NoDeprecatedCustomRule,
-	NoSchemaIntrospectionCustomRule = require(validation.rules.custom.NoSchemaIntrospectionCustomRule).NoSchemaIntrospectionCustomRule,
+	NoSchemaIntrospectionCustomRule = require(
+		validation.rules.custom.NoSchemaIntrospectionCustomRule
+	).NoSchemaIntrospectionCustomRule,
 }

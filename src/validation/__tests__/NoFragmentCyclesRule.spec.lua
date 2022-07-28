@@ -2,7 +2,8 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local NoFragmentCyclesRule = require(validationWorkspace.rules.NoFragmentCyclesRule).NoFragmentCyclesRule
+	local NoFragmentCyclesRule =
+		require(validationWorkspace.rules.NoFragmentCyclesRule).NoFragmentCyclesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 

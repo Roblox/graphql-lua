@@ -52,7 +52,8 @@ exports.FieldsOnCorrectTypeRule = function(context)
 					-- // Report an error, including helpful suggestions.
 					context:reportError(
 						GraphQLError.new(
-							('Cannot query field "%s" on type "%s".'):format(fieldName, type_.name) .. suggestion,
+							('Cannot query field "%s" on type "%s".'):format(fieldName, type_.name)
+								.. suggestion,
 							node
 						)
 					)

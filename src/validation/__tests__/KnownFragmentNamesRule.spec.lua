@@ -2,7 +2,8 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local KnownFragmentNamesRule = require(validationWorkspace.rules.KnownFragmentNamesRule).KnownFragmentNamesRule
+	local KnownFragmentNamesRule =
+		require(validationWorkspace.rules.KnownFragmentNamesRule).KnownFragmentNamesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 

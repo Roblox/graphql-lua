@@ -5,8 +5,9 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local UniqueFieldDefinitionNamesRule =
-		require(validationWorkspace.rules.UniqueFieldDefinitionNamesRule).UniqueFieldDefinitionNamesRule
+	local UniqueFieldDefinitionNamesRule = require(
+		validationWorkspace.rules.UniqueFieldDefinitionNamesRule
+	).UniqueFieldDefinitionNamesRule
 	local harness = require(script.Parent.harness)
 	local expectSDLValidationErrors = harness.expectSDLValidationErrors
 
@@ -14,7 +15,12 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectSDLValidationErrors(expect_, schema, UniqueFieldDefinitionNamesRule, "\n" .. sdlStr)
+		return expectSDLValidationErrors(
+			expect_,
+			schema,
+			UniqueFieldDefinitionNamesRule,
+			"\n" .. sdlStr
+		)
 	end
 
 	local function expectValidSDL(expect_, sdlStr: string, schema)

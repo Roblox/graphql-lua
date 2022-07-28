@@ -5,8 +5,9 @@ return function()
 	local root = validationWorkspace.Parent
 	local parse = require(root.language.parser).parse
 	local extendSchema = require(root.utilities.extendSchema).extendSchema
-	local UniqueDirectivesPerLocationRule =
-		require(validationWorkspace.rules.UniqueDirectivesPerLocationRule).UniqueDirectivesPerLocationRule
+	local UniqueDirectivesPerLocationRule = require(
+		validationWorkspace.rules.UniqueDirectivesPerLocationRule
+	).UniqueDirectivesPerLocationRule
 	local harness = require(script.Parent.harness)
 	local testSchema = harness.testSchema
 	local expectValidationErrorsWithSchema = harness.expectValidationErrorsWithSchema
@@ -39,7 +40,12 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectSDLValidationErrors(expect_, schema, UniqueDirectivesPerLocationRule, "\n" .. sdlStr)
+		return expectSDLValidationErrors(
+			expect_,
+			schema,
+			UniqueDirectivesPerLocationRule,
+			"\n" .. sdlStr
+		)
 	end
 
 	describe("Validate: Directives Are Unique Per Location", function()

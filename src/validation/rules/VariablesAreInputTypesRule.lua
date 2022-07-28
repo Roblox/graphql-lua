@@ -26,7 +26,10 @@ exports.VariablesAreInputTypesRule = function(context)
 
 				context:reportError(
 					GraphQLError.new(
-						('Variable "$%s" cannot be non-input type "%s".'):format(variableName, typeName),
+						('Variable "$%s" cannot be non-input type "%s".'):format(
+							variableName,
+							typeName
+						),
 						node.type
 					)
 				)

@@ -28,7 +28,10 @@ exports.LoneAnonymousOperationRule = function(context)
 		OperationDefinition = function(_self, node)
 			if not node.name and operationCount > 1 then
 				context:reportError(
-					GraphQLError.new("This anonymous operation must be the only defined operation.", node)
+					GraphQLError.new(
+						"This anonymous operation must be the only defined operation.",
+						node
+					)
 				)
 			end
 		end,

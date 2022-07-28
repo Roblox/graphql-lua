@@ -3,7 +3,9 @@
 return function()
 	local validationWorkspace = script.Parent.Parent
 	local LoneAnonymousOperationRule =
-		require(validationWorkspace.rules.LoneAnonymousOperationRule).LoneAnonymousOperationRule
+		require(
+			validationWorkspace.rules.LoneAnonymousOperationRule
+		).LoneAnonymousOperationRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 

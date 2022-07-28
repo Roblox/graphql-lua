@@ -3,6 +3,7 @@
 local languageWorkspace = script.Parent.Parent
 local srcWorkspace = languageWorkspace.Parent
 local Packages = srcWorkspace.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
 -- ROBLOX deviation: use jestExpect here so that we get reasonably text diffing on failures
 local JestGlobals = require(Packages.Dev.JestGlobals)
 local jestExpect = JestGlobals.expect
@@ -10,13 +11,15 @@ local astModule = require(languageWorkspace.ast)
 type FieldNode = astModule.FieldNode
 
 return function()
-	local dedent = require(script.Parent.Parent.Parent.__testUtils__.dedent).dedent
-	local kitchenSinkQuery = require(script.Parent.Parent.Parent.__testUtils__.kitchenSinkQuery).kitchenSinkQuery
+	local dedent = require(srcWorkspace.__testUtils__.dedent).dedent
+	local kitchenSinkQuery =
+		require(script.Parent.Parent.Parent.__testUtils__.kitchenSinkQuery).kitchenSinkQuery
 
 	local parse = require(script.Parent.Parent.parser).parse
 	local print_ = require(script.Parent.Parent.printer).print
 
-	local inspect = require(script.Parent.Parent.Parent.TestMatchers.inspect).inspect
+	--ROBLOX TODO: make proper JSON.stringify export in polyfill
+	local inspect = LuauPolyfill.util.inspect
 	describe("Printer: Query document", function()
 		it("does not alter ast", function()
 			-- ROBLOX deviation: no JSON.stringify in Lua. Using inspect instead
@@ -59,7 +62,9 @@ return function()
 				}
 			]]))
 
-			local queryASTWithArtifacts = parse("query ($foo: TestType) @testDirective { id, name }")
+			local queryASTWithArtifacts = parse(
+				"query ($foo: TestType) @testDirective { id, name }"
+			)
 			jestExpect(print_(queryASTWithArtifacts)).toEqual(dedent([[
 				query ($foo: TestType) @testDirective {
 				  id
@@ -67,7 +72,9 @@ return function()
 				}
 			]]))
 
-			local mutationASTWithArtifacts = parse("mutation ($foo: TestType) @testDirective { id, name }")
+			local mutationASTWithArtifacts = parse(
+				"mutation ($foo: TestType) @testDirective { id, name }"
+			)
 			jestExpect(print_(mutationASTWithArtifacts)).toEqual(dedent([[
 				mutation ($foo: TestType) @testDirective {
 				  id

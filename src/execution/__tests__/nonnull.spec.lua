@@ -527,8 +527,10 @@ return function()
 			end)
 		end)
 
-		describe("nulls the first nullable object after a field in a long chain of non-null fields", function()
-			local query = [[
+		describe(
+			"nulls the first nullable object after a field in a long chain of non-null fields",
+			function()
+				local query = [[
 
       {
         syncNest {
@@ -577,172 +579,173 @@ return function()
         }
       }
     ]]
-			local data = {
-				syncNest = NULL,
-				promiseNest = NULL,
-				anotherNest = NULL,
-				anotherPromiseNest = NULL,
-			}
+				local data = {
+					syncNest = NULL,
+					promiseNest = NULL,
+					anotherNest = NULL,
+					anotherPromiseNest = NULL,
+				}
 
-			it("that returns null", function()
-				local result = executeQuery(query, nullingData):expect()
+				it("that returns null", function()
+					local result = executeQuery(query, nullingData):expect()
 
-				--[[
+					--[[
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
-				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
-				expect(result.data).toEqual(data)
-				expect(result.errors).toArrayEqual({
-					{
-						message = "Cannot return null for non-nullable field DataType.syncNonNull.",
-						path = {
-							"syncNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"syncNonNull",
-						},
-						locations = {
-							{
-								line = 8,
-								column = 19,
+					expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
+					expect(result.data).toEqual(data)
+					expect(result.errors).toArrayEqual({
+						{
+							message = "Cannot return null for non-nullable field DataType.syncNonNull.",
+							path = {
+								"syncNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"syncNonNull",
+							},
+							locations = {
+								{
+									line = 8,
+									column = 19,
+								},
 							},
 						},
-					},
-					{
-						message = "Cannot return null for non-nullable field DataType.syncNonNull.",
-						path = {
-							"promiseNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"syncNonNull",
-						},
-						locations = {
-							{
-								line = 19,
-								column = 19,
+						{
+							message = "Cannot return null for non-nullable field DataType.syncNonNull.",
+							path = {
+								"promiseNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"syncNonNull",
+							},
+							locations = {
+								{
+									line = 19,
+									column = 19,
+								},
 							},
 						},
-					},
-					{
-						message = "Cannot return null for non-nullable field DataType.promiseNonNull.",
-						path = {
-							"anotherNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"promiseNonNull",
-						},
-						locations = {
-							{
-								line = 30,
-								column = 19,
+						{
+							message = "Cannot return null for non-nullable field DataType.promiseNonNull.",
+							path = {
+								"anotherNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"promiseNonNull",
+							},
+							locations = {
+								{
+									line = 30,
+									column = 19,
+								},
 							},
 						},
-					},
-					{
-						message = "Cannot return null for non-nullable field DataType.promiseNonNull.",
-						path = {
-							"anotherPromiseNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"promiseNonNull",
-						},
-						locations = {
-							{
-								line = 41,
-								column = 19,
+						{
+							message = "Cannot return null for non-nullable field DataType.promiseNonNull.",
+							path = {
+								"anotherPromiseNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"promiseNonNull",
+							},
+							locations = {
+								{
+									line = 41,
+									column = 19,
+								},
 							},
 						},
-					},
-				}, true)
-			end)
-			it("that throws", function()
-				local result = executeQuery(query, throwingData):expect()
+					}, true)
+				end)
+				it("that throws", function()
+					local result = executeQuery(query, throwingData):expect()
 
-				--[[
+					--[[
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
-				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
-				expect(result.data).toEqual(data)
-				expect(result.errors).toArrayEqual({
-					{
-						message = syncNonNullError.message,
-						path = {
-							"syncNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"syncNonNull",
-						},
-						locations = {
-							{
-								line = 8,
-								column = 19,
+					expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
+					expect(result.data).toEqual(data)
+					expect(result.errors).toArrayEqual({
+						{
+							message = syncNonNullError.message,
+							path = {
+								"syncNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"syncNonNull",
+							},
+							locations = {
+								{
+									line = 8,
+									column = 19,
+								},
 							},
 						},
-					},
-					{
-						message = syncNonNullError.message,
-						path = {
-							"promiseNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"syncNonNull",
-						},
-						locations = {
-							{
-								line = 19,
-								column = 19,
+						{
+							message = syncNonNullError.message,
+							path = {
+								"promiseNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"syncNonNull",
+							},
+							locations = {
+								{
+									line = 19,
+									column = 19,
+								},
 							},
 						},
-					},
-					{
-						message = promiseNonNullError.message,
-						path = {
-							"anotherNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"promiseNonNull",
-						},
-						locations = {
-							{
-								line = 30,
-								column = 19,
+						{
+							message = promiseNonNullError.message,
+							path = {
+								"anotherNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"promiseNonNull",
+							},
+							locations = {
+								{
+									line = 30,
+									column = 19,
+								},
 							},
 						},
-					},
-					{
-						message = promiseNonNullError.message,
-						path = {
-							"anotherPromiseNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"syncNonNullNest",
-							"promiseNonNullNest",
-							"promiseNonNull",
-						},
-						locations = {
-							{
-								line = 41,
-								column = 19,
+						{
+							message = promiseNonNullError.message,
+							path = {
+								"anotherPromiseNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"syncNonNullNest",
+								"promiseNonNullNest",
+								"promiseNonNull",
+							},
+							locations = {
+								{
+									line = 41,
+									column = 19,
+								},
 							},
 						},
-					},
-				}, true)
-			end)
-		end)
+					}, true)
+				end)
+			end
+		)
 
 		describe("nulls the top level if non-nullable field", function()
 			local query = [[
@@ -985,38 +988,41 @@ return function()
 				}, true)
 			end)
 
-			it("field error when non-null arg provided variable with explicit null value", function()
-				local result = executeSync({
-					schema = schemaWithNonNullArg,
-					document = parse([[
+			it(
+				"field error when non-null arg provided variable with explicit null value",
+				function()
+					local result = executeSync({
+						schema = schemaWithNonNullArg,
+						document = parse([[
 
           query ($testVar: String = "default value") {
             withNonNullArg (cannotBeNull: $testVar)
           }
         ]]),
-					variableValues = { testVar = NULL },
-				})
+						variableValues = { testVar = NULL },
+					})
 
-				--[[
+					--[[
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
 				--]]
-				expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
-				expect(result.data).toEqual({ withNonNullArg = NULL })
-				expect(result.errors).toArrayEqual({
-					{
-						message = 'Argument "cannotBeNull" of non-null type "String!" must not be null.',
-						locations = {
-							{
-								line = 3,
-								column = 43,
+					expect(Object.keys(result)).toHaveSameMembers({ "data", "errors" })
+					expect(result.data).toEqual({ withNonNullArg = NULL })
+					expect(result.errors).toArrayEqual({
+						{
+							message = 'Argument "cannotBeNull" of non-null type "String!" must not be null.',
+							locations = {
+								{
+									line = 3,
+									column = 43,
+								},
+							},
+							path = {
+								"withNonNullArg",
 							},
 						},
-						path = {
-							"withNonNullArg",
-						},
-					},
-				}, true)
-			end)
+					}, true)
+				end
+			)
 		end)
 	end)
 end

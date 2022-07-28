@@ -157,7 +157,9 @@ return function()
 				expect(removeStack(executeQuery(listOfPromises):expect())).toEqual(result)
 
 				-- Promise<Array<Promise<T>>> === Array<T>
-				expect(removeStack(executeQuery(promisify(listOfPromises)):expect())).toEqual(result)
+				expect(removeStack(executeQuery(promisify(listOfPromises)):expect())).toEqual(
+					result
+				)
 			end
 
 			-- ROBLOX deviation: wrap result in promise

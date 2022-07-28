@@ -420,7 +420,9 @@ return function()
 				value = "slashes \\\\ \\/",
 			})
 
-			expect(lexOne('"""\n\n        spans\n          multiple\n            lines\n\n        """')).toObjectContain({
+			expect(
+				lexOne('"""\n\n        spans\n          multiple\n            lines\n\n        """')
+			).toObjectContain({
 				kind = TokenKind.BLOCK_STRING,
 				start = 1,
 				_end = 69,

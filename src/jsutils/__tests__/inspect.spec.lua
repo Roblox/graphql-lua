@@ -61,7 +61,9 @@ return function()
 
 			expect(inspect({ { {} } })).to.equal("[[[]]]")
 			expect(inspect({ { { "a" } } })).to.equal("[[[Array]]]")
-			expect(inspect({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 })).to.equal("[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]")
+			expect(inspect({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 })).to.equal(
+				"[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]"
+			)
 
 			expect(inspect({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 })).to.equal(
 				"[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ... 1 more item]"
@@ -78,7 +80,9 @@ return function()
 			expect(inspect({ a = 1 })).to.equal("{ a: 1 }")
 			expect(inspect({ a = 1, b = 2 })).to.equal("{ a: 1, b: 2 }")
 			-- deviation: avoid sparse array
-			expect(inspect({ array = { false, 0 } :: Array<any> })).to.equal("{ array: [false, 0] }")
+			expect(inspect({ array = { false, 0 } :: Array<any> })).to.equal(
+				"{ array: [false, 0] }"
+			)
 
 			expect(inspect({ a = { b = {} } })).to.equal("{ a: { b: [] } }")
 			expect(inspect({ a = { b = { c = 1 } } })).to.equal("{ a: { b: [Object] } }")

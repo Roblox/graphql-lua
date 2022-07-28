@@ -1024,10 +1024,16 @@ return function()
 
 			expect(printASTNode(testField)).to.equal("testField(testArg: TestInput): TestUnion")
 			expect(printASTNode(testField.args[1])).to.equal("testArg: TestInput")
-			expect(printASTNode(testInput:getFields().testInputField)).to.equal("testInputField: TestEnum")
+			expect(printASTNode(testInput:getFields().testInputField)).to.equal(
+				"testInputField: TestEnum"
+			)
 			expect(printASTNode(testEnum:getValue("TEST_VALUE"))).to.equal("TEST_VALUE")
-			expect(printASTNode(testInterface:getFields().interfaceField)).to.equal("interfaceField: String")
-			expect(printASTNode(testType:getFields().interfaceField)).to.equal("interfaceField: String")
+			expect(printASTNode(testInterface:getFields().interfaceField)).to.equal(
+				"interfaceField: String"
+			)
+			expect(printASTNode(testType:getFields().interfaceField)).to.equal(
+				"interfaceField: String"
+			)
 			expect(printASTNode(testDirective.args[1])).to.equal("arg: TestScalar")
 		end)
 

@@ -130,8 +130,9 @@ function GraphQLError.new(
 	self.originalError = originalError
 
 	-- Compute list of blame nodes.
-	self.nodes =
-		undefinedIfEmpty(if Array.isArray(nodes) then nodes else if nodes then { nodes } else nil) :: Array<ASTNode> | nil
+	self.nodes = undefinedIfEmpty(
+		if Array.isArray(nodes) then nodes else if nodes then { nodes } else nil
+	) :: Array<ASTNode> | nil
 
 	-- ROBLOX FIXME Luau: Luau should normalize here as Array<Location> | nil without annotation
 	local nodeLocations: Array<Location>? = {}
@@ -147,7 +148,9 @@ function GraphQLError.new(
 	nodeLocations = undefinedIfEmpty(nodeLocations)
 
 	-- Compute locations in the source for the given nodes/positions.
-	self.source = if source then source else if nodeLocations == nil then nil else nodeLocations[1].source
+	self.source = if source
+		then source
+		else if nodeLocations == nil then nil else nodeLocations[1].source
 
 	self.positions = if positions
 		then positions

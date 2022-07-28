@@ -267,7 +267,9 @@ return function()
 			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
 			(expect :: any)(ast).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }));
 			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
-			(expect :: any)(editedAST).toEqual(parse("{ a,    c { a,    c } }", { noLocation = true }))
+			(expect :: any)(editedAST).toEqual(
+				parse("{ a,    c { a,    c } }", { noLocation = true })
+			)
 		end)
 
 		it("allows for editing on leave", function()
@@ -290,7 +292,9 @@ return function()
 			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
 			(expect :: any)(ast).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }));
 			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
-			(expect :: any)(editedAST).toEqual(parse("{ a,    c { a,    c } }", { noLocation = true }))
+			(expect :: any)(editedAST).toEqual(
+				parse("{ a,    c { a,    c } }", { noLocation = true })
+			)
 		end)
 
 		it("ignores false returned on leave", function()
@@ -301,7 +305,9 @@ return function()
 				end,
 			});
 			-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
-			(expect :: any)(returnedAST).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }))
+			(expect :: any)(returnedAST).toEqual(
+				parse("{ a, b, c { a, b, c } }", { noLocation = true })
+			)
 		end)
 
 		it("visits edited node", function()
@@ -1083,7 +1089,10 @@ return function()
 							enter = function(self, ...)
 								local node = ...
 								checkVisitorFnArgs(expect, ast, { ... })
-								table.insert(visited, { "no-a", "enter", node.kind, getValue(node) })
+								table.insert(
+									visited,
+									{ "no-a", "enter", node.kind, getValue(node) }
+								)
 								if node.kind == "Field" and node.name.value == "a" then
 									return false
 								end
@@ -1092,14 +1101,20 @@ return function()
 							leave = function(self, ...)
 								local node = ...
 								checkVisitorFnArgs(expect, ast, { ... })
-								table.insert(visited, { "no-a", "leave", node.kind, getValue(node) })
+								table.insert(
+									visited,
+									{ "no-a", "leave", node.kind, getValue(node) }
+								)
 							end,
 						},
 						{
 							enter = function(self, ...)
 								local node = ...
 								checkVisitorFnArgs(expect, ast, { ... })
-								table.insert(visited, { "no-b", "enter", node.kind, getValue(node) })
+								table.insert(
+									visited,
+									{ "no-b", "enter", node.kind, getValue(node) }
+								)
 								if node.kind == "Field" and node.name.value == "b" then
 									return false
 								end
@@ -1108,7 +1123,10 @@ return function()
 							leave = function(self, ...)
 								local node = ...
 								checkVisitorFnArgs(expect, ast, { ... })
-								table.insert(visited, { "no-b", "leave", node.kind, getValue(node) })
+								table.insert(
+									visited,
+									{ "no-b", "leave", node.kind, getValue(node) }
+								)
 							end,
 						},
 					})
@@ -1208,7 +1226,10 @@ return function()
 							enter = function(self, ...)
 								local node = ...
 								checkVisitorFnArgs(expect, ast, { ... })
-								table.insert(visited, { "break-a", "enter", node.kind, getValue(node) })
+								table.insert(
+									visited,
+									{ "break-a", "enter", node.kind, getValue(node) }
+								)
 								if node.kind == "Name" and node.value == "a" then
 									return BREAK
 								end
@@ -1223,7 +1244,10 @@ return function()
 							enter = function(self, ...)
 								local node = ...
 								checkVisitorFnArgs(expect, ast, { ... })
-								table.insert(visited, { "break-b", "enter", node.kind, getValue(node) })
+								table.insert(
+									visited,
+									{ "break-b", "enter", node.kind, getValue(node) }
+								)
 								if node.kind == "Name" and node.value == "b" then
 									return BREAK
 								end
@@ -1232,7 +1256,10 @@ return function()
 							leave = function(self, ...)
 								local node = ...
 								checkVisitorFnArgs(expect, ast, { ... })
-								table.insert(visited, { "break-b", "leave", node.kind, getValue(node) })
+								table.insert(
+									visited,
+									{ "break-b", "leave", node.kind, getValue(node) }
+								)
 							end,
 						},
 					})
@@ -1319,12 +1346,18 @@ return function()
 							enter = function(self, ...)
 								local node = ...
 								checkVisitorFnArgs(expect, ast, { ... })
-								table.insert(visited, { "break-a", "enter", node.kind, getValue(node) })
+								table.insert(
+									visited,
+									{ "break-a", "enter", node.kind, getValue(node) }
+								)
 							end,
 							leave = function(self, ...)
 								local node = ...
 								checkVisitorFnArgs(expect, ast, { ... })
-								table.insert(visited, { "break-a", "leave", node.kind, getValue(node) })
+								table.insert(
+									visited,
+									{ "break-a", "leave", node.kind, getValue(node) }
+								)
 								if node.kind == "Field" and node.name.value == "a" then
 									return BREAK
 								end
@@ -1335,12 +1368,18 @@ return function()
 							enter = function(self, ...)
 								local node = ...
 								checkVisitorFnArgs(expect, ast, { ... })
-								table.insert(visited, { "break-b", "enter", node.kind, getValue(node) })
+								table.insert(
+									visited,
+									{ "break-b", "enter", node.kind, getValue(node) }
+								)
 							end,
 							leave = function(self, ...)
 								local node = ...
 								checkVisitorFnArgs(expect, ast, { ... })
-								table.insert(visited, { "break-b", "leave", node.kind, getValue(node) })
+								table.insert(
+									visited,
+									{ "break-b", "leave", node.kind, getValue(node) }
+								)
 								if node.kind == "Field" and node.name.value == "b" then
 									return BREAK
 								end
@@ -1427,9 +1466,13 @@ return function()
 					})
 				);
 				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
-				(expect :: any)(ast).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }));
+				(expect :: any)(ast).toEqual(
+					parse("{ a, b, c { a, b, c } }", { noLocation = true })
+				);
 				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
-				(expect :: any)(editedAST).toEqual(parse("{ a,    c { a,    c } }", { noLocation = true }));
+				(expect :: any)(editedAST).toEqual(
+					parse("{ a,    c { a,    c } }", { noLocation = true })
+				);
 				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
 				(expect :: any)(visited).toEqual({
 					{ "enter", "Document" },
@@ -1501,9 +1544,13 @@ return function()
 					})
 				);
 				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
-				(expect :: any)(ast).toEqual(parse("{ a, b, c { a, b, c } }", { noLocation = true }));
+				(expect :: any)(ast).toEqual(
+					parse("{ a, b, c { a, b, c } }", { noLocation = true })
+				);
 				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
-				(expect :: any)(editedAST).toEqual(parse("{ a,    c { a,    c } }", { noLocation = true }));
+				(expect :: any)(editedAST).toEqual(
+					parse("{ a,    c { a,    c } }", { noLocation = true })
+				);
 				-- ROBLOX FIXME: Key 'toEqual' not found in table 'Expectation'
 				(expect :: any)(visited).toEqual({
 					{ "enter", "Document" },

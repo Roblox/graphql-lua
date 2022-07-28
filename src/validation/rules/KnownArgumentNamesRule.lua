@@ -37,8 +37,11 @@ function exports.KnownArgumentNamesRule(context)
 				local suggestions = suggestionList(argName, knownArgsNames)
 				context:reportError(
 					GraphQLError.new(
-						('Unknown argument "%s" on field "%s.%s".'):format(argName, parentType.name, fieldDef.name)
-							.. didYouMean(suggestions),
+						('Unknown argument "%s" on field "%s.%s".'):format(
+							argName,
+							parentType.name,
+							fieldDef.name
+						) .. didYouMean(suggestions),
 						argNode
 					)
 				)
@@ -88,8 +91,10 @@ function exports.KnownArgumentNamesOnDirectivesRule(context)
 						local suggestions = suggestionList(argName, knownArgs)
 						context:reportError(
 							GraphQLError.new(
-								('Unknown argument "%s" on directive "@%s".'):format(argName, directiveName)
-									.. didYouMean(suggestions),
+								('Unknown argument "%s" on directive "@%s".'):format(
+									argName,
+									directiveName
+								) .. didYouMean(suggestions),
 								argNode
 							)
 						)

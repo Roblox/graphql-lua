@@ -50,7 +50,11 @@ local function valueFromASTUntyped(
 		return tonumber(valueNode.value, 10)
 	elseif valueNode.kind == Kind.FLOAT then
 		return tonumber(valueNode.value)
-	elseif valueNode.kind == Kind.STRING or valueNode.kind == Kind.ENUM or valueNode.kind == Kind.BOOLEAN then
+	elseif
+		valueNode.kind == Kind.STRING
+		or valueNode.kind == Kind.ENUM
+		or valueNode.kind == Kind.BOOLEAN
+	then
 		return valueNode.value
 	elseif valueNode.kind == Kind.LIST then
 		return Array.map(valueNode.values, function(node)

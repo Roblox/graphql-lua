@@ -1,7 +1,8 @@
 -- upstream: https://github.com/graphql/graphql-js/blob/00d4efea7f5b44088356798afff0317880605f4d/src/utilities/__tests__/getIntrospectionQuery-test.js
 
 local srcWorkspace = script.Parent.Parent.Parent
-local getIntrospectionQuery = require(srcWorkspace.utilities.getIntrospectionQuery).getIntrospectionQuery
+local getIntrospectionQuery =
+	require(srcWorkspace.utilities.getIntrospectionQuery).getIntrospectionQuery
 
 -- ROBLOX Deviation: utility function for finding multiple matches
 local function stringFindAll(str, pattern)
@@ -90,17 +91,29 @@ return function()
 		it('include "deprecationReason" field on input values', function()
 			expectIntrospectionQuery().toMatch("deprecationReason", 2)
 
-			expectIntrospectionQuery({ inputValueDeprecation = true }).toMatch("deprecationReason", 3)
+			expectIntrospectionQuery({ inputValueDeprecation = true }).toMatch(
+				"deprecationReason",
+				3
+			)
 
-			expectIntrospectionQuery({ inputValueDeprecation = false }).toMatch("deprecationReason", 2)
+			expectIntrospectionQuery({ inputValueDeprecation = false }).toMatch(
+				"deprecationReason",
+				2
+			)
 		end)
 
 		it("include deprecated input field and args", function()
 			expectIntrospectionQuery().toMatch("includeDeprecated: true", 2)
 
-			expectIntrospectionQuery({ inputValueDeprecation = true }).toMatch("includeDeprecated: true", 5)
+			expectIntrospectionQuery({ inputValueDeprecation = true }).toMatch(
+				"includeDeprecated: true",
+				5
+			)
 
-			expectIntrospectionQuery({ inputValueDeprecation = false }).toMatch("includeDeprecated: true", 2)
+			expectIntrospectionQuery({ inputValueDeprecation = false }).toMatch(
+				"includeDeprecated: true",
+				2
+			)
 		end)
 	end)
 end

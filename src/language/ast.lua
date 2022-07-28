@@ -116,7 +116,9 @@ export type Token = {
    ]]
 	prev: Token?,
 	next: Token?,
-	toJSON: (self: Token) -> {
+	toJSON: (
+		self: Token
+	) -> {
 		kind: TokenKindEnum,
 		value: string?,
 		line: number,
@@ -291,7 +293,10 @@ export type DocumentNode = {
 	definitions: Array<DefinitionNode>,
 }
 
-export type DefinitionNode = ExecutableDefinitionNode | TypeSystemDefinitionNode | TypeSystemExtensionNode
+export type DefinitionNode =
+	ExecutableDefinitionNode
+	| TypeSystemDefinitionNode
+	| TypeSystemExtensionNode
 
 export type ExecutableDefinitionNode = OperationDefinitionNode | FragmentDefinitionNode
 
@@ -479,7 +484,10 @@ export type NonNullTypeNode = {
 
 -- Type System Definition
 
-export type TypeSystemDefinitionNode = SchemaDefinitionNode | TypeDefinitionNode | DirectiveDefinitionNode
+export type TypeSystemDefinitionNode =
+	SchemaDefinitionNode
+	| TypeDefinitionNode
+	| DirectiveDefinitionNode
 
 export type SchemaDefinitionNode = {
 	kind: "SchemaDefinition",

@@ -35,12 +35,16 @@ exports.LoneSchemaDefinitionRule = function(context)
 	return {
 		SchemaDefinition = function(_self, node)
 			if isNotNillish(alreadyDefined) then
-				context:reportError(GraphQLError.new("Cannot define a new schema within a schema extension.", node))
+				context:reportError(
+					GraphQLError.new("Cannot define a new schema within a schema extension.", node)
+				)
 				return
 			end
 
 			if schemaDefinitionsCount > 0 then
-				context:reportError(GraphQLError.new("Must provide only one schema definition.", node))
+				context:reportError(
+					GraphQLError.new("Must provide only one schema definition.", node)
+				)
 			end
 			schemaDefinitionsCount = schemaDefinitionsCount + 1
 		end,

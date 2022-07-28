@@ -37,7 +37,10 @@ exports.NoUnusedFragmentsRule = function(context)
 					local fragName = fragmentDef.name.value
 					if fragmentNameUsed[fragName] ~= true then
 						context:reportError(
-							GraphQLError.new(('Fragment "%s" is never used.'):format(fragName), fragmentDef)
+							GraphQLError.new(
+								('Fragment "%s" is never used.'):format(fragName),
+								fragmentDef
+							)
 						)
 					end
 				end

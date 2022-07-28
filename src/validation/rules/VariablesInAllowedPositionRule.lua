@@ -46,18 +46,22 @@ exports.VariablesInAllowedPositionRule = function(context)
 						local varType = typeFromAST(schema, varDef.type)
 						if
 							varType
-							and not allowedVariableUsage(schema, varType, varDef.defaultValue, type_, defaultValue)
+							and not allowedVariableUsage(
+								schema,
+								varType,
+								varDef.defaultValue,
+								type_,
+								defaultValue
+							)
 						then
 							local varTypeStr = inspect(varType)
 							local typeStr = inspect(type_)
 
 							context:reportError(
 								GraphQLError.new(
-									('Variable "$%s" of type "%s" used in position expecting type "%s".'):format(
-										varName,
-										varTypeStr,
-										typeStr
-									),
+									(
+										'Variable "$%s" of type "%s" used in position expecting type "%s".'
+									):format(varName, varTypeStr, typeStr),
 									{ varDef, node }
 								)
 							)
@@ -79,7 +83,8 @@ end
 --  */
 function allowedVariableUsage(schema, varType, varDefaultValue, locationType, locationDefaultValue)
 	if isNonNullType(locationType) and not isNonNullType(varType) then
-		local hasNonNullVariableDefaultValue = varDefaultValue ~= nil and varDefaultValue.kind ~= Kind.NULL
+		local hasNonNullVariableDefaultValue = varDefaultValue ~= nil
+			and varDefaultValue.kind ~= Kind.NULL
 		local hasLocationDefaultValue = locationDefaultValue ~= nil
 		if not hasNonNullVariableDefaultValue and not hasLocationDefaultValue then
 			return false

@@ -180,7 +180,12 @@ type Parser = {
 	expectKeyword: (self: Parser, value: string) -> (),
 	expectOptionalKeyword: (self: Parser, value: string) -> boolean,
 	unexpected: (self: Parser, atToken: Token?) -> GraphQLError,
-	any: <T>(self: Parser, openKind: TokenKindEnum, parseFn: (self: Parser) -> T, closeKind: TokenKindEnum) -> Array<T>,
+	any: <T>(
+		self: Parser,
+		openKind: TokenKindEnum,
+		parseFn: (self: Parser) -> T,
+		closeKind: TokenKindEnum
+	) -> Array<T>,
 	optionalMany: <T>(
 		self: Parser,
 		openKind: TokenKindEnum,
@@ -193,7 +198,11 @@ type Parser = {
 		parseFn: (self: Parser) -> T,
 		closeKind: TokenKindEnum
 	) -> Array<T>,
-	delimitedMany: <T>(self: Parser, delimiterKind: TokenKindEnum, parseFn: (self: Parser) -> T) -> Array<T>,
+	delimitedMany: <T>(
+		self: Parser,
+		delimiterKind: TokenKindEnum,
+		parseFn: (self: Parser) -> T
+	) -> Array<T>,
 }
 
 local Parser: Parser = {} :: Parser;
@@ -399,7 +408,9 @@ function Parser:parseVariableDefinition(): VariableDefinitionNode
 		kind = Kind.VARIABLE_DEFINITION,
 		variable = _ref0,
 		type = _ref1,
-		defaultValue = (if self:expectOptionalToken(TokenKind.EQUALS) then self:parseValueLiteral(true) else nil),
+		defaultValue = (if self:expectOptionalToken(TokenKind.EQUALS)
+			then self:parseValueLiteral(true)
+			else nil),
 		directives = self:parseDirectives(true),
 		loc = self:loc(start),
 	}
@@ -821,7 +832,9 @@ end
 --  *]]
 function Parser:parseTypeSystemDefinition()
 	-- Many definitions begin with a description and require a lookahead.
-	local keywordToken = if self:peekDescription() then self._lexer:lookahead() else self._lexer.token
+	local keywordToken = if self:peekDescription()
+		then self._lexer:lookahead()
+		else self._lexer.token
 
 	if keywordToken.kind == TokenKind.NAME then
 		local tokenValue = keywordToken.value
@@ -869,7 +882,11 @@ function Parser:parseSchemaDefinition()
 	local description = self:parseDescription()
 	self:expectKeyword("schema")
 	local directives = self:parseDirectives(true)
-	local operationTypes = self:many(TokenKind.BRACE_L, self.parseOperationTypeDefinition, TokenKind.BRACE_R)
+	local operationTypes = self:many(
+		TokenKind.BRACE_L,
+		self.parseOperationTypeDefinition,
+		TokenKind.BRACE_R
+	)
 	return {
 		kind = Kind.SCHEMA_DEFINITION,
 		description = description,
@@ -1198,7 +1215,11 @@ function Parser:parseSchemaExtension()
 	self:expectKeyword("extend")
 	self:expectKeyword("schema")
 	local directives = self:parseDirectives(true)
-	local operationTypes = self:optionalMany(TokenKind.BRACE_L, self.parseOperationTypeDefinition, TokenKind.BRACE_R)
+	local operationTypes = self:optionalMany(
+		TokenKind.BRACE_L,
+		self.parseOperationTypeDefinition,
+		TokenKind.BRACE_R
+	)
 	if #directives == 0 and #operationTypes == 0 then
 		error(self:unexpected())
 	end

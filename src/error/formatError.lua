@@ -27,16 +27,18 @@ exports.formatError = function(error_: GraphQLError): GraphQLFormattedError
 	local path = error_.path
 	local extensions = error_.extensions
 
-	return extensions and {
-		message = message,
-		locations = locations,
-		path = path,
-		extensions = extensions,
-	} or {
-		message = message,
-		locations = locations,
-		path = path,
-	}
+	return extensions
+			and {
+				message = message,
+				locations = locations,
+				path = path,
+				extensions = extensions,
+			}
+		or {
+			message = message,
+			locations = locations,
+			path = path,
+		}
 end
 
 --[[*

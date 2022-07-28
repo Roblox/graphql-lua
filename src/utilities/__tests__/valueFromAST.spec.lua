@@ -171,7 +171,10 @@ return function()
 			expectValueFrom(expect, "true", nonNullListOfNonNullBool).toEqual({ true })
 			expectValueFrom(expect, "123", nonNullListOfNonNullBool).to.equal(nil)
 			expectValueFrom(expect, "null", nonNullListOfNonNullBool).to.equal(nil)
-			expectValueFrom(expect, "[true, false]", nonNullListOfNonNullBool).toEqual({ true, false })
+			expectValueFrom(expect, "[true, false]", nonNullListOfNonNullBool).toEqual({
+				true,
+				false,
+			})
 			expectValueFrom(expect, "[true, 123]", nonNullListOfNonNullBool).to.equal(nil)
 			expectValueFrom(expect, "[true, null]", nonNullListOfNonNullBool).to.equal(nil)
 		end)
@@ -226,7 +229,12 @@ return function()
 		end)
 
 		it("omits input object fields for unprovided variables", function()
-			expectValueFrom(expect, "{ int: $foo, bool: $foo, requiredBool: true }", testInputObj, {}).toEqual({
+			expectValueFrom(
+				expect,
+				"{ int: $foo, bool: $foo, requiredBool: true }",
+				testInputObj,
+				{}
+			).toEqual({
 				int = 42,
 				requiredBool = true,
 			})

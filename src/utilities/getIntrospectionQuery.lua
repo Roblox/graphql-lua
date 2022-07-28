@@ -41,7 +41,9 @@ function getIntrospectionQuery(options: IntrospectionOptions?): string
 
 	local descriptions = if optionsWithDefault.descriptions then "description" else ""
 	local specifiedByUrl = if optionsWithDefault.specifiedByUrl then "specifiedByUrl" else ""
-	local directiveIsRepeatable = if optionsWithDefault.directiveIsRepeatable then "isRepeatable" else ""
+	local directiveIsRepeatable = if optionsWithDefault.directiveIsRepeatable
+		then "isRepeatable"
+		else ""
 	local schemaDescription = if optionsWithDefault.schemaDescription then descriptions else ""
 
 	local function inputDeprecation(str)
@@ -191,7 +193,10 @@ export type IntrospectionOutputType =
 	| IntrospectionUnionType
 	| IntrospectionEnumType
 
-export type IntrospectionInputType = IntrospectionScalarType | IntrospectionEnumType | IntrospectionInputObjectType
+export type IntrospectionInputType =
+	IntrospectionScalarType
+	| IntrospectionEnumType
+	| IntrospectionInputObjectType
 
 export type IntrospectionScalarType = {
 	kind: string, -- ROBLOX TODO: Luau doesn't support concrete values as type: 'SCALAR',
@@ -259,14 +264,16 @@ export type IntrospectionOutputTypeRef =
 	IntrospectionNamedTypeRef<IntrospectionOutputType>
 	| IntrospectionListTypeRef<IntrospectionOutputTypeRef>
 	| IntrospectionNonNullTypeRef<
-		IntrospectionNamedTypeRef<IntrospectionOutputType> | IntrospectionListTypeRef<IntrospectionOutputTypeRef>
+		IntrospectionNamedTypeRef<IntrospectionOutputType>
+		| IntrospectionListTypeRef<IntrospectionOutputTypeRef>
 	>
 
 export type IntrospectionInputTypeRef =
 	IntrospectionNamedTypeRef<IntrospectionInputType>
 	| IntrospectionListTypeRef<IntrospectionInputTypeRef>
 	| IntrospectionNonNullTypeRef<
-		IntrospectionNamedTypeRef<IntrospectionInputType> | IntrospectionListTypeRef<IntrospectionInputTypeRef>
+		IntrospectionNamedTypeRef<IntrospectionInputType>
+		| IntrospectionListTypeRef<IntrospectionInputTypeRef>
 	>
 
 -- ROBLOX TODO Luau: CLI-53241 using upstream default type introduces Recursive type being used with different parameters

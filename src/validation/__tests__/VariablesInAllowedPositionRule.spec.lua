@@ -2,8 +2,9 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local VariablesInAllowedPositionRule =
-		require(validationWorkspace.rules.VariablesInAllowedPositionRule).VariablesInAllowedPositionRule
+	local VariablesInAllowedPositionRule = require(
+		validationWorkspace.rules.VariablesInAllowedPositionRule
+	).VariablesInAllowedPositionRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 

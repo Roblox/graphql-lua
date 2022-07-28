@@ -19,7 +19,8 @@ return function()
 
 	local inspect = require(srcWorkspace.jsutils.inspect).inspect
 
-	local stripIgnoredCharacters = require(script.Parent.Parent.stripIgnoredCharacters).stripIgnoredCharacters
+	local stripIgnoredCharacters =
+		require(script.Parent.Parent.stripIgnoredCharacters).stripIgnoredCharacters
 	local ignoredTokens = {
 		"\u{FEFF}",
 		"\t",
@@ -68,22 +69,34 @@ return function()
 
 			invariant(
 				stripped == expected,
-				dedent(([[
+				dedent(
+					([[
         Expected stripIgnoredCharacters(%s)
             to equal %s
             but got  %s
-        ]]):format(inspectStr(docString), inspectStr(expected), inspectStr(stripped)))
+        ]]):format(
+						inspectStr(docString),
+						inspectStr(expected),
+						inspectStr(stripped)
+					)
+				)
 			)
 
 			local strippedTwice = stripIgnoredCharacters(stripped)
 
 			invariant(
 				stripped == strippedTwice,
-				dedent(([[
+				dedent(
+					([[
         Expected stripIgnoredCharacters(%s)
             to equal %s
             but got  %s
-        ]]):format(inspectStr(stripped), inspectStr(stripped), inspectStr(strippedTwice)))
+        ]]):format(
+						inspectStr(stripped),
+						inspectStr(stripped),
+						inspectStr(strippedTwice)
+					)
+				)
 			)
 		end
 		return {
@@ -213,11 +226,15 @@ return function()
 						expectStripped(left .. ignored .. right).toEqual(left .. right)
 
 						for _, anotherIgnored in ipairs(ignoredTokens) do
-							expectStripped(left .. ignored .. anotherIgnored .. right).toEqual(left .. right)
+							expectStripped(left .. ignored .. anotherIgnored .. right).toEqual(
+								left .. right
+							)
 						end
 					end
 
-					expectStripped(left .. Array.join(ignoredTokens, "") .. right).toEqual(left .. right)
+					expectStripped(left .. Array.join(ignoredTokens, "") .. right).toEqual(
+						left .. right
+					)
 				end
 			end
 		end)
@@ -232,7 +249,9 @@ return function()
 			for _, nonPunctuator in ipairs(nonPunctuatorTokens) do
 				for _, punctuator in ipairs(punctuatorTokens) do
 					for _, ignored in ipairs(ignoredTokens) do
-						expectStripped(punctuator .. ignored .. nonPunctuator).toEqual(punctuator .. nonPunctuator)
+						expectStripped(punctuator .. ignored .. nonPunctuator).toEqual(
+							punctuator .. nonPunctuator
+						)
 
 						for _, anotherIgnored in ipairs(ignoredTokens) do
 							expectStripped(punctuator .. ignored .. anotherIgnored .. nonPunctuator).toEqual(
@@ -263,7 +282,9 @@ return function()
 					end
 
 					for _, ignored in ipairs(ignoredTokens) do
-						expectStripped(nonPunctuator .. ignored .. punctuator).toEqual(nonPunctuator .. punctuator)
+						expectStripped(nonPunctuator .. ignored .. punctuator).toEqual(
+							nonPunctuator .. punctuator
+						)
 
 						for _, anotherIgnored in ipairs(ignoredTokens) do
 							expectStripped(nonPunctuator .. ignored .. anotherIgnored .. punctuator).toEqual(
@@ -286,7 +307,9 @@ return function()
 
 			for _, nonPunctuator in ipairs(nonPunctuatorTokens) do
 				for _, ignored in ipairs(ignoredTokens) do
-					expectStripped(nonPunctuator .. ignored .. "...").toEqual(nonPunctuator .. " ...")
+					expectStripped(nonPunctuator .. ignored .. "...").toEqual(
+						nonPunctuator .. " ..."
+					)
 
 					for _, anotherIgnored in ipairs(ignoredTokens) do
 						expectStripped(nonPunctuator .. ignored .. anotherIgnored .. " ...").toEqual(
@@ -295,7 +318,9 @@ return function()
 					end
 				end
 
-				expectStripped(nonPunctuator .. Array.join(ignoredTokens, "") .. "...").toEqual(nonPunctuator .. " ...")
+				expectStripped(nonPunctuator .. Array.join(ignoredTokens, "") .. "...").toEqual(
+					nonPunctuator .. " ..."
+				)
 			end
 		end)
 
@@ -315,11 +340,15 @@ return function()
 						expectStripped(left .. ignored .. right).toEqual(left .. " " .. right)
 
 						for _, anotherIgnored in ipairs(ignoredTokens) do
-							expectStripped(left .. ignored .. anotherIgnored .. right).toEqual(left .. " " .. right)
+							expectStripped(left .. ignored .. anotherIgnored .. right).toEqual(
+								left .. " " .. right
+							)
 						end
 					end
 
-					expectStripped(left .. Array.join(ignoredTokens, "") .. right).toEqual(left .. " " .. right)
+					expectStripped(left .. Array.join(ignoredTokens, "") .. right).toEqual(
+						left .. " " .. right
+					)
 				end
 			end
 		end)
@@ -371,11 +400,17 @@ return function()
 
 				invariant(
 					originalValue == strippedValue,
-					dedent(([[
+					dedent(
+						([[
             Expected lexValue(stripIgnoredCharacters(%s))
             to equal %s
             but got  %s
-        ]]):format(inspectStr(blockStr), inspectStr(originalValue), inspectStr(strippedValue)))
+        ]]):format(
+							inspectStr(blockStr),
+							inspectStr(originalValue),
+							inspectStr(strippedValue)
+						)
+					)
 				)
 
 				return expectStripped(blockStr)

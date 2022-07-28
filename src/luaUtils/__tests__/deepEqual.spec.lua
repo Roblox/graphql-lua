@@ -39,14 +39,17 @@ return function()
 			expect(deepEqual({ foo = "bar" }, 123)).to.equal(false)
 		end)
 
-		it("should not deep equal if comparing NULL against another value with the same shape", function()
-			local ok, message = deepEqual(NULL, {})
-			expect(ok).to.equal(false)
-			expect(message:find("{1} %(null%) ~= {2} %(table: 0x[%da-f]+%)")).to.be.ok()
+		it(
+			"should not deep equal if comparing NULL against another value with the same shape",
+			function()
+				local ok, message = deepEqual(NULL, {})
+				expect(ok).to.equal(false)
+				expect(message:find("{1} %(null%) ~= {2} %(table: 0x[%da-f]+%)")).to.be.ok()
 
-			ok, message = deepEqual({ foo = NULL }, { foo = {} })
-			expect(ok).to.equal(false)
-			expect(message:find("{1}%[foo%] %(null%) ~= {2}%[foo%] %(table: 0x[%da-f]+%)")).to.be.ok()
-		end)
+				ok, message = deepEqual({ foo = NULL }, { foo = {} })
+				expect(ok).to.equal(false)
+				expect(message:find("{1}%[foo%] %(null%) ~= {2}%[foo%] %(table: 0x[%da-f]+%)")).to.be.ok()
+			end
+		)
 	end)
 end

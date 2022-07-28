@@ -31,7 +31,10 @@ type GraphQLNamedType = definitionModule.GraphQLNamedType
 type GraphQLInputField = definitionModule.GraphQLInputField
 type GraphQLEnumValue = definitionModule.GraphQLEnumValue
 type GraphQLField<TSource, TContext> = definitionModule.GraphQLField<TSource, TContext>
-type GraphQLFieldConfigMap<TSource, TContext> = definitionModule.GraphQLFieldConfigMap<TSource, TContext>
+type GraphQLFieldConfigMap<TSource, TContext> = definitionModule.GraphQLFieldConfigMap<
+	TSource,
+	TContext
+>
 
 local GraphQLList = definitionModule.GraphQLList
 local GraphQLNonNull = definitionModule.GraphQLNonNull
@@ -163,7 +166,9 @@ __Directive = GraphQLObjectType.new({
 			{
 				"locations",
 				{
-					type = GraphQLNonNull.new(GraphQLList.new(GraphQLNonNull.new(__DirectiveLocation))),
+					type = GraphQLNonNull.new(
+						GraphQLList.new(GraphQLNonNull.new(__DirectiveLocation))
+					),
 					resolve = function(directive)
 						return directive.locations
 					end,

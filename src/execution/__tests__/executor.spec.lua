@@ -1011,7 +1011,9 @@ return function()
 			--]]
 			jestExpect(result).toMatchObject({
 				errors = {
-					{ message = "Must provide operation name if query contains multiple operations." },
+					{
+						message = "Must provide operation name if query contains multiple operations.",
+					},
 				},
 			})
 		end)

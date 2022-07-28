@@ -98,7 +98,9 @@ return function()
 			})
 
 			expect(scalar:parseLiteral(parseValue("null"))).to.equal("parseValue: null")
-			expect(scalar:parseLiteral(parseValue('{ foo: "bar" }'))).to.equal('parseValue: { foo: "bar" }')
+			expect(scalar:parseLiteral(parseValue('{ foo: "bar" }'))).to.equal(
+				'parseValue: { foo: "bar" }'
+			)
 			expect(scalar:parseLiteral(parseValue("{ foo: { bar: $var } }"), {
 				var = "baz",
 			})).to.equal('parseValue: { foo: { bar: "baz" } }')
@@ -127,18 +129,25 @@ return function()
 					name = "SomeScalar",
 					parseLiteral = dummyFunc,
 				})
-			end).to.throw('SomeScalar must provide both "parseValue" and "parseLiteral" functions.')
+			end).to.throw(
+				'SomeScalar must provide both "parseValue" and "parseLiteral" functions.'
+			)
 		end)
 
-		it("rejects a Scalar type defining parseValue and parseLiteral with an incorrect type", function()
-			expect(function()
-				return GraphQLScalarType.new({
-					name = "SomeScalar",
-					parseValue = {},
-					parseLiteral = {},
-				})
-			end).to.throw('SomeScalar must provide both "parseValue" and "parseLiteral" functions.')
-		end)
+		it(
+			"rejects a Scalar type defining parseValue and parseLiteral with an incorrect type",
+			function()
+				expect(function()
+					return GraphQLScalarType.new({
+						name = "SomeScalar",
+						parseValue = {},
+						parseLiteral = {},
+					})
+				end).to.throw(
+					'SomeScalar must provide both "parseValue" and "parseLiteral" functions.'
+				)
+			end
+		)
 
 		it("rejects a Scalar type defining specifiedByUrl with an incorrect type", function()
 			-- ROBLOX deviation: {} is treated as an Array in Lua so when printed it becomes [] rather than {}
@@ -392,7 +401,9 @@ return function()
 
 			expect(function()
 				return objType:getFields()
-			end).to.throw("SomeObject.badField args must be an object with argument names as keys.")
+			end).to.throw(
+				"SomeObject.badField args must be an object with argument names as keys."
+			)
 		end)
 
 		it("rejects an Object type with incorrectly typed interfaces", function()
@@ -405,23 +416,30 @@ return function()
 
 			expect(function()
 				return objType:getInterfaces()
-			end).to.throw("SomeObject interfaces must be an Array or a function which returns an Array.")
+			end).to.throw(
+				"SomeObject interfaces must be an Array or a function which returns an Array."
+			)
 		end)
 
-		it("rejects an Object type with interfaces as a function returning an incorrect type", function()
-			local objType = GraphQLObjectType.new({
-				name = "SomeObject",
-				fields = {},
-				interfaces = function()
-					-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty object
-					return { key = "value" }
-				end,
-			})
+		it(
+			"rejects an Object type with interfaces as a function returning an incorrect type",
+			function()
+				local objType = GraphQLObjectType.new({
+					name = "SomeObject",
+					fields = {},
+					interfaces = function()
+						-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty object
+						return { key = "value" }
+					end,
+				})
 
-			expect(function()
-				return objType:getInterfaces()
-			end).to.throw("SomeObject interfaces must be an Array or a function which returns an Array.")
-		end)
+				expect(function()
+					return objType:getInterfaces()
+				end).to.throw(
+					"SomeObject interfaces must be an Array or a function which returns an Array."
+				)
+			end
+		)
 
 		it("rejects an empty Object field resolver", function()
 			local objType = GraphQLObjectType.new({
@@ -437,7 +455,9 @@ return function()
 			-- ROBLOX deviation: {} is treated as an Array in Lua so when printed it becomes [] rather than {}
 			expect(function()
 				return objType:getFields()
-			end).to.throw("SomeObject.field field resolver must be a function if provided, but got: [].")
+			end).to.throw(
+				"SomeObject.field field resolver must be a function if provided, but got: []."
+			)
 		end)
 
 		it("rejects a constant scalar value resolver", function()
@@ -453,7 +473,9 @@ return function()
 
 			expect(function()
 				return objType:getFields()
-			end).to.throw("SomeObject.field field resolver must be a function if provided, but got: 0.")
+			end).to.throw(
+				"SomeObject.field field resolver must be a function if provided, but got: 0."
+			)
 		end)
 
 		it("rejects an Object type with an incorrect type for isTypeOf", function()
@@ -518,23 +540,30 @@ return function()
 
 			expect(function()
 				return objType:getInterfaces()
-			end).to.throw("AnotherInterface interfaces must be an Array or a function which returns an Array.")
+			end).to.throw(
+				"AnotherInterface interfaces must be an Array or a function which returns an Array."
+			)
 		end)
 
-		it("rejects an Interface type with interfaces as a function returning an incorrect type", function()
-			local objType = GraphQLInterfaceType.new({
-				name = "AnotherInterface",
-				fields = {},
-				interfaces = function()
-					-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty object
-					return { key = "value" }
-				end,
-			})
+		it(
+			"rejects an Interface type with interfaces as a function returning an incorrect type",
+			function()
+				local objType = GraphQLInterfaceType.new({
+					name = "AnotherInterface",
+					fields = {},
+					interfaces = function()
+						-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty object
+						return { key = "value" }
+					end,
+				})
 
-			expect(function()
-				return objType:getInterfaces()
-			end).to.throw("AnotherInterface interfaces must be an Array or a function which returns an Array.")
-		end)
+				expect(function()
+					return objType:getInterfaces()
+				end).to.throw(
+					"AnotherInterface interfaces must be an Array or a function which returns an Array."
+				)
+			end
+		)
 
 		it("rejects an Interface type with an incorrect type for resolveType", function()
 			-- ROBLOX deviation: {} is treated as an Array in Lua so when printed it becomes [] rather than {}
@@ -544,7 +573,9 @@ return function()
 					fields = {},
 					resolveType = {},
 				})
-			end).to.throw('AnotherInterface must provide "resolveType" as a function, but got: [].')
+			end).to.throw(
+				'AnotherInterface must provide "resolveType" as a function, but got: [].'
+			)
 		end)
 	end)
 
@@ -813,21 +844,24 @@ return function()
 				)
 			end)
 
-			it("rejects an Input Object type with fields function that returns incorrect type", function()
-				local inputObjType = GraphQLInputObjectType.new({
-					name = "SomeInputObject",
-					fields = function()
-						-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty array
-						return { "foo" }
-					end,
-				})
+			it(
+				"rejects an Input Object type with fields function that returns incorrect type",
+				function()
+					local inputObjType = GraphQLInputObjectType.new({
+						name = "SomeInputObject",
+						fields = function()
+							-- ROBLOX deviation: there is no distinction between empty object and empty array in Lua. We need to pass a non empty array
+							return { "foo" }
+						end,
+					})
 
-				expect(function()
-					return inputObjType:getFields()
-				end).to.throw(
-					"SomeInputObject fields must be an object with field names as keys or a function which returns such an object."
-				)
-			end)
+					expect(function()
+						return inputObjType:getFields()
+					end).to.throw(
+						"SomeInputObject fields must be an object with field names as keys or a function which returns such an object."
+					)
+				end
+			)
 		end)
 
 		describe("Input Object fields must not have resolvers", function()
@@ -915,7 +949,9 @@ return function()
 		end)
 
 		it("rejects a non-type as nullable type of non-null", function()
-			expectNonNull(expect, NonNullScalarType).to.throw("Expected Scalar! to be a GraphQL nullable type.")
+			expectNonNull(expect, NonNullScalarType).to.throw(
+				"Expected Scalar! to be a GraphQL nullable type."
+			)
 			-- ROBLOX deviation: {} is treated as an Array in Lua so when printed it becomes [] rather than {}
 			expectNonNull(expect, {}).to.throw("Expected [] to be a GraphQL nullable type.")
 			-- ROBLOX deviation: no String constructor in Lua

@@ -36,7 +36,9 @@ return function()
 				local result = toArrayEqual(arrA, arrB)
 
 				expect(result.pass).to.equal(false)
-				expect(result.message).to.equal("{1}[1][foo]: value of type 'string'\n{2}[1][foo]: value of type 'nil'")
+				expect(result.message).to.equal(
+					"{1}[1][foo]: value of type 'string'\n{2}[1][foo]: value of type 'nil'"
+				)
 			end)
 
 			it("should not pass expected array has additional properties", function()
@@ -45,7 +47,9 @@ return function()
 				local result = toArrayEqual(arrA, arrB)
 
 				expect(result.pass).to.equal(false)
-				expect(result.message).to.equal("{1}[1][foo]: value of type 'nil'\n{2}[1][foo]: value of type 'string'")
+				expect(result.message).to.equal(
+					"{1}[1][foo]: value of type 'nil'\n{2}[1][foo]: value of type 'string'"
+				)
 			end)
 		end)
 
@@ -91,7 +95,9 @@ return function()
 				local result = toArrayEqual(arrA, arrB, true)
 
 				expect(result.pass).to.equal(false)
-				expect(result.message).to.equal("{1}[1][foo]: value of type 'nil'\n{2}[1][foo]: value of type 'string'")
+				expect(result.message).to.equal(
+					"{1}[1][foo]: value of type 'nil'\n{2}[1][foo]: value of type 'string'"
+				)
 			end)
 		end)
 	end)

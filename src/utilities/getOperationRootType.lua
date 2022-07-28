@@ -20,7 +20,9 @@ local function getOperationRootType(
 	if operation.operation == "query" then
 		local queryType = schema:getQueryType()
 		if not queryType then
-			error(GraphQLError.new("Schema does not define the required query root type.", operation))
+			error(
+				GraphQLError.new("Schema does not define the required query root type.", operation)
+			)
 		end
 		-- ROBLOX FIXME Luau: Luau should narrow based on branch above
 		return queryType :: GraphQLObjectType

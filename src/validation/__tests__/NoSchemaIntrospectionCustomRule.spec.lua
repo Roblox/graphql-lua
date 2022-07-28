@@ -5,10 +5,9 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local NoSchemaIntrospectionCustomRule =
-		require(
-			validationWorkspace.rules.custom.NoSchemaIntrospectionCustomRule
-		).NoSchemaIntrospectionCustomRule
+	local NoSchemaIntrospectionCustomRule = require(
+		validationWorkspace.rules.custom.NoSchemaIntrospectionCustomRule
+	).NoSchemaIntrospectionCustomRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrorsWithSchema = harness.expectValidationErrorsWithSchema
 
@@ -19,7 +18,12 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectValidationErrorsWithSchema(expect_, schema, NoSchemaIntrospectionCustomRule, "\n" .. queryStr)
+		return expectValidationErrorsWithSchema(
+			expect_,
+			schema,
+			NoSchemaIntrospectionCustomRule,
+			"\n" .. queryStr
+		)
 	end
 
 	local function expectValid(expect_, queryStr: string)
@@ -87,10 +91,12 @@ return function()
 			})
 		end)
 
-		it("reports error when a field with an introspection type is requested and aliased", function()
-			expectErrors(
-				expect,
-				[[
+		it(
+			"reports error when a field with an introspection type is requested and aliased",
+			function()
+				expectErrors(
+					expect,
+					[[
       {
         s: __schema {
           queryType {
@@ -99,17 +105,18 @@ return function()
         }
       }
 			]]
-			).toEqual({
-				{
-					message = 'GraphQL introspection has been disabled, but the requested query contained the field "__schema".',
-					locations = { { line = 3, column = 9 } },
-				},
-				{
-					message = 'GraphQL introspection has been disabled, but the requested query contained the field "queryType".',
-					locations = { { line = 4, column = 11 } },
-				},
-			})
-		end)
+				).toEqual({
+					{
+						message = 'GraphQL introspection has been disabled, but the requested query contained the field "__schema".',
+						locations = { { line = 3, column = 9 } },
+					},
+					{
+						message = 'GraphQL introspection has been disabled, but the requested query contained the field "queryType".',
+						locations = { { line = 4, column = 11 } },
+					},
+				})
+			end
+		)
 
 		it("reports error when using a fragment with a field with an introspection type", function()
 			expectErrors(

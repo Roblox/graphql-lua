@@ -29,7 +29,9 @@ function isValidNameError(name: string): GraphQLError | nil
 	devAssert(type(name) == "string", "Expected name to be a string.")
 	if string.len(name) > 1 and name:sub(1, 1) == "_" and name:sub(2, 2) == "_" then
 		return GraphQLError.new(
-			'Name "' .. name .. '" must not begin with "__", which is reserved by GraphQL introspection.'
+			'Name "'
+				.. name
+				.. '" must not begin with "__", which is reserved by GraphQL introspection.'
 		)
 	end
 

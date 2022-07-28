@@ -21,7 +21,9 @@ return function()
 		end)
 
 		it("Limits to five suggestions", function()
-			expect(didYouMean({ "A", "B", "C", "D", "E", "F" })).to.equal(' Did you mean "A", "B", "C", "D", or "E"?')
+			expect(didYouMean({ "A", "B", "C", "D", "E", "F" })).to.equal(
+				' Did you mean "A", "B", "C", "D", or "E"?'
+			)
 		end)
 
 		it("Adds sub-message", function()

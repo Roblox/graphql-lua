@@ -170,7 +170,8 @@ function validateRootTypes(context: SchemaValidationContext): ()
 		-- ROBLOX TODO Luau: need null coalescing to do `getOperationTypeNode(schema, 'query') ?? queryType.astNode`
 		local ref = getOperationTypeNode(schema, "mutation")
 		context:reportError(
-			"Mutation root type must be Object type if provided, it cannot be " .. ("%s."):format(inspect(mutationType)),
+			"Mutation root type must be Object type if provided, it cannot be "
+				.. ("%s."):format(inspect(mutationType)),
 			if ref then ref else (mutationType :: any).astNode
 		)
 	end
@@ -232,7 +233,10 @@ function validateDirectives(context: SchemaValidationContext): ()
 
 			if isRequiredArgument(arg) and isNotNillish(arg.deprecationReason) then
 				context:reportError(
-					("Required argument @%s(%s:) cannot be deprecated."):format(directive.name, arg.name),
+					("Required argument @%s(%s:) cannot be deprecated."):format(
+						directive.name,
+						arg.name
+					),
 					{
 						getDeprecatedDirectiveNode(arg.astNode),
 						if arg.astNode ~= nil then arg.astNode.type else nil,
@@ -242,7 +246,10 @@ function validateDirectives(context: SchemaValidationContext): ()
 		end
 	end
 end
-function validateName(context: SchemaValidationContext, node: { name: string, astNode: ASTNode? }): ()
+function validateName(
+	context: SchemaValidationContext,
+	node: { name: string, astNode: ASTNode? }
+): ()
 	-- Ensure names are valid, however introspection types opt out.
 	-- ROBLOX deviation: Lua doesn't allow indexing (name) into a function
 	local nodeName
@@ -273,7 +280,10 @@ function validateTypes(context: SchemaValidationContext): ()
 			typeAstNode = type_.astNode
 		end
 		if not isNamedType(type_) then
-			context:reportError(("Expected GraphQL named type but got: %s."):format(inspect(type_)), typeAstNode)
+			context:reportError(
+				("Expected GraphQL named type but got: %s."):format(inspect(type_)),
+				typeAstNode
+			)
 			continue
 		end
 
@@ -310,13 +320,19 @@ function validateTypes(context: SchemaValidationContext): ()
 	end
 end
 
-function validateFields(context: SchemaValidationContext, type_: GraphQLObjectType | GraphQLInterfaceType): ()
+function validateFields(
+	context: SchemaValidationContext,
+	type_: GraphQLObjectType | GraphQLInterfaceType
+): ()
 	-- ROBLOX FIXME Luau: does complaints of function union not being callable
 	local fields = (type_ :: any):getFields():values()
 
 	-- Objects and Interfaces both must define one or more fields.
 	if #fields == 0 then
-		context:reportError(("Type %s must define one or more fields."):format(type_.name), getAllNodes(type_))
+		context:reportError(
+			("Type %s must define one or more fields."):format(type_.name),
+			getAllNodes(type_)
+		)
 	end
 
 	for _, field in ipairs(fields) do
@@ -343,15 +359,22 @@ function validateFields(context: SchemaValidationContext, type_: GraphQLObjectTy
 			-- Ensure the type is an input type
 			if not isInputType(arg.type) then
 				context:reportError(
-					("The type of %s.%s(%s:) must be Input "):format(type_.name, field.name, argName)
-						.. ("Type but got: %s."):format(inspect(arg.type)),
+					("The type of %s.%s(%s:) must be Input "):format(
+						type_.name,
+						field.name,
+						argName
+					) .. ("Type but got: %s."):format(inspect(arg.type)),
 					-- istanbul ignore next (TODO need to write coverage tests)
 					if arg.astNode ~= nil then arg.astNode.type else nil
 				)
 			end
 			if isRequiredArgument(arg) and isNotNillish(arg.deprecationReason) then
 				context:reportError(
-					("Required argument %s.%s(%s:) cannot be deprecated."):format(type_.name, field.name, argName),
+					("Required argument %s.%s(%s:) cannot be deprecated."):format(
+						type_.name,
+						field.name,
+						argName
+					),
 					{
 						getDeprecatedDirectiveNode(arg.astNode),
 						-- istanbul ignore next (TODO need to write coverage tests)
@@ -362,7 +385,10 @@ function validateFields(context: SchemaValidationContext, type_: GraphQLObjectTy
 		end
 	end
 end
-function validateInterfaces(context: SchemaValidationContext, type_: GraphQLObjectType | GraphQLInterfaceType): ()
+function validateInterfaces(
+	context: SchemaValidationContext,
+	type_: GraphQLObjectType | GraphQLInterfaceType
+): ()
 	local ifaceTypeNames = {}
 
 	-- ROBLOX FIXME Luau: does not recognize union of functions as callable
@@ -377,7 +403,9 @@ function validateInterfaces(context: SchemaValidationContext, type_: GraphQLObje
 		end
 		if type_ == iface then
 			context:reportError(
-				("Type %s cannot implement itself because it would create a circular reference."):format(type_.name),
+				("Type %s cannot implement itself because it would create a circular reference."):format(
+					type_.name
+				),
 				getAllImplementsInterfaceNodes(type_, iface)
 			)
 			continue
@@ -426,7 +454,11 @@ function validateTypeImplementsInterface(
 		-- Assert interface field exists on type.
 		if not typeField then
 			context:reportError(
-				("Interface field %s.%s expected but %s does not provide it."):format(iface.name, fieldName, type_.name),
+				("Interface field %s.%s expected but %s does not provide it."):format(
+					iface.name,
+					fieldName,
+					type_.name
+				),
 				Array.concat({
 					ifaceField.astNode,
 				}, getAllNodes(type_))
@@ -503,13 +535,9 @@ function validateTypeImplementsInterface(
 
 			if not ifaceArg and isRequiredArgument(typeArg) then
 				context:reportError(
-					("Object field %s.%s includes required argument %s that is missing from the Interface field %s.%s."):format(
-						type_.name,
-						fieldName,
-						argName,
-						iface.name,
-						fieldName
-					),
+					(
+						"Object field %s.%s includes required argument %s that is missing from the Interface field %s.%s."
+					):format(type_.name, fieldName, argName, iface.name, fieldName),
 					{
 						typeArg.astNode,
 						ifaceField.astNode,
@@ -532,10 +560,10 @@ function validateTypeImplementsAncestors(
 		if Array.indexOf(ifaceInterfaces, transitive) == -1 then
 			context:reportError(
 				if transitive == type_
-					then ("Type %s cannot implement %s because it would create a circular reference."):format(
-						type_.name,
-						iface.name
-					)
+					then
+						(
+							"Type %s cannot implement %s because it would create a circular reference."
+						):format(type_.name, iface.name)
 					else ("Type %s must implement %s because it is implemented by %s."):format(
 						type_.name,
 						transitive.name,
@@ -633,19 +661,27 @@ function validateInputFields(context: SchemaValidationContext, inputObj: GraphQL
 			)
 		end
 		if isRequiredInputField(field) and isNotNillish(field.deprecationReason) then
-			context:reportError(("Required input field %s.%s cannot be deprecated."):format(inputObj.name, field.name), {
-				getDeprecatedDirectiveNode((field :: GraphQLInputField).astNode),
-				if field.astNode ~= nil
-					-- ROBLOX FIXME START: Luau: work around TypeError: Value of type 'InputValueDefinitionNode?' could be nil
-					then (field :: any).astNode.type
-					-- ROBLOX FIXME END
-					else nil,
-			})
+			context:reportError(
+				("Required input field %s.%s cannot be deprecated."):format(
+					inputObj.name,
+					field.name
+				),
+				{
+					getDeprecatedDirectiveNode((field :: GraphQLInputField).astNode),
+					if field.astNode ~= nil
+						-- ROBLOX FIXME START: Luau: work around TypeError: Value of type 'InputValueDefinitionNode?' could be nil
+						then (field :: any).astNode.type
+						-- ROBLOX FIXME END
+						else nil,
+				}
+			)
 		end
 	end
 end
 
-function createInputObjectCircularRefsValidator(context: SchemaValidationContext): (GraphQLInputObjectType) -> ()
+function createInputObjectCircularRefsValidator(
+	context: SchemaValidationContext
+): (GraphQLInputObjectType) -> ()
 	-- Modified copy of algorithm from 'src/validation/rules/NoFragmentCycles.lua'.
 	-- Tracks already visited types to maintain O(N) and to ensure that cycles
 	-- are not redundantly reported.
@@ -695,10 +731,9 @@ function createInputObjectCircularRefsValidator(context: SchemaValidationContext
 					)
 
 					context:reportError(
-						('Cannot reference Input Object "%s" within itself through a series of non-null fields: "%s".'):format(
-							fieldType.name,
-							pathStr
-						),
+						(
+							'Cannot reference Input Object "%s" within itself through a series of non-null fields: "%s".'
+						):format(fieldType.name, pathStr),
 						Array.map(cyclePath, function(fieldObj)
 							return fieldObj.astNode
 						end)
@@ -733,7 +768,10 @@ end
 
 -- ROBLOX TODO Luau: needs constraints
 -- function getAllSubNodes<T: ASTNode, K: ASTNode, L: ASTNode>(
-function getAllSubNodes<T, K, L>(object: SDLDefinedObject<T, K>, getter: (T | K) -> (L | Array<L>)?): Array<L>
+function getAllSubNodes<T, K, L>(
+	object: SDLDefinedObject<T, K>,
+	getter: (T | K) -> (L | Array<L>)?
+): Array<L>
 	local subNodes: Array<L> = {}
 
 	for _, node in ipairs(getAllNodes(object)) do
@@ -771,7 +809,9 @@ function getUnionMemberTypeNodes(union: GraphQLUnionType, typeName: string): Arr
 	)
 end
 
-function getDeprecatedDirectiveNode(definitionNode: { directives: Array<DirectiveNode>? }?): DirectiveNode?
+function getDeprecatedDirectiveNode(
+	definitionNode: { directives: Array<DirectiveNode>? }?
+): DirectiveNode?
 	if definitionNode ~= nil and definitionNode.directives ~= nil then
 		-- istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
 		return Array.find(definitionNode.directives, function(node)

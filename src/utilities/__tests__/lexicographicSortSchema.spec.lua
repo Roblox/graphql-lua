@@ -11,7 +11,8 @@ return function()
 
 	local printSchema = require(utilitiesWorkspace.printSchema).printSchema
 	local buildSchema = require(utilitiesWorkspace.buildASTSchema).buildSchema
-	local lexicographicSortSchema = require(utilitiesWorkspace.lexicographicSortSchema).lexicographicSortSchema
+	local lexicographicSortSchema =
+		require(utilitiesWorkspace.lexicographicSortSchema).lexicographicSortSchema
 
 	local function sortSDL(sdl)
 		local schema = buildSchema(sdl)

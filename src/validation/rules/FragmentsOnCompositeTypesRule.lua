@@ -25,7 +25,9 @@ exports.FragmentsOnCompositeTypesRule = function(context)
 					local typeStr = print_(typeCondition)
 					context:reportError(
 						GraphQLError.new(
-							('Fragment cannot condition on non composite type "%s".'):format(typeStr),
+							('Fragment cannot condition on non composite type "%s".'):format(
+								typeStr
+							),
 							typeCondition
 						)
 					)
@@ -38,7 +40,10 @@ exports.FragmentsOnCompositeTypesRule = function(context)
 				local typeStr = print_(node.typeCondition)
 				context:reportError(
 					GraphQLError.new(
-						('Fragment "%s" cannot condition on non composite type "%s".'):format(node.name.value, typeStr),
+						('Fragment "%s" cannot condition on non composite type "%s".'):format(
+							node.name.value,
+							typeStr
+						),
 						node.typeCondition
 					)
 				)

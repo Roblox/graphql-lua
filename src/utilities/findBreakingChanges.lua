@@ -27,7 +27,11 @@ local schemaModule = require(typeDir.schema)
 type GraphQLSchema = schemaModule.GraphQLSchema
 local definition = require(typeDir.definition)
 -- ROBLOX FIXME Luau: doesn't correctly replicate default type args, so we inline `any` here
-type GraphQLField<TSource, TContext, TValue = any> = definition.GraphQLField<TSource, TContext, TValue>
+type GraphQLField<TSource, TContext, TValue = any> = definition.GraphQLField<
+	TSource,
+	TContext,
+	TValue
+>
 type GraphQLType = definition.GraphQLType
 type GraphQLInputType = definition.GraphQLInputType
 type GraphQLNamedType = definition.GraphQLNamedType
@@ -109,7 +113,10 @@ export type DangerousChange = {
 --  * Given two schemas, returns an Array containing descriptions of all the types
 --  * of breaking changes covered by the other functions down below.
 --  *]]
-local function findBreakingChanges(oldSchema: GraphQLSchema, newSchema: GraphQLSchema): Array<BreakingChange>
+local function findBreakingChanges(
+	oldSchema: GraphQLSchema,
+	newSchema: GraphQLSchema
+): Array<BreakingChange>
 	local breakingChanges = Array.filter(findSchemaChanges(oldSchema, newSchema), function(change)
 		return BreakingChangeType[change.type] ~= nil
 	end)
@@ -120,15 +127,24 @@ end
 --  * Given two schemas, returns an Array containing descriptions of all the types
 --  * of potentially dangerous changes covered by the other functions down below.
 --  *]]
-local function findDangerousChanges(oldSchema: GraphQLSchema, newSchema: GraphQLSchema): Array<DangerousChange>
+local function findDangerousChanges(
+	oldSchema: GraphQLSchema,
+	newSchema: GraphQLSchema
+): Array<DangerousChange>
 	local dangerousChanges = Array.filter(findSchemaChanges(oldSchema, newSchema), function(change)
 		return DangerousChangeType[change.type] ~= nil
 	end)
 	return dangerousChanges
 end
 
-function findSchemaChanges(oldSchema: GraphQLSchema, newSchema: GraphQLSchema): Array<BreakingChange | DangerousChange>
-	return Array.concat(findTypeChanges(oldSchema, newSchema), findDirectiveChanges(oldSchema, newSchema))
+function findSchemaChanges(
+	oldSchema: GraphQLSchema,
+	newSchema: GraphQLSchema
+): Array<BreakingChange | DangerousChange>
+	return Array.concat(
+		findTypeChanges(oldSchema, newSchema),
+		findDirectiveChanges(oldSchema, newSchema)
+	)
 end
 
 function findDirectiveChanges(
@@ -190,7 +206,10 @@ function findDirectiveChanges(
 	return schemaChanges
 end
 
-function findTypeChanges(oldSchema: GraphQLSchema, newSchema: GraphQLSchema): Array<BreakingChange | DangerousChange>
+function findTypeChanges(
+	oldSchema: GraphQLSchema,
+	newSchema: GraphQLSchema
+): Array<BreakingChange | DangerousChange>
 	local schemaChanges = {}
 
 	local typesDiff = diff(oldSchema:getTypeMap():values(), newSchema:getTypeMap():values())
@@ -222,7 +241,10 @@ function findTypeChanges(oldSchema: GraphQLSchema, newSchema: GraphQLSchema): Ar
 		elseif isObjectType(oldType) and isObjectType(newType) then
 			for _, item in
 				ipairs(
-					Array.concat(findFieldChanges(oldType, newType), findImplementedInterfacesChanges(oldType, newType))
+					Array.concat(
+						findFieldChanges(oldType, newType),
+						findImplementedInterfacesChanges(oldType, newType)
+					)
 				)
 			do
 				table.insert(schemaChanges, item)
@@ -231,7 +253,10 @@ function findTypeChanges(oldSchema: GraphQLSchema, newSchema: GraphQLSchema): Ar
 			-- selene: allow(if_same_then_else)
 			for _, item in
 				ipairs(
-					Array.concat(findFieldChanges(oldType, newType), findImplementedInterfacesChanges(oldType, newType))
+					Array.concat(
+						findFieldChanges(oldType, newType),
+						findImplementedInterfacesChanges(oldType, newType)
+					)
 				)
 			do
 				table.insert(schemaChanges, item)
@@ -262,12 +287,18 @@ function findInputObjectTypeChanges(
 		if isRequiredInputField(newField) then
 			table.insert(schemaChanges, {
 				type = BreakingChangeType.REQUIRED_INPUT_FIELD_ADDED,
-				description = ("A required field %s on input type %s was added."):format(newField.name, oldType.name),
+				description = ("A required field %s on input type %s was added."):format(
+					newField.name,
+					oldType.name
+				),
 			})
 		else
 			table.insert(schemaChanges, {
 				type = DangerousChangeType.OPTIONAL_INPUT_FIELD_ADDED,
-				description = ("An optional field %s on input type %s was added."):format(newField.name, oldType.name),
+				description = ("An optional field %s on input type %s was added."):format(
+					newField.name,
+					oldType.name
+				),
 			})
 		end
 	end
@@ -309,13 +340,19 @@ function findUnionTypeChanges(
 	for _, newPossibleType in ipairs(possibleTypesDiff.added) do
 		table.insert(schemaChanges, {
 			type = DangerousChangeType.TYPE_ADDED_TO_UNION,
-			description = ("%s was added to union type %s."):format(newPossibleType.name, oldType.name),
+			description = ("%s was added to union type %s."):format(
+				newPossibleType.name,
+				oldType.name
+			),
 		})
 	end
 	for _, oldPossibleType in ipairs(possibleTypesDiff.removed) do
 		table.insert(schemaChanges, {
 			type = BreakingChangeType.TYPE_REMOVED_FROM_UNION,
-			description = ("%s was removed from union type %s."):format(oldPossibleType.name, oldType.name),
+			description = ("%s was removed from union type %s."):format(
+				oldPossibleType.name,
+				oldType.name
+			),
 		})
 	end
 
@@ -355,13 +392,19 @@ function findImplementedInterfacesChanges(
 	for _, newInterface in ipairs(interfacesDiff.added) do
 		table.insert(schemaChanges, {
 			type = DangerousChangeType.IMPLEMENTED_INTERFACE_ADDED,
-			description = ("%s added to interfaces implemented by %s."):format(newInterface.name, oldType.name),
+			description = ("%s added to interfaces implemented by %s."):format(
+				newInterface.name,
+				oldType.name
+			),
 		})
 	end
 	for _, oldInterface in ipairs(interfacesDiff.removed) do
 		table.insert(schemaChanges, {
 			type = BreakingChangeType.IMPLEMENTED_INTERFACE_REMOVED,
-			description = ("%s no longer implements interface %s."):format(oldType.name, oldInterface.name),
+			description = ("%s no longer implements interface %s."):format(
+				oldType.name,
+				oldInterface.name
+			),
 		})
 	end
 
@@ -375,7 +418,10 @@ function findFieldChanges(
 	local schemaChanges = {}
 	-- ROBLOX deviation: use getFields returns Map
 	-- ROBLOX FIXME Luau: doesn't play nice with union of functions (not callable)
-	local fieldsDiff = diff((oldType :: any):getFields():values(), (newType :: any):getFields():values())
+	local fieldsDiff = diff(
+		(oldType :: any):getFields():values(),
+		(newType :: any):getFields():values()
+	)
 
 	for _, oldField in ipairs(fieldsDiff.removed) do
 		table.insert(schemaChanges, {
@@ -396,10 +442,9 @@ function findFieldChanges(
 		if not isSafe then
 			table.insert(schemaChanges, {
 				type = BreakingChangeType.FIELD_CHANGED_KIND,
-				description = ("%s.%s changed type from "):format(oldType.name, oldField.name) .. ("%s to %s."):format(
-					tostring(oldField.type),
-					tostring(newField.type)
-				),
+				description = ("%s.%s changed type from "):format(oldType.name, oldField.name) .. (
+					"%s to %s."
+				):format(tostring(oldField.type), tostring(newField.type)),
 			})
 		end
 	end
@@ -418,7 +463,11 @@ function findArgChanges(
 	for _, oldArg in ipairs(argsDiff.removed) do
 		table.insert(schemaChanges, {
 			type = BreakingChangeType.ARG_REMOVED,
-			description = ("%s.%s arg %s was removed."):format(oldType.name, oldField.name, oldArg.name),
+			description = ("%s.%s arg %s was removed."):format(
+				oldType.name,
+				oldField.name,
+				oldArg.name
+			),
 		})
 	end
 	for _, arg in ipairs(argsDiff.persisted) do
@@ -429,8 +478,11 @@ function findArgChanges(
 		if not isSafe then
 			table.insert(schemaChanges, {
 				type = BreakingChangeType.ARG_CHANGED_KIND,
-				description = ("%s.%s arg %s has changed type from "):format(oldType.name, oldField.name, oldArg.name)
-					.. ("%s to %s."):format(tostring(oldArg.type), tostring(newArg.type)),
+				description = ("%s.%s arg %s has changed type from "):format(
+					oldType.name,
+					oldField.name,
+					oldArg.name
+				) .. ("%s to %s."):format(tostring(oldArg.type), tostring(newArg.type)),
 			})
 		elseif oldArg.defaultValue ~= nil then
 			if newArg.defaultValue == nil then
@@ -495,16 +547,20 @@ function isChangeSafeForObjectOrInterfaceField(
 	newType: any
 ): boolean
 	if isListType(oldType) then
-		return isListType(newType) and isChangeSafeForObjectOrInterfaceField(oldType.ofType, newType.ofType) -- if they're both lists, make sure the underlying types are compatible
-			or isNonNullType(newType) and isChangeSafeForObjectOrInterfaceField(oldType, newType.ofType) -- moving from nullable to non-null of the same underlying type is safe
+		return isListType(newType)
+				and isChangeSafeForObjectOrInterfaceField(oldType.ofType, newType.ofType) -- if they're both lists, make sure the underlying types are compatible
+			or isNonNullType(newType)
+				and isChangeSafeForObjectOrInterfaceField(oldType, newType.ofType) -- moving from nullable to non-null of the same underlying type is safe
 	end
 	if isNonNullType(oldType) then
 		-- if they're both non-null, make sure the underlying types are compatible
-		return isNonNullType(newType) and isChangeSafeForObjectOrInterfaceField(oldType.ofType, newType.ofType)
+		return isNonNullType(newType)
+			and isChangeSafeForObjectOrInterfaceField(oldType.ofType, newType.ofType)
 	end
 
 	return isNamedType(newType) and oldType.name == newType.name -- if they're both named types, see if their names are equivalent
-		or isNonNullType(newType) and isChangeSafeForObjectOrInterfaceField(oldType, newType.ofType) -- moving from nullable to non-null of the same underlying type is safe
+		or isNonNullType(newType)
+			and isChangeSafeForObjectOrInterfaceField(oldType, newType.ofType) -- moving from nullable to non-null of the same underlying type is safe
 end
 
 function isChangeSafeForInputObjectFieldOrFieldArg(
@@ -514,11 +570,14 @@ function isChangeSafeForInputObjectFieldOrFieldArg(
 ): boolean
 	if isListType(oldType) then
 		-- if they're both lists, make sure the underlying types are compatible
-		return isListType(newType) and isChangeSafeForInputObjectFieldOrFieldArg(oldType.ofType, newType.ofType)
+		return isListType(newType)
+			and isChangeSafeForInputObjectFieldOrFieldArg(oldType.ofType, newType.ofType)
 	end
 	if isNonNullType(oldType) then
-		return isNonNullType(newType) and isChangeSafeForInputObjectFieldOrFieldArg(oldType.ofType, newType.ofType) -- if they're both non-null, make sure the underlying types are compatible
-			or not isNonNullType(newType) and isChangeSafeForInputObjectFieldOrFieldArg(oldType.ofType, newType) -- moving from non-null to nullable of the same underlying type is safe
+		return isNonNullType(newType)
+				and isChangeSafeForInputObjectFieldOrFieldArg(oldType.ofType, newType.ofType) -- if they're both non-null, make sure the underlying types are compatible
+			or not isNonNullType(newType)
+				and isChangeSafeForInputObjectFieldOrFieldArg(oldType.ofType, newType) -- moving from non-null to nullable of the same underlying type is safe
 	end
 
 	-- if they're both named types, see if their names are equivalent

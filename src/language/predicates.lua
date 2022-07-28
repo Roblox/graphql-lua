@@ -12,7 +12,9 @@ local isTypeSystemExtensionNode
 local isTypeExtensionNode
 
 local function isDefinitionNode(node): boolean
-	return isExecutableDefinitionNode(node) or isTypeSystemDefinitionNode(node) or isTypeSystemExtensionNode(node)
+	return isExecutableDefinitionNode(node)
+		or isTypeSystemDefinitionNode(node)
+		or isTypeSystemExtensionNode(node)
 end
 
 function isExecutableDefinitionNode(node): boolean
@@ -20,7 +22,9 @@ function isExecutableDefinitionNode(node): boolean
 end
 
 function isSelectionNode(node): boolean
-	return node.kind == Kind.FIELD or node.kind == Kind.FRAGMENT_SPREAD or node.kind == Kind.INLINE_FRAGMENT
+	return node.kind == Kind.FIELD
+		or node.kind == Kind.FRAGMENT_SPREAD
+		or node.kind == Kind.INLINE_FRAGMENT
 end
 
 function isValueNode(node): boolean
@@ -36,11 +40,15 @@ function isValueNode(node): boolean
 end
 
 function isTypeNode(node): boolean
-	return node.kind == Kind.NAMED_TYPE or node.kind == Kind.LIST_TYPE or node.kind == Kind.NON_NULL_TYPE
+	return node.kind == Kind.NAMED_TYPE
+		or node.kind == Kind.LIST_TYPE
+		or node.kind == Kind.NON_NULL_TYPE
 end
 
 function isTypeSystemDefinitionNode(node): boolean
-	return node.kind == Kind.SCHEMA_DEFINITION or isTypeDefinitionNode(node) or node.kind == Kind.DIRECTIVE_DEFINITION
+	return node.kind == Kind.SCHEMA_DEFINITION
+		or isTypeDefinitionNode(node)
+		or node.kind == Kind.DIRECTIVE_DEFINITION
 end
 
 function isTypeDefinitionNode(node): boolean

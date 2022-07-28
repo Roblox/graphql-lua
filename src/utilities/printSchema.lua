@@ -30,7 +30,11 @@ local isUnionType = DefinitionModule.isUnionType
 local isEnumType = DefinitionModule.isEnumType
 local isInputObjectType = DefinitionModule.isInputObjectType
 -- ROBLOX TODO Luau: Luau doesn't automatically forward default type aliases
-type GraphQLField<TSource, TContext, TArgs = any> = DefinitionModule.GraphQLField<TSource, TContext, TArgs>
+type GraphQLField<TSource, TContext, TArgs = any> = DefinitionModule.GraphQLField<
+	TSource,
+	TContext,
+	TArgs
+>
 type GraphQLType = DefinitionModule.GraphQLType
 type GraphQLEnumValue = DefinitionModule.GraphQLEnumValue
 type GraphQLList<T> = DefinitionModule.GraphQLList<T>
@@ -121,13 +125,19 @@ function printSchemaDefinition(schema: GraphQLSchema): string?
 	local mutationType = schema:getMutationType()
 
 	if isNotNillish(mutationType) then
-		table.insert(operationTypes, ("  mutation: %s"):format((mutationType :: GraphQLObjectType).name))
+		table.insert(
+			operationTypes,
+			("  mutation: %s"):format((mutationType :: GraphQLObjectType).name)
+		)
 	end
 
 	local subscriptionType = schema:getSubscriptionType()
 
 	if isNotNillish(subscriptionType) then
-		table.insert(operationTypes, ("  subscription: %s"):format((subscriptionType :: GraphQLObjectType).name))
+		table.insert(
+			operationTypes,
+			("  subscription: %s"):format((subscriptionType :: GraphQLObjectType).name)
+		)
 	end
 
 	return printDescription(schema) .. ("schema {\n%s\n}"):format(Array.join(operationTypes, "\n"))
@@ -161,7 +171,10 @@ function isSchemaOfCommonNames(schema: GraphQLSchema): boolean
 
 	local subscriptionType = schema:getSubscriptionType()
 
-	if isNotNillish(subscriptionType) and (subscriptionType :: GraphQLObjectType).name ~= "Subscription" then
+	if
+		isNotNillish(subscriptionType)
+		and (subscriptionType :: GraphQLObjectType).name ~= "Subscription"
+	then
 		return false
 	end
 
@@ -202,9 +215,9 @@ end
 
 local function printImplementedInterfaces(type_: GraphQLObjectType | GraphQLInterfaceType)
 	-- ROBLOX FIXME Luau: ** weird bug, where self param is unified into `any`: Cannot call non-function ((any) -> Array<GraphQLInterfaceType>) | ((any) -> Array<any>)
-	local interfaces = (
-		type_.getInterfaces :: (GraphQLObjectType | GraphQLInterfaceType) -> Array<GraphQLInterfaceType>
-	)(type_)
+	local interfaces = (type_.getInterfaces :: (
+		GraphQLObjectType | GraphQLInterfaceType
+	) -> Array<GraphQLInterfaceType>)(type_)
 
 	return if #interfaces > 0
 		then " implements " .. Array.join(
@@ -240,7 +253,10 @@ end
 function printEnum(type_: GraphQLEnumType): string
 	-- ROBLOX FIXME Luau: ** I shouldn't need to annotation value param below
 	local values = Array.map(type_:getValues(), function(value: GraphQLEnumValue, i)
-		return printDescription(value, "  ", i == 1) .. "  " .. value.name .. printDeprecated(value.deprecationReason)
+		return printDescription(value, "  ", i == 1)
+			.. "  "
+			.. value.name
+			.. printDeprecated(value.deprecationReason)
 	end)
 
 	return printDescription(type_) .. ("enum %s"):format(type_.name) .. printBlock(values)
@@ -302,7 +318,10 @@ function printArgs(args: Array<GraphQLArgument>, indentation_: string?): string
 		.. Array.join(
 			-- ROBLOX FIXME Luau: ** I shouldn't need to annotation value param below
 			Array.map(args, function(arg: GraphQLArgument, i)
-				return printDescription(arg, "  " .. indentation, i == 1) .. "  " .. indentation .. printInputValue(arg)
+				return printDescription(arg, "  " .. indentation, i == 1)
+					.. "  "
+					.. indentation
+					.. printInputValue(arg)
 			end),
 			"\n"
 		)
@@ -362,7 +381,11 @@ function printSpecifiedByUrl(scalar: GraphQLScalarType): string
 	return " @specifiedBy(url: " .. print_(urlAST :: StringValueNode) .. ")"
 end
 
-function printDescription(def: { description: string? }, indentation_: string?, firstInBlock_: boolean?): string
+function printDescription(
+	def: { description: string? },
+	indentation_: string?,
+	firstInBlock_: boolean?
+): string
 	-- ROBLOX deviation: handle default paramters
 	local indentation: string = if indentation_ ~= nil then indentation_ else ""
 
@@ -378,7 +401,9 @@ function printDescription(def: { description: string? }, indentation_: string?, 
 	-- ROBLOX TODO? should this be utf8.len?
 	local preferMultipleLines = string.len(description :: string) > 70
 	local blockString = printBlockString(description :: string, "", preferMultipleLines)
-	local prefix = if Boolean.toJSBoolean(indentation) and not firstInBlock then "\n" .. indentation else indentation
+	local prefix = if Boolean.toJSBoolean(indentation) and not firstInBlock
+		then "\n" .. indentation
+		else indentation
 
 	local replaced: string, _ = string.gsub(blockString, "\n", "\n" .. indentation)
 	return prefix .. replaced .. "\n"

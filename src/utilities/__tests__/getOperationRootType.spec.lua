@@ -10,7 +10,8 @@ return function()
 	local GraphQLSchema = require(srcWorkspace.type.schema).GraphQLSchema
 	local GraphQLString = require(srcWorkspace.type.scalars).GraphQLString
 	local GraphQLObjectType = require(srcWorkspace.type.definition).GraphQLObjectType
-	local getOperationRootType = require(utilitiesWorkspace.getOperationRootType).getOperationRootType
+	local getOperationRootType =
+		require(utilitiesWorkspace.getOperationRootType).getOperationRootType
 
 	local Object = require(srcWorkspace.Parent.LuauPolyfill).Object
 
@@ -79,7 +80,9 @@ return function()
 
 			local schemaNode = doc.definitions[1]
 			invariant(schemaNode and schemaNode.kind == Kind.SCHEMA_DEFINITION)
-			local queryNode, mutationNode, subscriptionNode = table.unpack(schemaNode.operationTypes)
+			local queryNode, mutationNode, subscriptionNode = table.unpack(
+				schemaNode.operationTypes
+			)
 
 			expect(getOperationRootType(testSchema, queryNode)).to.equal(queryType)
 			expect(getOperationRootType(testSchema, mutationNode)).to.equal(mutationType)

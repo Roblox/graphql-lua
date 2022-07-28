@@ -34,7 +34,9 @@ exports.UniqueOperationTypesRule = function(context)
 			if existingOperationTypes[operation] then
 				context:reportError(
 					GraphQLError.new(
-						("Type for %s already defined in the schema. It cannot be redefined."):format(operation),
+						("Type for %s already defined in the schema. It cannot be redefined."):format(
+							operation
+						),
 						operationType
 					)
 				)

@@ -16,7 +16,8 @@ return function()
 	local definition = require(typeWorkspace.definition)
 	local GraphQLScalarType = definition.GraphQLScalarType
 	local GraphQLObjectType = definition.GraphQLObjectType
-	local ValuesOfCorrectTypeRule = require(validationWorkspace.rules.ValuesOfCorrectTypeRule).ValuesOfCorrectTypeRule
+	local ValuesOfCorrectTypeRule =
+		require(validationWorkspace.rules.ValuesOfCorrectTypeRule).ValuesOfCorrectTypeRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 	local expectValidationErrorsWithSchema = harness.expectValidationErrorsWithSchema
@@ -1149,7 +1150,11 @@ return function()
 				local customScalar = GraphQLScalarType.new({
 					name = "Invalid",
 					parseValue = function(value)
-						error(Error.new(("Invalid scalar is always invalid: %s"):format(inspect(value))))
+						error(
+							Error.new(
+								("Invalid scalar is always invalid: %s"):format(inspect(value))
+							)
+						)
 					end,
 				})
 				local schema = GraphQLSchema.new({
@@ -1164,7 +1169,11 @@ return function()
 					}),
 				})
 
-				local expectedErrors = expectErrorsWithSchema(expect, schema, "{ invalidArg(arg: 123) }")
+				local expectedErrors = expectErrorsWithSchema(
+					expect,
+					schema,
+					"{ invalidArg(arg: 123) }"
+				)
 
 				expectedErrors.toEqual({
 					{

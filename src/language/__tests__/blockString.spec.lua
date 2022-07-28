@@ -14,14 +14,31 @@ return function()
 
 	describe("dedentBlockStringValue", function()
 		it("removes uniform indentation from a string", function()
-			local rawValue = joinLines("", "    Hello,", "      World!", "", "    Yours,", "      GraphQL.")
+			local rawValue = joinLines(
+				"",
+				"    Hello,",
+				"      World!",
+				"",
+				"    Yours,",
+				"      GraphQL."
+			)
 			expect(dedentBlockStringValue(rawValue)).to.equal(
 				joinLines("Hello,", "  World!", "", "Yours,", "  GraphQL.")
 			)
 		end)
 
 		it("removes empty leading and trailing lines", function()
-			local rawValue = joinLines("", "", "    Hello,", "      World!", "", "    Yours,", "      GraphQL.", "", "")
+			local rawValue = joinLines(
+				"",
+				"",
+				"    Hello,",
+				"      World!",
+				"",
+				"    Yours,",
+				"      GraphQL.",
+				"",
+				""
+			)
 			expect(dedentBlockStringValue(rawValue)).to.equal(
 				joinLines("Hello,", "  World!", "", "Yours,", "  GraphQL.")
 			)
@@ -45,7 +62,13 @@ return function()
 		end)
 
 		it("retains indentation from first line", function()
-			local rawValue = joinLines("    Hello,", "      World!", "", "    Yours,", "      GraphQL.")
+			local rawValue = joinLines(
+				"    Hello,",
+				"      World!",
+				"",
+				"    Yours,",
+				"      GraphQL."
+			)
 			expect(dedentBlockStringValue(rawValue)).to.equal(
 				joinLines("    Hello,", "  World!", "", "Yours,", "  GraphQL.")
 			)
@@ -115,7 +138,9 @@ return function()
 
 			expect(printBlockString(str)).to.equal('"""    space-led value "quoted string"\n"""')
 
-			expect(printBlockString(str, "", true)).to.equal('"""    space-led value "quoted string"\n"""')
+			expect(printBlockString(str, "", true)).to.equal(
+				'"""    space-led value "quoted string"\n"""'
+			)
 		end)
 
 		it("correctly prints single-line with trailing backslash", function()

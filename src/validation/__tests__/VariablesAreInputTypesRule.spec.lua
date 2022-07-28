@@ -3,7 +3,9 @@
 return function()
 	local validationWorkspace = script.Parent.Parent
 	local VariablesAreInputTypesRule =
-		require(validationWorkspace.rules.VariablesAreInputTypesRule).VariablesAreInputTypesRule
+		require(
+			validationWorkspace.rules.VariablesAreInputTypesRule
+		).VariablesAreInputTypesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 

@@ -3,7 +3,11 @@ local NULL = (
 	setmetatable({}, {
 		-- ROBLOX deviation: mimic behavior of Object.preventExtension
 		__newindex = function(self, key, value)
-			local message = ("%q (%s) is not a valid member of %s"):format(tostring(key), typeof(key), "null")
+			local message = ("%q (%s) is not a valid member of %s"):format(
+				tostring(key),
+				typeof(key),
+				"null"
+			)
 
 			error(message, 2)
 		end,

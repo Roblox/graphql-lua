@@ -105,12 +105,20 @@ printDocASTReducer = {
 		local selectionSet = node.selectionSet
 		-- Anonymous queries with no directives or variable definitions can use
 		-- the query short form.
-		if not name and not (directives and directives ~= "") and not (varDefs and varDefs ~= "") and op == "query" then
+		if
+			not name
+			and not (directives and directives ~= "")
+			and not (varDefs and varDefs ~= "")
+			and op == "query"
+		then
 			return selectionSet
 		else
 			-- ROBLOX FIXME Luau: Luau needs to understand mixed arrays
 			-- ROBLOX note: on this next line, name is NameNode, which is a bug. upstream 16.x fixes this with name.value, but that fix triggers test failures in 15.x
-			return join({ op, join({ name :: any, varDefs }), directives, selectionSet } :: Array<any>, " ")
+			return join(
+				{ op, join({ name :: any, varDefs }), directives, selectionSet } :: Array<any>,
+				" "
+			)
 		end
 	end,
 
@@ -170,7 +178,10 @@ printDocASTReducer = {
 		local directives = node.directives
 		local selectionSet = node.selectionSet
 		-- ROBLOX FIXME Luau: Luau needs to understand mixed arrays
-		return join({ "...", wrap("on ", typeCondition), join(directives, " "), selectionSet } :: Array<any>, " ")
+		return join(
+			{ "...", wrap("on ", typeCondition), join(directives, " "), selectionSet } :: Array<any>,
+			" "
+		)
 	end,
 
 	FragmentDefinition = function(_self, node: FragmentDefinitionNode)
@@ -319,7 +330,11 @@ printDocASTReducer = {
 		local type_ = node.type
 		local defaultValue = node.defaultValue
 		local directives = node.directives
-		return join({ tostring(name) .. ": " .. tostring(type_), wrap("= ", defaultValue), join(directives, " ") }, " ")
+		return join({
+			tostring(name) .. ": " .. tostring(type_),
+			wrap("= ", defaultValue),
+			join(directives, " "),
+		}, " ")
 	end),
 
 	InterfaceTypeDefinition = addDescription(function(node: InterfaceTypeDefinitionNode)

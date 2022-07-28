@@ -6,7 +6,10 @@ local function toArrayEqual(arrA, arrB, looseEquals)
 	if not sameLength then
 		return {
 			pass = false,
-			message = ("Expected array length %s / got length %s"):format(tostring(#arrA), tostring(#arrB)),
+			message = ("Expected array length %s / got length %s"):format(
+				tostring(#arrA),
+				tostring(#arrB)
+			),
 		}
 	end
 

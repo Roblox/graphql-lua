@@ -153,7 +153,15 @@ local function readName(source, start: number, line: number, col: number, prev):
 		position += 1
 	end
 
-	return Token.new(TokenKind.NAME, start, position, line, col, prev, String.slice(body, start, position))
+	return Token.new(
+		TokenKind.NAME,
+		start,
+		position,
+		line,
+		col,
+		prev,
+		String.slice(body, start, position)
+	)
 end
 
 --[[
@@ -173,7 +181,15 @@ local function readComment(source, start: number, line: number, col: number, pre
 	-- // SourceCharacter but not LineTerminator
 	until not ((not isNaN(code)) and (code > 0x001f or code == 0x0009))
 
-	return Token.new(TokenKind.COMMENT, start, position, line, col, prev, String.slice(body, start + 1, position))
+	return Token.new(
+		TokenKind.COMMENT,
+		start,
+		position,
+		line,
+		col,
+		prev,
+		String.slice(body, start + 1, position)
+	)
 end
 
 function printCharCode(code: number): string
@@ -207,7 +223,13 @@ function readDigits(source, start: number, firstCode: number): number
 		until not (code >= 48 and code <= 57) -- 0-9
 		return position
 	end
-	error(syntaxError(source, position, "Invalid number, expected digit but got: " .. printCharCode(code) .. "."))
+	error(
+		syntaxError(
+			source,
+			position,
+			"Invalid number, expected digit but got: " .. printCharCode(code) .. "."
+		)
+	)
 end
 
 --[[
@@ -243,7 +265,14 @@ end
  * Float: -?(0|[1-9][0-9]*)(\.[0-9]+)?((E|e)(+|-)?[0-9]+)?
 ]]
 --
-function readNumber(source, start: number, firstCode: number, line: number, col: number, prev): Token
+function readNumber(
+	source,
+	start: number,
+	firstCode: number,
+	line: number,
+	col: number,
+	prev
+): Token
 	local body = source.body
 	local code = firstCode
 	local position: number = start
@@ -301,7 +330,13 @@ function readNumber(source, start: number, firstCode: number, line: number, col:
 
 	-- Numbers cannot be followed by . or NameStart
 	if code == 46 or isNameStart(code) then
-		error(syntaxError(source, position, "Invalid number, expected digit but got: " .. printCharCode(code) .. "."))
+		error(
+			syntaxError(
+				source,
+				position,
+				"Invalid number, expected digit but got: " .. printCharCode(code) .. "."
+			)
+		)
 	end
 
 	return Token.new(
@@ -383,7 +418,10 @@ local function readToken(lexer: Lexer, prev: Token): Token
 		elseif
 			code == 46 -- .
 		then
-			if String.charCodeAt(body, pos + 1) == 46 and String.charCodeAt(body, pos + 2) == 46 then
+			if
+				String.charCodeAt(body, pos + 1) == 46
+				and String.charCodeAt(body, pos + 2) == 46
+			then
 				return Token.new(TokenKind.SPREAD, pos, pos + 3, line, col, prev)
 			end
 			-- don't need break because no case fall through in if statement
@@ -422,7 +460,10 @@ local function readToken(lexer: Lexer, prev: Token): Token
 		elseif
 			code == 34 -- "
 		then
-			if String.charCodeAt(body, pos + 1) == 34 and String.charCodeAt(body, pos + 2) == 34 then
+			if
+				String.charCodeAt(body, pos + 1) == 34
+				and String.charCodeAt(body, pos + 2) == 34
+			then
 				return readBlockString(source, pos, line, col, prev, lexer)
 			end
 			return readString(source, pos, line, col, prev)
@@ -602,7 +643,13 @@ function readBlockString(source, start, line, col, prev, lexer)
 
 		-- SourceCharacter
 		if code < 0x0020 and code ~= 0x0009 and code ~= 0x000a and code ~= 0x000d then
-			error(syntaxError(source, position, "Invalid character within String: " .. printCharCode(code) .. "."))
+			error(
+				syntaxError(
+					source,
+					position,
+					"Invalid character within String: " .. printCharCode(code) .. "."
+				)
+			)
 		end
 
 		if code == 10 then
@@ -673,7 +720,13 @@ function readString(source, start, line, col, prev)
 
 		-- SourceCharacter
 		if code < 0x0020 and code ~= 0x0009 then
-			error(syntaxError(source, position, "Invalid character within String: " .. printCharCode(code) .. "."))
+			error(
+				syntaxError(
+					source,
+					position,
+					"Invalid character within String: " .. printCharCode(code) .. "."
+				)
+			)
 		end
 
 		position += 1
@@ -718,7 +771,13 @@ function readString(source, start, line, col, prev)
 				value = value .. utf8.char(charCode)
 				position += 4
 			else
-				error(syntaxError(source, position, "Invalid character escape sequence: \\" .. utf8.char(code) .. "."))
+				error(
+					syntaxError(
+						source,
+						position,
+						"Invalid character escape sequence: \\" .. utf8.char(code) .. "."
+					)
+				)
 			end
 
 			position += 1

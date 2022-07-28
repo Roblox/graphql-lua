@@ -1,5 +1,7 @@
+local srcWorkspace = script.Parent.Parent
+local Packages = srcWorkspace.Parent
+local inspect = require(Packages.LuauPolyfill).util.inspect
 local deepContains = require(script.Parent.Parent.luaUtils.deepContains)
-local inspect = require(script.Parent.inspect).inspect
 
 local function toObjectContain(a, b)
 	local success = deepContains(a, b)
