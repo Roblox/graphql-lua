@@ -22,9 +22,9 @@ exports.UniqueTypeNamesRule = function(context)
 		if schema and schema:getType(typeName) then
 			context:reportError(
 				GraphQLError.new(
-					('Type "%s" already exists in the schema. It cannot also be defined in this type definition.'):format(
-						typeName
-					),
+					(
+						'Type "%s" already exists in the schema. It cannot also be defined in this type definition.'
+					):format(typeName),
 					node.name
 				)
 			)

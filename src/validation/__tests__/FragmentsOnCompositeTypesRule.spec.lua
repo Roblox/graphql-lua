@@ -2,8 +2,9 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local FragmentsOnCompositeTypesRule =
-		require(validationWorkspace.rules.FragmentsOnCompositeTypesRule).FragmentsOnCompositeTypesRule
+	local FragmentsOnCompositeTypesRule = require(
+		validationWorkspace.rules.FragmentsOnCompositeTypesRule
+	).FragmentsOnCompositeTypesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 

@@ -2,7 +2,8 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local UniqueFragmentNamesRule = require(validationWorkspace.rules.UniqueFragmentNamesRule).UniqueFragmentNamesRule
+	local UniqueFragmentNamesRule =
+		require(validationWorkspace.rules.UniqueFragmentNamesRule).UniqueFragmentNamesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 

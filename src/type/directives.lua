@@ -89,13 +89,17 @@ function GraphQLDirective.new(config: GraphQLDirectiveConfig): GraphQLDirective
 	self.astNode = config.astNode
 
 	devAssert(config.name, "Directive must be named.")
-	devAssert(Array.isArray(config.locations), ("@%s locations must be an Array."):format(config.name))
+	devAssert(
+		Array.isArray(config.locations),
+		("@%s locations must be an Array."):format(config.name)
+	)
 
 	local args = if config.args then config.args else {}
 
 	-- ROBLOX deviation: empty table doesn't necessarily mean an array
 	devAssert(
-		(isObjectLike(args) and not (Array.isArray(args) and next(args :: Array<any>) ~= nil)) or instanceOf(args, Map),
+		(isObjectLike(args) and not (Array.isArray(args) and next(args :: Array<any>) ~= nil))
+			or instanceOf(args, Map),
 		("@%s args must be an object with argument names as keys."):format(config.name)
 	)
 

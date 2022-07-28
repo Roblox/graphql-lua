@@ -37,10 +37,9 @@ exports.PossibleFragmentSpreadsRule = function(context)
 
 				context:reportError(
 					GraphQLError.new(
-						('Fragment cannot be spread here as objects of type "%s" can never be of type "%s".'):format(
-							parentTypeStr,
-							fragTypeStr
-						),
+						(
+							'Fragment cannot be spread here as objects of type "%s" can never be of type "%s".'
+						):format(parentTypeStr, fragTypeStr),
 						node
 					)
 				)
@@ -50,16 +49,18 @@ exports.PossibleFragmentSpreadsRule = function(context)
 			local fragName = node.name.value
 			local fragType = getFragmentType(context, fragName)
 			local parentType = context:getParentType()
-			if fragType and parentType and not doTypesOverlap(context:getSchema(), fragType, parentType) then
+			if
+				fragType
+				and parentType
+				and not doTypesOverlap(context:getSchema(), fragType, parentType)
+			then
 				local parentTypeStr = inspect(parentType)
 				local fragTypeStr = inspect(fragType)
 				context:reportError(
 					GraphQLError.new(
-						('Fragment "%s" cannot be spread here as objects of type "%s" can never be of type "%s".'):format(
-							fragName,
-							parentTypeStr,
-							fragTypeStr
-						),
+						(
+							'Fragment "%s" cannot be spread here as objects of type "%s" can never be of type "%s".'
+						):format(fragName, parentTypeStr, fragTypeStr),
 						node
 					)
 				)

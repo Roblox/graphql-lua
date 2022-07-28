@@ -30,7 +30,9 @@ return function()
 				end).toThrow("Int cannot represent non 32-bit signed integer value: 9876504321")
 				expect(function()
 					return parseValue(-9876504321)
-				end).toThrow("Int cannot represent non 32-bit signed integer value: -9876504321")
+				end).toThrow(
+					"Int cannot represent non 32-bit signed integer value: -9876504321"
+				)
 				expect(function()
 					return parseValue(0.1)
 				end).toThrow("Int cannot represent non-integer value: 0.1")
@@ -80,7 +82,9 @@ return function()
 				end).toThrow("Int cannot represent non 32-bit signed integer value: 9876504321")
 				expect(function()
 					return parseLiteral("-9876504321")
-				end).toThrow("Int cannot represent non 32-bit signed integer value: -9876504321")
+				end).toThrow(
+					"Int cannot represent non 32-bit signed integer value: -9876504321"
+				)
 				expect(function()
 					return parseLiteral("1.0")
 				end).toThrow("Int cannot represent non-integer value: 1.0")
@@ -154,7 +158,9 @@ return function()
 				end).toThrow("Int cannot represent non 32-bit signed integer value: 9876504321")
 				expect(function()
 					return serialize(-9876504321)
-				end).toThrow("Int cannot represent non 32-bit signed integer value: -9876504321")
+				end).toThrow(
+					"Int cannot represent non 32-bit signed integer value: -9876504321"
+				)
 
 				-- Too big to represent as an Int in JavaScript or GraphQL
 				expect(function()
@@ -626,10 +632,14 @@ return function()
 				end).toThrow('ID cannot represent a non-string and non-integer value: ["1"]')
 				expect(function()
 					return parseLiteral('{ value: "1" }')
-				end).toThrow('ID cannot represent a non-string and non-integer value: {value: "1"}')
+				end).toThrow(
+					'ID cannot represent a non-string and non-integer value: {value: "1"}'
+				)
 				expect(function()
 					return parseLiteral("ENUM_VALUE")
-				end).toThrow("ID cannot represent a non-string and non-integer value: ENUM_VALUE")
+				end).toThrow(
+					"ID cannot represent a non-string and non-integer value: ENUM_VALUE"
+				)
 				expect(function()
 					return parseLiteral("$var")
 				end).toThrow("ID cannot represent a non-string and non-integer value: $var")

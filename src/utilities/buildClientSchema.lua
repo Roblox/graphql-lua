@@ -167,11 +167,15 @@ local function buildClientSchema(
 		return type_
 	end
 
-	function getObjectType(typeRef: IntrospectionNamedTypeRef<IntrospectionObjectType>): GraphQLObjectType
+	function getObjectType(
+		typeRef: IntrospectionNamedTypeRef<IntrospectionObjectType>
+	): GraphQLObjectType
 		return assertObjectType(getNamedType(typeRef))
 	end
 
-	function getInterfaceType(typeRef: IntrospectionNamedTypeRef<IntrospectionInterfaceType>): GraphQLInterfaceType
+	function getInterfaceType(
+		typeRef: IntrospectionNamedTypeRef<IntrospectionInterfaceType>
+	): GraphQLInterfaceType
 		return assertInterfaceType(getNamedType(typeRef))
 	end
 
@@ -217,13 +221,22 @@ local function buildClientSchema(
 	): Array<GraphQLInterfaceType>
 		-- TODO: Temporary workaround until GraphQL ecosystem will fully support
 		-- 'interfaces' on interface types.
-		if implementingIntrospection.interfaces == nil and implementingIntrospection.kind == TypeKind.INTERFACE then
+		if
+			implementingIntrospection.interfaces == nil
+			and implementingIntrospection.kind == TypeKind.INTERFACE
+		then
 			return {}
 		end
 
 		if not implementingIntrospection.interfaces then
 			local implementingIntrospectionStr = inspect(implementingIntrospection)
-			error(Error.new(("Introspection result missing interfaces: %s."):format(implementingIntrospectionStr)))
+			error(
+				Error.new(
+					("Introspection result missing interfaces: %s."):format(
+						implementingIntrospectionStr
+					)
+				)
+			)
 		end
 
 		return Array.map(implementingIntrospection.interfaces, getInterfaceType)
@@ -242,7 +255,9 @@ local function buildClientSchema(
 		})
 	end
 
-	function buildInterfaceDef(interfaceIntrospection: IntrospectionInterfaceType): GraphQLInterfaceType
+	function buildInterfaceDef(
+		interfaceIntrospection: IntrospectionInterfaceType
+	): GraphQLInterfaceType
 		return GraphQLInterfaceType.new({
 			name = interfaceIntrospection.name,
 			description = interfaceIntrospection.description,
@@ -258,7 +273,13 @@ local function buildClientSchema(
 	function buildUnionDef(unionIntrospection: IntrospectionUnionType): GraphQLUnionType
 		if not unionIntrospection.possibleTypes then
 			local unionIntrospectionStr = inspect(unionIntrospection)
-			error(Error.new(("Introspection result missing possibleTypes: %s."):format(unionIntrospectionStr)))
+			error(
+				Error.new(
+					("Introspection result missing possibleTypes: %s."):format(
+						unionIntrospectionStr
+					)
+				)
+			)
 		end
 
 		return GraphQLUnionType.new({
@@ -273,7 +294,11 @@ local function buildClientSchema(
 	function buildEnumDef(enumIntrospection: IntrospectionEnumType): GraphQLEnumType
 		if not enumIntrospection.enumValues then
 			local enumIntrospectionStr = inspect(enumIntrospection)
-			error(Error.new(("Introspection result missing enumValues: %s."):format(enumIntrospectionStr)))
+			error(
+				Error.new(
+					("Introspection result missing enumValues: %s."):format(enumIntrospectionStr)
+				)
+			)
 		end
 		return GraphQLEnumType.new({
 			name = enumIntrospection.name,
@@ -290,10 +315,18 @@ local function buildClientSchema(
 		})
 	end
 
-	function buildInputObjectDef(inputObjectIntrospection: IntrospectionInputObjectType): GraphQLInputObjectType
+	function buildInputObjectDef(
+		inputObjectIntrospection: IntrospectionInputObjectType
+	): GraphQLInputObjectType
 		if not inputObjectIntrospection.inputFields then
 			local inputObjectIntrospectionStr = inspect(inputObjectIntrospection)
-			error(Error.new(("Introspection result missing inputFields: %s."):format(inputObjectIntrospectionStr)))
+			error(
+				Error.new(
+					("Introspection result missing inputFields: %s."):format(
+						inputObjectIntrospectionStr
+					)
+				)
+			)
 		end
 		return GraphQLInputObjectType.new({
 			name = inputObjectIntrospection.name,
@@ -308,7 +341,11 @@ local function buildClientSchema(
 		typeIntrospection: IntrospectionObjectType | IntrospectionInterfaceType
 	): GraphQLFieldConfigMap<any, any>
 		if not typeIntrospection.fields then
-			error(Error.new(("Introspection result missing fields: %s."):format(inspect(typeIntrospection))))
+			error(
+				Error.new(
+					("Introspection result missing fields: %s."):format(inspect(typeIntrospection))
+				)
+			)
 		end
 
 		-- ROBLOX FIXME Luau: shouldn't need to manually annotate the function param here
@@ -321,13 +358,23 @@ local function buildClientSchema(
 		local type_ = getType(fieldIntrospection.type)
 		if not isOutputType(type_) then
 			local typeStr = inspect(type_)
-			error(Error.new(("Introspection must provide output type for fields, but received: %s."):format(typeStr)))
+			error(
+				Error.new(
+					("Introspection must provide output type for fields, but received: %s."):format(
+						typeStr
+					)
+				)
+			)
 		end
 
 		if not fieldIntrospection.args then
 			local fieldIntrospectionStr = inspect(fieldIntrospection)
 
-			error(Error.new(("Introspection result missing field args: %s."):format(fieldIntrospectionStr)))
+			error(
+				Error.new(
+					("Introspection result missing field args: %s."):format(fieldIntrospectionStr)
+				)
+			)
 		end
 
 		return {
@@ -348,12 +395,21 @@ local function buildClientSchema(
 		local type_ = getType(inputValueIntrospection.type)
 		if not isInputType(type_) then
 			local typeStr = inspect(type_)
-			error(Error.new(("Introspection must provide input type for arguments, but received: %s."):format(typeStr)))
+			error(
+				Error.new(
+					("Introspection must provide input type for arguments, but received: %s."):format(
+						typeStr
+					)
+				)
+			)
 		end
 
 		-- ROBLOX TODO Luau: should narrow type_ based on `not isInputType(type_)` error branch above
 		local defaultValue = if isNotNillish(inputValueIntrospection.defaultValue)
-			then valueFromAST(parseValue(inputValueIntrospection.defaultValue :: string), type_ :: GraphQLInputObjectType)
+			then valueFromAST(
+				parseValue(inputValueIntrospection.defaultValue :: string),
+				type_ :: GraphQLInputObjectType
+			)
 			else nil
 
 		return {
@@ -368,12 +424,22 @@ local function buildClientSchema(
 		if not directiveIntrospection.args then
 			local directiveIntrospectionStr = inspect(directiveIntrospection)
 
-			error(Error.new(("Introspection result missing directive args: %s."):format(directiveIntrospectionStr)))
+			error(
+				Error.new(
+					("Introspection result missing directive args: %s."):format(
+						directiveIntrospectionStr
+					)
+				)
+			)
 		end
 		if not directiveIntrospection.locations then
 			local directiveIntrospectionStr = inspect(directiveIntrospection)
 			error(
-				Error.new(("Introspection result missing directive locations: %s."):format(directiveIntrospectionStr))
+				Error.new(
+					("Introspection result missing directive locations: %s."):format(
+						directiveIntrospectionStr
+					)
+				)
 			)
 		end
 		return GraphQLDirective.new({
@@ -414,15 +480,21 @@ local function buildClientSchema(
 	-- Get the root Query, Mutation, and Subscription types.
 	-- ROBLOX TODO Luau: should narrow on isNotNillish narrowing effect on the param
 	local queryType = if isNotNillish(schemaIntrospection.queryType)
-		then getObjectType(schemaIntrospection.queryType :: IntrospectionNamedTypeRef<IntrospectionObjectType>)
+		then getObjectType(
+			schemaIntrospection.queryType :: IntrospectionNamedTypeRef<IntrospectionObjectType>
+		)
 		else NULL
 
 	local mutationType = if isNotNillish(schemaIntrospection.mutationType)
-		then getObjectType(schemaIntrospection.mutationType :: IntrospectionNamedTypeRef<IntrospectionObjectType>)
+		then getObjectType(
+			schemaIntrospection.mutationType :: IntrospectionNamedTypeRef<IntrospectionObjectType>
+		)
 		else NULL
 
 	local subscriptionType = if isNotNillish(schemaIntrospection.subscriptionType)
-		then getObjectType(schemaIntrospection.subscriptionType :: IntrospectionNamedTypeRef<IntrospectionObjectType>)
+		then getObjectType(
+			schemaIntrospection.subscriptionType :: IntrospectionNamedTypeRef<IntrospectionObjectType>
+		)
 		else NULL
 
 	-- Get the directives supported by Introspection, assuming empty-set if

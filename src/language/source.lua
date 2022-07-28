@@ -40,8 +40,14 @@ function Source.new(body: string, _name: string?, _locationOffset: Location?): S
 	self.body = body
 	self.name = name
 	self.locationOffset = locationOffset
-	devAssert(self.locationOffset.line > 0, "line in locationOffset is 1-indexed and must be positive.")
-	devAssert(self.locationOffset.column > 0, "column in locationOffset is 1-indexed and must be positive.")
+	devAssert(
+		self.locationOffset.line > 0,
+		"line in locationOffset is 1-indexed and must be positive."
+	)
+	devAssert(
+		self.locationOffset.column > 0,
+		"column in locationOffset is 1-indexed and must be positive."
+	)
 
 	return (setmetatable(self, Source) :: any) :: Source
 end

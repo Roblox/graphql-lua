@@ -3,7 +3,9 @@
 return function()
 	local validationWorkspace = script.Parent.Parent
 	local UniqueInputFieldNamesRule =
-		require(validationWorkspace.rules.UniqueInputFieldNamesRule).UniqueInputFieldNamesRule
+		require(
+			validationWorkspace.rules.UniqueInputFieldNamesRule
+		).UniqueInputFieldNamesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 

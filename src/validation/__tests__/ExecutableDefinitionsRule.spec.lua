@@ -3,7 +3,9 @@
 return function()
 	local validationWorkspace = script.Parent.Parent
 	local ExecutableDefinitionsRule =
-		require(validationWorkspace.rules.ExecutableDefinitionsRule).ExecutableDefinitionsRule
+		require(
+			validationWorkspace.rules.ExecutableDefinitionsRule
+		).ExecutableDefinitionsRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 

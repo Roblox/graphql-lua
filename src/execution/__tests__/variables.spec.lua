@@ -94,9 +94,12 @@ return function()
 		name = "TestType",
 		fields = Map.new({
 			{ "fieldWithEnumInput", fieldWithInputArg({ type = TestEnum }) },
-			{ "fieldWithNonNullableEnumInput", fieldWithInputArg({
-				type = GraphQLNonNull.new(TestEnum),
-			}) },
+			{
+				"fieldWithNonNullableEnumInput",
+				fieldWithInputArg({
+					type = GraphQLNonNull.new(TestEnum),
+				}),
+			},
 			{ "fieldWithObjectInput", fieldWithInputArg({ type = TestInputObject }) },
 			{ "fieldWithNullableStringInput", fieldWithInputArg({ type = GraphQLString }) },
 			{
@@ -129,12 +132,18 @@ return function()
 			{ "list", fieldWithInputArg({
 				type = GraphQLList.new(GraphQLString),
 			}) },
-			{ "nnList", fieldWithInputArg({
-				type = GraphQLNonNull.new(GraphQLList.new(GraphQLString)),
-			}) },
-			{ "listNN", fieldWithInputArg({
-				type = GraphQLList.new(GraphQLNonNull.new(GraphQLString)),
-			}) },
+			{
+				"nnList",
+				fieldWithInputArg({
+					type = GraphQLNonNull.new(GraphQLList.new(GraphQLString)),
+				}),
+			},
+			{
+				"listNN",
+				fieldWithInputArg({
+					type = GraphQLList.new(GraphQLNonNull.new(GraphQLString)),
+				}),
+			},
 			{
 				"nnListNN",
 				fieldWithInputArg({
@@ -1408,7 +1417,12 @@ return function()
 			end)
 
 			it("when maxErrors is equal to number of errors", function()
-				local result = getVariableValues(schema, variableDefinitions, inputValue, { maxErrors = 3 })
+				local result = getVariableValues(
+					schema,
+					variableDefinitions,
+					inputValue,
+					{ maxErrors = 3 }
+				)
 
 				--[[
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message
@@ -1426,7 +1440,12 @@ return function()
 			end)
 
 			it("when maxErrors is less than number of errors", function()
-				local result = getVariableValues(schema, variableDefinitions, inputValue, { maxErrors = 2 })
+				local result = getVariableValues(
+					schema,
+					variableDefinitions,
+					inputValue,
+					{ maxErrors = 2 }
+				)
 
 				--[[
 				--  ROBLOX deviation: .to.deep.equal matcher doesn't convert to .toEqual in this case as errors contain more fields than just message

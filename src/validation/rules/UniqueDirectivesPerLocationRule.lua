@@ -67,7 +67,9 @@ exports.UniqueDirectivesPerLocationRule = function(context)
 					if seenDirectives[directiveName] then
 						context:reportError(
 							GraphQLError.new(
-								('The directive "@%s" can only be used once at this location.'):format(directiveName),
+								('The directive "@%s" can only be used once at this location.'):format(
+									directiveName
+								),
 								{ seenDirectives[directiveName], directive }
 							)
 						)

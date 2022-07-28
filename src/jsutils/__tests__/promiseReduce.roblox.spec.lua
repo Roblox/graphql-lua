@@ -24,19 +24,22 @@ return function()
 			expect(sum).to.equal(6)
 		end)
 
-		it("should fold the list into a promise if the reducer returns at least a promise", function()
-			-- ROBLOX FIXME Luau: should infer `element` from T in first argument, and `acc` from U in last argument
-			local sum = promiseReduce({ 1, 2, 3 }, function(acc: number, element: number)
-				if element == 2 then
-					return Promise.resolve(acc + element)
-				else
-					return acc + element
-				end
-			end, 0)
-			expect(Promise.is(sum)).to.equal(true)
-			expect((sum :: Promise<number>):getStatus()).to.equal(Promise.Status.Resolved)
-			expect((sum :: Promise<number>):expect()).to.equal(6)
-		end)
+		it(
+			"should fold the list into a promise if the reducer returns at least a promise",
+			function()
+				-- ROBLOX FIXME Luau: should infer `element` from T in first argument, and `acc` from U in last argument
+				local sum = promiseReduce({ 1, 2, 3 }, function(acc: number, element: number)
+					if element == 2 then
+						return Promise.resolve(acc + element)
+					else
+						return acc + element
+					end
+				end, 0)
+				expect(Promise.is(sum)).to.equal(true)
+				expect((sum :: Promise<number>):getStatus()).to.equal(Promise.Status.Resolved)
+				expect((sum :: Promise<number>):expect()).to.equal(6)
+			end
+		)
 
 		it("should return the first rejected promise", function()
 			local errorMessage = "foo"

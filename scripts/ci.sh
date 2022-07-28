@@ -10,5 +10,5 @@ find Packages/_Index -name "*.robloxrc" | xargs rm -f
 
 roblox-cli analyze test-bundle.project.json
 selene src
-stylua -c src/__fixtures__/ src/__testUtils__/ src/__tests__/ src/error/ src/polyfills/ 
-roblox-cli run --load.model graphql-tests.rbxm --run scripts/run-unit-tests.lua --fastFlags.allOnLuau --fastFlags.overrides "EnableLoadModule=true"
+stylua -c src
+roblox-cli run --load.model test-bundle.project.json --run scripts/run-unit-tests.lua --fastFlags.allOnLuau --fastFlags.overrides "EnableLoadModule=true"

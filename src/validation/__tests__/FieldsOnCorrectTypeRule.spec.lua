@@ -8,7 +8,8 @@ return function()
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
 	local validate = require(validationWorkspace.validate).validate
-	local FieldsOnCorrectTypeRule = require(validationWorkspace.rules.FieldsOnCorrectTypeRule).FieldsOnCorrectTypeRule
+	local FieldsOnCorrectTypeRule =
+		require(validationWorkspace.rules.FieldsOnCorrectTypeRule).FieldsOnCorrectTypeRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 
@@ -328,7 +329,9 @@ return function()
 					type Query { t: T }
 				]])
 
-				expectErrorMessage(expect, schema, "{ t { f } }").to.equal('Cannot query field "f" on type "T".')
+				expectErrorMessage(expect, schema, "{ t { f } }").to.equal(
+					'Cannot query field "f" on type "T".'
+				)
 			end)
 
 			it("Works with no small numbers of type suggestions", function()

@@ -2,7 +2,8 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local NoUnusedFragmentsRule = require(validationWorkspace.rules.NoUnusedFragmentsRule).NoUnusedFragmentsRule
+	local NoUnusedFragmentsRule =
+		require(validationWorkspace.rules.NoUnusedFragmentsRule).NoUnusedFragmentsRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 

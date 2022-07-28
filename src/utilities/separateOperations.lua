@@ -86,7 +86,11 @@ type DepGraph = ObjMap<Array<string>>
 
 -- From a dependency graph, collects a list of transitive dependencies by
 -- recursing through a dependency graph.
-function collectTransitiveDependencies(collected: Set<string>, depGraph: DepGraph, fromName: string): ()
+function collectTransitiveDependencies(
+	collected: Set<string>,
+	depGraph: DepGraph,
+	fromName: string
+): ()
 	if not collected:has(fromName) then
 		collected:add(fromName)
 

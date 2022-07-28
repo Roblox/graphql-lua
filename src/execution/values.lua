@@ -84,7 +84,11 @@ getVariableValues = function(
 
 	local ok, coerced = pcall(coerceVariableValues, schema, varDefNodes, inputs, function(error_)
 		if maxErrors ~= nil and #errors >= maxErrors then
-			error(GraphQLError.new("Too many errors processing variables, error limit reached. Execution aborted."))
+			error(
+				GraphQLError.new(
+					"Too many errors processing variables, error limit reached. Execution aborted."
+				)
+			)
 		end
 		table.insert(errors, error_)
 	end)
@@ -116,10 +120,9 @@ function coerceVariableValues(
 			local varTypeStr = print_(varDefNode.type)
 			onError(
 				GraphQLError.new(
-					('Variable "$%s" expected value of type "%s" which cannot be used as an input type.'):format(
-						varName,
-						varTypeStr
-					),
+					(
+						'Variable "$%s" expected value of type "%s" which cannot be used as an input type.'
+					):format(varName, varTypeStr),
 					varDefNode.type
 				)
 			)
@@ -133,7 +136,10 @@ function coerceVariableValues(
 				local varTypeStr = inspect(varType)
 				onError(
 					GraphQLError.new(
-						('Variable "$%s" of required type "%s" was not provided.'):format(varName, varTypeStr),
+						('Variable "$%s" of required type "%s" was not provided.'):format(
+							varName,
+							varTypeStr
+						),
 						varDefNode
 					)
 				)
@@ -146,20 +152,37 @@ function coerceVariableValues(
 			local varTypeStr = inspect(varType)
 			onError(
 				GraphQLError.new(
-					('Variable "$%s" of non-null type "%s" must not be null.'):format(varName, varTypeStr),
+					('Variable "$%s" of non-null type "%s" must not be null.'):format(
+						varName,
+						varTypeStr
+					),
 					varDefNode
 				)
 			)
 			continue
 		end
 
-		coercedValues[varName] = coerceInputValue(value, varType, function(path, invalidValue, error_)
-			local prefix = ('Variable "$%s" got invalid value '):format(varName) .. inspect(invalidValue)
-			if #path > 0 then
-				prefix ..= (' at "%s%s"'):format(varName, printPathArray(path))
+		coercedValues[varName] = coerceInputValue(
+			value,
+			varType,
+			function(path, invalidValue, error_)
+				local prefix = ('Variable "$%s" got invalid value '):format(varName)
+					.. inspect(invalidValue)
+				if #path > 0 then
+					prefix ..= (' at "%s%s"'):format(varName, printPathArray(path))
+				end
+				onError(
+					GraphQLError.new(
+						prefix .. "; " .. error_.message,
+						varDefNode,
+						nil,
+						nil,
+						nil,
+						error_.originalError
+					)
+				)
 			end
-			onError(GraphQLError.new(prefix .. "; " .. error_.message, varDefNode, nil, nil, nil, error_.originalError))
-		end)
+		)
 	end
 
 	return coercedValues
@@ -201,7 +224,8 @@ function getArgumentValues(
 			elseif isNonNullType(argType) then
 				error(
 					GraphQLError.new(
-						('Argument "%s" of required type "%s" '):format(name, inspect(argType)) .. "was not provided.",
+						('Argument "%s" of required type "%s" '):format(name, inspect(argType))
+							.. "was not provided.",
 						node
 					)
 				)
@@ -221,9 +245,9 @@ function getArgumentValues(
 					error(
 						GraphQLError.new(
 							('Argument "%s" of required type "%s" '):format(name, inspect(argType))
-								.. ('was provided the variable "$%s" which was not provided a runtime value.'):format(
-									variableName
-								),
+								.. (
+									'was provided the variable "$%s" which was not provided a runtime value.'
+								):format(variableName),
 							valueNode
 						)
 					)
@@ -237,7 +261,8 @@ function getArgumentValues(
 		if isNull and isNonNullType(argType) then
 			error(
 				GraphQLError.new(
-					('Argument "%s" of non-null type "%s" '):format(name, inspect(argType)) .. "must not be null.",
+					('Argument "%s" of non-null type "%s" '):format(name, inspect(argType))
+						.. "must not be null.",
 					valueNode
 				)
 			)
@@ -248,7 +273,12 @@ function getArgumentValues(
 			-- Note: ValuesOfCorrectTypeRule validation should catch this before
 			-- execution. This is a runtime check to ensure execution does not
 			-- continue with an invalid argument value.
-			error(GraphQLError.new(('Argument "%s" has invalid value %s.'):format(name, print_(valueNode)), valueNode))
+			error(
+				GraphQLError.new(
+					('Argument "%s" has invalid value %s.'):format(name, print_(valueNode)),
+					valueNode
+				)
+			)
 		end
 		coercedValues[name] = coercedValue
 	end

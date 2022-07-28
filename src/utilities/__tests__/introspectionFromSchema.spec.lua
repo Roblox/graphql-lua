@@ -13,7 +13,8 @@ return function()
 
 	local getIntrospectionQueryModule = require(utilitiesWorkspace.getIntrospectionQuery)
 	type IntrospectionQuery = getIntrospectionQueryModule.IntrospectionQuery
-	local introspectionFromSchema = require(srcWorkspace.utilities.introspectionFromSchema).introspectionFromSchema
+	local introspectionFromSchema =
+		require(srcWorkspace.utilities.introspectionFromSchema).introspectionFromSchema
 	local printSchema = require(utilitiesWorkspace.printSchema).printSchema
 	local buildClientSchema = require(utilitiesWorkspace.buildClientSchema).buildClientSchema
 

@@ -31,7 +31,9 @@ return function()
 			end)
 
 			it("lists of same type are equal", function()
-				expect(isEqualType(GraphQLList.new(GraphQLInt), GraphQLList.new(GraphQLInt))).to.equal(true)
+				expect(isEqualType(GraphQLList.new(GraphQLInt), GraphQLList.new(GraphQLInt))).to.equal(
+					true
+				)
 			end)
 
 			it("lists is not equal to item", function()
@@ -39,7 +41,9 @@ return function()
 			end)
 
 			it("non-null of same type are equal", function()
-				expect(isEqualType(GraphQLNonNull.new(GraphQLInt), GraphQLNonNull.new(GraphQLInt))).to.equal(true)
+				expect(isEqualType(GraphQLNonNull.new(GraphQLInt), GraphQLNonNull.new(GraphQLInt))).to.equal(
+					true
+				)
 			end)
 
 			it("non-null is not equal to nullable", function()
@@ -78,7 +82,9 @@ return function()
 					field = { type = GraphQLString },
 				})
 
-				expect(isTypeSubTypeOf(schema, GraphQLNonNull.new(GraphQLInt), GraphQLInt)).to.equal(true)
+				expect(isTypeSubTypeOf(schema, GraphQLNonNull.new(GraphQLInt), GraphQLInt)).to.equal(
+					true
+				)
 			end)
 
 			it("nullable is not subtype of non-null", function()
@@ -86,7 +92,9 @@ return function()
 					field = { type = GraphQLString },
 				})
 
-				expect(isTypeSubTypeOf(schema, GraphQLInt, GraphQLNonNull.new(GraphQLInt))).to.equal(false)
+				expect(isTypeSubTypeOf(schema, GraphQLInt, GraphQLNonNull.new(GraphQLInt))).to.equal(
+					false
+				)
 			end)
 
 			it("item is not subtype of list", function()
@@ -94,7 +102,9 @@ return function()
 					field = { type = GraphQLString },
 				})
 
-				expect(isTypeSubTypeOf(schema, GraphQLInt, GraphQLList.new(GraphQLInt))).to.equal(false)
+				expect(isTypeSubTypeOf(schema, GraphQLInt, GraphQLList.new(GraphQLInt))).to.equal(
+					false
+				)
 			end)
 
 			it("list is not subtype of item", function()
@@ -102,7 +112,9 @@ return function()
 					field = { type = GraphQLString },
 				})
 
-				expect(isTypeSubTypeOf(schema, GraphQLList.new(GraphQLInt), GraphQLInt)).to.equal(false)
+				expect(isTypeSubTypeOf(schema, GraphQLList.new(GraphQLInt), GraphQLInt)).to.equal(
+					false
+				)
 			end)
 
 			it("member is subtype of union", function()

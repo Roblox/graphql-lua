@@ -12,7 +12,10 @@ local NULL = require(script.Parent.null)
 
 local function deepEqual(a: any, b: any): (boolean, string?)
 	if typeof(a) ~= typeof(b) then
-		local message = ("{1}: value of type '%s'\n{2}: value of type '%s'"):format(typeof(a), typeof(b))
+		local message = ("{1}: value of type '%s'\n{2}: value of type '%s'"):format(
+			typeof(a),
+			typeof(b)
+		)
 		return false, message
 	end
 

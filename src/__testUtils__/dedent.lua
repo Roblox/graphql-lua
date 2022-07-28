@@ -58,7 +58,10 @@ function removeTrailingSpacesAndTabs(str: string): string
 		match = String.findOr(str, { " +", "\t+" }, init)
 
 		if match ~= nil then
-			if lastMatch ~= nil and lastMatch.index + string.len(lastMatch.match) == match.index then
+			if
+				lastMatch ~= nil
+				and lastMatch.index + string.len(lastMatch.match) == match.index
+			then
 				lastMatch = {
 					index = lastMatch.index,
 					match = lastMatch.match .. match.match,
@@ -69,7 +72,10 @@ function removeTrailingSpacesAndTabs(str: string): string
 			init = match.index + string.len(match.match)
 		end
 	until match == nil or init > string.len(str)
-	if lastMatch ~= nil and lastMatch.index + string.len(lastMatch.match) == string.len(str) + 1 then
+	if
+		lastMatch ~= nil
+		and lastMatch.index + string.len(lastMatch.match) == string.len(str) + 1
+	then
 		return string.sub(str, 1, lastMatch.index - 1)
 	end
 	return str

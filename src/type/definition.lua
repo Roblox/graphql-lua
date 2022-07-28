@@ -502,7 +502,10 @@ GraphQLNonNull.__index = GraphQLNonNull
 
 function GraphQLNonNull.new<T>(ofType: T): GraphQLNonNull<T>
 	local self = {}
-	devAssert(isNullableType(ofType), ("Expected %s to be a GraphQL nullable type."):format(inspect(ofType)))
+	devAssert(
+		isNullableType(ofType),
+		("Expected %s to be a GraphQL nullable type."):format(inspect(ofType))
+	)
 
 	self.ofType = ofType
 	return (setmetatable(self, GraphQLNonNull) :: any) :: GraphQLNonNull<T>
@@ -680,7 +683,9 @@ export type GraphQLScalarType<TInternal = any, TExternal = TInternal> = {
 	toString: (self: GraphQLScalarType<TInternal, TExternal>) -> string,
 	toJSON: (self: GraphQLScalarType<TInternal, TExternal>) -> string,
 
-	new: (config: GraphQLScalarTypeConfig<TInternal, TExternal>) -> GraphQLScalarType<TInternal, TExternal>,
+	new: (
+		config: GraphQLScalarTypeConfig<TInternal, TExternal>
+	) -> GraphQLScalarType<TInternal, TExternal>,
 	__tostring: (self: GraphQLScalarType<TInternal, TExternal>) -> string,
 }
 
@@ -698,7 +703,9 @@ function GraphQLScalarType.new(
 	self.name = config.name
 	self.description = config.description
 	self.specifiedByUrl = config.specifiedByUrl
-	local serialize = if config.serialize then config.serialize else identityFunc :: GraphQLScalarSerializer<_TExternal>
+	local serialize = if config.serialize
+		then config.serialize
+		else identityFunc :: GraphQLScalarSerializer<_TExternal>
 	-- ROBLOX deviation: we need to wrap the actual function to handle the `self` param correctly
 	self.serialize = function(_, ...)
 		return serialize(...)
@@ -784,7 +791,10 @@ export type GraphQLScalarSerializer<TExternal> = (any) -> TExternal
 
 export type GraphQLScalarValueParser<TInternal> = (any) -> TInternal
 
-export type GraphQLScalarLiteralParser<TInternal> = (valueNode: ValueNode, variables: ObjMap<any>?) -> TInternal
+export type GraphQLScalarLiteralParser<TInternal> = (
+	valueNode: ValueNode,
+	variables: ObjMap<any>?
+) -> TInternal
 
 export type GraphQLScalarTypeConfig<TInternal, TExternal> = {
 	name: string,
@@ -801,7 +811,10 @@ export type GraphQLScalarTypeConfig<TInternal, TExternal> = {
 	extensionASTNodes: Array<ScalarTypeExtensionNode>?,
 }
 
-type GraphQLScalarTypeNormalizedConfig<TInternal, TExternal> = GraphQLScalarTypeConfig<TInternal, TExternal> & {
+type GraphQLScalarTypeNormalizedConfig<TInternal, TExternal> = GraphQLScalarTypeConfig<
+	TInternal,
+	TExternal
+> & {
 	serialize: GraphQLScalarSerializer<TExternal>,
 	parseValue: GraphQLScalarValueParser<TInternal>,
 	parseLiteral: GraphQLScalarLiteralParser<TInternal>,
@@ -858,7 +871,8 @@ export type GraphQLObjectType = {
 	extensionASTNodes: Array<ObjectTypeExtensionNode>?,
 
 	-- ROBLOX FIXME: use of the Thunk type requires implementation of this RFC: https://github.com/Roblox/luau/pull/86
-	_fields: (() -> ObjMap<GraphQLField<_TSource, _TContext>>) | ObjMap<GraphQLField<_TSource, _TContext>>,
+	_fields: (() -> ObjMap<GraphQLField<_TSource, _TContext>>)
+		| ObjMap<GraphQLField<_TSource, _TContext>>,
 
 	new: (config: GraphQLObjectTypeConfig<_TSource, _TContext>) -> GraphQLObjectType,
 	__tostring: (self: GraphQLObjectType) -> string,
@@ -894,7 +908,9 @@ type GraphQLObjectType_ = {
 
 (GraphQLObjectType :: any).__index = GraphQLObjectType
 
-function GraphQLObjectType.new(config: GraphQLObjectTypeConfig<_TSource, _TContext>): GraphQLObjectType
+function GraphQLObjectType.new(
+	config: GraphQLObjectTypeConfig<_TSource, _TContext>
+): GraphQLObjectType
 	local self = {}
 	self.name = config.name
 	self.description = config.description
@@ -912,7 +928,10 @@ function GraphQLObjectType.new(config: GraphQLObjectTypeConfig<_TSource, _TConte
 	devAssert(typeof(config.name) == "string", "Must provide name.")
 	devAssert(
 		config.isTypeOf == nil or typeof(config.isTypeOf) == "function",
-		('%s must provide "isTypeOf" as a function, ' .. "but got: %s."):format(self.name, inspect(config.isTypeOf))
+		('%s must provide "isTypeOf" as a function, ' .. "but got: %s."):format(
+			self.name,
+			inspect(config.isTypeOf)
+		)
 	)
 
 	return (setmetatable(self, GraphQLObjectType) :: any) :: GraphQLObjectType
@@ -986,16 +1005,19 @@ function defineFieldMap<TSource, TContext>(
 	-- ROBLOX deviation: valueMap is either Map object or vanilla table
 	devAssert(
 		isPlainObj(fieldMap_) or instanceOf(fieldMap_, Map),
-		("%s fields must be an object with field names as keys or a function which returns such an object."):format(
-			config.name
-		)
+		(
+			"%s fields must be an object with field names as keys or a function which returns such an object."
+		):format(config.name)
 	)
 
 	-- ROBLOX deviation: coerce to map
 	local fieldMap = coerceToMap(fieldMap_)
 
 	return mapValueOrdered(fieldMap, function(fieldConfig, fieldName)
-		devAssert(isPlainObj(fieldConfig), ("%s.%s field config must be an object."):format(config.name, fieldName))
+		devAssert(
+			isPlainObj(fieldConfig),
+			("%s.%s field config must be an object."):format(config.name, fieldName)
+		)
 		devAssert(
 			fieldConfig.resolve == nil or typeof(fieldConfig.resolve) == "function",
 			("%s.%s field resolver must be a function if "):format(config.name, fieldName)
@@ -1006,7 +1028,10 @@ function defineFieldMap<TSource, TContext>(
 
 		devAssert(
 			isPlainObj(argsConfig) or instanceOf(argsConfig, Map),
-			("%s.%s args must be an object with argument names as keys."):format(config.name, fieldName)
+			("%s.%s args must be an object with argument names as keys."):format(
+				config.name,
+				fieldName
+			)
 		)
 
 		local args = Array.map(coerceToMap(argsConfig):entries(), function(entries)
@@ -1088,14 +1113,18 @@ export type GraphQLObjectTypeConfig<TSource, TContext> = {
 	-- ROBLOX FIXME Luau: use of the Thunk type requires implementation of this RFC: https://github.com/Roblox/luau/pull/86
 	interfaces: ((() -> Array<GraphQLInterfaceType>) | Array<GraphQLInterfaceType>)?,
 	-- ROBLOX FIXME Luau: use of the Thunk type requires implementation of this RFC: https://github.com/Roblox/luau/pull/86
-	fields: (() -> GraphQLFieldConfigMap<TSource, TContext>) | GraphQLFieldConfigMap<TSource, TContext>,
+	fields: (() -> GraphQLFieldConfigMap<TSource, TContext>)
+		| GraphQLFieldConfigMap<TSource, TContext>,
 	isTypeOf: GraphQLIsTypeOfFn<TSource, TContext>?,
 	extensions: ReadOnlyObjMapLike<any>?,
 	astNode: ObjectTypeDefinitionNode?,
 	extensionASTNodes: Array<ObjectTypeExtensionNode>?,
 }
 
-type GraphQLObjectTypeNormalizedConfig<TSource, TContext> = GraphQLObjectTypeConfig<TSource, TContext> & {
+type GraphQLObjectTypeNormalizedConfig<TSource, TContext> = GraphQLObjectTypeConfig<
+	TSource,
+	TContext
+> & {
 	interfaces: Array<GraphQLInterfaceType>,
 	fields: GraphQLFieldConfigMap<any, any>,
 	extensions: ReadOnlyObjMap<any>?,
@@ -1163,7 +1192,10 @@ export type GraphQLArgumentConfig = {
 	astNode: InputValueDefinitionNode?,
 }
 -- ROBLOX deviation START: use ordered Map object
-export type GraphQLFieldConfigMap<TSource, TContext> = Map<string, GraphQLFieldConfig<TSource, TContext>>
+export type GraphQLFieldConfigMap<TSource, TContext> = Map<
+	string,
+	GraphQLFieldConfig<TSource, TContext>
+>
 -- ROBLOX deviation END
 export type GraphQLField<TSource, TContext, TArgs = any> = {
 	name: string,
@@ -1236,7 +1268,9 @@ export type GraphQLInterfaceType = {
 
 (GraphQLInterfaceType :: any).__index = GraphQLInterfaceType
 
-function GraphQLInterfaceType.new(config: GraphQLInterfaceTypeConfig<any, any>): GraphQLInterfaceType
+function GraphQLInterfaceType.new(
+	config: GraphQLInterfaceTypeConfig<any, any>
+): GraphQLInterfaceType
 	local self = {}
 	self.name = config.name
 	self.description = config.description
@@ -1315,7 +1349,8 @@ export type GraphQLInterfaceTypeConfig<TSource, TContext> = {
 	-- ROBLOX FIXME: use of the Thunk type requires implementation of this RFC: https://github.com/Roblox/luau/pull/86
 	interfaces: ((() -> Array<GraphQLInterfaceType>) | Array<GraphQLInterfaceType>)?,
 	-- ROBLOX FIXME: use of the Thunk type requires implementation of this RFC: https://github.com/Roblox/luau/pull/86
-	fields: (() -> GraphQLFieldConfigMap<TSource, TContext>) | GraphQLFieldConfigMap<TSource, TContext>,
+	fields: (() -> GraphQLFieldConfigMap<TSource, TContext>)
+		| GraphQLFieldConfigMap<TSource, TContext>,
 	--[[*
    * Optionally provide a custom type resolver function. If one is not provided,
    * the default implementation will call `isTypeOf` on each implementing
@@ -1334,7 +1369,8 @@ export type GraphQLInterfaceTypeConfig_<TSource, TContext> = {
 	-- ROBLOX FIXME: use of the Thunk type requires implementation of this RFC: https://github.com/Roblox/luau/pull/86
 	interfaces: ((() -> Array<Object>) | Array<Object>)?,
 	-- ROBLOX FIXME: use of the Thunk type requires implementation of this RFC: https://github.com/Roblox/luau/pull/86
-	fields: (() -> GraphQLFieldConfigMap<TSource, TContext>) | GraphQLFieldConfigMap<TSource, TContext>,
+	fields: (() -> GraphQLFieldConfigMap<TSource, TContext>)
+		| GraphQLFieldConfigMap<TSource, TContext>,
 	--[[*
    * Optionally provide a custom type resolver function. If one is not provided,
    * the default implementation will call `isTypeOf` on each implementing
@@ -1474,7 +1510,9 @@ function defineTypes(config: GraphQLUnionTypeConfig<any, any>): Array<GraphQLObj
 
 	devAssert(
 		Array.isArray(types),
-		("Must provide Array of types or a function which returns such an array for Union %s."):format(config.name)
+		("Must provide Array of types or a function which returns such an array for Union %s."):format(
+			config.name
+		)
 	)
 
 	return types
@@ -1607,7 +1645,11 @@ function GraphQLEnumType:serialize(outputValue: any): string?
 		enumValue = self._valueLookup[NaN_KEY]
 	end
 	if enumValue == nil then
-		error(GraphQLError.new(('Enum "%s" cannot represent value: %s'):format(self.name, inspect(outputValue))))
+		error(
+			GraphQLError.new(
+				('Enum "%s" cannot represent value: %s'):format(self.name, inspect(outputValue))
+			)
+		)
 	end
 	return enumValue.name
 end
@@ -1617,10 +1659,10 @@ function GraphQLEnumType:parseValue(inputValue: any): any?
 		local valueStr = inspect(inputValue)
 		error(
 			GraphQLError.new(
-				('Enum "%s" cannot represent non-string value: %s.' .. didYouMeanEnumValue(self, valueStr)):format(
-					self.name,
+				('Enum "%s" cannot represent non-string value: %s.' .. didYouMeanEnumValue(
+					self,
 					valueStr
-				)
+				)):format(self.name, valueStr)
 			)
 		)
 	end
@@ -1684,8 +1726,9 @@ function GraphQLEnumType:toConfig(): GraphQLEnumTypeNormalizedConfig
 		values = values :: GraphQLEnumValueConfigMap,
 		extensions = self.extensions :: ReadOnlyObjMap<any>?,
 		astNode = self.astNode :: EnumTypeDefinitionNode?,
-		extensionASTNodes = self.extensionASTNodes :: Array<EnumTypeExtensionNode>
-			or {} :: Array<EnumTypeExtensionNode>,
+		extensionASTNodes = self.extensionASTNodes :: Array<EnumTypeExtensionNode> or {} :: Array<
+			EnumTypeExtensionNode
+		>,
 	}
 end
 
@@ -1718,7 +1761,10 @@ function didYouMeanEnumValue(enumType: GraphQLEnumType, unknownValueStr: string)
 end
 
 -- ROBLOX deviation: valueMap is either Map object or vanilla table
-function defineEnumValues(typeName: string, valueMap: GraphQLEnumValueConfigMap): Array<GraphQLEnumValue>
+function defineEnumValues(
+	typeName: string,
+	valueMap: GraphQLEnumValueConfigMap
+): Array<GraphQLEnumValue>
 	devAssert(
 		isPlainObj(valueMap) or instanceOf(valueMap, Map),
 		("%s values must be an object with value names as keys."):format(tostring(typeName))
@@ -1731,7 +1777,10 @@ function defineEnumValues(typeName: string, valueMap: GraphQLEnumValueConfigMap)
 
 		devAssert(
 			isPlainObj(valueConfig),
-			('%s.%s must refer to an object with a "value" key '):format(tostring(typeName), tostring(valueName))
+			('%s.%s must refer to an object with a "value" key '):format(
+				tostring(typeName),
+				tostring(valueName)
+			)
 				.. ("representing an internal value but got: %s."):format(inspect(valueConfig))
 		)
 
@@ -1894,9 +1943,9 @@ function defineInputFieldMap(config: GraphQLInputObjectTypeConfig): GraphQLInput
 	-- ROBLOX deviation: valueMap is either Map object or vanilla table
 	devAssert(
 		isPlainObj(fieldMap_) or instanceOf(fieldMap_, Map),
-		("%s fields must be an object with field names as keys or a function which returns such an object."):format(
-			config.name
-		)
+		(
+			"%s fields must be an object with field names as keys or a function which returns such an object."
+		):format(config.name)
 	)
 
 	-- Roblox deviation: coerce to map

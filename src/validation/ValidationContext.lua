@@ -91,7 +91,10 @@ local ASTValidationContext: ASTValidationContext & ASTValidationContextStatics =
 	({} :: any) :: ASTValidationContext & ASTValidationContextStatics
 local ASTValidationContextMetatable = { __index = ASTValidationContext }
 
-function ASTValidationContext.new(ast: DocumentNode, onError: (GraphQLError) -> ()): ASTValidationContext
+function ASTValidationContext.new(
+	ast: DocumentNode,
+	onError: (GraphQLError) -> ()
+): ASTValidationContext
 	return (
 		setmetatable({
 			_ast = ast,
@@ -190,7 +193,10 @@ export type SDLValidationContext = ASTValidationContext & {
 
 	getSchema: (self: SDLValidationContext) -> GraphQLSchema?,
 }
-local SDLValidationContext: SDLValidationContext = setmetatable({}, { __index = ASTValidationContext }) :: any
+local SDLValidationContext: SDLValidationContext = setmetatable(
+	{},
+	{ __index = ASTValidationContext }
+) :: any
 local SDLValidationContextMetatable = { __index = SDLValidationContext }
 
 function SDLValidationContext.new(
@@ -223,7 +229,10 @@ export type ValidationContext = ASTValidationContext & {
 	-- ROBLOX deviation: add argument for self
 	getSchema: (self: ValidationContext) -> GraphQLSchema,
 	getVariableUsages: (self: ValidationContext, NodeWithSelectionSet) -> Array<VariableUsage>,
-	getRecursiveVariableUsages: (self: ValidationContext, OperationDefinitionNode) -> Array<VariableUsage>,
+	getRecursiveVariableUsages: (
+		self: ValidationContext,
+		OperationDefinitionNode
+	) -> Array<VariableUsage>,
 	getType: (self: ValidationContext) -> GraphQLOutputType?,
 	getParentType: (self: ValidationContext) -> GraphQLCompositeType?,
 	getInputType: (self: ValidationContext) -> GraphQLInputType?,
@@ -235,7 +244,8 @@ export type ValidationContext = ASTValidationContext & {
 }
 
 -- ROBLOX TODO Luau: can't strongly type this table due to inactionable analyze message: Not all intersection parts are compatible. Type 'ASTValidationContext & ...
-local ValidationContext = (setmetatable({}, { __index = ASTValidationContext }) :: any) :: ValidationContext
+local ValidationContext =
+	(setmetatable({}, { __index = ASTValidationContext }) :: any) :: ValidationContext
 local ValidationContextMetatable = { __index = ValidationContext }
 
 function ValidationContext.new(
@@ -247,7 +257,10 @@ function ValidationContext.new(
 	local self = (ASTValidationContext.new(ast, onError) :: any) :: ValidationContext
 	self._schema = schema
 	self._typeInfo = typeInfo
-	self._variableUsages = Map.new() :: Map<FragmentDefinitionNode | OperationDefinitionNode, Array<VariableUsage>>
+	self._variableUsages = Map.new() :: Map<
+		FragmentDefinitionNode | OperationDefinitionNode,
+		Array<VariableUsage>
+	>
 	self._recursiveVariableUsages = Map.new() :: Map<OperationDefinitionNode, Array<VariableUsage>>
 	return (setmetatable(self, ValidationContextMetatable) :: any) :: ValidationContext
 end
@@ -283,7 +296,9 @@ function ValidationContext:getVariableUsages(node: NodeWithSelectionSet): Array<
 	return usages
 end
 
-function ValidationContext:getRecursiveVariableUsages(operation: OperationDefinitionNode): Array<VariableUsage>
+function ValidationContext:getRecursiveVariableUsages(
+	operation: OperationDefinitionNode
+): Array<VariableUsage>
 	local usages = self._recursiveVariableUsages[operation]
 	if not usages then
 		usages = self:getVariableUsages(operation)

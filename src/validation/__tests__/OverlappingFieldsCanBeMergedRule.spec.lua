@@ -5,8 +5,9 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local OverlappingFieldsCanBeMergedRule =
-		require(validationWorkspace.rules.OverlappingFieldsCanBeMergedRule).OverlappingFieldsCanBeMergedRule
+	local OverlappingFieldsCanBeMergedRule = require(
+		validationWorkspace.rules.OverlappingFieldsCanBeMergedRule
+	).OverlappingFieldsCanBeMergedRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 	local expectValidationErrorsWithSchema = harness.expectValidationErrorsWithSchema
@@ -26,7 +27,12 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectValidationErrorsWithSchema(expect_, schema, OverlappingFieldsCanBeMergedRule, "\n" .. queryStr)
+		return expectValidationErrorsWithSchema(
+			expect_,
+			schema,
+			OverlappingFieldsCanBeMergedRule,
+			"\n" .. queryStr
+		)
 	end
 
 	local function expectValidWithSchema(expect_, schema, queryStr)

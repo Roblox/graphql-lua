@@ -12,7 +12,10 @@ local exports = {}
 --  * name. If a name is not provided, an operation is only returned if only one is
 --  * provided in the document.
 --  *]]
-local function getOperationAST(documentAST: DocumentNode, operationName: string?): OperationDefinitionNode?
+local function getOperationAST(
+	documentAST: DocumentNode,
+	operationName: string?
+): OperationDefinitionNode?
 	local operation = nil
 	for _, definition in pairs(documentAST.definitions) do
 		if definition.kind == Kind.OPERATION_DEFINITION then

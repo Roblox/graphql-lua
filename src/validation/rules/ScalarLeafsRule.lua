@@ -28,10 +28,9 @@ exports.ScalarLeafsRule = function(context)
 						local typeStr = inspect(type_)
 						context:reportError(
 							GraphQLError.new(
-								('Field "%s" must not have a selection since type "%s" has no subfields.'):format(
-									fieldName,
-									typeStr
-								),
+								(
+									'Field "%s" must not have a selection since type "%s" has no subfields.'
+								):format(fieldName, typeStr),
 								selectionSet
 							)
 						)
@@ -41,11 +40,9 @@ exports.ScalarLeafsRule = function(context)
 					local typeStr = inspect(type_)
 					context:reportError(
 						GraphQLError.new(
-							('Field "%s" of type "%s" must have a selection of subfields. Did you mean "%s { ... }"?'):format(
-								fieldName,
-								typeStr,
-								fieldName
-							),
+							(
+								'Field "%s" of type "%s" must have a selection of subfields. Did you mean "%s { ... }"?'
+							):format(fieldName, typeStr, fieldName),
 							node
 						)
 					)

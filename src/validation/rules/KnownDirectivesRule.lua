@@ -53,7 +53,9 @@ exports.KnownDirectivesRule = function(context)
 			local locations = locationsMap[name]
 
 			if not locations then
-				context:reportError(GraphQLError.new(('Unknown directive "@%s".'):format(name), node))
+				context:reportError(
+					GraphQLError.new(('Unknown directive "@%s".'):format(name), node)
+				)
 				return
 			end
 
@@ -61,7 +63,10 @@ exports.KnownDirectivesRule = function(context)
 
 			if candidateLocation and Array.indexOf(locations, candidateLocation) == -1 then
 				context:reportError(
-					GraphQLError.new(('Directive "@%s" may not be used on %s.'):format(name, candidateLocation), node)
+					GraphQLError.new(
+						('Directive "@%s" may not be used on %s.'):format(name, candidateLocation),
+						node
+					)
 				)
 			end
 		end,
@@ -87,25 +92,43 @@ function getDirectiveLocationForASTPath(ancestors)
 		return DirectiveLocation.VARIABLE_DEFINITION
 	elseif appliedToKind == Kind.SCHEMA_DEFINITION or appliedToKind == Kind.SCHEMA_EXTENSION then
 		return DirectiveLocation.SCHEMA
-	elseif appliedToKind == Kind.SCALAR_TYPE_DEFINITION or appliedToKind == Kind.SCALAR_TYPE_EXTENSION then
+	elseif
+		appliedToKind == Kind.SCALAR_TYPE_DEFINITION
+		or appliedToKind == Kind.SCALAR_TYPE_EXTENSION
+	then
 		return DirectiveLocation.SCALAR
-	elseif appliedToKind == Kind.OBJECT_TYPE_DEFINITION or appliedToKind == Kind.OBJECT_TYPE_EXTENSION then
+	elseif
+		appliedToKind == Kind.OBJECT_TYPE_DEFINITION
+		or appliedToKind == Kind.OBJECT_TYPE_EXTENSION
+	then
 		return DirectiveLocation.OBJECT
 	elseif appliedToKind == Kind.FIELD_DEFINITION then
 		return DirectiveLocation.FIELD_DEFINITION
-	elseif appliedToKind == Kind.INTERFACE_TYPE_DEFINITION or appliedToKind == Kind.INTERFACE_TYPE_EXTENSION then
+	elseif
+		appliedToKind == Kind.INTERFACE_TYPE_DEFINITION
+		or appliedToKind == Kind.INTERFACE_TYPE_EXTENSION
+	then
 		return DirectiveLocation.INTERFACE
-	elseif appliedToKind == Kind.UNION_TYPE_DEFINITION or appliedToKind == Kind.UNION_TYPE_EXTENSION then
+	elseif
+		appliedToKind == Kind.UNION_TYPE_DEFINITION
+		or appliedToKind == Kind.UNION_TYPE_EXTENSION
+	then
 		return DirectiveLocation.UNION
-	elseif appliedToKind == Kind.ENUM_TYPE_DEFINITION or appliedToKind == Kind.ENUM_TYPE_EXTENSION then
+	elseif
+		appliedToKind == Kind.ENUM_TYPE_DEFINITION or appliedToKind == Kind.ENUM_TYPE_EXTENSION
+	then
 		return DirectiveLocation.ENUM
 	elseif appliedToKind == Kind.ENUM_VALUE_DEFINITION then
 		return DirectiveLocation.ENUM_VALUE
-	elseif appliedToKind == Kind.INPUT_OBJECT_TYPE_DEFINITION or appliedToKind == Kind.INPUT_OBJECT_TYPE_EXTENSION then
+	elseif
+		appliedToKind == Kind.INPUT_OBJECT_TYPE_DEFINITION
+		or appliedToKind == Kind.INPUT_OBJECT_TYPE_EXTENSION
+	then
 		return DirectiveLocation.INPUT_OBJECT
 	elseif appliedToKind == Kind.INPUT_VALUE_DEFINITION then
 		local parentNode = ancestors[#ancestors - 2]
-		return parentNode.kind == Kind.INPUT_OBJECT_TYPE_DEFINITION and DirectiveLocation.INPUT_FIELD_DEFINITION
+		return parentNode.kind == Kind.INPUT_OBJECT_TYPE_DEFINITION
+				and DirectiveLocation.INPUT_FIELD_DEFINITION
 			or DirectiveLocation.ARGUMENT_DEFINITION
 	end
 

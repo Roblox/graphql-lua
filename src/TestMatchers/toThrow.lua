@@ -29,7 +29,10 @@ local function toThrow(fn: () -> any, errorString: string?, isPattern: boolean?)
 			if resultErrorString:find(errorString, 1, not isPattern) ~= nil then
 				return {
 					pass = true,
-					message = string.format("Expected function not to throw with '%s'", errorString),
+					message = string.format(
+						"Expected function not to throw with '%s'",
+						errorString
+					),
 				}
 			end
 

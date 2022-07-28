@@ -3,6 +3,9 @@
 local languageWorkspace = script.Parent.Parent
 local srcWorkspace = languageWorkspace.Parent
 local Packages = srcWorkspace.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
+--ROBLOX TODO: make proper JSON.stringify export in polyfill
+local inspect = LuauPolyfill.util.inspect
 local JestGlobals = require(Packages.Dev.JestGlobals)
 -- ROBLOX deviation: use jestExpect here so that we get reasonably text diffing on failures
 local jestExpect = JestGlobals.expect
@@ -13,8 +16,6 @@ local kitchenSinkSDL = require(testUtilsWorkspace.kitchenSinkSDL).kitchenSinkSDL
 
 local parse = require(languageWorkspace.parser).parse
 local print_ = require(languageWorkspace.printer).print
-
-local inspect = require(srcWorkspace.TestMatchers.inspect)
 
 return function()
 	describe("Printer: SDL document", function()

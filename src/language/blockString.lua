@@ -76,7 +76,11 @@ function getBlockStringIndentation(value: string): number
 		elseif charAtIndex == 9 or charAtIndex == 32 then -- \t or <space>
 			indent += 1
 		else
-			if isEmptyLine and isFirstLine ~= true and (commonIndent == nil or indent < commonIndent) then
+			if
+				isEmptyLine
+				and isFirstLine ~= true
+				and (commonIndent == nil or indent < commonIndent)
+			then
 				commonIndent = indent
 			end
 
@@ -89,21 +93,29 @@ function getBlockStringIndentation(value: string): number
 	return commonIndent and commonIndent or 0
 end
 
-function printBlockString(value: string, _indentation: string?, _preferMultipleLines: boolean?): string
+function printBlockString(
+	value: string,
+	_indentation: string?,
+	_preferMultipleLines: boolean?
+): string
 	local indentation = _indentation or ""
 	local preferMultipleLines = if _preferMultipleLines == nil then false else _preferMultipleLines
 	local isSingleLine = string.find(value, "\n") == nil
 	local hasLeadingSpace = string.sub(value, 1, 1) == " " or string.sub(value, 1, 1) == "\t"
 	local hasTrailingQuote = string.sub(value, #value, #value) == '"'
 	local hasTrailingSlash = string.sub(value, #value, #value) == "\\"
-	local printAsMultipleLines = isSingleLine ~= true or hasTrailingQuote or hasTrailingSlash or preferMultipleLines
+	local printAsMultipleLines = isSingleLine ~= true
+		or hasTrailingQuote
+		or hasTrailingSlash
+		or preferMultipleLines
 
 	local result = ""
 	-- Format a multi-line block quote to account for leading space.
 	if printAsMultipleLines and (isSingleLine and hasLeadingSpace) ~= true then
 		result = result .. "\n" .. indentation
 	end
-	result = result .. (indentation ~= "" and string.gsub(value, "\n", "\n" .. indentation) or value)
+	result = result
+		.. (indentation ~= "" and string.gsub(value, "\n", "\n" .. indentation) or value)
 	if printAsMultipleLines then
 		result = result .. "\n"
 	end

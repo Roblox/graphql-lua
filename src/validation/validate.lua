@@ -77,7 +77,9 @@ exports.validate = function(
 		if options.maxErrors ~= nil and #errors >= options.maxErrors then
 			table.insert(
 				errors,
-				GraphQLError.new("Too many validation errors, error limit reached. Validation aborted.")
+				GraphQLError.new(
+					"Too many validation errors, error limit reached. Validation aborted."
+				)
 			)
 			error(abortObj)
 		end

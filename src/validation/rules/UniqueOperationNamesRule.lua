@@ -19,7 +19,9 @@ exports.UniqueOperationNamesRule = function(context)
 				if knownOperationNames[operationName.value] then
 					context:reportError(
 						GraphQLError.new(
-							('There can be only one operation named "%s".'):format(operationName.value),
+							('There can be only one operation named "%s".'):format(
+								operationName.value
+							),
 							{ knownOperationNames[operationName.value], operationName }
 						)
 					)

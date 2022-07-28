@@ -85,7 +85,9 @@ local function lexicographicSortSchema(schema: GraphQLSchema): GraphQLSchema
 		elseif isNonNullType(type_) then
 			-- $FlowFixMe[incompatible-return]
 			-- ROBLOX TODO Luau: need generic constraints
-			return GraphQLNonNull.new(replaceType(((type_ :: any) :: GraphQLNonNull<GraphQLType>).ofType))
+			return GraphQLNonNull.new(
+				replaceType(((type_ :: any) :: GraphQLNonNull<GraphQLType>).ofType)
+			)
 		end
 
 		return replaceNamedType(type_)

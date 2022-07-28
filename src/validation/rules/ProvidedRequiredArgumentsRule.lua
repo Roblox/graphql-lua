@@ -48,11 +48,9 @@ function exports.ProvidedRequiredArgumentsRule(context)
 						local argTypeStr = inspect(argDef.type)
 						context:reportError(
 							GraphQLError.new(
-								('Field "%s" argument "%s" of type "%s" is required, but it was not provided.'):format(
-									fieldDef.name,
-									argDef.name,
-									argTypeStr
-								),
+								(
+									'Field "%s" argument "%s" of type "%s" is required, but it was not provided.'
+								):format(fieldDef.name, argDef.name, argTypeStr),
 								fieldNode
 							)
 						)
@@ -76,9 +74,12 @@ function exports.ProvidedRequiredArgumentsOnDirectivesRule(context)
 		definedDirectives = schema:getDirectives()
 	end
 	for _, directive in ipairs(definedDirectives) do
-		requiredArgsMap[directive.name] = keyMap(Array.filter(directive.args, isRequiredArgument), function(arg)
-			return arg.name
-		end)
+		requiredArgsMap[directive.name] = keyMap(
+			Array.filter(directive.args, isRequiredArgument),
+			function(arg)
+				return arg.name
+			end
+		)
 	end
 
 	local astDefinitions = context:getDocument().definitions
@@ -87,9 +88,12 @@ function exports.ProvidedRequiredArgumentsOnDirectivesRule(context)
 			-- // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
 			local argNodes = def.arguments or {}
 
-			requiredArgsMap[def.name.value] = keyMap(Array.filter(argNodes, isRequiredArgumentNode), function(arg)
-				return arg.name.value
-			end)
+			requiredArgsMap[def.name.value] = keyMap(
+				Array.filter(argNodes, isRequiredArgumentNode),
+				function(arg)
+					return arg.name.value
+				end
+			)
 		end
 	end
 
@@ -109,15 +113,14 @@ function exports.ProvidedRequiredArgumentsOnDirectivesRule(context)
 					for _, argName in ipairs(Object.keys(requiredArgs)) do
 						if not argNodeMap[argName] then
 							local argType = requiredArgs[argName].type
-							local argTypeStr = isType(argType) and inspect(argType) or print_(argType)
+							local argTypeStr = isType(argType) and inspect(argType)
+								or print_(argType)
 
 							context:reportError(
 								GraphQLError.new(
-									('Directive "@%s" argument "%s" of type "%s" is required, but it was not provided.'):format(
-										directiveName,
-										argName,
-										argTypeStr
-									),
+									(
+										'Directive "@%s" argument "%s" of type "%s" is required, but it was not provided.'
+									):format(directiveName, argName, argTypeStr),
 									directiveNode
 								)
 							)

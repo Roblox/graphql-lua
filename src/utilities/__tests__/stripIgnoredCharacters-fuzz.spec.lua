@@ -3,14 +3,16 @@
 return function()
 	local dedent = require(script.Parent.Parent.Parent.__testUtils__.dedent).dedent
 	local inspectStr = require(script.Parent.Parent.Parent.__testUtils__.inspectStr).inspectStr
-	local genFuzzStrings = require(script.Parent.Parent.Parent.__testUtils__.genFuzzStrings).genFuzzStrings
+	local genFuzzStrings =
+		require(script.Parent.Parent.Parent.__testUtils__.genFuzzStrings).genFuzzStrings
 
 	local invariant = require(script.Parent.Parent.Parent.jsutils.invariant).invariant
 
 	local Lexer = require(script.Parent.Parent.Parent.language.lexer).Lexer
 	local Source = require(script.Parent.Parent.Parent.language.source).Source
 
-	local stripIgnoredCharacters = require(script.Parent.Parent.stripIgnoredCharacters).stripIgnoredCharacters
+	local stripIgnoredCharacters =
+		require(script.Parent.Parent.stripIgnoredCharacters).stripIgnoredCharacters
 
 	local function lexValue(str: string)
 		local lexer = Lexer.new(Source.new(str))
@@ -44,11 +46,17 @@ return function()
 
 				invariant(
 					testValue == strippedValue,
-					dedent(([[
+					dedent(
+						([[
                   Expected lexValue(stripIgnoredCharacters(%s))
                     to equal %s
                     but got  %s
-                ]]):format(inspectStr(testStr), inspectStr(testValue), inspectStr(strippedValue)))
+                ]]):format(
+							inspectStr(testStr),
+							inspectStr(testValue),
+							inspectStr(strippedValue)
+						)
+					)
 				)
 			end
 		end)

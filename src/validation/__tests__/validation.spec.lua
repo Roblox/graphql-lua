@@ -117,7 +117,10 @@ return function()
 				return {
 					Directive = function(_self, node)
 						local directiveDef = context:getDirective()
-						local error_ = GraphQLError.new("Reporting directive: " .. tostring(directiveDef), node)
+						local error_ = GraphQLError.new(
+							"Reporting directive: " .. tostring(directiveDef),
+							node
+						)
 						context:reportError(error_)
 					end,
 				}

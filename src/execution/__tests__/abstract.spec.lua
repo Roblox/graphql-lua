@@ -702,7 +702,9 @@ return function()
 			)
 			expectError({
 				forTypeName = "Human",
-			}).toEqual('Abstract type "Pet" was resolve to a type "Human" that does not exist inside schema.')
+			}).toEqual(
+				'Abstract type "Pet" was resolve to a type "Human" that does not exist inside schema.'
+			)
 			expectError({
 				forTypeName = "String",
 			}).toEqual('Abstract type "Pet" was resolve to a non-object type "String".')

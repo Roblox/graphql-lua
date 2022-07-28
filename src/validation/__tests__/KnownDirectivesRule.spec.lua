@@ -5,7 +5,8 @@ return function()
 	local root = validationWorkspace.Parent
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
-	local KnownDirectivesRule = require(validationWorkspace.rules.KnownDirectivesRule).KnownDirectivesRule
+	local KnownDirectivesRule =
+		require(validationWorkspace.rules.KnownDirectivesRule).KnownDirectivesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 	local expectSDLValidationErrors = harness.expectSDLValidationErrors

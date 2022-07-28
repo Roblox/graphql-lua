@@ -41,7 +41,9 @@ return function()
 		local result = toEqual(1, "1")
 
 		expect(result.pass).to.equal(false)
-		expect(result.message).to.equal("received: value of type 'number'\nexpected: value of type 'string'")
+		expect(result.message).to.equal(
+			"received: value of type 'number'\nexpected: value of type 'string'"
+		)
 	end)
 
 	it("should compare (and report about) nested tables", function()
@@ -73,7 +75,11 @@ return function()
 		local result = toEqual(A, C)
 
 		expect(result.pass).to.equal(false)
-		expect(result.message:find("received%[nested%]%[bar%] %(2%) ~= expected%[nested%]%[bar%] %(3%)")).to.be.ok()
+		expect(
+			result.message:find(
+				"received%[nested%]%[bar%] %(2%) ~= expected%[nested%]%[bar%] %(3%)"
+			)
+		).to.be.ok()
 	end)
 
 	it("should be commutative", function()

@@ -45,7 +45,8 @@ local function reasonMessage(reason): string
 		return table.concat(
 			Array.map(reason, function(item)
 				local responseName, subReason = item[1], item[2]
-				return ('subfields "%s" conflict because '):format(responseName) .. reasonMessage(subReason)
+				return ('subfields "%s" conflict because '):format(responseName)
+					.. reasonMessage(subReason)
 			end),
 			" and "
 		)
@@ -167,12 +168,23 @@ function findConflictsWithinSelectionSet(
 )
 	local conflicts = {}
 
-	local fieldsAndFragment = getFieldsAndFragmentNames(context, cachedFieldsAndFragmentNames, parentType, selectionSet)
+	local fieldsAndFragment = getFieldsAndFragmentNames(
+		context,
+		cachedFieldsAndFragmentNames,
+		parentType,
+		selectionSet
+	)
 	local fieldMap, fragmentNames = fieldsAndFragment[1], fieldsAndFragment[2]
 
 	-- // (A) Find find all conflicts "within" the fields of this selection set.
 	-- // Note: this is the *only place* `collectConflictsWithin` is called.
-	collectConflictsWithin(context, conflicts, cachedFieldsAndFragmentNames, comparedFragmentPairs, fieldMap)
+	collectConflictsWithin(
+		context,
+		conflicts,
+		cachedFieldsAndFragmentNames,
+		comparedFragmentPairs,
+		fieldMap
+	)
 
 	if #fragmentNames ~= 0 then
 		-- // (B) Then collect conflicts between these fields and those represented by
@@ -223,7 +235,11 @@ function collectConflictsBetweenFieldsAndFragment(
 		return
 	end
 
-	local fieldsAndFragment = getReferencedFieldsAndFragmentNames(context, cachedFieldsAndFragmentNames, fragment)
+	local fieldsAndFragment = getReferencedFieldsAndFragmentNames(
+		context,
+		cachedFieldsAndFragmentNames,
+		fragment
+	)
 	local fieldMap2, fragmentNames2 = fieldsAndFragment[1], fieldsAndFragment[2]
 
 	-- // Do not compare a fragment's fieldMap to itself.
@@ -287,10 +303,18 @@ function collectConflictsBetweenFragments(
 		return
 	end
 
-	local fieldAndFragment1 = getReferencedFieldsAndFragmentNames(context, cachedFieldsAndFragmentNames, fragment1)
+	local fieldAndFragment1 = getReferencedFieldsAndFragmentNames(
+		context,
+		cachedFieldsAndFragmentNames,
+		fragment1
+	)
 	local fieldMap1, fragmentNames1 = fieldAndFragment1[1], fieldAndFragment1[2]
 
-	local fieldAndFragment2 = getReferencedFieldsAndFragmentNames(context, cachedFieldsAndFragmentNames, fragment2)
+	local fieldAndFragment2 = getReferencedFieldsAndFragmentNames(
+		context,
+		cachedFieldsAndFragmentNames,
+		fragment2
+	)
 	local fieldMap2, fragmentNames2 = fieldAndFragment2[1], fieldAndFragment2[2]
 
 	-- // (F) First, collect all conflicts between these two collections of fields
@@ -428,7 +452,13 @@ local function findConflictsBetweenSubSelectionSets(
 end
 
 -- // Collect all Conflicts "within" one collection of fields.
-function collectConflictsWithin(context, conflicts, cachedFieldsAndFragmentNames, comparedFragmentPairs, fieldMap)
+function collectConflictsWithin(
+	context,
+	conflicts,
+	cachedFieldsAndFragmentNames,
+	comparedFragmentPairs,
+	fieldMap
+)
 	-- // A field map is a keyed collection, where each key represents a response
 	-- // name and the value at that key is a list of all fields which provide that
 	-- // response name. For every response name, if there are multiple fields, they
@@ -567,7 +597,13 @@ function findConflict(
 
 	if type1 and type2 and doTypesConflict(type1, type2) then
 		return {
-			{ responseName, ('they return conflicting types "%s" and "%s"'):format(inspect(type1), inspect(type2)) },
+			{
+				responseName,
+				('they return conflicting types "%s" and "%s"'):format(
+					inspect(type1),
+					inspect(type2)
+				),
+			},
 			{ node1 },
 			{ node2 },
 		}
@@ -656,7 +692,13 @@ function getFieldsAndFragmentNames(context, cachedFieldsAndFragmentNames, parent
 		-- ROBLOX deviation: use Ordered Map object
 		local nodeAndDefs = Map.new()
 		local fragmentNames = {}
-		_collectFieldsAndFragmentNames(context, parentType, selectionSet, nodeAndDefs, fragmentNames)
+		_collectFieldsAndFragmentNames(
+			context,
+			parentType,
+			selectionSet,
+			nodeAndDefs,
+			fragmentNames
+		)
 		cached = { nodeAndDefs, Object.keys(fragmentNames) }
 		cachedFieldsAndFragmentNames[selectionSet] = cached
 	end
@@ -674,10 +716,21 @@ function getReferencedFieldsAndFragmentNames(context, cachedFieldsAndFragmentNam
 	end
 
 	local fragmentType = typeFromAST(context:getSchema(), fragment.typeCondition)
-	return getFieldsAndFragmentNames(context, cachedFieldsAndFragmentNames, fragmentType, fragment.selectionSet)
+	return getFieldsAndFragmentNames(
+		context,
+		cachedFieldsAndFragmentNames,
+		fragmentType,
+		fragment.selectionSet
+	)
 end
 
-function _collectFieldsAndFragmentNames(context, parentType, selectionSet, nodeAndDefs, fragmentNames)
+function _collectFieldsAndFragmentNames(
+	context,
+	parentType,
+	selectionSet,
+	nodeAndDefs,
+	fragmentNames
+)
 	for _, selection in ipairs(selectionSet.selections) do
 		local selectionKind = selection.kind
 		if selectionKind == Kind.FIELD then
@@ -693,7 +746,10 @@ function _collectFieldsAndFragmentNames(context, parentType, selectionSet, nodeA
 				nodeAndDefs[responseName] = {}
 			end
 
-			table.insert(nodeAndDefs[responseName], { parentType or NULL, selection or NULL, fieldDef or NULL })
+			table.insert(
+				nodeAndDefs[responseName],
+				{ parentType or NULL, selection or NULL, fieldDef or NULL }
+			)
 		elseif selectionKind == Kind.FRAGMENT_SPREAD then
 			fragmentNames[selection.name.value] = true
 		elseif selectionKind == Kind.INLINE_FRAGMENT then

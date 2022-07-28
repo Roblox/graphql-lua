@@ -2,8 +2,9 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local SingleFieldSubscriptionsRule =
-		require(validationWorkspace.rules.SingleFieldSubscriptionsRule).SingleFieldSubscriptionsRule
+	local SingleFieldSubscriptionsRule = require(
+		validationWorkspace.rules.SingleFieldSubscriptionsRule
+	).SingleFieldSubscriptionsRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 

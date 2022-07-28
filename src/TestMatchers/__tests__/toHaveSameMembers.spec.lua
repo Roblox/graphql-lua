@@ -18,11 +18,9 @@ return function()
 				local result = toHaveSameMembers(arrA, arrB)
 
 				expect(result.pass).to.equal(false)
-				expect(result.message).to.equal([[Expected item {
-  name = "b"
-} to be in Array { {
-    name = "a"
-  } }]])
+				expect(result.message).to.equal(
+					'Expected item { name: "b" } to be in Array [{ name: "a" }]'
+				)
 			end)
 
 			it("should pass if same items in different order", function()
@@ -50,11 +48,9 @@ return function()
 				local result = toHaveSameMembers(arrA, arrB, true)
 
 				expect(result.pass).to.equal(false)
-				expect(result.message).to.equal([[Expected item {
-  name = "b"
-} to be in Array { {
-    name = "a"
-  } }]])
+				expect(result.message).to.equal(
+					'Expected item { name: "b" } to be in Array [{ name: "a" }]'
+				)
 			end)
 
 			it("should pass if same items in different order", function()
@@ -79,12 +75,9 @@ return function()
 				local result = toHaveSameMembers(arrA, arrB, true)
 
 				expect(result.pass).to.equal(false)
-				expect(result.message).to.equal([[Expected item {
-  foo = "bar",
-  name = "a"
-} to be in Array { {
-    name = "a"
-  } }]])
+				expect(result.message).to.equal(
+					'Expected item { foo: "bar", name: "a" } to be in Array [{ name: "a" }]'
+				)
 			end)
 		end)
 	end)

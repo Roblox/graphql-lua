@@ -84,8 +84,10 @@ exports.ValuesOfCorrectTypeRule = function(context)
 				)
 				context:reportError(
 					GraphQLError.new(
-						('Field "%s" is not defined by type "%s".'):format(node.name.value, parentType.name)
-							.. didYouMean(suggestions),
+						('Field "%s" is not defined by type "%s".'):format(
+							node.name.value,
+							parentType.name
+						) .. didYouMean(suggestions),
 						node
 					)
 				)
@@ -96,7 +98,10 @@ exports.ValuesOfCorrectTypeRule = function(context)
 			if isNonNullType(type_) then
 				context:reportError(
 					GraphQLError.new(
-						('Expected value of type "%s", found %s.'):format(inspect(type_), print_(node)),
+						('Expected value of type "%s", found %s.'):format(
+							inspect(type_),
+							print_(node)
+						),
 						node
 					)
 				)
@@ -136,7 +141,10 @@ function isValidValueNode(context, node)
 	if not isLeafType(type_) then
 		local typeStr = inspect(locationType)
 		context:reportError(
-			GraphQLError.new(('Expected value of type "%s", found %s.'):format(typeStr, print_(node)), node)
+			GraphQLError.new(
+				('Expected value of type "%s", found %s.'):format(typeStr, print_(node)),
+				node
+			)
 		)
 		return
 	end
@@ -150,7 +158,10 @@ function isValidValueNode(context, node)
 			local typeStr = inspect(locationType)
 
 			context:reportError(
-				GraphQLError.new(('Expected value of type "%s", found %s.'):format(typeStr, print_(node)), node)
+				GraphQLError.new(
+					('Expected value of type "%s", found %s.'):format(typeStr, print_(node)),
+					node
+				)
 			)
 		end
 	end, function(error_)
@@ -159,7 +170,8 @@ function isValidValueNode(context, node)
 			context:reportError(error_)
 		else
 			context:reportError(GraphQLError.new(
-				('Expected value of type "%s", found %s; '):format(typeStr, print_(node)) .. error_.message,
+				('Expected value of type "%s", found %s; '):format(typeStr, print_(node))
+					.. error_.message,
 				node,
 				nil,
 				nil,

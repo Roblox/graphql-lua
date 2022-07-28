@@ -177,7 +177,11 @@ local collectFields
 local buildResolveInfo
 local defaultTypeResolver: GraphQLTypeResolver<any, any>
 local defaultFieldResolver: GraphQLFieldResolver<any, any>
-local getFieldDef: (schema: GraphQLSchema, parentType: GraphQLObjectType, fieldName: string) -> GraphQLField<any, any>?
+local getFieldDef: (
+	schema: GraphQLSchema,
+	parentType: GraphQLObjectType,
+	fieldName: string
+) -> GraphQLField<any, any>?
 local buildResponse
 local executeOperation
 local executeFieldsSerially
@@ -251,7 +255,11 @@ function execute(args: ExecutionArgs): PromiseOrValue<ExecutionResult>
 	-- field and its descendants will be omitted, and sibling fields will still
 	-- be executed. An execution which encounters errors will still result in a
 	-- resolved Promise.
-	local data = executeOperation(exeContext :: ExecutionContext, (exeContext :: ExecutionContext).operation, rootValue)
+	local data = executeOperation(
+		exeContext :: ExecutionContext,
+		(exeContext :: ExecutionContext).operation,
+		rootValue
+	)
 
 	return buildResponse(exeContext :: ExecutionContext, data)
 end
@@ -346,7 +354,9 @@ function buildExecutionContext(
 			if operationName == nil then
 				if operation ~= nil then
 					return {
-						GraphQLError.new("Must provide operation name if query contains multiple operations."),
+						GraphQLError.new(
+							"Must provide operation name if query contains multiple operations."
+						),
 					}
 				end
 				operation = definition
@@ -561,7 +571,13 @@ function collectFields(
 			then
 				continue
 			end
-			collectFields(exeContext, runtimeType, selection.selectionSet, fields, visitedFragmentNames)
+			collectFields(
+				exeContext,
+				runtimeType,
+				selection.selectionSet,
+				fields,
+				visitedFragmentNames
+			)
 		elseif selection.kind == Kind.FRAGMENT_SPREAD then
 			local fragName = selection.name.value
 			if visitedFragmentNames[fragName] or not shouldIncludeNode(exeContext, selection) then
@@ -569,10 +585,18 @@ function collectFields(
 			end
 			visitedFragmentNames[fragName] = true
 			local fragment = exeContext.fragments[fragName]
-			if not fragment or not doesFragmentConditionMatch(exeContext, fragment, runtimeType) then
+			if
+				not fragment or not doesFragmentConditionMatch(exeContext, fragment, runtimeType)
+			then
 				continue
 			end
-			collectFields(exeContext, runtimeType, fragment.selectionSet, fields, visitedFragmentNames)
+			collectFields(
+				exeContext,
+				runtimeType,
+				fragment.selectionSet,
+				fields,
+				visitedFragmentNames
+			)
 		end
 	end
 
@@ -617,7 +641,8 @@ function doesFragmentConditionMatch(
 	end
 
 	-- ROBLOX FIXME Luau: Luau does not narrow to non-nil based on branch above
-	local conditionalType = typeFromAST(exeContext.schema, typeConditionNode :: NamedTypeNode) :: GraphQLNamedType
+	local conditionalType =
+		typeFromAST(exeContext.schema, typeConditionNode :: NamedTypeNode) :: GraphQLNamedType
 
 	if conditionalType == type_ then
 		return true
@@ -668,14 +693,24 @@ function resolveField(
 		then (fieldDef :: GraphQLField<any, any>).resolve :: GraphQLFieldResolver<any, any>
 		else exeContext.fieldResolver
 
-	local info = buildResolveInfo(exeContext, fieldDef :: GraphQLField<any, any>, fieldNodes, parentType, path)
+	local info = buildResolveInfo(
+		exeContext,
+		fieldDef :: GraphQLField<any, any>,
+		fieldNodes,
+		parentType,
+		path
+	)
 
 	-- Get the resolve function, regardless of if its result is normal or abrupt (error).
 	local ok, resultOrError = pcall(function()
 		-- Build a JS object of arguments from the field.arguments AST, using the
 		-- variables scope to fulfill any variable references.
 		-- TODO: find a way to memoize, in case this field is within a List type.
-		local args = getArgumentValues(fieldDef :: GraphQLField<any, any>, fieldNodes[1], exeContext.variableValues)
+		local args = getArgumentValues(
+			fieldDef :: GraphQLField<any, any>,
+			fieldNodes[1],
+			exeContext.variableValues
+		)
 
 		-- The resolve function's optional third argument is a context value that
 		-- is provided to every resolve function within an execution. It is commonly
@@ -683,7 +718,12 @@ function resolveField(
 		local contextValue = exeContext.contextValue
 
 		-- ROBLOX FIXME Luau: needs normalization
-		local result = (resolveFn :: (any, any, any, GraphQLResolveInfo) -> any)(source, args, contextValue, info)
+		local result = (resolveFn :: (any, any, any, GraphQLResolveInfo) -> any)(
+			source,
+			args,
+			contextValue,
+			info
+		)
 
 		local completed
 		if isPromise(result) then
@@ -808,7 +848,10 @@ function completeValue(
 		if isNillish(completed) then
 			error(
 				Error.new(
-					("Cannot return null for non-nullable field %s.%s."):format(info.parentType.name, info.fieldName)
+					("Cannot return null for non-nullable field %s.%s."):format(
+						info.parentType.name,
+						info.fieldName
+					)
 				)
 			)
 		end
@@ -845,7 +888,14 @@ function completeValue(
 	-- runtime Object type and complete for that type.
 	if isAbstractType(returnType) then
 		-- ROBLOX TODO Luau: need return constraints so we can narrow: isNonNullType(type: unknown): type is GraphQLUnionType
-		return completeAbstractValue(exeContext, returnType :: GraphQLAbstractType, fieldNodes, info, path, result)
+		return completeAbstractValue(
+			exeContext,
+			returnType :: GraphQLAbstractType,
+			fieldNodes,
+			info,
+			path,
+			result
+		)
 	end
 
 	-- If field type is Object, execute and complete all sub-selections.
@@ -853,7 +903,14 @@ function completeValue(
 	-- ROBLOX TODO Luau: need return constraints so we can narrow: isUnionType(type: unknown): type is GraphQLUnionType
 	if isObjectType(returnType) then
 		-- ROBLOX TODO Luau: need return constraints so we can narrow: isNonNullType(type: unknown): type is GraphQLUnionType
-		return completeObjectValue(exeContext, returnType :: GraphQLObjectType, fieldNodes, info, path, result)
+		return completeObjectValue(
+			exeContext,
+			returnType :: GraphQLObjectType,
+			fieldNodes,
+			info,
+			path,
+			result
+		)
 	end
 
 	invariant(false, "Cannot complete value of unexpected output type: " .. inspect(returnType))
@@ -910,7 +967,14 @@ function completeListValue(
 					return completeValue(exeContext, itemType, fieldNodes, info, itemPath, resolved)
 				end)
 			else
-				completedItem = completeValue(exeContext, itemType, fieldNodes, info, itemPath, item)
+				completedItem = completeValue(
+					exeContext,
+					itemType,
+					fieldNodes,
+					info,
+					itemPath,
+					item
+				)
 			end
 
 			if isPromise(completedItem) then
@@ -970,8 +1034,9 @@ function completeAbstractValue(
 	result: any
 ): PromiseOrValue<ObjMap<any>>
 	-- ROBLOX FIXME Luau: lack of ?? operator and `or` not unifying/normalizing means we take the runtime hit of the table lookup twice
-	local resolveTypeFn =
-		(if returnType.resolveType then returnType.resolveType else exeContext.typeResolver) :: GraphQLTypeResolver<any, any>
+	local resolveTypeFn = (
+		if returnType.resolveType then returnType.resolveType else exeContext.typeResolver
+	) :: GraphQLTypeResolver<any, any>
 	local contextValue = exeContext.contextValue
 	local runtimeType = resolveTypeFn(result, contextValue, info, returnType)
 
@@ -981,7 +1046,14 @@ function completeAbstractValue(
 		return (runtimeType :: Promise<any>):andThen(function(resolvedRuntimeType)
 			return completeObjectValue(
 				exeContext,
-				ensureValidRuntimeType(resolvedRuntimeType, exeContext, returnType, fieldNodes, info, result),
+				ensureValidRuntimeType(
+					resolvedRuntimeType,
+					exeContext,
+					returnType,
+					fieldNodes,
+					info,
+					result
+				),
 				fieldNodes,
 				info,
 				path,
@@ -993,7 +1065,14 @@ function completeAbstractValue(
 	-- ROBLOX TODO Luau: needs return type constraints and type states to understand false branch of isPromise() above to not need manual cast to string?
 	return completeObjectValue(
 		exeContext,
-		ensureValidRuntimeType(runtimeType :: string?, exeContext, returnType, fieldNodes, info, result),
+		ensureValidRuntimeType(
+			runtimeType :: string?,
+			exeContext,
+			returnType,
+			fieldNodes,
+			info,
+			result
+		),
 		fieldNodes,
 		info,
 		path,
@@ -1033,11 +1112,13 @@ function ensureValidRuntimeType(
 	if typeof(runtimeTypeName) ~= "string" then
 		error(
 			GraphQLError.new(
-				('Abstract type "%s" must resolve to an Object type at runtime for field "%s.%s" with '):format(
-					returnType.name,
-					info.parentType.name,
-					info.fieldName
-				) .. ('value %s, received "%s".'):format(inspect(result), inspect(runtimeTypeName))
+				(
+					'Abstract type "%s" must resolve to an Object type at runtime for field "%s.%s" with '
+				):format(returnType.name, info.parentType.name, info.fieldName)
+					.. ('value %s, received "%s".'):format(
+						inspect(result),
+						inspect(runtimeTypeName)
+					)
 			)
 		)
 	end
@@ -1058,7 +1139,10 @@ function ensureValidRuntimeType(
 	if not isObjectType(runtimeType) then
 		error(
 			GraphQLError.new(
-				('Abstract type "%s" was resolve to a non-object type "%s".'):format(returnType.name, runtimeTypeName),
+				('Abstract type "%s" was resolve to a non-object type "%s".'):format(
+					returnType.name,
+					runtimeTypeName
+				),
 				fieldNodes
 			)
 		)
@@ -1116,7 +1200,11 @@ function completeObjectValue(
 	return collectAndExecuteSubfields(exeContext, returnType, fieldNodes, path, result)
 end
 
-function invalidReturnTypeError(returnType: GraphQLObjectType, result: any, fieldNodes: Array<FieldNode>): GraphQLError
+function invalidReturnTypeError(
+	returnType: GraphQLObjectType,
+	result: any,
+	fieldNodes: Array<FieldNode>
+): GraphQLError
 	return GraphQLError.new(
 		('Expected value of type "%s" but got: %s.'):format(returnType.name, inspect(result)),
 		fieldNodes
@@ -1247,7 +1335,11 @@ end
 --  *
 --  * @internal
 --  *]]
-function getFieldDef(schema: GraphQLSchema, parentType: GraphQLObjectType, fieldName: string): GraphQLField<any, any>?
+function getFieldDef(
+	schema: GraphQLSchema,
+	parentType: GraphQLObjectType,
+	fieldName: string
+): GraphQLField<any, any>?
 	if fieldName == SchemaMetaFieldDef.name and schema:getQueryType() == parentType then
 		return SchemaMetaFieldDef
 	elseif fieldName == TypeMetaFieldDef.name and schema:getQueryType() == parentType then

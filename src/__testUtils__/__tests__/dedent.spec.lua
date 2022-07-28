@@ -114,7 +114,11 @@ return function()
 
 		it("removes all trailing spaces and tabs", function()
 			local output = dedent(
-				"\n" .. "      type Query {\n" .. "        me: User\n" .. "      }\n" .. "          \t\t  \t "
+				"\n"
+					.. "      type Query {\n"
+					.. "        me: User\n"
+					.. "      }\n"
+					.. "          \t\t  \t "
 			)
 			expect(output).to.equal(Array.join({
 				"type Query {",

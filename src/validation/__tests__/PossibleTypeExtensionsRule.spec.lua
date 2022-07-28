@@ -6,7 +6,9 @@ return function()
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
 	local PossibleTypeExtensionsRule =
-		require(validationWorkspace.rules.PossibleTypeExtensionsRule).PossibleTypeExtensionsRule
+		require(
+			validationWorkspace.rules.PossibleTypeExtensionsRule
+		).PossibleTypeExtensionsRule
 	local harness = require(script.Parent.harness)
 	local expectSDLValidationErrors = harness.expectSDLValidationErrors
 
@@ -14,7 +16,12 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectSDLValidationErrors(expect_, schema, PossibleTypeExtensionsRule, "\n" .. sdlStr)
+		return expectSDLValidationErrors(
+			expect_,
+			schema,
+			PossibleTypeExtensionsRule,
+			"\n" .. sdlStr
+		)
 	end
 
 	local function expectValidSDL(expect_, sdlStr, schema)
@@ -86,7 +93,8 @@ return function()
 		end)
 
 		it("extending unknown type", function()
-			local message = 'Cannot extend type "Unknown" because it is not defined. Did you mean "Known"?'
+			local message =
+				'Cannot extend type "Unknown" because it is not defined. Did you mean "Known"?'
 
 			expectSDLErrors(
 				expect,
@@ -269,7 +277,8 @@ return function()
       extend input Unknown @dummy
 			]]
 
-			local message = 'Cannot extend type "Unknown" because it is not defined. Did you mean "Known"?'
+			local message =
+				'Cannot extend type "Unknown" because it is not defined. Did you mean "Known"?'
 
 			expectSDLErrors(expect, sdl, schema).toEqual({
 				{

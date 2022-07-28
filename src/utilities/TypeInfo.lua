@@ -238,7 +238,10 @@ function TypeInfo:enter(node: ASTNode)
 		end
 		table.insert(self._fieldDefStack, if fieldDef then fieldDef else NULL)
 		-- ROBLOX TODO Luau: need return constraints so we can narrow based on isOutputType and not need manual annotation
-		table.insert(self._typeStack, if isOutputType(fieldType) then fieldType :: GraphQLOutputType else NULL)
+		table.insert(
+			self._typeStack,
+			if isOutputType(fieldType) then fieldType :: GraphQLOutputType else NULL
+		)
 		return
 	elseif nodeKind == Kind.DIRECTIVE then
 		self._directive = schema:getDirective((node :: DirectiveNode).name.value)
@@ -255,7 +258,10 @@ function TypeInfo:enter(node: ASTNode)
 			type_ = schema:getSubscriptionType()
 		end
 		-- ROBLOX TODO Luau: need return constraints so we can narrow: isUnionType(type: unknown): type is GraphQLUnionType
-		table.insert(self._typeStack, if isObjectType(type_) then type_ :: GraphQLObjectType else NULL)
+		table.insert(
+			self._typeStack,
+			if isObjectType(type_) then type_ :: GraphQLObjectType else NULL
+		)
 		return
 	elseif nodeKind == Kind.INLINE_FRAGMENT or nodeKind == Kind.FRAGMENT_DEFINITION then
 		local typeConditionAST = (node :: InlineFragmentNode | FragmentDefinitionNode).typeCondition
@@ -263,12 +269,18 @@ function TypeInfo:enter(node: ASTNode)
 			then typeFromAST(schema, typeConditionAST)
 			else getNamedType(self:getType())
 		-- ROBLOX TODO Luau: need return constraints so we can narrow: isOutputType
-		table.insert(self._typeStack, if isOutputType(outputType) then outputType :: GraphQLOutputType else NULL)
+		table.insert(
+			self._typeStack,
+			if isOutputType(outputType) then outputType :: GraphQLOutputType else NULL
+		)
 		return
 	elseif nodeKind == Kind.VARIABLE_DEFINITION then
 		local inputType = typeFromAST(schema, (node :: VariableDefinitionNode).type)
 		-- ROBLOX TODO Luau: need return constraints so we can narrow: isUnionType(type: unknown): type is GraphQLUnionType
-		table.insert(self._inputTypeStack, if isInputType(inputType) then inputType :: GraphQLInputType else NULL)
+		table.insert(
+			self._inputTypeStack,
+			if isInputType(inputType) then inputType :: GraphQLInputType else NULL
+		)
 		return
 	elseif nodeKind == Kind.ARGUMENT then
 		local argDef
@@ -306,7 +318,10 @@ function TypeInfo:enter(node: ASTNode)
 			end
 		end
 		table.insert(self._defaultValueStack, if inputField then inputField.defaultValue else NULL)
-		table.insert(self._inputTypeStack, if isInputType(inputFieldType) then inputFieldType else NULL)
+		table.insert(
+			self._inputTypeStack,
+			if isInputType(inputFieldType) then inputFieldType else NULL
+		)
 		return
 	elseif nodeKind == Kind.ENUM then
 		local enumType = getNamedType(self:getInputType())
@@ -353,7 +368,11 @@ end
 --  * statically evaluated environment we do not always have an Object type,
 --  * and need to handle Interface and Union types.
 --  */
-function getFieldDef(schema: GraphQLSchema, parentType: GraphQLType, fieldNode: FieldNode): GraphQLField<any, any>?
+function getFieldDef(
+	schema: GraphQLSchema,
+	parentType: GraphQLType,
+	fieldNode: FieldNode
+): GraphQLField<any, any>?
 	local name = fieldNode.name.value
 
 	if name == SchemaMetaFieldDef.name and schema:getQueryType() == parentType then
@@ -376,7 +395,10 @@ end
 --  * Creates a new visitor instance which maintains a provided TypeInfo instance
 --  * along with visiting visitor.
 --  */
-local function visitWithTypeInfo(typeInfo: TypeInfo, visitor: Visitor<ASTKindToNode>): Visitor<ASTKindToNode>
+local function visitWithTypeInfo(
+	typeInfo: TypeInfo,
+	visitor: Visitor<ASTKindToNode>
+): Visitor<ASTKindToNode>
 	return {
 		enter = function(_self, node, ...)
 			typeInfo:enter(node)

@@ -6,7 +6,9 @@ return function()
 	local buildASTSchema = require(root.utilities.buildASTSchema)
 	local buildSchema = buildASTSchema.buildSchema
 	local NoDeprecatedCustomRule =
-		require(validationWorkspace.rules.custom.NoDeprecatedCustomRule).NoDeprecatedCustomRule
+		require(
+			validationWorkspace.rules.custom.NoDeprecatedCustomRule
+		).NoDeprecatedCustomRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrorsWithSchema = harness.expectValidationErrorsWithSchema
 
@@ -17,7 +19,12 @@ return function()
 			-- ROBLOX deviation: we append a new line at the begining of the
 			-- query string because of how Lua multiline strings works (it does
 			-- take the new line if it's the first character of the string)
-			return expectValidationErrorsWithSchema(expect_, schema, NoDeprecatedCustomRule, "\n" .. queryStr)
+			return expectValidationErrorsWithSchema(
+				expect_,
+				schema,
+				NoDeprecatedCustomRule,
+				"\n" .. queryStr
+			)
 		end
 
 		local function expectValid(expect_, queryStr: string)
@@ -251,7 +258,8 @@ return function()
 			end)
 
 			it("reports error when a deprecated input field is used", function()
-				local message = "The input field InputType.deprecatedField is deprecated. Some input field reason."
+				local message =
+					"The input field InputType.deprecatedField is deprecated. Some input field reason."
 
 				expectErrors(
 					expect,
@@ -321,7 +329,8 @@ return function()
 			end)
 
 			it("reports error when a deprecated enum value is used", function()
-				local message = 'The enum value "EnumType.DEPRECATED_VALUE" is deprecated. Some enum reason.'
+				local message =
+					'The enum value "EnumType.DEPRECATED_VALUE" is deprecated. Some enum reason.'
 
 				expectErrors(
 					expect,

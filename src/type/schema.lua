@@ -166,7 +166,10 @@ export type GraphQLSchema = {
 	getSubscriptionType: (self: GraphQLSchema) -> GraphQLObjectType? | NULL,
 	getTypeMap: (self: GraphQLSchema) -> TypeMap,
 	getType: (self: GraphQLSchema, name: string) -> GraphQLNamedType?,
-	getPossibleTypes: (self: GraphQLSchema, abstractType: GraphQLAbstractType) -> Array<GraphQLObjectType>,
+	getPossibleTypes: (
+		self: GraphQLSchema,
+		abstractType: GraphQLAbstractType
+	) -> Array<GraphQLObjectType>,
 	getImplementations: (
 		self: GraphQLSchema,
 		interfaceType: GraphQLInterfaceType
@@ -206,7 +209,8 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 	)
 	devAssert(
 		not config.directives or Array.isArray(config.directives),
-		'"directives" must be Array if provided but got: ' .. ("%s."):format(inspect(config.directives))
+		'"directives" must be Array if provided but got: '
+			.. ("%s."):format(inspect(config.directives))
 	)
 
 	self.description = config.description
@@ -274,13 +278,16 @@ function GraphQLSchema.new(config: GraphQLSchemaConfig): GraphQLSchema
 			typeName = tostring(namedType)
 		end
 
-		devAssert(typeName and typeName ~= "", "One of the provided types for building the Schema is missing a name.")
+		devAssert(
+			typeName and typeName ~= "",
+			"One of the provided types for building the Schema is missing a name."
+		)
 		if self._typeMap:has(typeName) then
 			error(
 				Error.new(
-					('Schema must contain uniquely named types but contains multiple types named "%s".'):format(
-						typeName
-					)
+					(
+						'Schema must contain uniquely named types but contains multiple types named "%s".'
+					):format(typeName)
 				)
 			)
 		end

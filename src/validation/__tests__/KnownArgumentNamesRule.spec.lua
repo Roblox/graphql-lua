@@ -7,7 +7,8 @@ return function()
 	local buildSchema = buildASTSchema.buildSchema
 	local KnownArgumentNamesRuleExports = require(validationWorkspace.rules.KnownArgumentNamesRule)
 	local KnownArgumentNamesRule = KnownArgumentNamesRuleExports.KnownArgumentNamesRule
-	local KnownArgumentNamesOnDirectivesRule = KnownArgumentNamesRuleExports.KnownArgumentNamesOnDirectivesRule
+	local KnownArgumentNamesOnDirectivesRule =
+		KnownArgumentNamesRuleExports.KnownArgumentNamesOnDirectivesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 	local expectSDLValidationErrors = harness.expectSDLValidationErrors
@@ -27,7 +28,12 @@ return function()
 		-- ROBLOX deviation: we append a new line at the begining of the
 		-- query string because of how Lua multiline strings works (it does
 		-- take the new line if it's the first character of the string)
-		return expectSDLValidationErrors(expect_, schema, KnownArgumentNamesOnDirectivesRule, "\n" .. sdlStr)
+		return expectSDLValidationErrors(
+			expect_,
+			schema,
+			KnownArgumentNamesOnDirectivesRule,
+			"\n" .. sdlStr
+		)
 	end
 
 	local function expectValidSDL(expect_, sdlStr)

@@ -20,13 +20,19 @@ exports.ExecutableDefinitionsRule = function(context)
 			for _, definition in ipairs(node.definitions) do
 				if not isExecutableDefinitionNode(definition) then
 					local defName = nil
-					if definition.kind == Kind.SCHEMA_DEFINITION or definition.kind == Kind.SCHEMA_EXTENSION then
+					if
+						definition.kind == Kind.SCHEMA_DEFINITION
+						or definition.kind == Kind.SCHEMA_EXTENSION
+					then
 						defName = "schema"
 					else
 						defName = '"' .. definition.name.value .. '"'
 					end
 					context:reportError(
-						GraphQLError.new(("The %s definition is not executable."):format(defName), definition)
+						GraphQLError.new(
+							("The %s definition is not executable."):format(defName),
+							definition
+						)
 					)
 				end
 			end

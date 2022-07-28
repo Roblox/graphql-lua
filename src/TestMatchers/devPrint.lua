@@ -1,4 +1,6 @@
-local inspect = require(script.Parent.inspect).inspect
+local srcWorkspace = script.Parent.Parent
+local Packages = srcWorkspace.Parent
+local inspect = require(Packages.LuauPolyfill).util.inspect
 
 local function devPrint(...)
 	local inspected = {}

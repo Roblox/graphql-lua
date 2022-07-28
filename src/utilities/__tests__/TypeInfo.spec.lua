@@ -236,7 +236,11 @@ return function()
 						})
 
 						-- // Make a query valid by adding missing selection sets.
-						if node.kind == "Field" and not node.selectionSet and isCompositeType(getNamedType(type_)) then
+						if
+							node.kind == "Field"
+							and not node.selectionSet
+							and isCompositeType(getNamedType(type_))
+						then
 							return Object.assign({}, node, {
 								selectionSet = {
 									kind = "SelectionSet",
@@ -269,7 +273,9 @@ return function()
 
 			expect(print_(ast)).to.equal(print_(parse("{ human(id: 4) { name, pets }, alien }")))
 			expect(print_(editedAST)).to.equal(
-				print_(parse("{ human(id: 4) { name, pets { __typename } }, alien { __typename } }"))
+				print_(
+					parse("{ human(id: 4) { name, pets { __typename } }, alien { __typename } }")
+				)
 			)
 
 			expect(visited).toEqual({

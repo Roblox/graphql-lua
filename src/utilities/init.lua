@@ -26,7 +26,9 @@ export type IntrospectionInputTypeRef = getIntrospectionQueryModule.Introspectio
 export type IntrospectionOutputTypeRef = getIntrospectionQueryModule.IntrospectionOutputTypeRef
 export type IntrospectionNamedTypeRef<T> = getIntrospectionQueryModule.IntrospectionNamedTypeRef<T>
 export type IntrospectionListTypeRef<T> = getIntrospectionQueryModule.IntrospectionListTypeRef<T>
-export type IntrospectionNonNullTypeRef<T> = getIntrospectionQueryModule.IntrospectionNonNullTypeRef<T>
+export type IntrospectionNonNullTypeRef<T> = getIntrospectionQueryModule.IntrospectionNonNullTypeRef<
+	T
+>
 export type IntrospectionField = getIntrospectionQueryModule.IntrospectionField
 export type IntrospectionInputValue = getIntrospectionQueryModule.IntrospectionInputValue
 export type IntrospectionEnumValue = getIntrospectionQueryModule.IntrospectionEnumValue

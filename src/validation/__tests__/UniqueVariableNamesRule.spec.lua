@@ -2,7 +2,8 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local UniqueVariableNamesRule = require(validationWorkspace.rules.UniqueVariableNamesRule).UniqueVariableNamesRule
+	local UniqueVariableNamesRule =
+		require(validationWorkspace.rules.UniqueVariableNamesRule).UniqueVariableNamesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 

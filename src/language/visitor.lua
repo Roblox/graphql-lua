@@ -240,7 +240,11 @@ local getVisitFn
 --  *       }
 --  *     })
 --  */
-local function visit(root: ASTNode, visitor: Visitor<ASTKindToNode>, visitorKeys_: VisitorKeyMap<ASTKindToNode>?): any
+local function visit(
+	root: ASTNode,
+	visitor: Visitor<ASTKindToNode>,
+	visitorKeys_: VisitorKeyMap<ASTKindToNode>?
+): any
 	local visitorKeys: VisitorKeyMap<ASTKindToNode> = visitorKeys_ or QueryDocumentKeys
 
 	local stack: any = nil

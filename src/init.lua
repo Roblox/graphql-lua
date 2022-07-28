@@ -154,25 +154,55 @@ export type GraphQLEnumTypeConfig = typeModule.GraphQLEnumTypeConfig
 export type GraphQLEnumValue = typeModule.GraphQLEnumValue
 export type GraphQLEnumValueConfig = typeModule.GraphQLEnumValueConfig
 export type GraphQLEnumValueConfigMap = typeModule.GraphQLEnumValueConfigMap
-export type GraphQLField<TSource, TContext, TArgs> = typeModule.GraphQLField<TSource, TContext, TArgs>
-export type GraphQLFieldConfig<TSource, TContext, TArgs> = typeModule.GraphQLFieldConfig<TSource, TContext, TArgs>
+export type GraphQLField<TSource, TContext, TArgs> = typeModule.GraphQLField<
+	TSource,
+	TContext,
+	TArgs
+>
+export type GraphQLFieldConfig<TSource, TContext, TArgs> = typeModule.GraphQLFieldConfig<
+	TSource,
+	TContext,
+	TArgs
+>
 export type GraphQLFieldConfigArgumentMap = typeModule.GraphQLFieldConfigArgumentMap
-export type GraphQLFieldConfigMap<TSource, TContext> = typeModule.GraphQLFieldConfigMap<TSource, TContext>
+export type GraphQLFieldConfigMap<TSource, TContext> = typeModule.GraphQLFieldConfigMap<
+	TSource,
+	TContext
+>
 export type GraphQLFieldMap<TSource, TContext> = typeModule.GraphQLFieldMap<TSource, TContext>
-export type GraphQLFieldResolver<TSource, TContext, TArgs> = typeModule.GraphQLFieldResolver<TSource, TContext, TArgs>
+export type GraphQLFieldResolver<TSource, TContext, TArgs> = typeModule.GraphQLFieldResolver<
+	TSource,
+	TContext,
+	TArgs
+>
 export type GraphQLInputField = typeModule.GraphQLInputField
 export type GraphQLInputFieldConfig = typeModule.GraphQLInputFieldConfig
 export type GraphQLInputFieldConfigMap = typeModule.GraphQLInputFieldConfigMap
 export type GraphQLInputFieldMap = typeModule.GraphQLInputFieldMap
 export type GraphQLInputObjectTypeConfig = typeModule.GraphQLInputObjectTypeConfig
-export type GraphQLInterfaceTypeConfig<TSource, TContext> = typeModule.GraphQLInterfaceTypeConfig<TSource, TContext>
+export type GraphQLInterfaceTypeConfig<TSource, TContext> = typeModule.GraphQLInterfaceTypeConfig<
+	TSource,
+	TContext
+>
 export type GraphQLIsTypeOfFn<TSource, TContext> = typeModule.GraphQLIsTypeOfFn<TSource, TContext>
-export type GraphQLObjectTypeConfig<TSource, TContext> = typeModule.GraphQLObjectTypeConfig<TSource, TContext>
+export type GraphQLObjectTypeConfig<TSource, TContext> = typeModule.GraphQLObjectTypeConfig<
+	TSource,
+	TContext
+>
 export type GraphQLResolveInfo = typeModule.GraphQLResolveInfo
 export type ResponsePath = typeModule.ResponsePath
-export type GraphQLScalarTypeConfig<TInternal, TExternal> = typeModule.GraphQLScalarTypeConfig<TInternal, TExternal>
-export type GraphQLTypeResolver<TSource, TContext> = typeModule.GraphQLTypeResolver<TSource, TContext>
-export type GraphQLUnionTypeConfig<TSource, TContext> = typeModule.GraphQLUnionTypeConfig<TSource, TContext>
+export type GraphQLScalarTypeConfig<TInternal, TExternal> = typeModule.GraphQLScalarTypeConfig<
+	TInternal,
+	TExternal
+>
+export type GraphQLTypeResolver<TSource, TContext> = typeModule.GraphQLTypeResolver<
+	TSource,
+	TContext
+>
+export type GraphQLUnionTypeConfig<TSource, TContext> = typeModule.GraphQLUnionTypeConfig<
+	TSource,
+	TContext
+>
 export type GraphQLScalarSerializer<TExternal> = typeModule.GraphQLScalarSerializer<TExternal>
 export type GraphQLScalarValueParser<TExternal> = typeModule.GraphQLScalarValueParser<TExternal>
 export type GraphQLScalarLiteralParser<TInternal> = typeModule.GraphQLScalarLiteralParser<TInternal>
@@ -237,7 +267,10 @@ export type Source = languageModule.Source
 -- Visitor utilities
 export type ASTVisitor = languageModule.ASTVisitor
 export type Visitor<KindToNode, Nodes = any> = languageModule.Visitor<KindToNode, Nodes>
-export type VisitFn<TAnyNode, TVisitedNode = TAnyNode> = languageModule.VisitFn<TAnyNode, TVisitedNode>
+export type VisitFn<TAnyNode, TVisitedNode = TAnyNode> = languageModule.VisitFn<
+	TAnyNode,
+	TVisitedNode
+>
 export type VisitorKeyMap<KindToNode> = languageModule.VisitorKeyMap<KindToNode>
 
 -- AST nodes

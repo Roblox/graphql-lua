@@ -59,20 +59,36 @@ function serializeInt(outputValue): number
 		num = tonumber(coercedValue)
 	end
 	if typeof(num) ~= "number" or not Number.isInteger(num) then
-		error(GraphQLError.new(("Int cannot represent non-integer value: %s"):format(inspect(coercedValue))))
+		error(
+			GraphQLError.new(
+				("Int cannot represent non-integer value: %s"):format(inspect(coercedValue))
+			)
+		)
 	end
 	if num > MAX_INT or num < MIN_INT then
-		error(GraphQLError.new("Int cannot represent non 32-bit signed integer value: " .. inspect(coercedValue)))
+		error(
+			GraphQLError.new(
+				"Int cannot represent non 32-bit signed integer value: " .. inspect(coercedValue)
+			)
+		)
 	end
 
 	return num
 end
 function coerceInt(inputValue)
 	if typeof(inputValue) ~= "number" or not Number.isInteger(inputValue) then
-		error(GraphQLError.new(("Int cannot represent non-integer value: %s"):format(inspect(inputValue))))
+		error(
+			GraphQLError.new(
+				("Int cannot represent non-integer value: %s"):format(inspect(inputValue))
+			)
+		)
 	end
 	if inputValue > MAX_INT or inputValue < MIN_INT then
-		error(GraphQLError.new(("Int cannot represent non 32-bit signed integer value: %s"):format(inputValue)))
+		error(
+			GraphQLError.new(
+				("Int cannot represent non 32-bit signed integer value: %s"):format(inputValue)
+			)
+		)
 	end
 
 	return inputValue
@@ -85,7 +101,12 @@ local GraphQLInt: GraphQLScalarType<number, number> = GraphQLScalarType.new({
 	parseValue = coerceInt,
 	parseLiteral = function(valueNode)
 		if valueNode.kind ~= Kind.INT then
-			error(GraphQLError.new(("Int cannot represent non-integer value: %s"):format(print_(valueNode)), valueNode))
+			error(
+				GraphQLError.new(
+					("Int cannot represent non-integer value: %s"):format(print_(valueNode)),
+					valueNode
+				)
+			)
 		end
 
 		-- ROBLOX FIXME Luau: kind comparison above should narrow valueNode
@@ -120,14 +141,22 @@ function serializeFloat(outputValue)
 		num = tonumber(coercedValue)
 	end
 	if typeof(num) ~= "number" or not NumberisFinite(num) then
-		error(GraphQLError.new(("Float cannot represent non numeric value: %s"):format(inspect(coercedValue))))
+		error(
+			GraphQLError.new(
+				("Float cannot represent non numeric value: %s"):format(inspect(coercedValue))
+			)
+		)
 	end
 
 	return num
 end
 function coerceFloat(inputValue)
 	if typeof(inputValue) ~= "number" or not NumberisFinite(inputValue) then
-		error(GraphQLError.new(("Float cannot represent non numeric value: %s"):format(inspect(inputValue))))
+		error(
+			GraphQLError.new(
+				("Float cannot represent non numeric value: %s"):format(inspect(inputValue))
+			)
+		)
 	end
 
 	return inputValue
@@ -141,7 +170,10 @@ local GraphQLFloat: GraphQLScalarType<number> = GraphQLScalarType.new({
 	parseLiteral = function(valueNode)
 		if valueNode.kind ~= Kind.FLOAT and valueNode.kind ~= Kind.INT then
 			error(
-				GraphQLError.new(("Float cannot represent non numeric value: %s"):format(print_(valueNode)), valueNode)
+				GraphQLError.new(
+					("Float cannot represent non numeric value: %s"):format(print_(valueNode)),
+					valueNode
+				)
 			)
 		end
 
@@ -190,7 +222,11 @@ function serializeString(outputValue): string
 end
 function coerceString(inputValue): string
 	if typeof(inputValue) ~= "string" then
-		error(GraphQLError.new(("String cannot represent a non string value: %s"):format(inspect(inputValue))))
+		error(
+			GraphQLError.new(
+				("String cannot represent a non string value: %s"):format(inspect(inputValue))
+			)
+		)
 	end
 
 	return inputValue
@@ -227,12 +263,20 @@ function serializeBoolean(outputValue): boolean
 		return coercedValue ~= 0
 	end
 
-	error(GraphQLError.new(("Boolean cannot represent a non boolean value: %s"):format(inspect(coercedValue))))
+	error(
+		GraphQLError.new(
+			("Boolean cannot represent a non boolean value: %s"):format(inspect(coercedValue))
+		)
+	)
 end
 
 function coerceBoolean(inputValue): boolean
 	if typeof(inputValue) ~= "boolean" then
-		error(GraphQLError.new(("Boolean cannot represent a non boolean value: %s"):format(inspect(inputValue))))
+		error(
+			GraphQLError.new(
+				("Boolean cannot represent a non boolean value: %s"):format(inspect(inputValue))
+			)
+		)
 	end
 
 	return inputValue

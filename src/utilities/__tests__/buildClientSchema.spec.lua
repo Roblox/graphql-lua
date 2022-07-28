@@ -31,7 +31,8 @@ return function()
 	local printSchema = require(utilitiesWorkspace.printSchema).printSchema
 	local buildSchema = require(utilitiesWorkspace.buildASTSchema).buildSchema
 	local buildClientSchema = require(utilitiesWorkspace.buildClientSchema).buildClientSchema
-	local introspectionFromSchema = require(utilitiesWorkspace.introspectionFromSchema).introspectionFromSchema
+	local introspectionFromSchema =
+		require(utilitiesWorkspace.introspectionFromSchema).introspectionFromSchema
 
 	--[[*
 	--  * This function does a full cycle of going from a string with the contents of
@@ -685,10 +686,13 @@ return function()
 			it("throws when referenced unknown type", function()
 				local introspection = introspectionFromSchema(dummySchema)
 
-				introspection.__schema.types = Array.filter(introspection.__schema.types, function(_ref)
-					local name = _ref.name
-					return name ~= "Query"
-				end)
+				introspection.__schema.types = Array.filter(
+					introspection.__schema.types,
+					function(_ref)
+						local name = _ref.name
+						return name ~= "Query"
+					end
+				)
 
 				expect(function()
 					return buildClientSchema(introspection)
@@ -706,10 +710,13 @@ return function()
       ]])
 				local introspection = introspectionFromSchema(schema)
 
-				introspection.__schema.types = Array.filter(introspection.__schema.types, function(_ref)
-					local name = _ref.name
-					return name ~= "Float"
-				end)
+				introspection.__schema.types = Array.filter(
+					introspection.__schema.types,
+					function(_ref)
+						local name = _ref.name
+						return name ~= "Float"
+					end
+				)
 
 				expect(function()
 					return buildClientSchema(introspection)
@@ -733,10 +740,13 @@ return function()
 
 			it("throws when missing kind", function()
 				local introspection = introspectionFromSchema(dummySchema)
-				local queryTypeIntrospection = Array.find(introspection.__schema.types, function(_ref)
-					local name = _ref.name
-					return name == "Query"
-				end)
+				local queryTypeIntrospection = Array.find(
+					introspection.__schema.types,
+					function(_ref)
+						local name = _ref.name
+						return name == "Query"
+					end
+				)
 
 				expect(queryTypeIntrospection.kind).to.be.ok()
 
@@ -758,10 +768,13 @@ return function()
 
 			it("throws when missing interfaces", function()
 				local introspection = introspectionFromSchema(dummySchema)
-				local queryTypeIntrospection = Array.find(introspection.__schema.types, function(_ref)
-					local name = _ref.name
-					return name == "Query"
-				end)
+				local queryTypeIntrospection = Array.find(
+					introspection.__schema.types,
+					function(_ref)
+						local name = _ref.name
+						return name == "Query"
+					end
+				)
 
 				expect(queryTypeIntrospection.interfaces).to.be.ok()
 
@@ -782,15 +795,21 @@ return function()
 				-- ROBLOX deviation: adding second matcher to test for both 'kind' and 'name' properties.
 				expect(function()
 					return buildClientSchema(introspection)
-				end).toThrow('Introspection result missing interfaces: { .* ?name: "Query",?.* }%.', true)
+				end).toThrow(
+					'Introspection result missing interfaces: { .* ?name: "Query",?.* }%.',
+					true
+				)
 			end)
 
 			it("Legacy support for interfaces with null as interfaces field", function()
 				local introspection = introspectionFromSchema(dummySchema)
-				local someInterfaceIntrospection = Array.find(introspection.__schema.types, function(_ref)
-					local name = _ref.name
-					return name == "SomeInterface"
-				end)
+				local someInterfaceIntrospection = Array.find(
+					introspection.__schema.types,
+					function(_ref)
+						local name = _ref.name
+						return name == "SomeInterface"
+					end
+				)
 
 				expect(someInterfaceIntrospection.interfaces).to.be.ok()
 				someInterfaceIntrospection.interfaces = nil
@@ -801,10 +820,13 @@ return function()
 
 			it("throws when missing fields", function()
 				local introspection = introspectionFromSchema(dummySchema)
-				local queryTypeIntrospection = Array.find(introspection.__schema.types, function(_ref)
-					local name = _ref.name
-					return name == "Query"
-				end)
+				local queryTypeIntrospection = Array.find(
+					introspection.__schema.types,
+					function(_ref)
+						local name = _ref.name
+						return name == "Query"
+					end
+				)
 
 				expect(queryTypeIntrospection.fields).to.be.ok()
 				queryTypeIntrospection.fields = nil
@@ -824,15 +846,21 @@ return function()
 				-- ROBLOX deviation: adding second matcher to test for both 'kind' and 'name' properties.
 				expect(function()
 					return buildClientSchema(introspection)
-				end).toThrow('Introspection result missing fields: { .* ?name: "Query",?.* }%.', true)
+				end).toThrow(
+					'Introspection result missing fields: { .* ?name: "Query",?.* }%.',
+					true
+				)
 			end)
 
 			it("throws when missing field args", function()
 				local introspection = introspectionFromSchema(dummySchema)
-				local queryTypeIntrospection = Array.find(introspection.__schema.types, function(_ref)
-					local name = _ref.name
-					return name == "Query"
-				end)
+				local queryTypeIntrospection = Array.find(
+					introspection.__schema.types,
+					function(_ref)
+						local name = _ref.name
+						return name == "Query"
+					end
+				)
 
 				expect(queryTypeIntrospection.fields[1].args).to.be.ok()
 				queryTypeIntrospection.fields[1].args = nil
@@ -853,40 +881,53 @@ return function()
 
 			it("throws when output type is used as an arg type", function()
 				local introspection = introspectionFromSchema(dummySchema)
-				local queryTypeIntrospection = Array.find(introspection.__schema.types, function(_ref)
-					local name = _ref.name
-					return name == "Query"
-				end)
+				local queryTypeIntrospection = Array.find(
+					introspection.__schema.types,
+					function(_ref)
+						local name = _ref.name
+						return name == "Query"
+					end
+				)
 
 				expect(queryTypeIntrospection.fields[1].args[1].type.name).to.equal("String")
 				queryTypeIntrospection.fields[1].args[1].type.name = "SomeUnion"
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).toThrow("Introspection must provide input type for arguments, but received: SomeUnion.")
+				end).toThrow(
+					"Introspection must provide input type for arguments, but received: SomeUnion."
+				)
 			end)
 
 			it("throws when input type is used as a field type", function()
 				local introspection = introspectionFromSchema(dummySchema)
-				local queryTypeIntrospection = Array.find(introspection.__schema.types, function(_ref)
-					local name = _ref.name
-					return name == "Query"
-				end)
+				local queryTypeIntrospection = Array.find(
+					introspection.__schema.types,
+					function(_ref)
+						local name = _ref.name
+						return name == "Query"
+					end
+				)
 
 				expect(queryTypeIntrospection.fields[1].type.name).to.equal("String")
 				queryTypeIntrospection.fields[1].type.name = "SomeInputObject"
 
 				expect(function()
 					return buildClientSchema(introspection)
-				end).toThrow("Introspection must provide output type for fields, but received: SomeInputObject.")
+				end).toThrow(
+					"Introspection must provide output type for fields, but received: SomeInputObject."
+				)
 			end)
 
 			it("throws when missing possibleTypes", function()
 				local introspection = introspectionFromSchema(dummySchema)
-				local someUnionIntrospection = Array.find(introspection.__schema.types, function(_ref)
-					local name = _ref.name
-					return name == "SomeUnion"
-				end)
+				local someUnionIntrospection = Array.find(
+					introspection.__schema.types,
+					function(_ref)
+						local name = _ref.name
+						return name == "SomeUnion"
+					end
+				)
 
 				expect(someUnionIntrospection.possibleTypes).to.be.ok()
 				someUnionIntrospection.possibleTypes = nil
@@ -906,15 +947,21 @@ return function()
 				-- ROBLOX deviation: adding second matcher to test for both 'kind' and 'name' properties.
 				expect(function()
 					return buildClientSchema(introspection)
-				end).toThrow('Introspection result missing possibleTypes: { .* ?name: "SomeUnion",?.* }%.', true)
+				end).toThrow(
+					'Introspection result missing possibleTypes: { .* ?name: "SomeUnion",?.* }%.',
+					true
+				)
 			end)
 
 			it("throws when missing enumValues", function()
 				local introspection = introspectionFromSchema(dummySchema)
-				local someEnumIntrospection = Array.find(introspection.__schema.types, function(_ref)
-					local name = _ref.name
-					return name == "SomeEnum"
-				end)
+				local someEnumIntrospection = Array.find(
+					introspection.__schema.types,
+					function(_ref)
+						local name = _ref.name
+						return name == "SomeEnum"
+					end
+				)
 
 				expect(someEnumIntrospection.enumValues).to.be.ok()
 				someEnumIntrospection.enumValues = nil
@@ -934,15 +981,21 @@ return function()
 				-- ROBLOX deviation: adding second matcher to test for both 'kind' and 'name' properties.
 				expect(function()
 					return buildClientSchema(introspection)
-				end).toThrow('Introspection result missing enumValues: { .* ?name: "SomeEnum",?.* }%.', true)
+				end).toThrow(
+					'Introspection result missing enumValues: { .* ?name: "SomeEnum",?.* }%.',
+					true
+				)
 			end)
 
 			it("throws when missing inputFields", function()
 				local introspection = introspectionFromSchema(dummySchema)
-				local someInputObjectIntrospection = Array.find(introspection.__schema.types, function(_ref)
-					local name = _ref.name
-					return name == "SomeInputObject"
-				end)
+				local someInputObjectIntrospection = Array.find(
+					introspection.__schema.types,
+					function(_ref)
+						local name = _ref.name
+						return name == "SomeInputObject"
+					end
+				)
 
 				expect(someInputObjectIntrospection.inputFields).to.be.ok()
 				someInputObjectIntrospection.inputFields = nil

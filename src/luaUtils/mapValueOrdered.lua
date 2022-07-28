@@ -8,7 +8,10 @@ local LuauPolyfill = require(rootWorkspace.LuauPolyfill)
 local Map = LuauPolyfill.Map
 type Map<T, V> = LuauPolyfill.Map<T, V>
 
-local function mapValueOrdered<T, V>(map: Map<string, T>, fn: (value: T, key: string) -> V): Map<string, V>
+local function mapValueOrdered<T, V>(
+	map: Map<string, T>,
+	fn: (value: T, key: string) -> V
+): Map<string, V>
 	local result = Map.new() :: Map<string, V>
 	for _, entry in map:ipairs() do
 		local key, value = entry[1], entry[2]

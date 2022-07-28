@@ -197,80 +197,89 @@ return function()
 					},
 				})
 			end)
-			it("Allows us to create a generic query, then use it to fetch Luke Skywalker using his ID", function()
-				local expect: any = expect
-				local source = [[
+			it(
+				"Allows us to create a generic query, then use it to fetch Luke Skywalker using his ID",
+				function()
+					local expect: any = expect
+					local source = [[
 			query FetchSomeIDQuery($someId: String!) {
 			human(id: $someId) {
 				name
 			}
 			}
 		]]
-				local variableValues = {
-					someId = "1000",
-				}
+					local variableValues = {
+						someId = "1000",
+					}
 
-				local result = graphql({
-					schema = schema,
-					source = source,
-					variableValues = variableValues,
-				}):expect()
-				expect(result).toObjectContain({
-					data = {
-						human = {
-							name = "Luke Skywalker",
+					local result = graphql({
+						schema = schema,
+						source = source,
+						variableValues = variableValues,
+					}):expect()
+					expect(result).toObjectContain({
+						data = {
+							human = {
+								name = "Luke Skywalker",
+							},
 						},
-					},
-				})
-			end)
-			it("Allows us to create a generic query, then use it to fetch Han Solo using his ID", function()
-				local expect: any = expect
-				local source = [[
+					})
+				end
+			)
+			it(
+				"Allows us to create a generic query, then use it to fetch Han Solo using his ID",
+				function()
+					local expect: any = expect
+					local source = [[
 			query FetchSomeIDQuery($someId: String!) {
 			human(id: $someId) {
 				name
 			}
 			}
 		]]
-				local variableValues = {
-					someId = "1002",
-				}
+					local variableValues = {
+						someId = "1002",
+					}
 
-				local result = graphql({
-					schema = schema,
-					source = source,
-					variableValues = variableValues,
-				}):expect()
-				expect(result).toObjectContain({
-					data = {
-						human = {
-							name = "Han Solo",
+					local result = graphql({
+						schema = schema,
+						source = source,
+						variableValues = variableValues,
+					}):expect()
+					expect(result).toObjectContain({
+						data = {
+							human = {
+								name = "Han Solo",
+							},
 						},
-					},
-				})
-			end)
-			it("Allows us to create a generic query, then pass an invalid ID to get null back", function()
-				local expect: any = expect
-				local source = [[
+					})
+				end
+			)
+			it(
+				"Allows us to create a generic query, then pass an invalid ID to get null back",
+				function()
+					local expect: any = expect
+					local source = [[
 			query humanQuery($id: String!) {
 			human(id: $id) {
 				name
 			}
 			}
 		]]
-				local variableValues = {
-					id = "not a valid id",
-				}
+					local variableValues = {
+						id = "not a valid id",
+					}
 
-				local result = graphql({
-					schema = schema,
-					source = source,
-					variableValues = variableValues,
-				}):expect()
-				expect(result).toObjectContain({
-					data = { human = nil },
-				})
-			end)
+					local result = graphql({
+						schema = schema,
+						source = source,
+						variableValues = variableValues,
+					}):expect()
+					expect(result).toObjectContain({
+						data = { human = nil },
+					})
+				end
+			)
 		end)
 		describe("Using aliases to change the key in the response", function()
 			it("Allows us to query for Luke, changing his key with an alias", function()
@@ -295,9 +304,11 @@ return function()
 					},
 				})
 			end)
-			it("Allows us to query for both Luke and Leia, using two root fields and an alias", function()
-				local expect: any = expect
-				local source = [[
+			it(
+				"Allows us to query for both Luke and Leia, using two root fields and an alias",
+				function()
+					local expect: any = expect
+					local source = [[
 			query FetchLukeAndLeiaAliased {
 			luke: human(id: "1000") {
 				name
@@ -308,21 +319,22 @@ return function()
 			}
 		]]
 
-				local result = graphql({
-					schema = schema,
-					source = source,
-				}):expect()
-				expect(result).toObjectContain({
-					data = {
-						luke = {
-							name = "Luke Skywalker",
+					local result = graphql({
+						schema = schema,
+						source = source,
+					}):expect()
+					expect(result).toObjectContain({
+						data = {
+							luke = {
+								name = "Luke Skywalker",
+							},
+							leia = {
+								name = "Leia Organa",
+							},
 						},
-						leia = {
-							name = "Leia Organa",
-						},
-					},
-				})
-			end)
+					})
+				end
+			)
 		end)
 		describe("Uses fragments to express more complex queries", function()
 			it("Allows us to query using duplicated content", function()

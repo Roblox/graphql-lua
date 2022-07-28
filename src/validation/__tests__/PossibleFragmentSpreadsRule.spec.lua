@@ -2,8 +2,9 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local PossibleFragmentSpreadsRule =
-		require(validationWorkspace.rules.PossibleFragmentSpreadsRule).PossibleFragmentSpreadsRule
+	local PossibleFragmentSpreadsRule = require(
+		validationWorkspace.rules.PossibleFragmentSpreadsRule
+	).PossibleFragmentSpreadsRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 

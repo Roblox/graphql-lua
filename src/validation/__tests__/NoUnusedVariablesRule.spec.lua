@@ -2,7 +2,8 @@
 
 return function()
 	local validationWorkspace = script.Parent.Parent
-	local NoUnusedVariablesRule = require(validationWorkspace.rules.NoUnusedVariablesRule).NoUnusedVariablesRule
+	local NoUnusedVariablesRule =
+		require(validationWorkspace.rules.NoUnusedVariablesRule).NoUnusedVariablesRule
 	local harness = require(script.Parent.harness)
 	local expectValidationErrors = harness.expectValidationErrors
 

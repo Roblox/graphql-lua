@@ -60,7 +60,12 @@ function defaultOnError(path: Array<string | number>, invalidValue: any, error_:
 	error(error_)
 end
 
-function coerceInputValueImpl(inputValue: any, type_: GraphQLInputType, onError: OnErrorCB, path: Path | nil): any
+function coerceInputValueImpl(
+	inputValue: any,
+	type_: GraphQLInputType,
+	onError: OnErrorCB,
+	path: Path | nil
+): any
 	if isNonNullType(type_) then
 		if isNotNillish(inputValue) then
 			return coerceInputValueImpl(inputValue, type_.ofType, onError, path)
@@ -68,7 +73,9 @@ function coerceInputValueImpl(inputValue: any, type_: GraphQLInputType, onError:
 		onError(
 			pathToArray(path),
 			inputValue,
-			GraphQLError.new('Expected non-nullable type "' .. inspect(type_) .. '" not to be null.')
+			GraphQLError.new(
+				'Expected non-nullable type "' .. inspect(type_) .. '" not to be null.'
+			)
 		)
 		return
 	end
@@ -116,7 +123,11 @@ function coerceInputValueImpl(inputValue: any, type_: GraphQLInputType, onError:
 						pathToArray(path),
 						inputValue,
 						GraphQLError.new(
-							'Field "' .. field.name .. '" of required type "' .. typeStr .. '" was not provided.'
+							'Field "'
+								.. field.name
+								.. '" of required type "'
+								.. typeStr
+								.. '" was not provided.'
 						)
 					)
 				end
@@ -185,7 +196,11 @@ function coerceInputValueImpl(inputValue: any, type_: GraphQLInputType, onError:
 		end
 
 		if parseResult == nil then
-			onError(pathToArray(path), inputValue, GraphQLError.new(('Expected type "%s".'):format(type_.name)))
+			onError(
+				pathToArray(path),
+				inputValue,
+				GraphQLError.new(('Expected type "%s".'):format(type_.name))
+			)
 		end
 		return parseResult
 	end

@@ -152,7 +152,12 @@ local testSchema = buildSchema([[
 
 -- deviation: expect needs to be passed because it can't be injected
 -- in this file
-local function expectValidationErrorsWithSchema(expect_, schema: GraphQLSchema, rule, queryStr: string): any
+local function expectValidationErrorsWithSchema(
+	expect_,
+	schema: GraphQLSchema,
+	rule,
+	queryStr: string
+): any
 	local doc = parse(queryStr)
 	local errors = validate(schema, doc, { rule })
 	-- ROBLOX deviation: our toEqual does not have a special case when
