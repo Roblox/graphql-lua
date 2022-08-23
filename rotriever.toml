@@ -1,6 +1,6 @@
 [package]
 name = "GraphQL"
-version = "15.5.0"
+version = "15.5.1"
 authors = [
 	"Chris Trześniewski <k.trzesniewski@gmail.com>",
 	"Ignacio Falk <flakolefluk@gmail.com>",
@@ -12,7 +12,7 @@ content_root = "src"
 
 [dependencies]
 RegExp = "github.com/Roblox/luau-regexp@0.2.0"
-LuauPolyfill = "github.com/roblox/luau-polyfill@0.4"
+LuauPolyfill = "github.com/roblox/luau-polyfill@1.0"
 Promise = "github.com/Roblox/roblox-lua-promise@3.2.1"
 
 [dev_dependencies]
