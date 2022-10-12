@@ -2,8 +2,6 @@
 
 set -x
 
-rojo build test-bundle.project.json --output graphql-tests.rbxm
-
 echo "Remove .robloxrc from dev dependencies"
 find Packages/Dev -name "*.robloxrc" | xargs rm -f
 find Packages/_Index -name "*.robloxrc" | xargs rm -f
