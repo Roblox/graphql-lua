@@ -1,6 +1,6 @@
 [package]
 name = "GraphQL"
-version = "15.5.4"
+version = "15.6.0"
 authors = [
 	"Chris Trześniewski <k.trzesniewski@gmail.com>",
 	"Ignacio Falk <flakolefluk@gmail.com>",
