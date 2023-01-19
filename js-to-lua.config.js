@@ -16,6 +16,7 @@ module.exports = {
             "src/**/*.lua"
         ]
     },
+    releasePattern: /^v?\d+\.\d+\.\d+$/,
     renameFiles: [
         [
             (filename) => filename.endsWith(".test.lua"),
