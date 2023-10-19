@@ -21,7 +21,7 @@ return function()
 			}
 			local encoded = stringify(data)
 
-			jestExpect(encoded).toEqual('{"data":{"b":{"c":"l"},"d":[1,2,3,4,5],"a":1}}')
+			jestExpect(encoded).toEqual('{"data":{"a":1,"d":[1,2,3,4,5],"b":{"c":"l"}}}')
 
 			local decoded = HttpService:JSONDecode(encoded)
 
@@ -40,7 +40,7 @@ return function()
 			}
 			local encoded = stringify(data)
 
-			jestExpect(encoded).toEqual('{"data":{"b":{"c":"l"},"d":[1,2,3,4,5],"a":null}}')
+			jestExpect(encoded).toEqual('{"data":{"a":null,"d":[1,2,3,4,5],"b":{"c":"l"}}}')
 
 			local decoded = HttpService:JSONDecode(encoded)
 
@@ -70,7 +70,7 @@ return function()
 			local encoded = stringify(data)
 
 			jestExpect(encoded).toEqual(
-				'{"data":{"b":{"e":"a","c":{"d":null}},"f":[1,null,3,null,null],"a":null}}'
+				'{"data":{"a":null,"f":[1,null,3,null,null],"b":{"c":{"d":null},"e":"a"}}}'
 			)
 
 			local decoded = HttpService:JSONDecode(encoded)
