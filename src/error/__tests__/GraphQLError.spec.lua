@@ -117,7 +117,7 @@ return function()
 
 		it("serializes to include message and locations", function()
 			local e = GraphQLError.new("msg", fieldNode)
-			expect(e:toJSON()).to.equal('{"message":"msg","locations":[{"line":2,"column":3}]}')
+			expect(e:toJSON()).to.equal('{"message":"msg","locations":[{"column":3,"line":2}]}')
 		end)
 
 		it("serializes to include path", function()
