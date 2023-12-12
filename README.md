@@ -2,8 +2,8 @@
 
 The Roblox Lua reference implementation for GraphQL, a query language for APIs created by Facebook.
 
-[![Build Status](https://github.com/Roblox/graphql-lua/workflows/ci/badge.svg?branch=master)](https://github.com/Roblox/graphql-lua/actions?query=branch%3Amaster)
-[![Coverage Status](https://codecov.io/gh/Roblox/graphql-lua/branch/master/graph/badge.svg)](https://codecov.io/gh/Roblox/graphql-lua)
+[![Build Status](https://github.com/Roblox/graphql-lua-internal/workflows/ci/badge.svg?branch=master)](https://github.com/Roblox/graphql-lua-internal/actions?query=branch%3Amaster)
+[![Coverage Status](https://codecov.io/gh/Roblox/graphql-lua-internal/branch/master/graph/badge.svg)](https://codecov.io/gh/Roblox/graphql-lua-internal)
 
 See more complete documentation at https://graphql.org/ and
 https://graphql.org/graphql-js/. GraphQL-Lua has few to no deviations from the upstream documentation and APIs, with the exception of the subscription API (which is stubbed). A quick search for `SKIP`ped tests will highlight current deviations.
@@ -30,7 +30,7 @@ GraphQL-Lua provides two important capabilities: building a type schema and
 serving queries against that type schema.
 
 * In a new project, you can consume this library by adding this line to your rotriever.toml
-  * `GraphQL = "github.com/roblox/graphql-lua@15.5.0"`
+  * `GraphQL = "github.com/Roblox/graphql-lua-internal@15.5.0"`
 * Make sure you are using the latest [rotriever](https://github.com/Roblox/rotriever/releases) 0.5.1 (or later) release
   * you can download the release binary, or add it to your `foreman.toml`: ```rotrieve = { source = "roblox/rotriever", version = "0.5.1" }```
 
@@ -120,7 +120,7 @@ We actively welcome pull requests. Learn how to [contribute](./.github/CONTRIBUT
 
 ### Changelog
 
-Changes are tracked as [GitHub releases](https://github.com/Roblox/graphql-lua/releases).
+Changes are tracked as [GitHub releases](https://github.com/Roblox/graphql-lua-internal/releases).
 
 ### License
 
