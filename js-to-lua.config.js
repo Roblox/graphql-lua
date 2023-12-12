@@ -10,7 +10,7 @@ module.exports = {
     },
     downstream: {
         owner: "roblox",
-        repo: "graphql-lua",
+        repo: "graphql-lua-internal",
         primaryBranch: "master",
         patterns: [
             "src/**/*.lua"
