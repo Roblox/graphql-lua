@@ -1,6 +1,6 @@
 [package]
 name = "GraphQL"
-version = "15.6.2"
+version = "15.6.3"
 authors = [
 	"Chris Trześniewski <k.trzesniewski@gmail.com>",
 	"Ignacio Falk <flakolefluk@gmail.com>",
@@ -9,6 +9,7 @@ authors = [
 	"Olivier Trepanier <otrepanier@roblox.com>",
 ]
 content_root = "src"
+files = ["*", "!**/*.spec.lua", "!**/.robloxrc"]
 
 [config]
 registry_index = true
