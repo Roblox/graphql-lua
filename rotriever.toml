@@ -1,6 +1,6 @@
 [package]
 name = "GraphQL"
-version = "15.6.1"
+version = "15.6.2"
 authors = [
 	"Chris Trześniewski <k.trzesniewski@gmail.com>",
 	"Ignacio Falk <flakolefluk@gmail.com>",
@@ -9,6 +9,9 @@ authors = [
 	"Olivier Trepanier <otrepanier@roblox.com>",
 ]
 content_root = "src"
+
+[config]
+registry_index = true
 
 [dependencies]
 RegExp = "github.com/Roblox/luau-regexp@0.2.0"
