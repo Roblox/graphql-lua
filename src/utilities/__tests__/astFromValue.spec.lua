@@ -88,8 +88,7 @@ return function()
 			-- Note: outside the bounds of 32bit signed int.
 			expect(function()
 				return astFromValue(1e40, GraphQLInt)
-				-- ROBLOX deviation: value is represented as 1.e+40 instead of 1e+40
-			end).toThrow("Int cannot represent non 32-bit signed integer value: 1.e+40")
+			end).toThrow("Int cannot represent non 32-bit signed integer value: 1e+40")
 
 			expect(function()
 				return astFromValue(NaN, GraphQLInt)
@@ -119,8 +118,7 @@ return function()
 
 			expect(astFromValue(1e40, GraphQLFloat)).toEqual({
 				kind = "FloatValue",
-				-- ROBLOX deviation: value is represented as 1.e+40 instead of 1e+40
-				value = "1.e+40",
+				value = "1e+40",
 			})
 		end)
 
