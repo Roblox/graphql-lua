@@ -1,6 +1,6 @@
 [package]
 name = "GraphQL"
-version = "15.6.3"
+version = "15.6.4"
 authors = [
 	"Chris Trześniewski <k.trzesniewski@gmail.com>",
 	"Ignacio Falk <flakolefluk@gmail.com>",
@@ -15,7 +15,7 @@ files = ["*", "!**/*.spec.lua", "!**/.robloxrc"]
 registry_index = true
 
 [dependencies]
-RegExp = "github.com/Roblox/luau-regexp@0.2.0"
+RegExp = "github.com/Roblox/luau-regexp-internal@0.3.0"
 LuauPolyfill = "github.com/roblox/luau-polyfill@1.0"
 Promise = "github.com/Roblox/roblox-lua-promise@3.2.1"
 
